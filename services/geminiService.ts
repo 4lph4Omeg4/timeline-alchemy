@@ -16,11 +16,11 @@ const imageTasks: ImageTask[] = [
     { title: 'Facebook Post', aspectRatio: '1:1' },
 ];
 
-const getPromptsFromBlogPost = async (blogPost: string): Promise<string[]> => {
+const getPromptsFromBlogPost = async (blogPost: string, style: string): Promise<string[]> => {
     const prompt = `
         Based on the following blog post, generate exactly 6 distinct, concise, and visually descriptive prompts for an image generation AI.
         Each prompt should capture a key theme, subject, or moment from the text.
-        It is absolutely essential that every single prompt describes a scene in a "cosmic, vibrant, neon-colored psychedelic" style.
+        It is absolutely essential that every single prompt describes a scene in a "${style}" style.
         Do not just list objects; describe a dynamic scene.
 
         Blog Post:
@@ -66,8 +66,8 @@ const getPromptsFromBlogPost = async (blogPost: string): Promise<string[]> => {
     }
 };
 
-const generateImage = async (prompt: string, aspectRatio: '16:9' | '1:1' | '9:16'): Promise<string> => {
-    const fullPrompt = `${prompt}, cosmic, vibrant, neon colors, psychedelic, hyper-detailed, epic lighting`;
+const generateImage = async (prompt: string, aspectRatio: '16:9' | '1:1' | '9:16', style: string): Promise<string> => {
+    const fullPrompt = `${prompt}, ${style}, hyper-detailed, epic lighting`;
     
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
@@ -89,18 +89,21 @@ const generateImage = async (prompt: string, aspectRatio: '16:9' | '1:1' | '9:16
 
 export const generateAllImages = async (
     blogPost: string, 
-    updateLoadingMessage: (message: string) => void
+    updateLoadingMessage: (message: string) => void,
+    style: string
 ): Promise<GeneratedImage[]> => {
-    updateLoadingMessage("Analyzing blog post to create cosmic prompts...");
-    const prompts = await getPromptsFromBlogPost(blogPost);
+    updateLoadingMessage(`Analyzing blog post for ${style} prompts...`);
+    const prompts = await getPromptsFromBlogPost(blogPost, style);
 
     const generationPromises = imageTasks.map((task, index) => {
-        updateLoadingMessage(`Generating ${task.title}...`);
-        return generateImage(prompts[index], task.aspectRatio)
-            .then(src => ({
-                ...task,
-                src,
-            }));
+        return generateImage(prompts[index], task.aspectRatio, style)
+            .then(src => {
+                 updateLoadingMessage(`Generating ${task.title}...`);
+                 return {
+                    ...task,
+                    src,
+                };
+            });
     });
     
     const results = await Promise.all(generationPromises);
