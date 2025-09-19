@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { GeneratedImage } from './types';
 import { generateAllImages } from './services/geminiService';
+import { applyBranding } from './utils/branding';
 import SparklesIcon from './components/icons/SparklesIcon';
 import Loader from './components/Loader';
 import ImageCard from './components/ImageCard';
@@ -49,6 +50,19 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
+  const [logo, setLogo] = useState<string | null>(null);
+  const [tagline, setTagline] = useState<string>('');
+
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogo(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleGenerate = useCallback(async () => {
     if (!blogPost.trim() || isLoading) return;
@@ -58,8 +72,23 @@ const App: React.FC = () => {
     setGeneratedImages([]);
     
     try {
-      const images = await generateAllImages(blogPost, setLoadingMessage, selectedStyle);
-      setGeneratedImages(images);
+      const initialImages = await generateAllImages(blogPost, setLoadingMessage, selectedStyle);
+      
+      if (logo || tagline) {
+        setLoadingMessage('Applying branding...');
+        const brandedImages = await Promise.all(
+          initialImages.map(image => 
+            applyBranding(image.src, logo, tagline).then(brandedSrc => ({
+              ...image,
+              src: brandedSrc,
+            }))
+          )
+        );
+        setGeneratedImages(brandedImages);
+      } else {
+        setGeneratedImages(initialImages);
+      }
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(`Generation failed: ${errorMessage}`);
@@ -68,7 +97,7 @@ const App: React.FC = () => {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [blogPost, isLoading, selectedStyle]);
+  }, [blogPost, isLoading, selectedStyle, logo, tagline]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans p-4 sm:p-6 lg:p-8">
@@ -96,7 +125,40 @@ const App: React.FC = () => {
               className="w-full h-48 p-4 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200 resize-none"
               disabled={isLoading}
             />
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+
+            <div className="mt-6 border-t border-slate-700 pt-6">
+              <h3 className="text-lg font-semibold text-slate-300 mb-4">Branding Kit (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="logo-upload" className="block text-sm font-medium text-slate-400 mb-2">
+                    Logo Overlay
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label htmlFor="logo-upload" className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 px-4 rounded-md transition-colors duration-200">
+                      Upload Logo
+                    </label>
+                    <input id="logo-upload" type="file" className="hidden" accept="image/png" onChange={handleLogoUpload} disabled={isLoading}/>
+                    {logo && <img src={logo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded" />}
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="tagline-input" className="block text-sm font-medium text-slate-400 mb-2">
+                    Tagline / URL
+                  </label>
+                  <input
+                    id="tagline-input"
+                    type="text"
+                    value={tagline}
+                    onChange={(e) => setTagline(e.target.value)}
+                    placeholder="e.g. yourwebsite.com"
+                    className="w-full p-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                 <div>
                     <label htmlFor="style-select" className="block text-sm font-medium text-slate-400 mb-2">
                         Choose Your Style
