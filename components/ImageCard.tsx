@@ -1,13 +1,15 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { GeneratedImage } from '../types';
 import DownloadIcon from './icons/DownloadIcon';
+import ShareIcon from './icons/ShareIcon';
 
 interface ImageCardProps {
   image: GeneratedImage;
 }
 
 const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+
   const getAspectRatioClass = (aspectRatio: string) => {
     switch (aspectRatio) {
       case '16:9':
@@ -29,7 +31,45 @@ const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }
+  };
+
+  const handleShare = async () => {
+    setShareStatus('idle'); // Reset status on new attempt
+    try {
+      // Convert base64 to blob to create a File object
+      const response = await fetch(image.src);
+      const blob = await response.blob();
+      const file = new File([blob], `${image.title.replace(/\s+/g, '_').toLowerCase()}.jpg`, { type: 'image/jpeg' });
+      const shareData = {
+          files: [file],
+          title: image.title,
+          text: `Check out this AI-generated image: ${image.title}`,
+      };
+
+      // Use Web Share API if available
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard && navigator.clipboard.write) {
+        // Fallback: Copy image to clipboard
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/jpeg': blob }),
+        ]);
+        setShareStatus('copied');
+        setTimeout(() => setShareStatus('idle'), 2000);
+      } else {
+        throw new Error("Share and Clipboard APIs are not supported.");
+      }
+    } catch (error) {
+      // Don't show an alert for user-cancelled share dialogs
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
+      console.error('Sharing failed:', error);
+      setShareStatus('error');
+      alert('Could not share or copy image. Your browser may not support this feature.');
+      setTimeout(() => setShareStatus('idle'), 2000);
+    }
+  };
 
   return (
     <div className="group relative overflow-hidden rounded-xl bg-slate-800 shadow-lg transition-all duration-300 hover:shadow-cyan-500/30">
@@ -41,13 +81,28 @@ const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
       <div className="absolute bottom-0 left-0 p-4 w-full flex justify-between items-center">
         <h3 className="text-white text-lg font-bold drop-shadow-lg">{image.title}</h3>
-        <button
-          onClick={downloadImage}
-          className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800"
-          aria-label={`Download ${image.title}`}
-        >
-          <DownloadIcon className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+            <button
+                onClick={handleShare}
+                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800 flex items-center justify-center min-w-[36px] min-h-[36px]"
+                aria-label={`Share ${image.title}`}
+                title="Share or Copy Image"
+            >
+                {shareStatus === 'copied' ? (
+                    <span className="text-xs font-semibold">Copied!</span>
+                ) : (
+                    <ShareIcon className="h-5 w-5" />
+                )}
+            </button>
+            <button
+                onClick={downloadImage}
+                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800"
+                aria-label={`Download ${image.title}`}
+                title="Download Image"
+            >
+                <DownloadIcon className="h-5 w-5" />
+            </button>
+        </div>
       </div>
     </div>
   );

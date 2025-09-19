@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { GeneratedImage, ImageTask } from '../types';
 
@@ -13,11 +12,13 @@ const imageTasks: ImageTask[] = [
     { title: 'Blog Image 2', aspectRatio: '16:9' },
     { title: 'Instagram Post', aspectRatio: '1:1' },
     { title: 'TikTok Post', aspectRatio: '9:16' },
+    { title: 'LinkedIn Post', aspectRatio: '1:1' },
+    { title: 'Facebook Post', aspectRatio: '1:1' },
 ];
 
 const getPromptsFromBlogPost = async (blogPost: string): Promise<string[]> => {
     const prompt = `
-        Based on the following blog post, generate exactly 4 distinct, concise, and visually descriptive prompts for an image generation AI.
+        Based on the following blog post, generate exactly 6 distinct, concise, and visually descriptive prompts for an image generation AI.
         Each prompt should capture a key theme, subject, or moment from the text.
         It is absolutely essential that every single prompt describes a scene in a "cosmic, vibrant, neon-colored psychedelic" style.
         Do not just list objects; describe a dynamic scene.
@@ -43,7 +44,7 @@ const getPromptsFromBlogPost = async (blogPost: string): Promise<string[]> => {
                                 type: Type.STRING,
                                 description: "A visually descriptive prompt for image generation.",
                             },
-                            description: "An array of exactly 4 image generation prompts.",
+                            description: "An array of exactly 6 image generation prompts.",
                         },
                     },
                     required: ["prompts"],
@@ -53,8 +54,8 @@ const getPromptsFromBlogPost = async (blogPost: string): Promise<string[]> => {
         
         const jsonResponse = JSON.parse(response.text);
 
-        if (!jsonResponse.prompts || jsonResponse.prompts.length !== 4) {
-            throw new Error("AI did not return 4 prompts.");
+        if (!jsonResponse.prompts || jsonResponse.prompts.length !== 6) {
+            throw new Error("AI did not return 6 prompts.");
         }
 
         return jsonResponse.prompts;

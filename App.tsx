@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { GeneratedImage } from './types';
 import { generateAllImages } from './services/geminiService';
@@ -46,7 +45,7 @@ const App: React.FC = () => {
               </div>
           </div>
           <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
-            Paste your blog post below. We'll summon four psychedelic, neon-drenched images from the cosmos, perfectly sized for your content.
+            Paste your blog post below. We'll summon six psychedelic, neon-drenched images from the cosmos, perfectly sized for your content.
           </p>
         </header>
 
@@ -86,11 +85,9 @@ const App: React.FC = () => {
           {generatedImages.length > 0 && !isLoading && (
             <div className="mt-12">
                 <h2 className="text-3xl font-bold text-center mb-8 text-slate-200">Your Cosmic Creations</h2>
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {generatedImages.map((img) => (
-                        <div key={img.title} className={img.aspectRatio === '9:16' ? 'lg:col-span-1 md:col-span-2' : 'lg:col-span-1'}>
-                             <ImageCard image={img} />
-                        </div>
+                        <ImageCard key={img.title} image={img} />
                     ))}
                 </div>
             </div>
