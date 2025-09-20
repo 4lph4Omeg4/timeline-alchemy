@@ -175,11 +175,11 @@ const App: React.FC = () => {
   }, [generatedImages, prompts, selectedStyle, logo, tagline]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 font-sans p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-[#0D0C14] to-black text-gray-100 font-sans p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         
         <header className="text-center mb-12">
-           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
+           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
               Cosmic Content Creator
             </h1>
           <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
