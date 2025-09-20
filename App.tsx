@@ -5,6 +5,7 @@ import { applyBranding } from './utils/branding';
 import SparklesIcon from './components/icons/SparklesIcon';
 import Loader from './components/Loader';
 import ImageCard from './components/ImageCard';
+import { Analytics } from '@vercel/analytics/next';
 
 const styleOptions = [
   {
