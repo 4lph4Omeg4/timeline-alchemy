@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .stroke{fill:none;stroke:#000;stroke-width:36;stroke-linejoin:round;stroke-linecap:round}
+    </style>
+  </defs>
+  <polygon class="stroke" points="256,96 336,256 176,256" />
+  <polygon class="stroke" points="256,416 176,256 336,256" />
+</svg>
