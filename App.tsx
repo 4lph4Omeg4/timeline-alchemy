@@ -175,57 +175,53 @@ const App: React.FC = () => {
   }, [generatedImages, prompts, selectedStyle, logo, tagline]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-900 text-gray-100 font-sans p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         
-        <header className="text-center mb-8">
-          <div className="inline-block bg-gradient-to-r from-fuchsia-500 via-purple-500 to-cyan-400 p-1 rounded-xl">
-              <div className="bg-slate-900 rounded-lg px-4 py-2">
-                 <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
-                    Cosmic Content Creator
-                  </h1>
-              </div>
-          </div>
-          <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
+        <header className="text-center mb-12">
+           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
+              Cosmic Content Creator
+            </h1>
+          <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
             Paste your blog post, choose your style, and we'll summon six images from the cosmos, perfectly sized for your content.
           </p>
         </header>
 
         <main>
           {step === 'input' && !isLoading && (
-            <div className="bg-slate-800/50 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-slate-700">
+            <div className="bg-gray-800 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-gray-700">
               <textarea
                 value={blogPost}
                 onChange={(e) => setBlogPost(e.target.value)}
                 placeholder="Paste your blog post here..."
-                className="w-full h-48 p-4 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200 resize-none"
+                className="w-full h-48 p-4 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 resize-none"
                 disabled={isLoading}
               />
-              <div className="mt-6 border-t border-slate-700 pt-6">
-                <h3 className="text-lg font-semibold text-slate-300 mb-4">Branding Kit (Optional)</h3>
+              <div className="mt-6 border-t border-gray-700 pt-6">
+                <h3 className="text-lg font-semibold text-gray-300 mb-4">Branding Kit (Optional)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="logo-upload" className="block text-sm font-medium text-slate-400 mb-2">Logo Overlay</label>
+                    <label htmlFor="logo-upload" className="block text-sm font-medium text-gray-400 mb-2">Logo Overlay</label>
                     <div className="flex items-center gap-4">
-                      <label htmlFor="logo-upload" className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 px-4 rounded-md transition-colors duration-200">Upload Logo</label>
+                      <label htmlFor="logo-upload" className="cursor-pointer bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-2 px-4 rounded-md transition-colors duration-200">Upload Logo</label>
                       <input id="logo-upload" type="file" className="hidden" accept="image/png" onChange={handleLogoUpload} disabled={isLoading}/>
                       {logo && <img src={logo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded" />}
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="tagline-input" className="block text-sm font-medium text-slate-400 mb-2">Tagline / URL</label>
-                    <input id="tagline-input" type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. yourwebsite.com" className="w-full p-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200" disabled={isLoading}/>
+                    <label htmlFor="tagline-input" className="block text-sm font-medium text-gray-400 mb-2">Tagline / URL</label>
+                    <input id="tagline-input" type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. yourwebsite.com" className="w-full p-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" disabled={isLoading}/>
                   </div>
                 </div>
               </div>
-              <div className="mt-6 pt-6 border-t border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+              <div className="mt-6 pt-6 border-t border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                 <div>
-                  <label htmlFor="style-select" className="block text-sm font-medium text-slate-400 mb-2">Choose Your Style</label>
-                  <select id="style-select" value={selectedStyle} onChange={(e) => setSelectedStyle(e.target.value)} disabled={isLoading} className="w-full p-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200 appearance-none" style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem'}}>
-                    {styleOptions.map((group) => (<optgroup key={group.category} label={group.category} className="bg-slate-800 text-slate-300">{group.styles.map((style) => (<option key={style} value={style} className="bg-slate-900 hover:bg-slate-700">{style}</option>))}</optgroup>))}
+                  <label htmlFor="style-select" className="block text-sm font-medium text-gray-400 mb-2">Choose Your Style</label>
+                  <select id="style-select" value={selectedStyle} onChange={(e) => setSelectedStyle(e.target.value)} disabled={isLoading} className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 appearance-none" style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem'}}>
+                    {styleOptions.map((group) => (<optgroup key={group.category} label={group.category} className="bg-gray-800 text-gray-300">{group.styles.map((style) => (<option key={style} value={style} className="bg-gray-900 hover:bg-gray-700">{style}</option>))}</optgroup>))}
                   </select>
                 </div>
-                <button onClick={handleGeneratePrompts} disabled={isLoading || !blogPost.trim()} className="inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-500 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+                <button onClick={handleGeneratePrompts} disabled={isLoading || !blogPost.trim()} className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white bg-indigo-600 rounded-lg shadow-lg transition-colors duration-200 ease-in-out hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-900">
                   <SparklesIcon className="h-5 w-5" />
                   Analyze & Create Prompts
                 </button>
@@ -234,21 +230,21 @@ const App: React.FC = () => {
           )}
 
           {step === 'prompts' && !isLoading && (
-            <div className="bg-slate-800/50 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-slate-700 animate-[fadeIn_0.5s_ease-in-out]">
+            <div className="bg-gray-800 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-gray-700 animate-[fadeIn_0.5s_ease-in-out]">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-slate-200">Review & Edit Prompts</h2>
-                    <button onClick={() => setStep('input')} className="text-sm font-semibold text-cyan-400 hover:text-cyan-300">&larr; Back to Editor</button>
+                    <h2 className="text-2xl font-bold text-gray-200">Review & Edit Prompts</h2>
+                    <button onClick={() => setStep('input')} className="text-sm font-semibold text-indigo-400 hover:text-indigo-300">&larr; Back to Editor</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {prompts.map((prompt, index) => (
                         <div key={imageTasks[index].id}>
-                            <label htmlFor={`prompt-${index}`} className="block text-sm font-medium text-slate-400 mb-1">{imageTasks[index].title} ({imageTasks[index].aspectRatio})</label>
-                            <textarea id={`prompt-${index}`} value={prompt} onChange={(e) => handlePromptChange(index, e.target.value)} rows={4} className="w-full p-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 resize-y"/>
+                            <label htmlFor={`prompt-${index}`} className="block text-sm font-medium text-gray-400 mb-1">{imageTasks[index].title} ({imageTasks[index].aspectRatio})</label>
+                            <textarea id={`prompt-${index}`} value={prompt} onChange={(e) => handlePromptChange(index, e.target.value)} rows={4} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 resize-y"/>
                         </div>
                     ))}
                 </div>
-                <div className="mt-6 pt-6 border-t border-slate-700 text-center">
-                    <button onClick={handleGenerateImages} className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-500 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-cyan-500/50">
+                <div className="mt-6 pt-6 border-t border-gray-700 text-center">
+                    <button onClick={handleGenerateImages} className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white bg-indigo-600 rounded-lg shadow-lg transition-colors duration-200 ease-in-out hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-900">
                         <SparklesIcon className="h-5 w-5" />
                         Generate Images
                     </button>
@@ -271,8 +267,8 @@ const App: React.FC = () => {
           {step === 'results' && !isLoading && generatedImages.length > 0 && (
             <div className="mt-12 animate-[fadeIn_0.5s_ease-in-out]">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-slate-200">Your Cosmic Creations</h2>
-                    <button onClick={handleStartOver} className="mt-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300">Start Over &rarr;</button>
+                    <h2 className="text-3xl font-bold text-gray-200">Your Cosmic Creations</h2>
+                    <button onClick={handleStartOver} className="mt-2 text-sm font-semibold text-indigo-400 hover:text-indigo-300">Start Over &rarr;</button>
                 </div>
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {generatedImages.map((img, index) => (

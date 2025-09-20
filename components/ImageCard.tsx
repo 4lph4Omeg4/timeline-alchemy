@@ -74,7 +74,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onRegenerate }) => {
   };
 
   return (
-    <div className="group relative overflow-hidden rounded-xl bg-slate-800 shadow-lg transition-all duration-300 hover:shadow-cyan-500/30">
+    <div className="group relative overflow-hidden rounded-xl bg-gray-800 shadow-lg transition-all duration-300 hover:shadow-indigo-500/30">
       <img
         src={image.src}
         alt={image.title}
@@ -82,10 +82,10 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onRegenerate }) => {
       />
 
       {image.isRegenerating && (
-        <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center z-10">
+        <div className="absolute inset-0 bg-gray-900/70 flex items-center justify-center z-10">
           <div className="relative flex items-center justify-center">
-            <div className="absolute h-16 w-16 rounded-full border-t-2 border-b-2 border-cyan-400 animate-spin"></div>
-            <p className="text-slate-200 text-sm font-semibold">Creating...</p>
+            <div className="absolute h-16 w-16 rounded-full border-t-2 border-b-2 border-indigo-400 animate-spin"></div>
+            <p className="text-gray-200 text-sm font-semibold">Creating...</p>
           </div>
         </div>
       )}
@@ -97,7 +97,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onRegenerate }) => {
             <button
                 onClick={onRegenerate}
                 disabled={image.isRegenerating}
-                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-wait"
+                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-wait"
                 aria-label={`Regenerate ${image.title}`}
                 title="Regenerate Image"
             >
@@ -106,7 +106,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onRegenerate }) => {
             <button
                 onClick={handleShare}
                 disabled={image.isRegenerating}
-                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800 flex items-center justify-center min-w-[36px] min-h-[36px] disabled:opacity-50"
+                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-gray-800 flex items-center justify-center min-w-[36px] min-h-[36px] disabled:opacity-50"
                 aria-label={`Share ${image.title}`}
                 title="Share or Copy Image"
             >
@@ -119,7 +119,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, onRegenerate }) => {
             <button
                 onClick={downloadImage}
                 disabled={image.isRegenerating}
-                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50"
+                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50"
                 aria-label={`Download ${image.title}`}
                 title="Download Image"
             >
