@@ -1,5 +1,5 @@
 {
   "name": "Cosmic Blog Image Generator",
-  "description": "An application that uses AI to generate six themed images (for blog posts, Facebook, Instagram, LinkedIn and TikTok) based on a blog post's content, with 10+ styles to choose from.",
+  "description": "An application that uses AI to generate four themed images (for blog posts, Instagram, and TikTok) based on a blog post's content, all in a cosmic, vibrant, neon-colored psychedelic style.",
   "requestFramePermissions": []
 }

@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { GeneratedImage, ImageTask } from '../types';
+import { ImageTask } from '../types';
 
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable not set");
@@ -7,16 +7,16 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const imageTasks: ImageTask[] = [
-    { title: 'Blog Image 1', aspectRatio: '16:9' },
-    { title: 'Blog Image 2', aspectRatio: '16:9' },
-    { title: 'Instagram Post', aspectRatio: '1:1' },
-    { title: 'TikTok Post', aspectRatio: '9:16' },
-    { title: 'LinkedIn Post', aspectRatio: '1:1' },
-    { title: 'Facebook Post', aspectRatio: '1:1' },
+export const imageTasks: ImageTask[] = [
+    { id: 'blog1', title: 'Blog Image 1', aspectRatio: '16:9' },
+    { id: 'blog2', title: 'Blog Image 2', aspectRatio: '16:9' },
+    { id: 'insta', title: 'Instagram Post', aspectRatio: '1:1' },
+    { id: 'tiktok', title: 'TikTok Post', aspectRatio: '9:16' },
+    { id: 'linkedin', title: 'LinkedIn Post', aspectRatio: '1:1' },
+    { id: 'facebook', title: 'Facebook Post', aspectRatio: '1:1' },
 ];
 
-const getPromptsFromBlogPost = async (blogPost: string, style: string): Promise<string[]> => {
+export const getPromptsFromBlogPost = async (blogPost: string, style: string): Promise<string[]> => {
     const prompt = `
         Based on the following blog post, generate exactly 6 distinct, concise, and visually descriptive prompts for an image generation AI.
         Each prompt should capture a key theme, subject, or moment from the text.
@@ -55,7 +55,16 @@ const getPromptsFromBlogPost = async (blogPost: string, style: string): Promise<
         const jsonResponse = JSON.parse(response.text);
 
         if (!jsonResponse.prompts || jsonResponse.prompts.length !== 6) {
-            throw new Error("AI did not return 6 prompts.");
+            let prompts = jsonResponse.prompts || [];
+            if (prompts.length > 6) {
+                prompts = prompts.slice(0, 6);
+            } else {
+                while(prompts.length < 6) {
+                    prompts.push(`A beautiful abstract image in a ${style} style`);
+                }
+            }
+            console.warn("AI did not return exactly 6 prompts. Adjusted to 6.");
+            return prompts;
         }
 
         return jsonResponse.prompts;
@@ -66,7 +75,7 @@ const getPromptsFromBlogPost = async (blogPost: string, style: string): Promise<
     }
 };
 
-const generateImage = async (prompt: string, aspectRatio: '16:9' | '1:1' | '9:16', style: string): Promise<string> => {
+export const generateImage = async (prompt: string, aspectRatio: '16:9' | '1:1' | '9:16', style: string): Promise<string> => {
     const fullPrompt = `${prompt}, ${style}, hyper-detailed, epic lighting`;
     
     const response = await ai.models.generateImages({
@@ -85,28 +94,4 @@ const generateImage = async (prompt: string, aspectRatio: '16:9' | '1:1' | '9:16
 
     const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
     return `data:image/jpeg;base64,${base64ImageBytes}`;
-};
-
-export const generateAllImages = async (
-    blogPost: string, 
-    updateLoadingMessage: (message: string) => void,
-    style: string
-): Promise<GeneratedImage[]> => {
-    updateLoadingMessage(`Analyzing blog post for ${style} prompts...`);
-    const prompts = await getPromptsFromBlogPost(blogPost, style);
-
-    const generationPromises = imageTasks.map((task, index) => {
-        return generateImage(prompts[index], task.aspectRatio, style)
-            .then(src => {
-                 updateLoadingMessage(`Generating ${task.title}...`);
-                 return {
-                    ...task,
-                    src,
-                };
-            });
-    });
-    
-    const results = await Promise.all(generationPromises);
-    updateLoadingMessage("All images generated!");
-    return results;
 };

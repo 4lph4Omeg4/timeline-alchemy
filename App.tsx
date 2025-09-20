@@ -1,11 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { GeneratedImage } from './types';
-import { generateAllImages } from './services/geminiService';
+import { imageTasks, getPromptsFromBlogPost, generateImage } from './services/geminiService';
 import { applyBranding } from './utils/branding';
 import SparklesIcon from './components/icons/SparklesIcon';
 import Loader from './components/Loader';
 import ImageCard from './components/ImageCard';
-import { Analytics } from '@vercel/analytics/next';
 
 const styleOptions = [
   {
@@ -47,12 +46,14 @@ const styleOptions = [
 const App: React.FC = () => {
   const [blogPost, setBlogPost] = useState<string>('');
   const [selectedStyle, setSelectedStyle] = useState<string>('Cosmic Neon');
+  const [prompts, setPrompts] = useState<string[]>([]);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
   const [logo, setLogo] = useState<string | null>(null);
   const [tagline, setTagline] = useState<string>('');
+  const [step, setStep] = useState<'input' | 'prompts' | 'results'>('input');
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -64,41 +65,114 @@ const App: React.FC = () => {
       reader.readAsDataURL(file);
     }
   };
+  
+  const handleStartOver = () => {
+    setBlogPost('');
+    setGeneratedImages([]);
+    setPrompts([]);
+    setError(null);
+    setStep('input');
+    // Keep branding intact for next use
+  };
 
-  const handleGenerate = useCallback(async () => {
+  const handleGeneratePrompts = useCallback(async () => {
     if (!blogPost.trim() || isLoading) return;
 
     setIsLoading(true);
     setError(null);
     setGeneratedImages([]);
-    
-    try {
-      const initialImages = await generateAllImages(blogPost, setLoadingMessage, selectedStyle);
-      
-      if (logo || tagline) {
-        setLoadingMessage('Applying branding...');
-        const brandedImages = await Promise.all(
-          initialImages.map(image => 
-            applyBranding(image.src, logo, tagline).then(brandedSrc => ({
-              ...image,
-              src: brandedSrc,
-            }))
-          )
-        );
-        setGeneratedImages(brandedImages);
-      } else {
-        setGeneratedImages(initialImages);
-      }
+    setPrompts([]);
+    setLoadingMessage(`Analyzing blog post for prompts...`);
 
+    try {
+      const generatedPrompts = await getPromptsFromBlogPost(blogPost, selectedStyle);
+      setPrompts(generatedPrompts);
+      setStep('prompts');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-      setError(`Generation failed: ${errorMessage}`);
+      setError(`Failed to generate prompts: ${errorMessage}`);
+      setStep('input');
       console.error(err);
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [blogPost, isLoading, selectedStyle, logo, tagline]);
+  }, [blogPost, isLoading, selectedStyle]);
+
+  const handlePromptChange = (index: number, value: string) => {
+    const newPrompts = [...prompts];
+    newPrompts[index] = value;
+    setPrompts(newPrompts);
+  };
+
+  const handleGenerateImages = useCallback(async () => {
+    if (prompts.length !== imageTasks.length || isLoading) return;
+
+    setIsLoading(true);
+    setError(null);
+    setGeneratedImages([]);
+    setStep('results'); // Move to results view immediately to show loader there
+
+    try {
+        const generationPromises = imageTasks.map((task, index) => {
+            setLoadingMessage(`Generating ${task.title}...`);
+            return generateImage(prompts[index], task.aspectRatio, selectedStyle)
+                .then(async (src) => {
+                    const brandedSrc = (logo || tagline) ? await applyBranding(src, logo, tagline) : src;
+                    return {
+                        ...task,
+                        src: brandedSrc,
+                    };
+                });
+        });
+        
+        const results = await Promise.all(generationPromises);
+        setGeneratedImages(results);
+
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(`Generation failed: ${errorMessage}`);
+        console.error(err);
+    } finally {
+        setIsLoading(false);
+        setLoadingMessage('');
+    }
+  }, [prompts, isLoading, selectedStyle, logo, tagline]);
+
+  const handleRegenerateImage = useCallback(async (imageIndex: number) => {
+    const imageToRegen = generatedImages[imageIndex];
+    if (!imageToRegen || imageToRegen.isRegenerating) return;
+
+    setGeneratedImages(currentImages =>
+      currentImages.map((img, idx) =>
+        idx === imageIndex ? { ...img, isRegenerating: true } : img
+      )
+    );
+    setError(null);
+
+    try {
+      const task = imageTasks[imageIndex];
+      const prompt = prompts[imageIndex];
+      const newSrc = await generateImage(prompt, task.aspectRatio, selectedStyle);
+      const brandedSrc = (logo || tagline) ? await applyBranding(newSrc, logo, tagline) : newSrc;
+      
+      setGeneratedImages(currentImages =>
+        currentImages.map((img, idx) =>
+          idx === imageIndex ? { ...img, src: brandedSrc, isRegenerating: false } : img
+        )
+      );
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(`Regeneration failed for ${imageToRegen.title}: ${errorMessage}`);
+      console.error(err);
+      setGeneratedImages(currentImages =>
+        currentImages.map((img, idx) =>
+          idx === imageIndex ? { ...img, isRegenerating: false } : img
+        )
+      );
+    }
+  }, [generatedImages, prompts, selectedStyle, logo, tagline]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans p-4 sm:p-6 lg:p-8">
@@ -118,87 +192,69 @@ const App: React.FC = () => {
         </header>
 
         <main>
-          <div className="bg-slate-800/50 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-slate-700">
-            <textarea
-              value={blogPost}
-              onChange={(e) => setBlogPost(e.target.value)}
-              placeholder="Paste your blog post here..."
-              className="w-full h-48 p-4 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200 resize-none"
-              disabled={isLoading}
-            />
-
-            <div className="mt-6 border-t border-slate-700 pt-6">
-              <h3 className="text-lg font-semibold text-slate-300 mb-4">Branding Kit (Optional)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="logo-upload" className="block text-sm font-medium text-slate-400 mb-2">
-                    Logo Overlay
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <label htmlFor="logo-upload" className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 px-4 rounded-md transition-colors duration-200">
-                      Upload Logo
-                    </label>
-                    <input id="logo-upload" type="file" className="hidden" accept="image/png" onChange={handleLogoUpload} disabled={isLoading}/>
-                    {logo && <img src={logo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded" />}
+          {step === 'input' && !isLoading && (
+            <div className="bg-slate-800/50 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-slate-700">
+              <textarea
+                value={blogPost}
+                onChange={(e) => setBlogPost(e.target.value)}
+                placeholder="Paste your blog post here..."
+                className="w-full h-48 p-4 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200 resize-none"
+                disabled={isLoading}
+              />
+              <div className="mt-6 border-t border-slate-700 pt-6">
+                <h3 className="text-lg font-semibold text-slate-300 mb-4">Branding Kit (Optional)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="logo-upload" className="block text-sm font-medium text-slate-400 mb-2">Logo Overlay</label>
+                    <div className="flex items-center gap-4">
+                      <label htmlFor="logo-upload" className="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 px-4 rounded-md transition-colors duration-200">Upload Logo</label>
+                      <input id="logo-upload" type="file" className="hidden" accept="image/png" onChange={handleLogoUpload} disabled={isLoading}/>
+                      {logo && <img src={logo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded" />}
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="tagline-input" className="block text-sm font-medium text-slate-400 mb-2">Tagline / URL</label>
+                    <input id="tagline-input" type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. yourwebsite.com" className="w-full p-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200" disabled={isLoading}/>
                   </div>
                 </div>
+              </div>
+              <div className="mt-6 pt-6 border-t border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                 <div>
-                  <label htmlFor="tagline-input" className="block text-sm font-medium text-slate-400 mb-2">
-                    Tagline / URL
-                  </label>
-                  <input
-                    id="tagline-input"
-                    type="text"
-                    value={tagline}
-                    onChange={(e) => setTagline(e.target.value)}
-                    placeholder="e.g. yourwebsite.com"
-                    className="w-full p-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200"
-                    disabled={isLoading}
-                  />
+                  <label htmlFor="style-select" className="block text-sm font-medium text-slate-400 mb-2">Choose Your Style</label>
+                  <select id="style-select" value={selectedStyle} onChange={(e) => setSelectedStyle(e.target.value)} disabled={isLoading} className="w-full p-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200 appearance-none" style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem'}}>
+                    {styleOptions.map((group) => (<optgroup key={group.category} label={group.category} className="bg-slate-800 text-slate-300">{group.styles.map((style) => (<option key={style} value={style} className="bg-slate-900 hover:bg-slate-700">{style}</option>))}</optgroup>))}
+                  </select>
                 </div>
+                <button onClick={handleGeneratePrompts} disabled={isLoading || !blogPost.trim()} className="inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-500 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+                  <SparklesIcon className="h-5 w-5" />
+                  Analyze & Create Prompts
+                </button>
               </div>
             </div>
+          )}
 
-            <div className="mt-6 pt-6 border-t border-slate-700 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-                <div>
-                    <label htmlFor="style-select" className="block text-sm font-medium text-slate-400 mb-2">
-                        Choose Your Style
-                    </label>
-                    <select
-                        id="style-select"
-                        value={selectedStyle}
-                        onChange={(e) => setSelectedStyle(e.target.value)}
-                        disabled={isLoading}
-                        className="w-full p-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200 appearance-none"
-                        style={{
-                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                            backgroundPosition: 'right 0.5rem center',
-                            backgroundRepeat: 'no-repeat',
-                            backgroundSize: '1.5em 1.5em',
-                            paddingRight: '2.5rem',
-                        }}
-                    >
-                        {styleOptions.map((group) => (
-                            <optgroup key={group.category} label={group.category} className="bg-slate-800 text-slate-300">
-                                {group.styles.map((style) => (
-                                    <option key={style} value={style} className="bg-slate-900 hover:bg-slate-700">
-                                        {style}
-                                    </option>
-                                ))}
-                            </optgroup>
-                        ))}
-                    </select>
+          {step === 'prompts' && !isLoading && (
+            <div className="bg-slate-800/50 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-slate-700 animate-[fadeIn_0.5s_ease-in-out]">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-slate-200">Review & Edit Prompts</h2>
+                    <button onClick={() => setStep('input')} className="text-sm font-semibold text-cyan-400 hover:text-cyan-300">&larr; Back to Editor</button>
                 </div>
-                <button
-                    onClick={handleGenerate}
-                    disabled={isLoading || !blogPost.trim()}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-500 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                    <SparklesIcon className="h-5 w-5" />
-                    {isLoading ? 'Generating...' : 'Generate Images'}
-                </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {prompts.map((prompt, index) => (
+                        <div key={imageTasks[index].id}>
+                            <label htmlFor={`prompt-${index}`} className="block text-sm font-medium text-slate-400 mb-1">{imageTasks[index].title} ({imageTasks[index].aspectRatio})</label>
+                            <textarea id={`prompt-${index}`} value={prompt} onChange={(e) => handlePromptChange(index, e.target.value)} rows={4} className="w-full p-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-300 placeholder-slate-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition duration-200 resize-y"/>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-6 pt-6 border-t border-slate-700 text-center">
+                    <button onClick={handleGenerateImages} className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white bg-gradient-to-r from-purple-600 to-cyan-500 rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-cyan-500/50">
+                        <SparklesIcon className="h-5 w-5" />
+                        Generate Images
+                    </button>
+                </div>
             </div>
-          </div>
+          )}
 
           {error && (
             <div className="mt-8 p-4 bg-red-900/50 border border-red-700 text-red-300 rounded-lg text-center">
@@ -212,18 +268,20 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {generatedImages.length > 0 && !isLoading && (
-            <div className="mt-12">
-                <h2 className="text-3xl font-bold text-center mb-8 text-slate-200">Your Cosmic Creations</h2>
+          {step === 'results' && !isLoading && generatedImages.length > 0 && (
+            <div className="mt-12 animate-[fadeIn_0.5s_ease-in-out]">
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-slate-200">Your Cosmic Creations</h2>
+                    <button onClick={handleStartOver} className="mt-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300">Start Over &rarr;</button>
+                </div>
                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {generatedImages.map((img) => (
-                        <ImageCard key={img.title} image={img} />
+                    {generatedImages.map((img, index) => (
+                        <ImageCard key={img.id} image={img} onRegenerate={() => handleRegenerateImage(index)} />
                     ))}
                 </div>
             </div>
           )}
         </main>
-
       </div>
     </div>
   );

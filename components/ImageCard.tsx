@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { GeneratedImage } from '../types';
 import DownloadIcon from './icons/DownloadIcon';
 import ShareIcon from './icons/ShareIcon';
+import RegenerateIcon from './icons/RegenerateIcon';
 
 interface ImageCardProps {
   image: GeneratedImage;
+  onRegenerate: () => void;
 }
 
-const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
+const ImageCard: React.FC<ImageCardProps> = ({ image, onRegenerate }) => {
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle');
 
   const getAspectRatioClass = (aspectRatio: string) => {
@@ -76,15 +78,35 @@ const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
       <img
         src={image.src}
         alt={image.title}
-        className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${getAspectRatioClass(image.aspectRatio)}`}
+        className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${getAspectRatioClass(image.aspectRatio)} ${image.isRegenerating ? 'blur-sm' : ''}`}
       />
+
+      {image.isRegenerating && (
+        <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center z-10">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute h-16 w-16 rounded-full border-t-2 border-b-2 border-cyan-400 animate-spin"></div>
+            <p className="text-slate-200 text-sm font-semibold">Creating...</p>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
       <div className="absolute bottom-0 left-0 p-4 w-full flex justify-between items-center">
         <h3 className="text-white text-lg font-bold drop-shadow-lg">{image.title}</h3>
         <div className="flex items-center gap-2">
             <button
+                onClick={onRegenerate}
+                disabled={image.isRegenerating}
+                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-wait"
+                aria-label={`Regenerate ${image.title}`}
+                title="Regenerate Image"
+            >
+                <RegenerateIcon className="h-5 w-5" />
+            </button>
+            <button
                 onClick={handleShare}
-                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800 flex items-center justify-center min-w-[36px] min-h-[36px]"
+                disabled={image.isRegenerating}
+                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800 flex items-center justify-center min-w-[36px] min-h-[36px] disabled:opacity-50"
                 aria-label={`Share ${image.title}`}
                 title="Share or Copy Image"
             >
@@ -96,7 +118,8 @@ const ImageCard: React.FC<ImageCardProps> = ({ image }) => {
             </button>
             <button
                 onClick={downloadImage}
-                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800"
+                disabled={image.isRegenerating}
+                className="p-2 rounded-full bg-white/20 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50"
                 aria-label={`Download ${image.title}`}
                 title="Download Image"
             >
