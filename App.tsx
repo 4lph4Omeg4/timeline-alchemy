@@ -175,7 +175,7 @@ const App: React.FC = () => {
   }, [generatedImages, prompts, selectedStyle, logo, tagline]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0D0C14] to-black text-gray-100 font-sans p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-[#11111B] text-gray-200 font-sans p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         
         <header className="text-center mb-12">
@@ -189,39 +189,39 @@ const App: React.FC = () => {
 
         <main>
           {step === 'input' && !isLoading && (
-            <div className="bg-gray-800 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-gray-700">
+            <div className="bg-[#1C1B2E] p-6 rounded-2xl shadow-2xl shadow-black/50 border border-slate-800">
               <textarea
                 value={blogPost}
                 onChange={(e) => setBlogPost(e.target.value)}
                 placeholder="Paste your blog post here..."
-                className="w-full h-48 p-4 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 resize-none"
+                className="w-full h-48 p-4 bg-[#11111B] border border-slate-700 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 resize-none"
                 disabled={isLoading}
               />
-              <div className="mt-6 border-t border-gray-700 pt-6">
+              <div className="mt-6 border-t border-slate-800 pt-6">
                 <h3 className="text-lg font-semibold text-gray-300 mb-4">Branding Kit (Optional)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="logo-upload" className="block text-sm font-medium text-gray-400 mb-2">Logo Overlay</label>
                     <div className="flex items-center gap-4">
-                      <label htmlFor="logo-upload" className="cursor-pointer bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-2 px-4 rounded-md transition-colors duration-200">Upload Logo</label>
+                      <label htmlFor="logo-upload" className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-gray-300 font-semibold py-2 px-4 rounded-md transition-colors duration-200 border border-slate-600">Upload Logo</label>
                       <input id="logo-upload" type="file" className="hidden" accept="image/png" onChange={handleLogoUpload} disabled={isLoading}/>
                       {logo && <img src={logo} alt="Logo Preview" className="h-10 w-auto bg-white/10 p-1 rounded" />}
                     </div>
                   </div>
                   <div>
                     <label htmlFor="tagline-input" className="block text-sm font-medium text-gray-400 mb-2">Tagline / URL</label>
-                    <input id="tagline-input" type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. yourwebsite.com" className="w-full p-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" disabled={isLoading}/>
+                    <input id="tagline-input" type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. yourwebsite.com" className="w-full p-2 bg-[#11111B] border border-slate-700 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" disabled={isLoading}/>
                   </div>
                 </div>
               </div>
-              <div className="mt-6 pt-6 border-t border-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+              <div className="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                 <div>
                   <label htmlFor="style-select" className="block text-sm font-medium text-gray-400 mb-2">Choose Your Style</label>
-                  <select id="style-select" value={selectedStyle} onChange={(e) => setSelectedStyle(e.target.value)} disabled={isLoading} className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 appearance-none" style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem'}}>
-                    {styleOptions.map((group) => (<optgroup key={group.category} label={group.category} className="bg-gray-800 text-gray-300">{group.styles.map((style) => (<option key={style} value={style} className="bg-gray-900 hover:bg-gray-700">{style}</option>))}</optgroup>))}
+                  <select id="style-select" value={selectedStyle} onChange={(e) => setSelectedStyle(e.target.value)} disabled={isLoading} className="w-full p-3 bg-[#11111B] border border-slate-700 rounded-lg text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 appearance-none" style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem'}}>
+                    {styleOptions.map((group) => (<optgroup key={group.category} label={group.category} className="bg-slate-800 text-gray-300">{group.styles.map((style) => (<option key={style} value={style} className="bg-slate-900 hover:bg-slate-700">{style}</option>))}</optgroup>))}
                   </select>
                 </div>
-                <button onClick={handleGeneratePrompts} disabled={isLoading || !blogPost.trim()} className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white bg-indigo-600 rounded-lg shadow-lg transition-colors duration-200 ease-in-out hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-900">
+                <button onClick={handleGeneratePrompts} disabled={isLoading || !blogPost.trim()} className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-lg transition-all duration-200 ease-in-out hover:opacity-95 hover:shadow-indigo-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-[#1C1B2E]">
                   <SparklesIcon className="h-5 w-5" />
                   Analyze & Create Prompts
                 </button>
@@ -230,7 +230,7 @@ const App: React.FC = () => {
           )}
 
           {step === 'prompts' && !isLoading && (
-            <div className="bg-gray-800 p-6 rounded-2xl shadow-2xl shadow-black/20 border border-gray-700 animate-[fadeIn_0.5s_ease-in-out]">
+            <div className="bg-[#1C1B2E] p-6 rounded-2xl shadow-2xl shadow-black/50 border border-slate-800 animate-[fadeIn_0.5s_ease-in-out]">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-200">Review & Edit Prompts</h2>
                     <button onClick={() => setStep('input')} className="text-sm font-semibold text-indigo-400 hover:text-indigo-300">&larr; Back to Editor</button>
@@ -239,12 +239,12 @@ const App: React.FC = () => {
                     {prompts.map((prompt, index) => (
                         <div key={imageTasks[index].id}>
                             <label htmlFor={`prompt-${index}`} className="block text-sm font-medium text-gray-400 mb-1">{imageTasks[index].title} ({imageTasks[index].aspectRatio})</label>
-                            <textarea id={`prompt-${index}`} value={prompt} onChange={(e) => handlePromptChange(index, e.target.value)} rows={4} className="w-full p-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 resize-y"/>
+                            <textarea id={`prompt-${index}`} value={prompt} onChange={(e) => handlePromptChange(index, e.target.value)} rows={4} className="w-full p-2 bg-[#11111B] border border-slate-700 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 resize-y"/>
                         </div>
                     ))}
                 </div>
-                <div className="mt-6 pt-6 border-t border-gray-700 text-center">
-                    <button onClick={handleGenerateImages} className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white bg-indigo-600 rounded-lg shadow-lg transition-colors duration-200 ease-in-out hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-900">
+                <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+                    <button onClick={handleGenerateImages} className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-lg transition-all duration-200 ease-in-out hover:opacity-95 hover:shadow-indigo-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-[#1C1B2E]">
                         <SparklesIcon className="h-5 w-5" />
                         Generate Images
                     </button>
