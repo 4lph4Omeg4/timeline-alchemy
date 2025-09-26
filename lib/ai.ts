@@ -1,13 +1,16 @@
 import OpenAI from 'openai'
 import { AIGenerateRequest, AIGenerateResponse } from '@/types/index'
 
-if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
-  throw new Error('NEXT_PUBLIC_OPENAI_API_KEY is not set')
+// Server-side OpenAI instance (only use in API routes)
+export const getOpenAI = () => {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not set')
+  }
+  
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
 }
-
-const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-})
 
 interface ComprehensiveContentRequest {
   prompt: string
@@ -56,6 +59,7 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
   }
 
   try {
+    const openai = getOpenAI()
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
@@ -99,6 +103,8 @@ export async function generateComprehensiveContent(request: ComprehensiveContent
   const { prompt, tone = 'professional', length = 'medium', platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok'] } = request
 
   try {
+    const openai = getOpenAI()
+    
     // Generate blog post with non-dual perspective
     const blogCompletion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -147,6 +153,7 @@ export async function generateComprehensiveContent(request: ComprehensiveContent
 
 async function generateSocialPosts(prompt: string, tone: string, platforms: string[]): Promise<any> {
   const socialPosts: any = {}
+  const openai = getOpenAI()
 
   for (const platform of platforms) {
     try {
@@ -232,6 +239,7 @@ function parseBlogContent(content: string): { title: string; content: string; ex
 
 export async function generateImage(prompt: string): Promise<string> {
   try {
+    const openai = getOpenAI()
     const response = await openai.images.generate({
       model: 'dall-e-3',
       prompt: `Professional, high-quality image: ${prompt}`,

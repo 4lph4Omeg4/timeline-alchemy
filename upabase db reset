@@ -1,0 +1,80 @@
+warning: in the working copy of 'app/dashboard/layout.tsx', CRLF will be replaced by LF the next time Git touches it
+[1mdiff --git a/app/dashboard/layout.tsx b/app/dashboard/layout.tsx[m
+[1mindex 898d4f9..6ddda18 100644[m
+[1m--- a/app/dashboard/layout.tsx[m
+[1m+++ b/app/dashboard/layout.tsx[m
+[36m@@ -21,6 +21,64 @@[m [mexport default function DashboardLayout({ children }: DashboardLayoutProps) {[m
+   const [loading, setLoading] = useState(true)[m
+   const router = useRouter()[m
+ [m
+[32m+[m[32m  const ensureAdminOrganization = async (userId: string) => {[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      // Check if admin already has an organization[m
+[32m+[m[32m      const { data: existingOrg } = await supabase[m
+[32m+[m[32m        .from('org_members')[m
+[32m+[m[32m        .select('org_id, organizations(*)')[m
+[32m+[m[32m        .eq('user_id', userId)[m
+[32m+[m[32m        .eq('role', 'owner')[m
+[32m+[m[32m        .single()[m
+[32m+[m
+[32m+[m[32m      if (existingOrg) {[m
+[32m+[m[32m        return // Admin already has an organization[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      // Create admin organization[m
+[32m+[m[32m      const { data: newOrg, error: orgError } = await supabase[m
+[32m+[m[32m        .from('organizations')[m
+[32m+[m[32m        .insert({[m
+[32m+[m[32m          name: 'Timeline Alchemy Admin',[m
+[32m+[m[32m          plan: 'enterprise'[m
+[32m+[m[32m        })[m
+[32m+[m[32m        .select()[m
+[32m+[m[32m        .single()[m
+[32m+[m
+[32m+[m[32m      if (orgError) {[m
+[32m+[m[32m        console.error('Error creating admin organization:', orgError)[m
+[32m+[m[32m        return[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      // Add admin as owner of the organization[m
+[32m+[m[32m      const { error: memberError } = await supabase[m
+[32m+[m[32m        .from('org_members')[m
+[32m+[m[32m        .insert({[m
+[32m+[m[32m          org_id: newOrg.id,[m
+[32m+[m[32m          user_id: userId,[m
+[32m+[m[32m          role: 'owner'[m
+[32m+[m[32m        })[m
+[32m+[m
+[32m+[m[32m      if (memberError) {[m
+[32m+[m[32m        console.error('Error adding admin to organization:', memberError)[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      // Create a subscription for the admin organization[m
+[32m+[m[32m      await supabase[m
+[32m+[m[32m        .from('subscriptions')[m
+[32m+[m[32m        .insert({[m
+[32m+[m[32m          org_id: newOrg.id,[m
+[32m+[m[32m          stripe_customer_id: 'admin-' + newOrg.id,[m
+[32m+[m[32m          stripe_subscription_id: 'admin-sub-' + newOrg.id,[m
+[32m+[m[32m          plan: 'enterprise',[m
+[32m+[m[32m          status: 'active'[m
+[32m+[m[32m        })[m
+[32m+[m
+[32m+[m[32m    } catch (error) {[m
+[32m+[m[32m      console.error('Error ensuring admin organization:', error)[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m
+   useEffect(() => {[m
+     const getUser = async () => {[m
+       const { data: { user } } = await supabase.auth.getUser()[m
+[36m@@ -43,6 +101,9 @@[m [mexport default function DashboardLayout({ children }: DashboardLayoutProps) {[m
+       setIsAdmin(isAdminUser)[m
+ [m
+       if (isAdminUser) {[m
+[32m+[m[32m        // Ensure admin has an organization[m
+[32m+[m[32m        await ensureAdminOrganization(user.id)[m
+[32m+[m
+         // For admin: fetch all active organizations[m
+         const { data: orgs, error: orgError } = await supabase[m
+           .from('organizations')[m
