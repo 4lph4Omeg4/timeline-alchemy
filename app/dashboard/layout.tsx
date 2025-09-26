@@ -21,6 +21,64 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  const ensureAdminOrganization = async (userId: string) => {
+    try {
+      // Check if admin already has an organization
+      const { data: existingOrg } = await supabase
+        .from('org_members')
+        .select('org_id, organizations(*)')
+        .eq('user_id', userId)
+        .eq('role', 'owner')
+        .single()
+
+      if (existingOrg) {
+        return // Admin already has an organization
+      }
+
+      // Create admin organization
+      const { data: newOrg, error: orgError } = await supabase
+        .from('organizations')
+        .insert({
+          name: 'Timeline Alchemy Admin',
+          plan: 'enterprise'
+        })
+        .select()
+        .single()
+
+      if (orgError) {
+        console.error('Error creating admin organization:', orgError)
+        return
+      }
+
+      // Add admin as owner of the organization
+      const { error: memberError } = await supabase
+        .from('org_members')
+        .insert({
+          org_id: newOrg.id,
+          user_id: userId,
+          role: 'owner'
+        })
+
+      if (memberError) {
+        console.error('Error adding admin to organization:', memberError)
+      }
+
+      // Create a subscription for the admin organization
+      await supabase
+        .from('subscriptions')
+        .insert({
+          org_id: newOrg.id,
+          stripe_customer_id: 'admin-' + newOrg.id,
+          stripe_subscription_id: 'admin-sub-' + newOrg.id,
+          plan: 'enterprise',
+          status: 'active'
+        })
+
+    } catch (error) {
+      console.error('Error ensuring admin organization:', error)
+    }
+  }
+
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -43,6 +101,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       setIsAdmin(isAdminUser)
 
       if (isAdminUser) {
+        // Ensure admin has an organization
+        await ensureAdminOrganization(user.id)
+
         // For admin: fetch all active organizations
         const { data: orgs, error: orgError } = await supabase
           .from('organizations')
