@@ -138,8 +138,8 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <SparklesIcon className="h-6 w-6 text-primary mr-2" />
-                AI Content Generation
+                <Logo size="sm" showText={false} />
+                <span className="ml-2">AI Content Generation</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -153,8 +153,8 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <SparklesIcon className="h-6 w-6 text-primary mr-2" />
-                Smart Scheduling
+                <Logo size="sm" showText={false} />
+                <span className="ml-2">Smart Scheduling</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -168,8 +168,8 @@ export default function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <SparklesIcon className="h-6 w-6 text-primary mr-2" />
-                Multi-Platform Publishing
+                <Logo size="sm" showText={false} />
+                <span className="ml-2">Multi-Platform Publishing</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
