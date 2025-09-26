@@ -50,6 +50,25 @@ export default function SignUpPage() {
 
       if (!response.ok) {
         toast.error(data.error || 'Failed to create account')
+      } else if (data.redirectToSignup) {
+        // Fall back to regular signup
+        toast.info('Creating account...')
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name,
+            },
+          },
+        })
+
+        if (error) {
+          toast.error(error.message)
+        } else {
+          toast.success('Account created successfully! Please check your email to confirm your account.')
+          router.push('/auth/signin')
+        }
       } else {
         toast.success('Account and organization created successfully! Please check your email to confirm your account.')
         router.push('/auth/signin')

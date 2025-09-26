@@ -137,7 +137,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           setClients(clientsData)
         }
       } else {
-        // For regular users: fetch their organizations
+        // For regular users: check if they have an organization, create one if not
         const { data: orgs, error } = await supabase
           .from('org_members')
           .select(`
@@ -146,8 +146,31 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           `)
           .eq('user_id', user.id)
 
-        if (orgs) {
+        if (orgs && orgs.length > 0) {
           setOrganizations(orgs.map((org: any) => org.organizations))
+        } else {
+          // User doesn't have an organization, create one
+          try {
+            const response = await fetch('/api/create-organization', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                userName: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+              }),
+            })
+
+            if (response.ok) {
+              const data = await response.json()
+              setOrganizations([data.organization])
+            } else {
+              console.error('Failed to create organization for user')
+            }
+          } catch (error) {
+            console.error('Error creating organization:', error)
+          }
         }
       }
 
