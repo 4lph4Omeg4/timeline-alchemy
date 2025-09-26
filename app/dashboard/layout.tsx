@@ -79,9 +79,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -92,25 +92,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             <nav className="hidden md:flex space-x-8">
-              <Link href="/dashboard" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard" className="text-gray-300 hover:text-yellow-400">
                 Dashboard
               </Link>
-              <Link href="/dashboard/content" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard/content" className="text-gray-300 hover:text-yellow-400">
                 Content
               </Link>
-              <Link href="/dashboard/schedule" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard/schedule" className="text-gray-300 hover:text-yellow-400">
                 Schedule
               </Link>
-              <Link href="/dashboard/socials" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard/socials" className="text-gray-300 hover:text-yellow-400">
                 Socials
               </Link>
-              <Link href="/dashboard/billing" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard/billing" className="text-gray-300 hover:text-yellow-400">
                 Billing
               </Link>
             </nav>
 
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-300">
                 {user?.name || user?.email}
               </div>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
@@ -123,17 +123,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar */}
       <div className="flex">
-        <aside className="w-64 bg-white shadow-sm min-h-screen">
+        <aside className="w-64 bg-gray-800 shadow-sm min-h-screen border-r border-gray-700">
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Organizations</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Organizations</h3>
             <div className="space-y-2">
               {organizations.map((org) => (
                 <div
                   key={org.id}
-                  className="p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer"
+                  className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
                 >
-                  <div className="font-medium text-gray-900">{org.name}</div>
-                  <div className="text-sm text-gray-500 capitalize">{org.plan}</div>
+                  <div className="font-medium text-white">{org.name}</div>
+                  <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
                 </div>
               ))}
             </div>
