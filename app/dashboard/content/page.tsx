@@ -105,7 +105,7 @@ export default function ContentPage() {
         .single()
 
       if (!orgMember) {
-        showToast('No organization found. Please create an organization first.', 'error')
+        router.push('/create-organization')
         return
       }
 
