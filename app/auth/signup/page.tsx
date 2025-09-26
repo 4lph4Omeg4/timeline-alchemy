@@ -65,21 +65,21 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Logo size="lg" showText={false} />
           </div>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl text-white">Create your account</CardTitle>
+          <CardDescription className="text-gray-300">
             Start your journey with Timeline Alchemy
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="text-gray-300">Full Name</Label>
               <Input
                 id="name"
                 type="text"
@@ -90,7 +90,7 @@ export default function SignUpPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -143,11 +143,11 @@ export default function SignUpPage() {
             Google
           </Button>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-sm text-gray-300">
             Already have an account?{' '}
             <button
               onClick={() => router.push('/auth/signin')}
-              className="text-primary hover:underline"
+              className="text-yellow-400 hover:underline"
             >
               Sign in
             </button>
