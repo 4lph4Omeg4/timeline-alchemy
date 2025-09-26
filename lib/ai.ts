@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { AIGenerateRequest, AIGenerateResponse } from '@/types'
+import { AIGenerateRequest, AIGenerateResponse } from '@/types/index'
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY is not set')

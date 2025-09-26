@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { STRIPE_PLANS, PlanType } from '@/lib/stripe'
-import { Subscription } from '@/types'
+import { Subscription } from '@/types/index'
 import toast from 'react-hot-toast'
 
 export default function BillingPage() {
