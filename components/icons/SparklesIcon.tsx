@@ -16,4 +16,4 @@ const SparklesIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-export default SparklesIcon;
+export { SparklesIcon };
