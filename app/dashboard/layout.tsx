@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { User, Organization } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SparklesIcon } from '@/components/icons/SparklesIcon'
+import { Logo } from '@/components/Logo'
 import Link from 'next/link'
 
 interface DashboardLayoutProps {
@@ -85,9 +85,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center space-x-2">
-                <SparklesIcon className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold text-gray-900">Timeline Alchemy</span>
+              <Link href="/dashboard" className="flex items-center">
+                <Logo size="md" showText={false} />
               </Link>
             </div>
 

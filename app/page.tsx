@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { User } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SparklesIcon } from '@/components/icons/SparklesIcon'
+import { Logo } from '@/components/Logo'
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
@@ -76,9 +76,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-12">
             <div className="flex justify-center mb-6">
-              <div className="bg-primary rounded-full p-4">
-                <SparklesIcon className="h-12 w-12 text-white" />
-              </div>
+              <Logo size="xl" showText={false} />
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Welcome back, {user.name}!
@@ -101,10 +99,7 @@ export default function HomePage() {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <SparklesIcon className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-gray-900">Timeline Alchemy</span>
-            </div>
+            <Logo size="md" showText={false} />
             <div className="flex space-x-4">
               <Button variant="outline" onClick={handleSignIn}>
                 Sign In

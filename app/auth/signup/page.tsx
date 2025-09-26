@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SparklesIcon } from '@/components/icons/SparklesIcon'
+import { Logo } from '@/components/Logo'
 import toast from 'react-hot-toast'
 
 export default function SignUpPage() {
@@ -69,7 +69,7 @@ export default function SignUpPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <SparklesIcon className="h-12 w-12 text-primary" />
+            <Logo size="lg" showText={false} />
           </div>
           <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>
