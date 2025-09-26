@@ -7,35 +7,71 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SparklesIcon } from '@/components/icons/SparklesIcon'
+import { Logo } from '@/components/Logo'
 import toast from 'react-hot-toast'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password: Math.random().toString(36).slice(-8), // Temporary password
-        options: {
-          data: {
-            name,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+        }),
       })
 
-      if (error) {
-        toast.error(error.message)
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to create account')
+      } else if (data.redirectToSignup) {
+        // Fall back to regular signup
+        toast.loading('Creating account...')
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name,
+            },
+          },
+        })
+
+        if (error) {
+          toast.error(error.message)
+        } else {
+          toast.success('Account created successfully! Please check your email to confirm your account.')
+          router.push('/auth/signin')
+        }
       } else {
-        toast.success('Check your email for the confirmation link!')
+        toast.success('Account and organization created successfully! Please check your email to confirm your account.')
+        router.push('/auth/signin')
       }
     } catch (error) {
       toast.error('An unexpected error occurred')
@@ -65,21 +101,21 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <SparklesIcon className="h-12 w-12 text-primary" />
+            <Logo size="lg" showText={false} />
           </div>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl text-white">Create your account</CardTitle>
+          <CardDescription className="text-gray-300">
             Start your journey with Timeline Alchemy
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="text-gray-300">Full Name</Label>
               <Input
                 id="name"
                 type="text"
@@ -90,7 +126,7 @@ export default function SignUpPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -100,8 +136,30 @@ export default function SignUpPage() {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-300">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password (min 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-gray-300">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Account'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 
@@ -143,11 +201,11 @@ export default function SignUpPage() {
             Google
           </Button>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-sm text-gray-300">
             Already have an account?{' '}
             <button
               onClick={() => router.push('/auth/signin')}
-              className="text-primary hover:underline"
+              className="text-yellow-400 hover:underline"
             >
               Sign in
             </button>

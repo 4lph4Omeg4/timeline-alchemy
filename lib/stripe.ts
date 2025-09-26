@@ -1,52 +1,52 @@
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
+// Server-side Stripe instance (only use in API routes)
+export const getStripe = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not set')
+  }
+  
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2023-10-16',
+  })
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-})
-
+// Client-safe Stripe plans configuration
 export const STRIPE_PLANS = {
   basic: {
     name: 'Basic',
-    price: 29,
+    price: 129,
     features: [
-      '5 AI posts per month',
       '1 organization',
-      '2 social accounts',
+      '4x Blog + crossplatform social links (set per week)',
       'Basic scheduling',
     ],
     limits: {
-      postsPerMonth: 5,
+      postsPerMonth: 16, // 4 per week
       organizations: 1,
-      socialAccounts: 2,
+      socialAccounts: 5,
     },
   },
   pro: {
     name: 'Pro',
-    price: 99,
+    price: 249,
     features: [
-      '50 AI posts per month',
-      '3 organizations',
-      '10 social accounts',
+      '1 organization',
+      '8x Blog + crossplatform social links (2x set per week)',
       'Advanced scheduling',
       'Analytics dashboard',
     ],
     limits: {
-      postsPerMonth: 50,
-      organizations: 3,
+      postsPerMonth: 32, // 8 per week
+      organizations: 1,
       socialAccounts: 10,
     },
   },
   enterprise: {
     name: 'Enterprise',
-    price: 299,
+    price: 499,
     features: [
       'Unlimited AI posts',
-      'Unlimited organizations',
-      'Unlimited social accounts',
       'Priority support',
       'Custom integrations',
     ],
@@ -61,6 +61,7 @@ export const STRIPE_PLANS = {
 export type PlanType = keyof typeof STRIPE_PLANS
 
 export async function createStripeCustomer(email: string, name: string) {
+  const stripe = getStripe()
   return await stripe.customers.create({
     email,
     name,
@@ -71,6 +72,7 @@ export async function createStripeSubscription(
   customerId: string,
   priceId: string
 ) {
+  const stripe = getStripe()
   return await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
@@ -86,6 +88,7 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ) {
+  const stripe = getStripe()
   return await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ['card'],

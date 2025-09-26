@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { User, Organization } from '@/types'
+import { User, Organization, Client } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SparklesIcon } from '@/components/icons/SparklesIcon'
+import { Logo } from '@/components/Logo'
 import Link from 'next/link'
 
 interface DashboardLayoutProps {
@@ -16,8 +16,72 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [user, setUser] = useState<User | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+
+  const ensureAdminOrganization = async (userId: string) => {
+    try {
+      // Check if admin already has an organization
+      const { data: existingOrg, error: checkError } = await supabase
+        .from('org_members')
+        .select('org_id, organizations(*)')
+        .eq('user_id', userId)
+        .eq('role', 'owner')
+        .single()
+
+      if (existingOrg) {
+        console.log('Admin already has organization:', existingOrg.organizations)
+        return // Admin already has an organization
+      }
+
+      // Only create if no organization exists
+      console.log('Creating admin organization...')
+      
+      // Create admin organization
+      const { data: newOrg, error: orgError } = await supabase
+        .from('organizations')
+        .insert({
+          name: 'Timeline Alchemy Admin',
+          plan: 'enterprise'
+        })
+        .select()
+        .single()
+
+      if (orgError) {
+        console.error('Error creating admin organization:', orgError)
+        return
+      }
+
+      // Add admin as owner of the organization
+      const { error: memberError } = await supabase
+        .from('org_members')
+        .insert({
+          org_id: newOrg.id,
+          user_id: userId,
+          role: 'owner'
+        })
+
+      if (memberError) {
+        console.error('Error adding admin to organization:', memberError)
+      }
+
+      // Create a subscription for the admin organization
+      await supabase
+        .from('subscriptions')
+        .insert({
+          org_id: newOrg.id,
+          stripe_customer_id: 'admin-' + newOrg.id,
+          stripe_subscription_id: 'admin-sub-' + newOrg.id,
+          plan: 'enterprise',
+          status: 'active'
+        })
+
+    } catch (error) {
+      console.error('Error ensuring admin organization:', error)
+    }
+  }
 
   useEffect(() => {
     const getUser = async () => {
@@ -36,17 +100,112 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         created_at: user.created_at,
       })
 
-      // Fetch user's organizations
-      const { data: orgs, error } = await supabase
-        .from('org_members')
-        .select(`
-          *,
-          organizations (*)
-        `)
-        .eq('user_id', user.id)
+      // Check if user is admin (sh4m4ni4k@sh4m4ni4k.nl)
+      const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
+      setIsAdmin(isAdminUser)
 
-      if (orgs) {
-        setOrganizations(orgs.map((org: any) => org.organizations))
+      if (isAdminUser) {
+        // Ensure admin has an organization
+        await ensureAdminOrganization(user.id)
+
+        // For admin: fetch all active organizations
+        const { data: orgs, error: orgError } = await supabase
+          .from('organizations')
+          .select(`
+            *,
+            subscriptions!inner(status)
+          `)
+          .eq('subscriptions.status', 'active')
+          .order('created_at', { ascending: false })
+
+        console.log('Admin organizations query result:', { orgs, orgError })
+
+        if (orgs) {
+          setOrganizations(orgs)
+        }
+
+        // For admin: fetch all active clients
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('clients')
+          .select(`
+            *,
+            organizations(name, plan)
+          `)
+          .order('created_at', { ascending: false })
+
+        if (clientsData) {
+          setClients(clientsData)
+        }
+      } else {
+        // For regular users: check if they have an organization, create one if not
+        const { data: orgs, error } = await supabase
+          .from('org_members')
+          .select(`
+            *,
+            organizations (*)
+          `)
+          .eq('user_id', user.id)
+
+        if (orgs && orgs.length > 0) {
+          setOrganizations(orgs.map((org: any) => org.organizations))
+        } else {
+          // User doesn't have an organization, create one directly
+          try {
+            console.log('Creating organization for user:', user.id)
+            
+            // Create organization
+            const { data: orgData, error: orgError } = await supabase
+              .from('organizations')
+              .insert({
+                name: `${user.user_metadata?.name || user.email?.split('@')[0] || 'User'}'s Organization`,
+                plan: 'basic'
+              })
+              .select()
+              .single()
+
+            if (orgError) {
+              console.error('Error creating organization:', orgError)
+            } else {
+              console.log('Organization created:', orgData)
+              
+              // Add user as owner
+              const { error: memberError } = await supabase
+                .from('org_members')
+                .insert({
+                  org_id: orgData.id,
+                  user_id: user.id,
+                  role: 'owner'
+                })
+
+              if (memberError) {
+                console.error('Error adding user to organization:', memberError)
+              } else {
+                console.log('User added to organization')
+                
+                // Create subscription
+                const { error: subError } = await supabase
+                  .from('subscriptions')
+                  .insert({
+                    org_id: orgData.id,
+                    stripe_customer_id: 'temp-' + orgData.id,
+                    stripe_subscription_id: 'temp-sub-' + orgData.id,
+                    plan: 'basic',
+                    status: 'active'
+                  })
+
+                if (subError) {
+                  console.error('Error creating subscription:', subError)
+                } else {
+                  console.log('Subscription created')
+                }
+                
+                setOrganizations([orgData])
+              }
+            }
+          } catch (error) {
+            console.error('Error creating organization:', error)
+          }
+        }
       }
 
       setLoading(false)
@@ -79,39 +238,44 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center space-x-2">
-                <SparklesIcon className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold text-gray-900">Timeline Alchemy</span>
+              <Link href="/dashboard" className="flex items-center">
+                <Logo size="md" showText={false} />
+                <span className="ml-3 text-xl font-bold text-gray-900 dark:text-white">Timeline Alchemy</span>
               </Link>
             </div>
 
             <nav className="hidden md:flex space-x-8">
-              <Link href="/dashboard" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard" className="text-gray-300 hover:text-yellow-400">
                 Dashboard
               </Link>
-              <Link href="/dashboard/content" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard/content" className="text-gray-300 hover:text-yellow-400">
                 Content
               </Link>
-              <Link href="/dashboard/schedule" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard/schedule" className="text-gray-300 hover:text-yellow-400">
                 Schedule
               </Link>
-              <Link href="/dashboard/socials" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard/socials" className="text-gray-300 hover:text-yellow-400">
                 Socials
               </Link>
-              <Link href="/dashboard/billing" className="text-gray-700 hover:text-primary">
+              <Link href="/dashboard/billing" className="text-gray-300 hover:text-yellow-400">
                 Billing
               </Link>
             </nav>
 
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-300">
                 {user?.name || user?.email}
+                {isAdmin && (
+                  <span className="ml-2 px-2 py-1 text-xs bg-yellow-600 text-yellow-100 rounded-full">
+                    ADMIN
+                  </span>
+                )}
               </div>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sign Out
@@ -123,20 +287,58 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar */}
       <div className="flex">
-        <aside className="w-64 bg-white shadow-sm min-h-screen">
+        <aside className="w-64 bg-gray-800 shadow-sm min-h-screen border-r border-gray-700">
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Organizations</h3>
-            <div className="space-y-2">
-              {organizations.map((org) => (
-                <div
-                  key={org.id}
-                  className="p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer"
-                >
-                  <div className="font-medium text-gray-900">{org.name}</div>
-                  <div className="text-sm text-gray-500 capitalize">{org.plan}</div>
+            {isAdmin ? (
+              <>
+                <h3 className="text-lg font-semibold text-white mb-4">Active Organizations</h3>
+                <div className="space-y-2 mb-6">
+                  {organizations.map((org) => (
+                    <div
+                      key={org.id}
+                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                    >
+                      <div className="font-medium text-white">{org.name}</div>
+                      <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
+                      <div className="text-xs text-green-400">Active</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                
+                <h3 className="text-lg font-semibold text-white mb-4">Active Clients</h3>
+                <div className="space-y-2">
+                  {clients.map((client) => (
+                    <div
+                      key={client.id}
+                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                    >
+                      <div className="font-medium text-white">{client.name}</div>
+                      <div className="text-sm text-gray-400">
+                        {client.contact_info?.email || 'No email'}
+                      </div>
+                      <div className="text-xs text-blue-400">
+                        {client.organizations?.name || 'Unknown Org'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-semibold text-white mb-4">My Organizations</h3>
+                <div className="space-y-2">
+                  {organizations.map((org) => (
+                    <div
+                      key={org.id}
+                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                    >
+                      <div className="font-medium text-white">{org.name}</div>
+                      <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </aside>
 

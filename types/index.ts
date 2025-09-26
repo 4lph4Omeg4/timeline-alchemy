@@ -65,6 +65,10 @@ export interface Client {
   contact_info?: Record<string, any>
   created_at: string
   updated_at: string
+  organizations?: {
+    name: string
+    plan: string
+  }
 }
 
 export interface Image {

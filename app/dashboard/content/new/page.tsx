@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { generateContent, generateImage } from '@/lib/ai'
-import { AIGenerateRequest } from '@/types'
+import { AIGenerateRequest } from '@/types/index'
 import toast from 'react-hot-toast'
 
 export default function ContentEditorPage() {
