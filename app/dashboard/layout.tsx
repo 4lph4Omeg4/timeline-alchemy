@@ -149,24 +149,58 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         if (orgs && orgs.length > 0) {
           setOrganizations(orgs.map((org: any) => org.organizations))
         } else {
-          // User doesn't have an organization, create one
+          // User doesn't have an organization, create one directly
           try {
-            const response = await fetch('/api/create-organization', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                userId: user.id,
-                userName: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-              }),
-            })
+            console.log('Creating organization for user:', user.id)
+            
+            // Create organization
+            const { data: orgData, error: orgError } = await supabase
+              .from('organizations')
+              .insert({
+                name: `${user.user_metadata?.name || user.email?.split('@')[0] || 'User'}'s Organization`,
+                plan: 'basic'
+              })
+              .select()
+              .single()
 
-            if (response.ok) {
-              const data = await response.json()
-              setOrganizations([data.organization])
+            if (orgError) {
+              console.error('Error creating organization:', orgError)
             } else {
-              console.error('Failed to create organization for user')
+              console.log('Organization created:', orgData)
+              
+              // Add user as owner
+              const { error: memberError } = await supabase
+                .from('org_members')
+                .insert({
+                  org_id: orgData.id,
+                  user_id: user.id,
+                  role: 'owner'
+                })
+
+              if (memberError) {
+                console.error('Error adding user to organization:', memberError)
+              } else {
+                console.log('User added to organization')
+                
+                // Create subscription
+                const { error: subError } = await supabase
+                  .from('subscriptions')
+                  .insert({
+                    org_id: orgData.id,
+                    stripe_customer_id: 'temp-' + orgData.id,
+                    stripe_subscription_id: 'temp-sub-' + orgData.id,
+                    plan: 'basic',
+                    status: 'active'
+                  })
+
+                if (subError) {
+                  console.error('Error creating subscription:', subError)
+                } else {
+                  console.log('Subscription created')
+                }
+                
+                setOrganizations([orgData])
+              }
             }
           } catch (error) {
             console.error('Error creating organization:', error)
