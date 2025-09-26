@@ -187,47 +187,43 @@ export default function HomePage() {
             Simple, Transparent Pricing
           </h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card>
+            <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
-                <CardTitle>Basic</CardTitle>
-                <div className="text-3xl font-bold text-primary">$29<span className="text-lg text-gray-500">/month</span></div>
+                <CardTitle className="text-white">Basic</CardTitle>
+                <div className="text-3xl font-bold text-yellow-400">$129<span className="text-lg text-gray-400">/month</span></div>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-left">
-                  <li>✓ 5 AI posts per month</li>
+                <ul className="space-y-2 text-left text-gray-300">
                   <li>✓ 1 organization</li>
-                  <li>✓ 2 social accounts</li>
+                  <li>✓ 4x Blog + crossplatform social links (set per week)</li>
                   <li>✓ Basic scheduling</li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="border-primary border-2">
+            <Card className="border-yellow-400 border-2 bg-gray-800 border-gray-700">
               <CardHeader>
-                <CardTitle>Pro</CardTitle>
-                <div className="text-3xl font-bold text-primary">$99<span className="text-lg text-gray-500">/month</span></div>
+                <CardTitle className="text-white">Pro</CardTitle>
+                <div className="text-3xl font-bold text-yellow-400">$249<span className="text-lg text-gray-400">/month</span></div>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-left">
-                  <li>✓ 50 AI posts per month</li>
-                  <li>✓ 3 organizations</li>
-                  <li>✓ 10 social accounts</li>
+                <ul className="space-y-2 text-left text-gray-300">
+                  <li>✓ 1 organization</li>
+                  <li>✓ 8x Blog + crossplatform social links (2x set per week)</li>
                   <li>✓ Advanced scheduling</li>
                   <li>✓ Analytics dashboard</li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
-                <CardTitle>Enterprise</CardTitle>
-                <div className="text-3xl font-bold text-primary">$299<span className="text-lg text-gray-500">/month</span></div>
+                <CardTitle className="text-white">Enterprise</CardTitle>
+                <div className="text-3xl font-bold text-yellow-400">$499<span className="text-lg text-gray-400">/month</span></div>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-left">
+                <ul className="space-y-2 text-left text-gray-300">
                   <li>✓ Unlimited AI posts</li>
-                  <li>✓ Unlimited organizations</li>
-                  <li>✓ Unlimited social accounts</li>
                   <li>✓ Priority support</li>
                   <li>✓ Custom integrations</li>
                 </ul>

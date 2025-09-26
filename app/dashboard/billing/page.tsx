@@ -218,16 +218,16 @@ export default function BillingPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">5</div>
-              <div className="text-sm text-gray-600">AI Posts Generated</div>
-              <div className="text-xs text-gray-500">
-                {subscription ? 
-                  `${STRIPE_PLANS[subscription.plan].limits.postsPerMonth === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan].limits.postsPerMonth} limit` :
-                  '5 limit'
-                }
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">16</div>
+                <div className="text-sm text-gray-600">AI Posts Generated</div>
+                <div className="text-xs text-gray-500">
+                  {subscription ? 
+                    `${STRIPE_PLANS[subscription.plan].limits.postsPerMonth === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan].limits.postsPerMonth} limit` :
+                    '16 limit'
+                  }
+                </div>
               </div>
-            </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">1</div>
               <div className="text-sm text-gray-600">Organizations</div>
