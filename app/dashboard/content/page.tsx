@@ -14,7 +14,6 @@ import { generateComprehensiveContent } from '@/lib/ai'
 import { supabase } from '@/lib/supabase'
 import { BlogPost } from '@/types/index'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 
 interface GeneratedContent {
   blogPost: {
@@ -43,11 +42,17 @@ export default function ContentPage() {
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
   const router = useRouter()
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage(message)
+    setTimeout(() => setToastMessage(''), 3000)
+  }
 
   const handleGenerate = async () => {
     if (!idea.trim()) {
-      toast.error('Please enter an idea for your content')
+      showToast('Please enter an idea for your content', 'error')
       return
     }
 
@@ -61,10 +66,10 @@ export default function ContentPage() {
       })
 
       setGeneratedContent(content)
-      toast.success('Content generated successfully!')
+      showToast('Content generated successfully!')
     } catch (error) {
       console.error('Error generating content:', error)
-      toast.error('Failed to generate content. Please try again.')
+      showToast('Failed to generate content. Please try again.', 'error')
     } finally {
       setIsGenerating(false)
     }
@@ -77,7 +82,7 @@ export default function ContentPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        toast.error('Please sign in to save content')
+        showToast('Please sign in to save content', 'error')
         return
       }
 
@@ -90,7 +95,7 @@ export default function ContentPage() {
         .single()
 
       if (!orgMember) {
-        toast.error('No organization found. Please create an organization first.')
+        showToast('No organization found. Please create an organization first.', 'error')
         return
       }
 
@@ -121,11 +126,11 @@ export default function ContentPage() {
           })
       }
 
-      toast.success('Content saved successfully!')
+      showToast('Content saved successfully!')
       router.push(`/dashboard/content/${blogPost.id}`)
     } catch (error) {
       console.error('Error saving content:', error)
-      toast.error('Failed to save content. Please try again.')
+      showToast('Failed to save content. Please try again.', 'error')
     } finally {
       setIsSaving(false)
     }
@@ -133,6 +138,13 @@ export default function ContentPage() {
 
   return (
     <div className="space-y-6">
+      {/* Toast Message */}
+      {toastMessage && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          {toastMessage}
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">AI Content Creator</h1>
