@@ -78,7 +78,7 @@ export async function generateImage(prompt: string): Promise<string> {
       quality: 'standard',
     })
 
-    return response.data[0]?.url || ''
+    return response.data?.[0]?.url || ''
   } catch (error) {
     console.error('Error generating image:', error)
     throw new Error('Failed to generate image')
