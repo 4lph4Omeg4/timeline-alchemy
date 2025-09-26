@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const ensureAdminOrganization = async (userId: string) => {
     try {
       // Check if admin already has an organization
-      const { data: existingOrg } = await supabase
+      const { data: existingOrg, error: checkError } = await supabase
         .from('org_members')
         .select('org_id, organizations(*)')
         .eq('user_id', userId)
@@ -32,9 +32,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         .single()
 
       if (existingOrg) {
+        console.log('Admin already has organization:', existingOrg.organizations)
         return // Admin already has an organization
       }
 
+      // Only create if no organization exists
+      console.log('Creating admin organization...')
+      
       // Create admin organization
       const { data: newOrg, error: orgError } = await supabase
         .from('organizations')
@@ -113,6 +117,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           `)
           .eq('subscriptions.status', 'active')
           .order('created_at', { ascending: false })
+
+        console.log('Admin organizations query result:', { orgs, orgError })
 
         if (orgs) {
           setOrganizations(orgs)
