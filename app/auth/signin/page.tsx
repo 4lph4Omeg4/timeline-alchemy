@@ -12,6 +12,7 @@ import toast from 'react-hot-toast'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -20,17 +21,16 @@ export default function SignInPage() {
     setLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        password,
       })
 
       if (error) {
         toast.error(error.message)
       } else {
-        toast.success('Check your email for the login link!')
+        toast.success('Welcome back!')
+        router.push('/dashboard')
       }
     } catch (error) {
       toast.error('An unexpected error occurred')
@@ -84,8 +84,19 @@ export default function SignInPage() {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-300">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Sending...' : 'Send Magic Link'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 

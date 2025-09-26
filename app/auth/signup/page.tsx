@@ -12,30 +12,43 @@ import toast from 'react-hot-toast'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
     setLoading(true)
 
     try {
       const { error } = await supabase.auth.signUp({
         email,
-        password: Math.random().toString(36).slice(-8), // Temporary password
+        password,
         options: {
           data: {
             name,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
       if (error) {
         toast.error(error.message)
       } else {
-        toast.success('Check your email for the confirmation link!')
+        toast.success('Account created successfully! Please check your email to confirm your account.')
+        router.push('/auth/signin')
       }
     } catch (error) {
       toast.error('An unexpected error occurred')
@@ -100,8 +113,30 @@ export default function SignUpPage() {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-300">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password (min 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-gray-300">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Account'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 
