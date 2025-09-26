@@ -1,12 +1,12 @@
 import OpenAI from 'openai'
 import { AIGenerateRequest, AIGenerateResponse } from '@/types/index'
 
-if (!process.env.NEXT_OPENAI_API_KEY) {
-  throw new Error('NEXT_OPENAI_API_KEY is not set')
+if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
+  throw new Error('NEXT_PUBLIC_OPENAI_API_KEY is not set')
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.NEXT_OPENAI_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 })
 
 interface ComprehensiveContentRequest {
