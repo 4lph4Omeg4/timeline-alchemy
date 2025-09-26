@@ -94,7 +94,7 @@ function generateHashtags(prompt: string, platform?: string): string[] {
   
   // Add platform-specific hashtags
   if (platform) {
-    const platformTags = {
+    const platformTags: Record<string, string[]> = {
       twitter: ['#Twitter', '#SocialMedia'],
       linkedin: ['#LinkedIn', '#Professional'],
       instagram: ['#Instagram', '#Visual'],
