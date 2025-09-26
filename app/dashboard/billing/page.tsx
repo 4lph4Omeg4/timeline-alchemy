@@ -101,34 +101,34 @@ export default function BillingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-3xl font-bold text-white">Billing & Subscription</h1>
+        <p className="text-gray-300 mt-2">
           Manage your subscription and billing information
         </p>
       </div>
 
       {/* Current Plan */}
       {subscription && (
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle>Current Plan</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Current Plan</CardTitle>
+            <CardDescription className="text-gray-300">
               Your current subscription details
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold text-white">
                   {STRIPE_PLANS[subscription.plan].name}
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-300">
                   ${STRIPE_PLANS[subscription.plan].price}/month
                 </p>
                 <p className={`text-sm ${
-                  subscription.status === 'active' ? 'text-green-600' :
-                  subscription.status === 'canceled' ? 'text-red-600' :
-                  'text-yellow-600'
+                  subscription.status === 'active' ? 'text-green-400' :
+                  subscription.status === 'canceled' ? 'text-red-400' :
+                  'text-yellow-400'
                 }`}>
                   Status: {subscription.status}
                 </p>
@@ -149,10 +149,10 @@ export default function BillingPage() {
       )}
 
       {/* Available Plans */}
-      <Card>
+      <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle>Available Plans</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-white">Available Plans</CardTitle>
+          <CardDescription className="text-gray-300">
             Choose the plan that best fits your needs
           </CardDescription>
         </CardHeader>
@@ -169,22 +169,22 @@ export default function BillingPage() {
               return (
                 <div
                   key={planKey}
-                  className={`border rounded-lg p-6 ${
-                    planKey === 'pro' ? 'border-primary border-2' : ''
+                  className={`border rounded-lg p-6 bg-gray-700 ${
+                    planKey === 'pro' ? 'border-yellow-400 border-2' : 'border-gray-600'
                   }`}
                 >
                   <div className="text-center">
-                    <h3 className="text-lg font-semibold">{plan.name}</h3>
-                    <div className="text-3xl font-bold text-primary mt-2">
+                    <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
+                    <div className="text-3xl font-bold text-yellow-400 mt-2">
                       ${plan.price}
-                      <span className="text-lg text-gray-500">/month</span>
+                      <span className="text-lg text-gray-400">/month</span>
                     </div>
                   </div>
                   
                   <ul className="mt-6 space-y-2">
                     {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center text-sm">
-                        <span className="text-green-500 mr-2">✓</span>
+                      <li key={index} className="flex items-center text-sm text-gray-300">
+                        <span className="text-green-400 mr-2">✓</span>
                         {feature}
                       </li>
                     ))}
@@ -209,19 +209,19 @@ export default function BillingPage() {
       </Card>
 
       {/* Usage Stats */}
-      <Card>
+      <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle>Usage This Month</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-white">Usage This Month</CardTitle>
+          <CardDescription className="text-gray-300">
             Track your current usage against plan limits
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">16</div>
-                <div className="text-sm text-gray-600">AI Posts Generated</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-2xl font-bold text-yellow-400">16</div>
+                <div className="text-sm text-gray-300">AI Posts Generated</div>
+                <div className="text-xs text-gray-400">
                   {subscription ? 
                     `${STRIPE_PLANS[subscription.plan].limits.postsPerMonth === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan].limits.postsPerMonth} limit` :
                     '16 limit'
@@ -229,9 +229,9 @@ export default function BillingPage() {
                 </div>
               </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">1</div>
-              <div className="text-sm text-gray-600">Organizations</div>
-              <div className="text-xs text-gray-500">
+              <div className="text-2xl font-bold text-yellow-400">1</div>
+              <div className="text-sm text-gray-300">Organizations</div>
+              <div className="text-xs text-gray-400">
                 {subscription ? 
                   `${STRIPE_PLANS[subscription.plan].limits.organizations === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan].limits.organizations} limit` :
                   '1 limit'
@@ -239,9 +239,9 @@ export default function BillingPage() {
               </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">2</div>
-              <div className="text-sm text-gray-600">Social Accounts</div>
-              <div className="text-xs text-gray-500">
+              <div className="text-2xl font-bold text-yellow-400">2</div>
+              <div className="text-sm text-gray-300">Social Accounts</div>
+              <div className="text-xs text-gray-400">
                 {subscription ? 
                   `${STRIPE_PLANS[subscription.plan].limits.socialAccounts === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan].limits.socialAccounts} limit` :
                   '2 limit'
@@ -253,17 +253,17 @@ export default function BillingPage() {
       </Card>
 
       {/* Billing History */}
-      <Card>
+      <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle>Billing History</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-white">Billing History</CardTitle>
+          <CardDescription className="text-gray-300">
             View your past invoices and payments
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">No billing history yet</p>
-            <p className="text-sm text-gray-400">
+            <p className="text-gray-400 mb-4">No billing history yet</p>
+            <p className="text-sm text-gray-500">
               Your invoices and payment history will appear here
             </p>
           </div>

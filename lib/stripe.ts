@@ -1,13 +1,17 @@
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
+// Server-side Stripe instance (only use in API routes)
+export const getStripe = () => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not set')
+  }
+  
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2023-10-16',
+  })
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-})
-
+// Client-safe Stripe plans configuration
 export const STRIPE_PLANS = {
   basic: {
     name: 'Basic',
@@ -57,6 +61,7 @@ export const STRIPE_PLANS = {
 export type PlanType = keyof typeof STRIPE_PLANS
 
 export async function createStripeCustomer(email: string, name: string) {
+  const stripe = getStripe()
   return await stripe.customers.create({
     email,
     name,
@@ -67,6 +72,7 @@ export async function createStripeSubscription(
   customerId: string,
   priceId: string
 ) {
+  const stripe = getStripe()
   return await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
@@ -82,6 +88,7 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ) {
+  const stripe = getStripe()
   return await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ['card'],
