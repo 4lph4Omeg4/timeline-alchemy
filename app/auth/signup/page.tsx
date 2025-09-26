@@ -52,7 +52,7 @@ export default function SignUpPage() {
         toast.error(data.error || 'Failed to create account')
       } else if (data.redirectToSignup) {
         // Fall back to regular signup
-        toast.info('Creating account...')
+        toast.loading('Creating account...')
         const { error } = await supabase.auth.signUp({
           email,
           password,
