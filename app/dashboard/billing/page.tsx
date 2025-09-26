@@ -50,27 +50,33 @@ export default function BillingPage() {
 
   const handleUpgrade = async (plan: PlanType) => {
     try {
-      // In a real implementation, this would redirect to Stripe Checkout
-      toast.success(`Redirecting to upgrade to ${STRIPE_PLANS[plan].name}...`)
+      if (!subscription) {
+        toast.error('No subscription found. Please contact support.')
+        return
+      }
+
+      toast.success(`Upgrading to ${STRIPE_PLANS[plan].name}...`)
       
-      // Simulate upgrade
-      setTimeout(() => {
-        const mockSubscription = {
-          id: Math.random().toString(36).substr(2, 9),
-          org_id: 'mock-org-id',
-          stripe_customer_id: 'mock-customer-id',
-          stripe_subscription_id: 'mock-subscription-id',
-          plan,
-          status: 'active' as const,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-        
-        setSubscription(mockSubscription)
-        toast.success(`Successfully upgraded to ${STRIPE_PLANS[plan].name}!`)
-      }, 2000)
+      // Update subscription in database
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ 
+          plan: plan,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', subscription.id)
+
+      if (error) {
+        throw error
+      }
+
+      // Update local state
+      setSubscription(prev => prev ? { ...prev, plan, updated_at: new Date().toISOString() } : null)
+      
+      toast.success(`Successfully upgraded to ${STRIPE_PLANS[plan].name}!`)
     } catch (error) {
-      toast.error('Failed to upgrade plan')
+      console.error('Error upgrading plan:', error)
+      toast.error('Failed to upgrade plan. Please try again.')
     }
   }
 
@@ -78,15 +84,28 @@ export default function BillingPage() {
     try {
       if (!subscription) return
 
-      // In a real implementation, this would cancel the Stripe subscription
       toast.success('Canceling subscription...')
       
-      setTimeout(() => {
-        setSubscription(prev => prev ? { ...prev, status: 'canceled' } : null)
-        toast.success('Subscription canceled successfully')
-      }, 2000)
+      // Update subscription in database
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ 
+          status: 'canceled',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', subscription.id)
+
+      if (error) {
+        throw error
+      }
+
+      // Update local state
+      setSubscription(prev => prev ? { ...prev, status: 'canceled', updated_at: new Date().toISOString() } : null)
+      
+      toast.success('Subscription canceled successfully')
     } catch (error) {
-      toast.error('Failed to cancel subscription')
+      console.error('Error canceling subscription:', error)
+      toast.error('Failed to cancel subscription. Please try again.')
     }
   }
 

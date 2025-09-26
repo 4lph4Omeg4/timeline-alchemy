@@ -34,20 +34,24 @@ export default function SignUpPage() {
     setLoading(true)
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+        }),
       })
 
-      if (error) {
-        toast.error(error.message)
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to create account')
       } else {
-        toast.success('Account created successfully! Please check your email to confirm your account.')
+        toast.success('Account and organization created successfully! Please check your email to confirm your account.')
         router.push('/auth/signin')
       }
     } catch (error) {
