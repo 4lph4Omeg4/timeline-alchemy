@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Loader } from '@/components/Loader'
-import { generateComprehensiveContent } from '@/lib/ai'
 import { supabase } from '@/lib/supabase'
 import { BlogPost } from '@/types/index'
 import { useRouter } from 'next/navigation'
@@ -58,13 +57,24 @@ export default function ContentPage() {
 
     setIsGenerating(true)
     try {
-      const content = await generateComprehensiveContent({
-        prompt: idea,
-        tone,
-        length,
-        platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+      const response = await fetch('/api/generate-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: idea,
+          tone,
+          length,
+          platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+        }),
       })
 
+      if (!response.ok) {
+        throw new Error('Failed to generate content')
+      }
+
+      const content = await response.json()
       setGeneratedContent(content)
       showToast('Content generated successfully!')
     } catch (error) {
