@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { User, Organization } from '@/types/index'
+import { User, Organization, Client } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/Logo'
@@ -16,6 +16,8 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [user, setUser] = useState<User | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -36,17 +38,50 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         created_at: user.created_at,
       })
 
-      // Fetch user's organizations
-      const { data: orgs, error } = await supabase
-        .from('org_members')
-        .select(`
-          *,
-          organizations (*)
-        `)
-        .eq('user_id', user.id)
+      // Check if user is admin (sh4m4ni4k@sh4m4ni4k.nl)
+      const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
+      setIsAdmin(isAdminUser)
 
-      if (orgs) {
-        setOrganizations(orgs.map((org: any) => org.organizations))
+      if (isAdminUser) {
+        // For admin: fetch all active organizations
+        const { data: orgs, error: orgError } = await supabase
+          .from('organizations')
+          .select(`
+            *,
+            subscriptions!inner(status)
+          `)
+          .eq('subscriptions.status', 'active')
+          .order('created_at', { ascending: false })
+
+        if (orgs) {
+          setOrganizations(orgs)
+        }
+
+        // For admin: fetch all active clients
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('clients')
+          .select(`
+            *,
+            organizations!inner(name, plan)
+          `)
+          .order('created_at', { ascending: false })
+
+        if (clientsData) {
+          setClients(clientsData)
+        }
+      } else {
+        // For regular users: fetch their organizations
+        const { data: orgs, error } = await supabase
+          .from('org_members')
+          .select(`
+            *,
+            organizations (*)
+          `)
+          .eq('user_id', user.id)
+
+        if (orgs) {
+          setOrganizations(orgs.map((org: any) => org.organizations))
+        }
       }
 
       setLoading(false)
@@ -112,6 +147,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-300">
                 {user?.name || user?.email}
+                {isAdmin && (
+                  <span className="ml-2 px-2 py-1 text-xs bg-yellow-600 text-yellow-100 rounded-full">
+                    ADMIN
+                  </span>
+                )}
               </div>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 Sign Out
@@ -125,18 +165,56 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex">
         <aside className="w-64 bg-gray-800 shadow-sm min-h-screen border-r border-gray-700">
           <div className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Organizations</h3>
-            <div className="space-y-2">
-              {organizations.map((org) => (
-                <div
-                  key={org.id}
-                  className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
-                >
-                  <div className="font-medium text-white">{org.name}</div>
-                  <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
+            {isAdmin ? (
+              <>
+                <h3 className="text-lg font-semibold text-white mb-4">Active Organizations</h3>
+                <div className="space-y-2 mb-6">
+                  {organizations.map((org) => (
+                    <div
+                      key={org.id}
+                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                    >
+                      <div className="font-medium text-white">{org.name}</div>
+                      <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
+                      <div className="text-xs text-green-400">Active</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                
+                <h3 className="text-lg font-semibold text-white mb-4">Active Clients</h3>
+                <div className="space-y-2">
+                  {clients.map((client) => (
+                    <div
+                      key={client.id}
+                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                    >
+                      <div className="font-medium text-white">{client.name}</div>
+                      <div className="text-sm text-gray-400">
+                        {client.contact_info?.email || 'No email'}
+                      </div>
+                      <div className="text-xs text-blue-400">
+                        {client.organizations?.name || 'Unknown Org'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-semibold text-white mb-4">My Organizations</h3>
+                <div className="space-y-2">
+                  {organizations.map((org) => (
+                    <div
+                      key={org.id}
+                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                    >
+                      <div className="font-medium text-white">{org.name}</div>
+                      <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </aside>
 
