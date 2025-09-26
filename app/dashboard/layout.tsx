@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           .from('clients')
           .select(`
             *,
-            organizations!inner(name, plan)
+            organizations(name, plan)
           `)
           .order('created_at', { ascending: false })
 
