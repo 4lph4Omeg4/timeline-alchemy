@@ -1,0 +1,16 @@
+{
+  "name": "timeline-alchemy",
+  "version": "1.0.0",
+  "description": "AI Content Creation Platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "supabase start",
+    "reset": "supabase db reset",
+    "migrate": "supabase db push",
+    "functions:deploy": "supabase functions deploy",
+    "functions:serve": "supabase functions serve"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4"
+  }
+}
