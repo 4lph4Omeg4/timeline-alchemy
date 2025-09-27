@@ -131,7 +131,8 @@ export default function BillingPage() {
       }
 
       // Redirect to Stripe Checkout
-      const stripe = (await import('@stripe/stripe-js')).loadStripe(
+      const { loadStripe } = await import('@stripe/stripe-js')
+      const stripe = await loadStripe(
         process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
       )
 
