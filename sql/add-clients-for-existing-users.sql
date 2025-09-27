@@ -14,8 +14,9 @@ INSERT INTO clients (org_id, name, contact_info)
 SELECT 
   owc.id,
   owc.name || ' Client',
-  ('{"email": "client@' || owc.name || '.com"}')::jsonb
-FROM orgs_without_clients owc;
+  ('{"email": "' || au.email || '"}')::jsonb
+FROM orgs_without_clients owc
+JOIN auth.users au ON owc.user_id = au.id;
 
 -- Show the results
 SELECT 
