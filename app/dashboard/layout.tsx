@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         .single()
 
       if (existingOrg) {
-        console.log('Admin already has organization:', existingOrg.organizations)
+        console.log('Admin already has organization:', (existingOrg as any).organizations)
         return // Admin already has an organization
       }
 
@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       console.log('Creating admin organization...')
       
       // Create admin organization
-      const { data: newOrg, error: orgError } = await supabase
+      const { data: newOrg, error: orgError } = await (supabase as any)
         .from('organizations')
         .insert({
           name: 'Timeline Alchemy Admin',
@@ -49,13 +49,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         .select()
         .single()
 
-      if (orgError) {
+      if (orgError || !newOrg) {
         console.error('Error creating admin organization:', orgError)
         return
       }
 
       // Add admin as owner of the organization
-      const { error: memberError } = await supabase
+      const { error: memberError } = await (supabase as any)
         .from('org_members')
         .insert({
           org_id: newOrg.id,
@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
 
       // Create a subscription for the admin organization
-      await supabase
+      await (supabase as any)
         .from('subscriptions')
         .insert({
           org_id: newOrg.id,

@@ -29,10 +29,10 @@ export default function BillingPage() {
         if (!orgMember) return
 
         // Get subscription
-        const { data: sub, error } = await supabase
+        const { data: sub, error } = await (supabase as any)
           .from('subscriptions')
           .select('*')
-          .eq('org_id', orgMember.org_id)
+          .eq('org_id', (orgMember as any).org_id)
           .single()
 
         if (sub) {
@@ -58,7 +58,7 @@ export default function BillingPage() {
       toast.success(`Upgrading to ${STRIPE_PLANS[plan].name}...`)
       
       // Update subscription in database
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('subscriptions')
         .update({ 
           plan: plan,
@@ -87,7 +87,7 @@ export default function BillingPage() {
       toast.success('Canceling subscription...')
       
       // Update subscription in database
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('subscriptions')
         .update({ 
           status: 'canceled',

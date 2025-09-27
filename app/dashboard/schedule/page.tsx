@@ -38,7 +38,7 @@ export default function SchedulerPage() {
 
   const handleSchedulePost = async (postId: string, scheduledFor: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('blog_posts')
         .update({
           state: 'scheduled',
@@ -64,7 +64,7 @@ export default function SchedulerPage() {
 
   const handlePublishNow = async (postId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('blog_posts')
         .update({
           state: 'published',
