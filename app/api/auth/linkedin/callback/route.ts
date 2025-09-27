@@ -29,10 +29,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if we have the required environment variables
+    console.log('Environment check:', {
+      LINKEDIN_CLIENT_ID: process.env.LINKEDIN_CLIENT_ID ? 'SET' : 'NOT SET',
+      LINKEDIN_CLIENT_SECRET: process.env.LINKEDIN_CLIENT_SECRET ? 'SET' : 'NOT SET',
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
+    })
+    
     if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
-      console.error('Missing LinkedIn API credentials')
+      console.error('Missing LinkedIn API credentials:', {
+        LINKEDIN_CLIENT_ID: !!process.env.LINKEDIN_CLIENT_ID,
+        LINKEDIN_CLIENT_SECRET: !!process.env.LINKEDIN_CLIENT_SECRET
+      })
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=missing_credentials`
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=missing_credentials&details=linkedin_creds`
       )
     }
 
