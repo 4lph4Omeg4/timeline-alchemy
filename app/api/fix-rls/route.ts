@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       ALTER TABLE subscriptions DISABLE ROW LEVEL SECURITY;
     `
 
-    const { data, error } = await supabase.rpc('exec_sql', { sql })
+    const { data, error } = await (supabase as any).rpc('exec_sql', { sql })
 
     if (error) {
       console.error('Error executing SQL:', error)
