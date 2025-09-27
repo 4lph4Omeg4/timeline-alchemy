@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
     if (existingOrg) {
       return NextResponse.json({ 
         message: 'User already has an organization',
-        organization: existingOrg.organizations
+        organization: (existingOrg as any).organizations
       })
     }
 
     // Create default organization for the user
-    const { data: orgData, error: orgError } = await supabase
+    const { data: orgData, error: orgError } = await (supabase as any)
       .from('organizations')
       .insert({
         name: `${userName}'s Organization`,
@@ -34,13 +34,13 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
-    if (orgError) {
+    if (orgError || !orgData) {
       console.error('Error creating organization:', orgError)
       return NextResponse.json({ error: 'Failed to create organization' }, { status: 500 })
     }
 
     // Add user as owner of the organization
-    const { error: memberError } = await supabase
+    const { error: memberError } = await (supabase as any)
       .from('org_members')
       .insert({
         org_id: orgData.id,
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a basic subscription for the organization
-    const { error: subError } = await supabase
+    const { error: subError } = await (supabase as any)
       .from('subscriptions')
       .insert({
         org_id: orgData.id,

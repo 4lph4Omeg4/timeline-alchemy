@@ -53,7 +53,7 @@ export default function SignUpPage() {
       } else if (data.redirectToSignup) {
         // Fall back to regular signup
         toast.loading('Creating account...')
-        const { error } = await supabase.auth.signUp({
+        const { error } = await (supabase as any).auth.signUp({
           email,
           password,
           options: {
@@ -64,8 +64,10 @@ export default function SignUpPage() {
         })
 
         if (error) {
+          toast.dismiss() // Dismiss the loading toast
           toast.error(error.message)
         } else {
+          toast.dismiss() // Dismiss the loading toast
           toast.success('Account created successfully! Please check your email to confirm your account.')
           router.push('/auth/signin')
         }

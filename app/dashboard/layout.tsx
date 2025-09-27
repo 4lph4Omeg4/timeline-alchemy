@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const ensureAdminOrganization = async (userId: string) => {
     try {
       // Check if admin already has an organization
-      const { data: existingOrg, error: checkError } = await supabase
+      const { data: existingOrg, error: checkError } = await (supabase as any)
         .from('org_members')
         .select('org_id, organizations(*)')
         .eq('user_id', userId)
@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         .single()
 
       if (existingOrg) {
-        console.log('Admin already has organization:', existingOrg.organizations)
+        console.log('Admin already has organization:', (existingOrg as any).organizations)
         return // Admin already has an organization
       }
 
@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       console.log('Creating admin organization...')
       
       // Create admin organization
-      const { data: newOrg, error: orgError } = await supabase
+      const { data: newOrg, error: orgError } = await (supabase as any)
         .from('organizations')
         .insert({
           name: 'Timeline Alchemy Admin',
@@ -49,13 +49,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         .select()
         .single()
 
-      if (orgError) {
+      if (orgError || !newOrg) {
         console.error('Error creating admin organization:', orgError)
         return
       }
 
       // Add admin as owner of the organization
-      const { error: memberError } = await supabase
+      const { error: memberError } = await (supabase as any)
         .from('org_members')
         .insert({
           org_id: newOrg.id,
@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
 
       // Create a subscription for the admin organization
-      await supabase
+      await (supabase as any)
         .from('subscriptions')
         .insert({
           org_id: newOrg.id,
@@ -109,7 +109,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         await ensureAdminOrganization(user.id)
 
         // For admin: fetch all active organizations
-        const { data: orgs, error: orgError } = await supabase
+        const { data: orgs, error: orgError } = await (supabase as any)
           .from('organizations')
           .select(`
             *,
@@ -125,7 +125,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
 
         // For admin: fetch all active clients
-        const { data: clientsData, error: clientsError } = await supabase
+        const { data: clientsData, error: clientsError } = await (supabase as any)
           .from('clients')
           .select(`
             *,
@@ -138,73 +138,47 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       } else {
         // For regular users: check if they have an organization, create one if not
-        const { data: orgs, error } = await supabase
+        const { data: orgs, error } = await (supabase as any)
           .from('org_members')
-          .select(`
-            *,
-            organizations (*)
-          `)
+          .select('org_id, role, created_at')
           .eq('user_id', user.id)
 
         if (orgs && orgs.length > 0) {
-          setOrganizations(orgs.map((org: any) => org.organizations))
+          // Fetch organization details for each org_id
+          const orgIds = orgs.map((org: any) => org.org_id)
+          const { data: orgDetails } = await (supabase as any)
+            .from('organizations')
+            .select('*')
+            .in('id', orgIds)
+          
+          if (orgDetails) {
+            setOrganizations(orgDetails)
+          }
         } else {
-          // User doesn't have an organization, create one directly
-          try {
-            console.log('Creating organization for user:', user.id)
-            
-            // Create organization
-            const { data: orgData, error: orgError } = await supabase
-              .from('organizations')
-              .insert({
-                name: `${user.user_metadata?.name || user.email?.split('@')[0] || 'User'}'s Organization`,
-                plan: 'basic'
-              })
-              .select()
-              .single()
+          // User doesn't have an organization yet - the database trigger should have created one
+          // Let's wait a moment and try again, or show a message
+          console.log('No organization found for user. This might be a new user - organization should be created automatically.')
+          
+          // Try to fetch again after a short delay
+          setTimeout(async () => {
+            const { data: retryOrgs, error: retryError } = await (supabase as any)
+              .from('org_members')
+              .select('org_id, role, created_at')
+              .eq('user_id', user.id)
 
-            if (orgError) {
-              console.error('Error creating organization:', orgError)
-            } else {
-              console.log('Organization created:', orgData)
+            if (retryOrgs && retryOrgs.length > 0) {
+              // Fetch organization details for each org_id
+              const orgIds = retryOrgs.map((org: any) => org.org_id)
+              const { data: orgDetails } = await (supabase as any)
+                .from('organizations')
+                .select('*')
+                .in('id', orgIds)
               
-              // Add user as owner
-              const { error: memberError } = await supabase
-                .from('org_members')
-                .insert({
-                  org_id: orgData.id,
-                  user_id: user.id,
-                  role: 'owner'
-                })
-
-              if (memberError) {
-                console.error('Error adding user to organization:', memberError)
-              } else {
-                console.log('User added to organization')
-                
-                // Create subscription
-                const { error: subError } = await supabase
-                  .from('subscriptions')
-                  .insert({
-                    org_id: orgData.id,
-                    stripe_customer_id: 'temp-' + orgData.id,
-                    stripe_subscription_id: 'temp-sub-' + orgData.id,
-                    plan: 'basic',
-                    status: 'active'
-                  })
-
-                if (subError) {
-                  console.error('Error creating subscription:', subError)
-                } else {
-                  console.log('Subscription created')
-                }
-                
-                setOrganizations([orgData])
+              if (orgDetails) {
+                setOrganizations(orgDetails)
               }
             }
-          } catch (error) {
-            console.error('Error creating organization:', error)
-          }
+          }, 2000)
         }
       }
 
@@ -250,23 +224,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Link>
             </div>
 
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/dashboard" className="text-gray-300 hover:text-yellow-400">
-                Dashboard
-              </Link>
-              <Link href="/dashboard/content" className="text-gray-300 hover:text-yellow-400">
-                Content
-              </Link>
-              <Link href="/dashboard/schedule" className="text-gray-300 hover:text-yellow-400">
-                Schedule
-              </Link>
-              <Link href="/dashboard/socials" className="text-gray-300 hover:text-yellow-400">
-                Socials
-              </Link>
-              <Link href="/dashboard/billing" className="text-gray-300 hover:text-yellow-400">
-                Billing
-              </Link>
-            </nav>
 
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-300">
@@ -289,10 +246,60 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex">
         <aside className="w-64 bg-gray-800 shadow-sm min-h-screen border-r border-gray-700">
           <div className="p-6">
-            {isAdmin ? (
-              <>
-                <h3 className="text-lg font-semibold text-white mb-4">Active Organizations</h3>
-                <div className="space-y-2 mb-6">
+            {/* Navigation Links */}
+            <nav className="mb-8">
+              <div className="space-y-2">
+                <Link href="/dashboard" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                  <span className="mr-3">📊</span>
+                  Dashboard
+                </Link>
+                <Link href="/dashboard/content" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                  <span className="mr-3">📝</span>
+                  Content
+                </Link>
+                <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                  <span className="mr-3">📅</span>
+                  Schedule
+                </Link>
+                <Link href="/dashboard/socials" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                  <span className="mr-3">🔗</span>
+                  Socials
+                </Link>
+                <Link href="/dashboard/billing" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                  <span className="mr-3">💳</span>
+                  Billing
+                </Link>
+                {isAdmin && (
+                  <>
+                    <div className="border-t border-gray-600 my-4"></div>
+                    <Link href="/dashboard/organizations" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                      <span className="mr-3">🏢</span>
+                      Organizations
+                    </Link>
+                    <Link href="/dashboard/subscriptions" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                      <span className="mr-3">📋</span>
+                      Subscriptions
+                    </Link>
+                    <Link href="/dashboard/clients" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                      <span className="mr-3">👥</span>
+                      Clients
+                    </Link>
+                    <Link href="/dashboard/analytics" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                      <span className="mr-3">📈</span>
+                      Analytics
+                    </Link>
+                  </>
+                )}
+              </div>
+            </nav>
+
+            {/* Organization Info */}
+            {organizations.length > 0 && (
+              <div className="border-t border-gray-600 pt-6">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  {isAdmin ? 'Active Organizations' : 'My Organization'}
+                </h3>
+                <div className="space-y-2">
                   {organizations.map((org) => (
                     <div
                       key={org.id}
@@ -300,44 +307,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     >
                       <div className="font-medium text-white">{org.name}</div>
                       <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
-                      <div className="text-xs text-green-400">Active</div>
+                      {isAdmin && (
+                        <div className="text-xs text-green-400">Active</div>
+                      )}
                     </div>
                   ))}
                 </div>
-                
-                <h3 className="text-lg font-semibold text-white mb-4">Active Clients</h3>
-                <div className="space-y-2">
-                  {clients.map((client) => (
-                    <div
-                      key={client.id}
-                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
-                    >
-                      <div className="font-medium text-white">{client.name}</div>
-                      <div className="text-sm text-gray-400">
-                        {client.contact_info?.email || 'No email'}
-                      </div>
-                      <div className="text-xs text-blue-400">
-                        {client.organizations?.name || 'Unknown Org'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                <h3 className="text-lg font-semibold text-white mb-4">My Organizations</h3>
-                <div className="space-y-2">
-                  {organizations.map((org) => (
-                    <div
-                      key={org.id}
-                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
-                    >
-                      <div className="font-medium text-white">{org.name}</div>
-                      <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
-                    </div>
-                  ))}
-                </div>
-              </>
+              </div>
             )}
           </div>
         </aside>

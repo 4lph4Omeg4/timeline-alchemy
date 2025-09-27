@@ -95,10 +95,10 @@ export default function ContentEditorPage() {
         return
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('blog_posts')
         .insert({
-          org_id: orgMember.org_id,
+          org_id: (orgMember as any).org_id,
           title,
           content,
           state: 'draft',

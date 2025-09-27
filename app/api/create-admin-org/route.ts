@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, Database } from '@/lib/supabase'
+
+type OrganizationInsert = Database['public']['Tables']['organizations']['Insert']
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if admin already has an organization
-    const { data: existingOrg } = await supabase
+    const { data: existingOrg } = await (supabase as any)
       .from('org_members')
       .select('org_id, organizations(*)')
       .eq('user_id', userId)
@@ -23,21 +25,23 @@ export async function POST(request: NextRequest) {
     if (existingOrg) {
       return NextResponse.json({
         message: 'Admin already has an organization',
-        organization: existingOrg.organizations
+        organization: (existingOrg as any).organizations
       })
     }
 
     // Create admin organization
-    const { data: newOrg, error: orgError } = await supabase
+    const orgData: OrganizationInsert = {
+      name: 'Timeline Alchemy Admin',
+      plan: 'enterprise'
+    }
+    
+    const { data: newOrg, error: orgError } = await (supabase as any)
       .from('organizations')
-      .insert({
-        name: 'Timeline Alchemy Admin',
-        plan: 'enterprise'
-      })
+      .insert(orgData)
       .select()
       .single()
 
-    if (orgError) {
+    if (orgError || !newOrg) {
       console.error('Error creating admin organization:', orgError)
       return NextResponse.json(
         { error: 'Failed to create organization' },
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Add admin as owner of the organization
-    const { error: memberError } = await supabase
+    const { error: memberError } = await (supabase as any)
       .from('org_members')
       .insert({
         org_id: newOrg.id,
@@ -63,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a subscription for the admin organization
-    const { error: subError } = await supabase
+    const { error: subError } = await (supabase as any)
       .from('subscriptions')
       .insert({
         org_id: newOrg.id,

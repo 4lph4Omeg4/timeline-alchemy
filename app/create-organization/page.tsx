@@ -33,7 +33,7 @@ export default function CreateOrganizationPage() {
       }
 
       // Create organization
-      const { data: newOrg, error: orgError } = await supabase
+      const { data: newOrg, error: orgError } = await (supabase as any)
         .from('organizations')
         .insert({
           name: name.trim(),
@@ -42,14 +42,14 @@ export default function CreateOrganizationPage() {
         .select()
         .single()
 
-      if (orgError) {
+      if (orgError || !newOrg) {
         console.error('Error creating organization:', orgError)
-        setMessage('Failed to create organization: ' + orgError.message)
+        setMessage('Failed to create organization: ' + (orgError?.message || 'Unknown error'))
         return
       }
 
       // Add user as owner of the organization
-      const { error: memberError } = await supabase
+      const { error: memberError } = await (supabase as any)
         .from('org_members')
         .insert({
           org_id: newOrg.id,
@@ -64,7 +64,7 @@ export default function CreateOrganizationPage() {
       }
 
       // Create a subscription for the organization
-      const { error: subError } = await supabase
+      const { error: subError } = await (supabase as any)
         .from('subscriptions')
         .insert({
           org_id: newOrg.id,

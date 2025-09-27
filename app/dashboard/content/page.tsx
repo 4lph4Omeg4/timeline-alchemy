@@ -110,10 +110,10 @@ export default function ContentPage() {
       }
 
       // Save blog post
-      const { data: blogPost, error: blogError } = await supabase
+      const { data: blogPost, error: blogError } = await (supabase as any)
         .from('blog_posts')
         .insert({
-          org_id: orgMember.org_id,
+          org_id: (orgMember as any).org_id,
           title: generatedContent.blogPost.title,
           content: generatedContent.blogPost.content,
           state: 'draft'
@@ -127,17 +127,17 @@ export default function ContentPage() {
 
       // Save image
       if (generatedContent.image.url) {
-        await supabase
+        await (supabase as any)
           .from('images')
           .insert({
-            org_id: orgMember.org_id,
-            post_id: blogPost.id,
+            org_id: (orgMember as any).org_id,
+            post_id: (blogPost as any).id,
             url: generatedContent.image.url
           })
       }
 
       showToast('Content saved successfully!')
-      router.push(`/dashboard/content/${blogPost.id}`)
+      router.push(`/dashboard/content/${(blogPost as any).id}`)
     } catch (error) {
       console.error('Error saving content:', error)
       showToast('Failed to save content. Please try again.', 'error')

@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
         // Calculate posts this month
         const currentMonth = new Date().toISOString().slice(0, 7)
         const postsThisMonth = posts?.filter(post => 
-          post.created_at.startsWith(currentMonth)
+          (post as any).created_at.startsWith(currentMonth)
         ).length || 0
 
         setAnalytics({

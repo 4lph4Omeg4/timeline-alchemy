@@ -3,20 +3,75 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
-// Client-side Supabase instance (for browser)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Global singleton instances
+let supabaseClient: ReturnType<typeof createClient> | null = null
+let supabaseAdminClient: ReturnType<typeof createClient> | null = null
 
-// Server-side Supabase instance (for API routes)
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+// Client-side Supabase instance (for browser) - singleton pattern
+export const supabase = (() => {
+  if (typeof window === 'undefined') {
+    // Server-side: create a new instance
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    })
   }
-)
+  
+  // Client-side: use singleton with explicit storage key
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: {
+          getItem: (key: string) => {
+            if (typeof window !== 'undefined') {
+              return window.localStorage.getItem(key)
+            }
+            return null
+          },
+          setItem: (key: string, value: string) => {
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem(key, value)
+            }
+          },
+          removeItem: (key: string) => {
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem(key)
+            }
+          }
+        }
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'supabase-js-web'
+        }
+      }
+    })
+  }
+  return supabaseClient
+})()
+
+// Server-side Supabase instance (for API routes) - singleton pattern
+export const supabaseAdmin = (() => {
+  if (!supabaseAdminClient) {
+    supabaseAdminClient = createClient(
+      supabaseUrl,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+  }
+  return supabaseAdminClient
+})()
 
 // Database types
 export interface Database {
