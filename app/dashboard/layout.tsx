@@ -7,7 +7,11 @@ import { User, Organization, Client } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/Logo'
+import { Modal } from '@/components/ui/modal'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -19,6 +23,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [clients, setClients] = useState<Client[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [editOrgModal, setEditOrgModal] = useState(false)
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null)
+  const [newOrgName, setNewOrgName] = useState('')
   const router = useRouter()
 
   const ensureAdminOrganization = async (userId: string) => {
@@ -155,30 +162,78 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             setOrganizations(orgDetails)
           }
         } else {
-          // User doesn't have an organization yet - the database trigger should have created one
-          // Let's wait a moment and try again, or show a message
-          console.log('No organization found for user. This might be a new user - organization should be created automatically.')
+          // User doesn't have an organization yet - try to create one manually
+          console.log('No organization found for user. Attempting to create organization manually.')
           
-          // Try to fetch again after a short delay
-          setTimeout(async () => {
-            const { data: retryOrgs, error: retryError } = await (supabase as any)
-              .from('org_members')
-              .select('org_id, role, created_at')
-              .eq('user_id', user.id)
+          try {
+            // Create organization manually as fallback
+            const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
+            const { data: newOrg, error: orgError } = await (supabase as any)
+              .from('organizations')
+              .insert({
+                name: userName + "'s Organization",
+                plan: 'basic'
+              })
+              .select()
+              .single()
 
-            if (retryOrgs && retryOrgs.length > 0) {
-              // Fetch organization details for each org_id
-              const orgIds = retryOrgs.map((org: any) => org.org_id)
-              const { data: orgDetails } = await (supabase as any)
-                .from('organizations')
-                .select('*')
-                .in('id', orgIds)
-              
-              if (orgDetails) {
-                setOrganizations(orgDetails)
+            if (newOrg && !orgError) {
+              // Add user as owner
+              const { error: memberError } = await (supabase as any)
+                .from('org_members')
+                .insert({
+                  org_id: newOrg.id,
+                  user_id: user.id,
+                  role: 'owner'
+                })
+
+              if (!memberError) {
+                // Create subscription
+                await (supabase as any)
+                  .from('subscriptions')
+                  .insert({
+                    org_id: newOrg.id,
+                    stripe_customer_id: 'temp-customer-' + newOrg.id,
+                    stripe_subscription_id: 'temp-sub-' + newOrg.id,
+                    plan: 'basic',
+                    status: 'active'
+                  })
+
+                // Create default client
+                await (supabase as any)
+                  .from('clients')
+                  .insert({
+                    org_id: newOrg.id,
+                    name: userName + "'s Client",
+                    contact_info: { email: user.email }
+                  })
+
+                console.log('Successfully created organization manually:', newOrg)
+                setOrganizations([newOrg])
               }
             }
-          }, 2000)
+          } catch (error) {
+            console.error('Failed to create organization manually:', error)
+            // Try to fetch again after a delay in case the trigger eventually works
+            setTimeout(async () => {
+              const { data: retryOrgs } = await (supabase as any)
+                .from('org_members')
+                .select('org_id, role, created_at')
+                .eq('user_id', user.id)
+
+              if (retryOrgs && retryOrgs.length > 0) {
+                const orgIds = retryOrgs.map((org: any) => org.org_id)
+                const { data: orgDetails } = await (supabase as any)
+                  .from('organizations')
+                  .select('*')
+                  .in('id', orgIds)
+                
+                if (orgDetails) {
+                  setOrganizations(orgDetails)
+                }
+              }
+            }, 3000)
+          }
         }
       }
 
@@ -203,6 +258,47 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push('/')
   }
 
+  const handleEditOrgName = (org: Organization) => {
+    setEditingOrg(org)
+    setNewOrgName(org.name)
+    setEditOrgModal(true)
+  }
+
+  const handleSaveOrgName = async () => {
+    if (!editingOrg || !newOrgName.trim()) return
+
+    try {
+      const { error } = await (supabase as any)
+        .from('organizations')
+        .update({ 
+          name: newOrgName.trim(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingOrg.id)
+
+      if (error) {
+        toast.error('Failed to update organization name')
+        console.error('Error updating organization:', error)
+      } else {
+        // Update local state
+        setOrganizations(prev => 
+          prev.map(org => 
+            org.id === editingOrg.id 
+              ? { ...org, name: newOrgName.trim(), updated_at: new Date().toISOString() }
+              : org
+          )
+        )
+        toast.success('Organization name updated successfully')
+        setEditOrgModal(false)
+        setEditingOrg(null)
+        setNewOrgName('')
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+      console.error('Unexpected error:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -211,10 +307,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
+    return (
+      <div className="min-h-screen bg-black">
+        {/* Header */}
+        <header className="bg-gray-900 shadow-sm border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -242,49 +338,49 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </header>
 
-      {/* Sidebar */}
-      <div className="flex">
-        <aside className="w-64 bg-gray-800 shadow-sm min-h-screen border-r border-gray-700">
+        {/* Sidebar */}
+        <div className="flex">
+          <aside className="w-64 bg-gray-900 shadow-sm min-h-screen border-r border-gray-800">
           <div className="p-6">
             {/* Navigation Links */}
             <nav className="mb-8">
               <div className="space-y-2">
-                <Link href="/dashboard" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                <Link href="/dashboard" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">📊</span>
                   Dashboard
                 </Link>
-                <Link href="/dashboard/content" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                <Link href="/dashboard/content" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">📝</span>
                   Content
                 </Link>
-                <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">📅</span>
                   Schedule
                 </Link>
-                <Link href="/dashboard/socials" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                <Link href="/dashboard/socials" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">🔗</span>
                   Socials
                 </Link>
-                <Link href="/dashboard/billing" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                <Link href="/dashboard/billing" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">💳</span>
                   Billing
                 </Link>
                 {isAdmin && (
                   <>
-                    <div className="border-t border-gray-600 my-4"></div>
-                    <Link href="/dashboard/organizations" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                    <div className="border-t border-gray-700 my-4"></div>
+                    <Link href="/dashboard/organizations" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                       <span className="mr-3">🏢</span>
                       Organizations
                     </Link>
-                    <Link href="/dashboard/subscriptions" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                    <Link href="/dashboard/subscriptions" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                       <span className="mr-3">📋</span>
                       Subscriptions
                     </Link>
-                    <Link href="/dashboard/clients" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                    <Link href="/dashboard/clients" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                       <span className="mr-3">👥</span>
                       Clients
                     </Link>
-                    <Link href="/dashboard/analytics" className="flex items-center px-3 py-2 text-gray-300 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors">
+                    <Link href="/dashboard/analytics" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                       <span className="mr-3">📈</span>
                       Analytics
                     </Link>
@@ -293,28 +389,43 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </nav>
 
-            {/* Organization Info */}
-            {organizations.length > 0 && (
-              <div className="border-t border-gray-600 pt-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  {isAdmin ? 'Active Organizations' : 'My Organization'}
-                </h3>
-                <div className="space-y-2">
-                  {organizations.map((org) => (
-                    <div
-                      key={org.id}
-                      className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 cursor-pointer"
-                    >
-                      <div className="font-medium text-white">{org.name}</div>
-                      <div className="text-sm text-gray-400 capitalize">{org.plan}</div>
-                      {isAdmin && (
-                        <div className="text-xs text-green-400">Active</div>
-                      )}
-                    </div>
-                  ))}
+              {/* Organization Info */}
+              {organizations.length > 0 && (
+                <div className="border-t border-gray-700 pt-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    {isAdmin ? 'Active Organizations' : 'My Organization'}
+                  </h3>
+                  <div className="space-y-2">
+                    {organizations.map((org) => (
+                      <div
+                        key={org.id}
+                        className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-white">{org.name}</div>
+                            <div className="text-sm text-gray-300 capitalize">{org.plan}</div>
+                            {isAdmin && (
+                              <div className="text-xs text-green-400">Active</div>
+                            )}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditOrgName(org)
+                            }}
+                            className="ml-2 border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white"
+                          >
+                            Edit
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </aside>
 
@@ -323,6 +434,51 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Edit Organization Modal */}
+      <Modal
+        isOpen={editOrgModal}
+        onClose={() => {
+          setEditOrgModal(false)
+          setEditingOrg(null)
+          setNewOrgName('')
+        }}
+        title="Edit Organization Name"
+      >
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="orgName" className="text-white">Organization Name</Label>
+            <Input
+              id="orgName"
+              value={newOrgName}
+              onChange={(e) => setNewOrgName(e.target.value)}
+              placeholder="Enter organization name"
+              className="mt-1 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-yellow-400"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditOrgModal(false)
+                setEditingOrg(null)
+                setNewOrgName('')
+              }}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveOrgName}
+              disabled={!newOrgName.trim() || newOrgName.trim() === editingOrg?.name}
+              className="bg-yellow-400 text-black hover:bg-yellow-500 disabled:bg-gray-600 disabled:text-gray-400"
+            >
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

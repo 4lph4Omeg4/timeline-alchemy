@@ -93,15 +93,15 @@ export default function ClientsPage() {
         </p>
       </div>
 
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white">
-            {isAdmin ? 'All Clients' : 'My Clients'}
-          </CardTitle>
-          <CardDescription className="text-gray-300">
-            {clients.length} clients found
-          </CardDescription>
-        </CardHeader>
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white">
+                {isAdmin ? 'All Clients' : 'My Clients'}
+              </CardTitle>
+              <CardDescription className="text-gray-200">
+                {clients.length} clients found
+              </CardDescription>
+            </CardHeader>
         <CardContent>
           {clients.length === 0 ? (
             <div className="text-center py-8">
@@ -110,22 +110,17 @@ export default function ClientsPage() {
           ) : (
             <div className="space-y-4">
               {clients.map((client) => (
-                <div key={client.id} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
-                  <div className="flex justify-between items-start">
+                <div key={client.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
+                  <div className="flex items-start">
                     <div className="flex-1">
                       <h3 className="font-medium text-white">{client.name}</h3>
-                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-400">
+                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-300">
                         <span>Email: {client.contact_info?.email || 'No email'}</span>
-                        <Badge variant="secondary" className="bg-gray-600 text-gray-200">
+                        <Badge variant="secondary" className="bg-gray-700 text-gray-200">
                           {(client as any).organizations?.name || 'Unknown Org'}
                         </Badge>
                         <span>Created: {new Date(client.created_at).toLocaleDateString()}</span>
                       </div>
-                    </div>
-                    <div className="ml-4">
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
                     </div>
                   </div>
                 </div>

@@ -180,81 +180,81 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {isAdmin ? (
           <>
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Total Organizations</CardTitle>
-                <span className="text-2xl">🏢</span>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-400">{adminStats.totalOrganizations}</div>
-                <p className="text-xs text-gray-400">
-                  All registered organizations
-                </p>
-              </CardContent>
-            </Card>
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-white">Total Organizations</CardTitle>
+                    <span className="text-2xl">🏢</span>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-yellow-400">{adminStats.totalOrganizations}</div>
+                    <p className="text-xs text-gray-300">
+                      All registered organizations
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Active Subscriptions</CardTitle>
-                <span className="text-2xl">💳</span>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-400">{adminStats.activeSubscriptions}</div>
-                <p className="text-xs text-gray-400">
-                  Paying customers
-                </p>
-              </CardContent>
-            </Card>
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-white">Active Subscriptions</CardTitle>
+                    <span className="text-2xl">💳</span>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-yellow-400">{adminStats.activeSubscriptions}</div>
+                    <p className="text-xs text-gray-300">
+                      Paying customers
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Total Clients</CardTitle>
-                <span className="text-2xl">👥</span>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-400">{adminStats.totalClients}</div>
-                <p className="text-xs text-gray-400">
-                  Client accounts
-                </p>
-              </CardContent>
-            </Card>
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-white">Total Clients</CardTitle>
+                    <span className="text-2xl">👥</span>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-yellow-400">{adminStats.totalClients}</div>
+                    <p className="text-xs text-gray-300">
+                      Client accounts
+                    </p>
+                  </CardContent>
+                </Card>
           </>
         ) : (
           <>
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-gray-900 border-gray-800">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white">Posts This Month</CardTitle>
                 <span className="text-2xl">📝</span>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-yellow-400">{usageStats.postsThisMonth}</div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-300">
                   AI-generated content created
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-gray-900 border-gray-800">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white">Organizations</CardTitle>
                 <span className="text-2xl">🏢</span>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-yellow-400">{usageStats.organizationsCount}</div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-300">
                   Active organizations
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-gray-900 border-gray-800">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white">Social Accounts</CardTitle>
                 <span className="text-2xl">🔗</span>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-yellow-400">{usageStats.socialAccountsCount}</div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-300">
                   Connected platforms
                 </p>
               </CardContent>
@@ -264,12 +264,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <Card className="bg-gray-800 border-gray-700">
+      <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
           <CardTitle className="text-white">
             {isAdmin ? 'Admin Actions' : 'Quick Actions'}
           </CardTitle>
-          <CardDescription className="text-gray-300">
+          <CardDescription className="text-gray-200">
             {isAdmin 
               ? 'System management and monitoring tools'
               : 'Get started with creating new content'
@@ -313,114 +313,20 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* All Organizations (Admin only) */}
-      {isAdmin && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white">All Organizations</CardTitle>
-            <CardDescription className="text-gray-300">
-              All organizations in the system with their subscription status
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {allOrganizations.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-400 mb-4">No organizations found</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {allOrganizations.map((org, index) => (
-                  <div key={org.id || index} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-white">
-                          {org.name}
-                        </h3>
-                        <div className="text-sm text-gray-300 mt-1">
-                          <p><strong>Plan:</strong> {org.plan}</p>
-                          <p><strong>Created:</strong> {formatDate(org.created_at)}</p>
-                          {org.subscriptions && org.subscriptions.length > 0 ? (
-                            <p><strong>Subscription:</strong> {org.subscriptions[0].plan} - {org.subscriptions[0].status}</p>
-                          ) : (
-                            <p><strong>Subscription:</strong> No subscription</p>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
-                          <span className={`px-2 py-1 rounded-full ${
-                            org.subscriptions && org.subscriptions.length > 0 && org.subscriptions[0].status === 'active' 
-                              ? 'bg-green-900 text-green-300' 
-                              : 'bg-gray-600 text-gray-300'
-                          }`}>
-                            {org.subscriptions && org.subscriptions.length > 0 ? org.subscriptions[0].status : 'No subscription'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Active Users (Admin only) */}
-      {isAdmin && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white">Active Users with Subscriptions</CardTitle>
-            <CardDescription className="text-gray-300">
-              Users with active subscriptions across all organizations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {activeUsers.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-400 mb-4">No active users found</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {activeUsers.map((user, index) => (
-                  <div key={user.user_id || index} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-white">
-                          User ID: {user.user_id}
-                        </h3>
-                        <div className="text-sm text-gray-300 mt-1">
-                          <p><strong>Organization:</strong> {user.organizations?.name}</p>
-                          <p><strong>Plan:</strong> {user.organizations?.subscriptions?.plan}</p>
-                          <p><strong>Role:</strong> {user.role}</p>
-                        </div>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
-                          <span className="px-2 py-1 rounded-full bg-green-900 text-green-300">
-                            {user.organizations?.subscriptions?.status}
-                          </span>
-                          <span>Joined: {formatDate(user.created_at)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Recent Posts */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white">
-            {isAdmin ? 'All Recent Posts' : 'Recent Posts'}
-          </CardTitle>
-          <CardDescription className="text-gray-300">
-            {isAdmin 
-              ? 'Latest content from all organizations'
-              : 'Your latest content creations'
-            }
-          </CardDescription>
-        </CardHeader>
+          {/* Recent Posts */}
+          <Card className="bg-gray-900 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white">
+                {isAdmin ? 'All Recent Posts' : 'Recent Posts'}
+              </CardTitle>
+              <CardDescription className="text-gray-200">
+                {isAdmin 
+                  ? 'Latest content from all organizations'
+                  : 'Your latest content creations'
+                }
+              </CardDescription>
+            </CardHeader>
         <CardContent>
           {posts.length === 0 ? (
             <div className="text-center py-8">
@@ -430,37 +336,37 @@ export default function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <div key={post.id} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-white">{post.title}</h3>
-                      <p className="text-sm text-gray-300 mt-1 line-clamp-2">
-                        {post.content}
-                      </p>
-                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
-                        <span className={`px-2 py-1 rounded-full ${
-                          post.state === 'published' ? 'bg-green-900 text-green-300' :
-                          post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
-                          'bg-gray-600 text-gray-300'
-                        }`}>
-                          {post.state}
-                        </span>
-                        <span>{formatDate(post.created_at)}</span>
+                <div className="space-y-4">
+                  {posts.map((post) => (
+                    <div key={post.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-white">{post.title}</h3>
+                          <p className="text-sm text-gray-200 mt-1 line-clamp-2">
+                            {post.content}
+                          </p>
+                          <div className="flex items-center space-x-4 mt-2 text-xs text-gray-300">
+                            <span className={`px-2 py-1 rounded-full ${
+                              post.state === 'published' ? 'bg-green-900 text-green-300' :
+                              post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+                              'bg-gray-700 text-gray-200'
+                            }`}>
+                              {post.state}
+                            </span>
+                            <span>{formatDate(post.created_at)}</span>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <Link href={`/dashboard/content/${post.id}`}>
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                    <div className="ml-4">
-                      <Link href={`/dashboard/content/${post.id}`}>
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
           )}
         </CardContent>
       </Card>

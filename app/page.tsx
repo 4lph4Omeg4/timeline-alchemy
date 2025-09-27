@@ -72,7 +72,7 @@ export default function HomePage() {
 
   if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
+      <div className="min-h-screen bg-gradient-to-br from-black to-gray-900">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-12">
             <div className="flex justify-center mb-6">
@@ -81,7 +81,7 @@ export default function HomePage() {
             <h1 className="text-4xl font-bold text-white mb-4">
               Welcome back, {user.name}!
             </h1>
-            <p className="text-xl text-gray-300 mb-8">
+            <p className="text-xl text-gray-200 mb-8">
               Ready to create amazing content with AI?
             </p>
             <Button onClick={handleDashboard} size="lg" className="text-lg px-8 py-3">
@@ -94,9 +94,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
+    <div className="min-h-screen bg-gradient-to-br from-black to-gray-900">
       {/* Header */}
-      <header className="bg-gray-800 shadow-sm border-b border-gray-700">
+      <header className="bg-gray-900 shadow-sm border-b border-gray-800">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <Logo size="md" showText={false} />
@@ -119,7 +119,7 @@ export default function HomePage() {
             Create Amazing Content with{' '}
             <span className="text-yellow-400">AI Magic</span>
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-200 mb-8 max-w-3xl mx-auto">
             Timeline Alchemy helps small businesses and creators generate, schedule, 
             and publish AI-powered content across all social media platforms.
           </p>
@@ -135,7 +135,7 @@ export default function HomePage() {
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="flex items-center text-white">
                 <Logo size="sm" showText={false} />
@@ -143,14 +143,14 @@ export default function HomePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription className="text-gray-300">
+              <CardDescription className="text-gray-200">
                 Generate engaging blog posts and social media content using advanced AI. 
                 Choose your tone, length, and platform-specific formatting.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="flex items-center text-white">
                 <Logo size="sm" showText={false} />
@@ -158,14 +158,14 @@ export default function HomePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription className="text-gray-300">
+              <CardDescription className="text-gray-200">
                 Schedule your content across multiple platforms with our intelligent 
                 calendar system. Never miss an opportunity to engage your audience.
               </CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="flex items-center text-white">
                 <Logo size="sm" showText={false} />
@@ -173,7 +173,7 @@ export default function HomePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription className="text-gray-300">
+              <CardDescription className="text-gray-200">
                 Connect your social media accounts and publish content automatically 
                 to Twitter, LinkedIn, Instagram, Facebook, and YouTube.
               </CardDescription>
@@ -187,13 +187,13 @@ export default function HomePage() {
             Simple, Transparent Pricing
           </h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
                 <CardTitle className="text-white">Basic</CardTitle>
-                <div className="text-3xl font-bold text-yellow-400">$129<span className="text-lg text-gray-400">/month</span></div>
+                <div className="text-3xl font-bold text-yellow-400">$129<span className="text-lg text-gray-300">/month</span></div>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-left text-gray-300">
+                <ul className="space-y-2 text-left text-gray-200">
                   <li>✓ 1 organization</li>
                   <li>✓ 4x Blog + crossplatform social links (set per week)</li>
                   <li>✓ Basic scheduling</li>
@@ -201,13 +201,13 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-yellow-400 border-2 bg-gray-800 border-gray-700">
+            <Card className="border-yellow-400 border-2 bg-gray-900 border-gray-800">
               <CardHeader>
                 <CardTitle className="text-white">Pro</CardTitle>
-                <div className="text-3xl font-bold text-yellow-400">$249<span className="text-lg text-gray-400">/month</span></div>
+                <div className="text-3xl font-bold text-yellow-400">$249<span className="text-lg text-gray-300">/month</span></div>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-left text-gray-300">
+                <ul className="space-y-2 text-left text-gray-200">
                   <li>✓ 1 organization</li>
                   <li>✓ 8x Blog + crossplatform social links (2x set per week)</li>
                   <li>✓ Advanced scheduling</li>
@@ -216,13 +216,13 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
                 <CardTitle className="text-white">Enterprise</CardTitle>
-                <div className="text-3xl font-bold text-yellow-400">$499<span className="text-lg text-gray-400">/month</span></div>
+                <div className="text-3xl font-bold text-yellow-400">$499<span className="text-lg text-gray-300">/month</span></div>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-left text-gray-300">
+                <ul className="space-y-2 text-left text-gray-200">
                   <li>✓ Unlimited AI posts</li>
                   <li>✓ Priority support</li>
                   <li>✓ Custom integrations</li>
@@ -234,7 +234,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-8 mt-16 border-t border-gray-700">
+      <footer className="bg-black text-gray-200 py-8 mt-16 border-t border-gray-800">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; 2025 Timeline Alchemy. All rights reserved.</p>
         </div>
