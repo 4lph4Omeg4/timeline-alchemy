@@ -111,7 +111,7 @@ export default function ClientsPage() {
             <div className="space-y-4">
               {clients.map((client) => (
                 <div key={client.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
-                  <div className="flex justify-between items-start">
+                  <div className="flex items-start">
                     <div className="flex-1">
                       <h3 className="font-medium text-white">{client.name}</h3>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-300">
@@ -121,11 +121,6 @@ export default function ClientsPage() {
                         </Badge>
                         <span>Created: {new Date(client.created_at).toLocaleDateString()}</span>
                       </div>
-                    </div>
-                    <div className="ml-4">
-                      <Button variant="outline" size="sm" onClick={() => window.open(`/dashboard/clients/${client.id}`, '_blank')}>
-                        View Details
-                      </Button>
                     </div>
                   </div>
                 </div>
