@@ -140,14 +140,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         // For regular users: check if they have an organization, create one if not
         const { data: orgs, error } = await (supabase as any)
           .from('org_members')
-          .select(`
-            *,
-            organizations (*)
-          `)
+          .select('org_id, role, created_at')
           .eq('user_id', user.id)
 
         if (orgs && orgs.length > 0) {
-          setOrganizations(orgs.map((org: any) => org.organizations))
+          // Fetch organization details for each org_id
+          const orgIds = orgs.map((org: any) => org.org_id)
+          const { data: orgDetails } = await (supabase as any)
+            .from('organizations')
+            .select('*')
+            .in('id', orgIds)
+          
+          if (orgDetails) {
+            setOrganizations(orgDetails)
+          }
         } else {
           // User doesn't have an organization yet - the database trigger should have created one
           // Let's wait a moment and try again, or show a message
@@ -157,14 +163,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           setTimeout(async () => {
             const { data: retryOrgs, error: retryError } = await (supabase as any)
               .from('org_members')
-              .select(`
-                *,
-                organizations (*)
-              `)
+              .select('org_id, role, created_at')
               .eq('user_id', user.id)
 
             if (retryOrgs && retryOrgs.length > 0) {
-              setOrganizations(retryOrgs.map((org: any) => org.organizations))
+              // Fetch organization details for each org_id
+              const orgIds = retryOrgs.map((org: any) => org.org_id)
+              const { data: orgDetails } = await (supabase as any)
+                .from('organizations')
+                .select('*')
+                .in('id', orgIds)
+              
+              if (orgDetails) {
+                setOrganizations(orgDetails)
+              }
             }
           }, 2000)
         }

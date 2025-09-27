@@ -22,6 +22,7 @@ export default function DashboardPage() {
     totalPosts: 0,
   })
   const [activeUsers, setActiveUsers] = useState<any[]>([])
+  const [allOrganizations, setAllOrganizations] = useState<any[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -57,6 +58,23 @@ export default function DashboardPage() {
             .from('clients')
             .select('id')
 
+          // Fetch all organizations with their subscriptions
+          const { data: allOrgsWithSubs } = await (supabase as any)
+            .from('organizations')
+            .select(`
+              id,
+              name,
+              plan,
+              created_at,
+              subscriptions(
+                id,
+                plan,
+                status,
+                created_at
+              )
+            `)
+            .order('created_at', { ascending: false })
+
           // Fetch active users with subscriptions
           const { data: usersWithSubs } = await (supabase as any)
             .from('org_members')
@@ -64,12 +82,12 @@ export default function DashboardPage() {
               user_id,
               role,
               created_at,
-              organizations!inner(
+              organizations(
                 id,
                 name,
                 plan,
                 created_at,
-                subscriptions!inner(
+                subscriptions(
                   id,
                   plan,
                   status,
@@ -77,11 +95,11 @@ export default function DashboardPage() {
                 )
               )
             `)
-            .eq('organizations.subscriptions.status', 'active')
             .order('created_at', { ascending: false })
 
           setPosts(allPosts || [])
           setActiveUsers(usersWithSubs || [])
+          setAllOrganizations(allOrgsWithSubs || [])
           setAdminStats({
             totalOrganizations: totalOrgs?.length || 0,
             activeSubscriptions: activeSubs?.length || 0,
@@ -292,6 +310,57 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* All Organizations (Admin only) */}
+      {isAdmin && (
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white">All Organizations</CardTitle>
+            <CardDescription className="text-gray-300">
+              All organizations in the system with their subscription status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {allOrganizations.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">No organizations found</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {allOrganizations.map((org, index) => (
+                  <div key={org.id || index} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-white">
+                          {org.name}
+                        </h3>
+                        <div className="text-sm text-gray-300 mt-1">
+                          <p><strong>Plan:</strong> {org.plan}</p>
+                          <p><strong>Created:</strong> {formatDate(org.created_at)}</p>
+                          {org.subscriptions && org.subscriptions.length > 0 ? (
+                            <p><strong>Subscription:</strong> {org.subscriptions[0].plan} - {org.subscriptions[0].status}</p>
+                          ) : (
+                            <p><strong>Subscription:</strong> No subscription</p>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
+                          <span className={`px-2 py-1 rounded-full ${
+                            org.subscriptions && org.subscriptions.length > 0 && org.subscriptions[0].status === 'active' 
+                              ? 'bg-green-900 text-green-300' 
+                              : 'bg-gray-600 text-gray-300'
+                          }`}>
+                            {org.subscriptions && org.subscriptions.length > 0 ? org.subscriptions[0].status : 'No subscription'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Active Users (Admin only) */}
       {isAdmin && (

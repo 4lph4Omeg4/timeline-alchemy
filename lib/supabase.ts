@@ -45,6 +45,11 @@ export const supabase = (() => {
             }
           }
         }
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'supabase-js-web'
+        }
       }
     })
   }
