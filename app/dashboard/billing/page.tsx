@@ -189,7 +189,7 @@ export default function BillingPage() {
                 <div
                   key={planKey}
                   className={`border rounded-lg p-6 bg-gray-700 ${
-                    planKey === 'pro' ? 'border-yellow-400 border-2' : 'border-gray-600'
+                    planKey === 'basic' ? 'border-yellow-400 border-2' : 'border-gray-600'
                   }`}
                 >
                   <div className="text-center">

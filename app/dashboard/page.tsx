@@ -355,6 +355,11 @@ export default function DashboardPage() {
                               </span>
                             </div>
                           </div>
+                          <div className="ml-4">
+                            <Button variant="outline" size="sm" onClick={() => window.open(`/dashboard/organizations/${org.id}`, '_blank')}>
+                              View Details
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -398,6 +403,11 @@ export default function DashboardPage() {
                               </span>
                               <span>Joined: {formatDate(user.created_at)}</span>
                             </div>
+                          </div>
+                          <div className="ml-4">
+                            <Button variant="outline" size="sm" onClick={() => window.open(`/dashboard/subscriptions/${user.organizations?.subscriptions?.id}`, '_blank')}>
+                              View Details
+                            </Button>
                           </div>
                         </div>
                       </div>

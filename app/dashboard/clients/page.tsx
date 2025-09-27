@@ -123,7 +123,7 @@ export default function ClientsPage() {
                       </div>
                     </div>
                     <div className="ml-4">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => window.open(`/dashboard/clients/${client.id}`, '_blank')}>
                         View Details
                       </Button>
                     </div>
