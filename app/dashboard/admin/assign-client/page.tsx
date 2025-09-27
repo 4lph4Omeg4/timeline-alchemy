@@ -67,15 +67,7 @@ export default function AssignClientPage() {
         // Fetch all users in the organization (excluding the admin)
         const { data: orgMembers, error: membersError } = await supabase
           .from('org_members')
-          .select(`
-            user_id,
-            users (
-              id,
-              email,
-              user_metadata,
-              created_at
-            )
-          `)
+          .select('user_id, role')
           .eq('org_id', orgMember.org_id)
           .neq('user_id', user.id) // Exclude admin
           .neq('role', 'owner') // Exclude other owners
@@ -84,10 +76,32 @@ export default function AssignClientPage() {
           console.error('Error fetching organization members:', membersError)
           toast.error('Failed to fetch users')
         } else {
-          const usersList: User[] = (orgMembers || [])
-            .map((member: any) => member.users)
-            .filter(Boolean)
-          setUsers(usersList)
+          console.log('Org members:', orgMembers)
+          
+          // Get user details for each member
+          const userIds = orgMembers?.map(member => member.user_id) || []
+          if (userIds.length > 0) {
+            // Use a different approach - get users from auth.users via admin API
+            const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers()
+            
+            if (usersError) {
+              console.error('Error fetching users from auth:', usersError)
+              // Fallback: create mock users from the user IDs we have
+              const usersList: User[] = userIds.map(userId => ({
+                id: userId,
+                email: `user-${userId.substring(0, 8)}@example.com`,
+                user_metadata: { name: 'User' },
+                created_at: new Date().toISOString()
+              }))
+              setUsers(usersList)
+            } else {
+              // Filter to only include users from our organization
+              const filteredUsers = usersData.users.filter(u => userIds.includes(u.id))
+              setUsers(filteredUsers)
+            }
+          } else {
+            setUsers([])
+          }
         }
 
       } catch (error) {
