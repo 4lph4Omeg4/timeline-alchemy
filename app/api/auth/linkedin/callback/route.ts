@@ -128,6 +128,7 @@ export async function GET(request: NextRequest) {
 
     const userData = await userResponse.json()
     const linkedinUserId = userData.id
+    const linkedinUsername = userData.firstName ? `${userData.firstName} ${userData.lastName || ''}`.trim() : userData.displayName || `User ${linkedinUserId}`
 
     // Use org_id from state parameter (no need to authenticate user)
     console.log('Using org_id from state:', orgId)
