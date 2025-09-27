@@ -125,6 +125,7 @@ export default function SocialConnectionsPage() {
       }
       toast.error(errorMessage)
       console.error('OAuth error details:', { error, details })
+      console.error('Full URL params:', Object.fromEntries(urlParams.entries()))
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
     }
