@@ -8,6 +8,26 @@ import { SocialConnection } from '@/types/index'
 import { SocialIcon } from '@/components/ui/social-icons'
 import toast from 'react-hot-toast'
 
+// PKCE helper functions
+function generateCodeVerifier(): string {
+  const array = new Uint8Array(32)
+  crypto.getRandomValues(array)
+  return btoa(String.fromCharCode.apply(null, Array.from(array)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
+}
+
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(verifier)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(digest))))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
+}
+
 const socialPlatforms = [
   {
     id: 'twitter',
@@ -97,21 +117,25 @@ export default function SocialConnectionsPage() {
   const handleConnect = async (platform: string) => {
     try {
       if (platform === 'twitter') {
-        // Generate state parameter for security
-        const state = Math.random().toString(36).substring(2, 15)
+        // Generate state parameter for security and include code verifier
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const codeVerifier = generateCodeVerifier()
+        const codeChallenge = await generateCodeChallenge(codeVerifier)
         
-        // Store state in localStorage for verification
-        localStorage.setItem('twitter_oauth_state', state)
+        // Encode state with code verifier
+        const state = btoa(JSON.stringify({
+          state: stateParam,
+          codeVerifier: codeVerifier
+        }))
         
-        // Twitter OAuth 2.0 URL
         const authUrl = new URL('https://twitter.com/i/oauth2/authorize')
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '')
         authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/twitter/callback`)
         authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read offline.access')
         authUrl.searchParams.set('state', state)
-        authUrl.searchParams.set('code_challenge', 'challenge')
-        authUrl.searchParams.set('code_challenge_method', 'plain')
+        authUrl.searchParams.set('code_challenge', codeChallenge)
+        authUrl.searchParams.set('code_challenge_method', 'S256')
         
         toast.success(`Redirecting to ${platform} OAuth...`)
         

@@ -35,12 +35,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Extract code verifier from state parameter
+    let codeVerifier: string
+    try {
+      const stateData = JSON.parse(atob(state || ''))
+      codeVerifier = stateData.codeVerifier
+    } catch (error) {
+      console.error('Failed to decode state parameter:', error)
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=invalid_state`
+      )
+    }
+    
     // Exchange code for access token
     const tokenRequestBody = new URLSearchParams({
       code,
       grant_type: 'authorization_code',
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/twitter/callback`,
-      code_verifier: 'challenge', // In production, store this in session/state
+      code_verifier,
     })
 
     console.log('Exchanging code for token with body:', tokenRequestBody.toString())
