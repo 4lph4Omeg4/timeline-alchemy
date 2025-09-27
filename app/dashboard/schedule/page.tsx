@@ -100,20 +100,22 @@ export default function SchedulerPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Content Scheduler</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-white">Content Scheduler</h1>
+          <p className="text-gray-200 mt-2">
             Manage and schedule your content across all platforms
           </p>
         </div>
         <div className="flex space-x-2">
           <Button
             variant={view === 'list' ? 'default' : 'outline'}
+            className={view === 'list' ? 'bg-yellow-400 text-black hover:bg-yellow-500' : 'border-gray-600 text-gray-300 hover:bg-gray-800'}
             onClick={() => setView('list')}
           >
             List View
           </Button>
           <Button
             variant={view === 'calendar' ? 'default' : 'outline'}
+            className={view === 'calendar' ? 'bg-yellow-400 text-black hover:bg-yellow-500' : 'border-gray-600 text-gray-300 hover:bg-gray-800'}
             onClick={() => setView('calendar')}
           >
             Calendar View
@@ -123,40 +125,40 @@ export default function SchedulerPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Total Posts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{posts.length}</div>
+            <div className="text-2xl font-bold text-yellow-400">{posts.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Scheduled</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-yellow-400">
               {posts.filter(p => p.state === 'scheduled').length}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Published</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Published</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-green-400">
               {posts.filter(p => p.state === 'published').length}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Drafts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-gray-400">
               {posts.filter(p => p.state === 'draft').length}
             </div>
           </CardContent>
@@ -165,46 +167,46 @@ export default function SchedulerPage() {
 
       {/* Content */}
       {view === 'list' ? (
-        <Card>
+        <Card className="bg-gray-900 border-gray-800">
           <CardHeader>
-            <CardTitle>All Posts</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">All Posts</CardTitle>
+            <CardDescription className="text-gray-200">
               Manage your content posts and their scheduling
             </CardDescription>
           </CardHeader>
           <CardContent>
             {posts.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">No posts yet</p>
+                <p className="text-gray-300 mb-4">No posts yet</p>
                 <Link href="/dashboard/content/new">
-                  <Button>Create Your First Post</Button>
+                  <Button className="bg-yellow-400 text-black hover:bg-yellow-500">Create Your First Post</Button>
                 </Link>
               </div>
             ) : (
               <div className="space-y-4">
                 {posts.map((post) => (
-                  <div key={post.id} className="border rounded-lg p-4">
+                  <div key={post.id} className="border border-gray-700 rounded-lg p-6 bg-gray-800 hover:bg-gray-750 transition-colors">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{post.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        <h3 className="font-semibold text-white text-lg">{post.title}</h3>
+                        <p className="text-sm text-gray-300 mt-2 line-clamp-2 leading-relaxed">
                           {post.content}
                         </p>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                          <span className={`px-2 py-1 rounded-full ${
-                            post.state === 'published' ? 'bg-green-100 text-green-800' :
-                            post.state === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                        <div className="flex items-center space-x-4 mt-3 text-xs">
+                          <span className={`px-3 py-1 rounded-full font-medium ${
+                            post.state === 'published' ? 'bg-green-900 text-green-300' :
+                            post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+                            'bg-gray-700 text-gray-300'
                           }`}>
                             {post.state}
                           </span>
                           {post.scheduled_for && (
-                            <span>Scheduled: {formatDateTime(post.scheduled_for)}</span>
+                            <span className="text-gray-400">Scheduled: {formatDateTime(post.scheduled_for)}</span>
                           )}
                           {post.published_at && (
-                            <span>Published: {formatDateTime(post.published_at)}</span>
+                            <span className="text-gray-400">Published: {formatDateTime(post.published_at)}</span>
                           )}
-                          <span>Created: {formatDateTime(post.created_at)}</span>
+                          <span className="text-gray-400">Created: {formatDateTime(post.created_at)}</span>
                         </div>
                       </div>
                       <div className="ml-4 flex space-x-2">
@@ -212,6 +214,7 @@ export default function SchedulerPage() {
                           <>
                             <Button
                               size="sm"
+                              className="bg-yellow-400 text-black hover:bg-yellow-500"
                               onClick={() => {
                                 const scheduledFor = prompt('Enter scheduled date (YYYY-MM-DD HH:MM):')
                                 if (scheduledFor) {
@@ -223,7 +226,7 @@ export default function SchedulerPage() {
                             </Button>
                             <Button
                               size="sm"
-                              variant="outline"
+                              className="bg-green-600 text-white hover:bg-green-700"
                               onClick={() => handlePublishNow(post.id)}
                             >
                               Publish Now
@@ -231,7 +234,7 @@ export default function SchedulerPage() {
                           </>
                         )}
                         <Link href={`/dashboard/content/${post.id}`}>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-700">
                             Edit
                           </Button>
                         </Link>
@@ -244,16 +247,16 @@ export default function SchedulerPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="bg-gray-900 border-gray-800">
           <CardHeader>
-            <CardTitle>Calendar View</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Calendar View</CardTitle>
+            <CardDescription className="text-gray-200">
               Visual calendar of your scheduled content
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">Calendar view coming soon!</p>
+              <p className="text-gray-300 mb-4">Calendar view coming soon!</p>
               <p className="text-sm text-gray-400">
                 This will show a visual calendar with scheduled posts
               </p>

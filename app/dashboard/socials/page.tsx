@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SocialConnection } from '@/types/index'
+import { SocialIcon } from '@/components/ui/social-icons'
 import toast from 'react-hot-toast'
 
 const socialPlatforms = [
@@ -12,36 +13,36 @@ const socialPlatforms = [
     id: 'twitter',
     name: 'Twitter/X',
     description: 'Connect your Twitter account to publish tweets',
-    icon: '🐦',
-    color: 'bg-blue-500',
+    color: 'bg-black',
+    brandColor: '#1DA1F2',
   },
   {
     id: 'linkedin',
     name: 'LinkedIn',
     description: 'Connect your LinkedIn account to publish posts',
-    icon: '💼',
     color: 'bg-blue-600',
+    brandColor: '#0077B5',
   },
   {
     id: 'instagram',
     name: 'Instagram',
     description: 'Connect your Instagram account to publish posts',
-    icon: '📸',
-    color: 'bg-pink-500',
+    color: 'bg-gradient-to-br from-purple-500 to-pink-500',
+    brandColor: '#E4405F',
   },
   {
     id: 'facebook',
     name: 'Facebook',
     description: 'Connect your Facebook account to publish posts',
-    icon: '👥',
     color: 'bg-blue-700',
+    brandColor: '#1877F2',
   },
   {
     id: 'youtube',
     name: 'YouTube',
     description: 'Connect your YouTube account to publish videos',
-    icon: '📺',
-    color: 'bg-red-500',
+    color: 'bg-red-600',
+    brandColor: '#FF0000',
   },
 ]
 
@@ -131,18 +132,18 @@ export default function SocialConnectionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Social Connections</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-3xl font-bold text-white">Social Connections</h1>
+        <p className="text-gray-200 mt-2">
           Connect your social media accounts to publish content automatically
         </p>
       </div>
 
       {/* Connected Accounts */}
       {connections.length > 0 && (
-        <Card>
+        <Card className="bg-gray-900 border-gray-800">
           <CardHeader>
-            <CardTitle>Connected Accounts</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">Connected Accounts</CardTitle>
+            <CardDescription className="text-gray-200">
               Manage your connected social media accounts
             </CardDescription>
           </CardHeader>
@@ -151,20 +152,21 @@ export default function SocialConnectionsPage() {
               {connections.map((connection) => {
                 const platform = socialPlatforms.find(p => p.id === connection.platform)
                 return (
-                  <div key={connection.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={connection.id} className="flex items-center justify-between p-6 border border-gray-700 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
                     <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full ${platform?.color} flex items-center justify-center text-white text-xl`}>
-                        {platform?.icon}
+                      <div className={`w-14 h-14 rounded-xl ${platform?.color} flex items-center justify-center text-white shadow-lg`}>
+                        <SocialIcon platform={platform?.id || ''} size="lg" className="text-white" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{platform?.name}</h3>
-                        <p className="text-sm text-gray-500">
+                        <h3 className="font-semibold text-white text-lg">{platform?.name}</h3>
+                        <p className="text-sm text-gray-300">
                           Connected on {new Date(connection.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <Button
                       variant="outline"
+                      className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
                       onClick={() => handleDisconnect(connection.id)}
                     >
                       Disconnect
@@ -178,33 +180,37 @@ export default function SocialConnectionsPage() {
       )}
 
       {/* Available Platforms */}
-      <Card>
+      <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle>Available Platforms</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-white">Available Platforms</CardTitle>
+          <CardDescription className="text-gray-200">
             Connect your social media accounts to start publishing
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {socialPlatforms.map((platform) => (
-              <div key={platform.id} className="border rounded-lg p-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className={`w-10 h-10 rounded-full ${platform.color} flex items-center justify-center text-white text-lg`}>
-                    {platform.icon}
+              <div key={platform.id} className="border border-gray-700 rounded-xl p-6 bg-gray-800 hover:bg-gray-750 transition-all duration-200 hover:border-gray-600 hover:shadow-lg">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className={`w-12 h-12 rounded-xl ${platform.color} flex items-center justify-center text-white shadow-md`}>
+                    <SocialIcon platform={platform.id} size="md" className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">{platform.name}</h3>
+                    <h3 className="font-semibold text-white text-lg">{platform.name}</h3>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-4">{platform.description}</p>
+                <p className="text-sm text-gray-300 mb-6 leading-relaxed">{platform.description}</p>
                 <Button
-                  className="w-full"
-                  variant={isConnected(platform.id) ? "outline" : "default"}
+                  className={`w-full transition-all duration-200 ${
+                    isConnected(platform.id) 
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'bg-yellow-400 hover:bg-yellow-500 text-black font-semibold'
+                  }`}
+                  variant={isConnected(platform.id) ? "default" : "default"}
                   onClick={() => handleConnect(platform.id)}
                   disabled={isConnected(platform.id)}
                 >
-                  {isConnected(platform.id) ? 'Connected' : 'Connect'}
+                  {isConnected(platform.id) ? '✓ Connected' : 'Connect Account'}
                 </Button>
               </div>
             ))}
@@ -213,16 +219,28 @@ export default function SocialConnectionsPage() {
       </Card>
 
       {/* Help Section */}
-      <Card>
+      <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle>Need Help?</CardTitle>
+          <CardTitle className="text-white">Need Help?</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>• Make sure you have admin access to the social media accounts you want to connect</p>
-            <p>• You can connect multiple accounts of the same platform</p>
-            <p>• Connected accounts will be used for automatic publishing of scheduled content</p>
-            <p>• You can disconnect accounts at any time</p>
+          <div className="space-y-3 text-sm text-gray-200">
+            <div className="flex items-start space-x-3">
+              <span className="text-yellow-400 mt-0.5">•</span>
+              <p>Make sure you have admin access to the social media accounts you want to connect</p>
+            </div>
+            <div className="flex items-start space-x-3">
+              <span className="text-yellow-400 mt-0.5">•</span>
+              <p>You can connect multiple accounts of the same platform</p>
+            </div>
+            <div className="flex items-start space-x-3">
+              <span className="text-yellow-400 mt-0.5">•</span>
+              <p>Connected accounts will be used for automatic publishing of scheduled content</p>
+            </div>
+            <div className="flex items-start space-x-3">
+              <span className="text-yellow-400 mt-0.5">•</span>
+              <p>You can disconnect accounts at any time</p>
+            </div>
           </div>
         </CardContent>
       </Card>
