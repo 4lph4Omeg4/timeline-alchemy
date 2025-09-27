@@ -20,13 +20,31 @@ export const supabase = (() => {
     })
   }
   
-  // Client-side: use singleton
+  // Client-side: use singleton with explicit storage key
   if (!supabaseClient) {
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: true,
+        storage: {
+          getItem: (key: string) => {
+            if (typeof window !== 'undefined') {
+              return window.localStorage.getItem(key)
+            }
+            return null
+          },
+          setItem: (key: string, value: string) => {
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem(key, value)
+            }
+          },
+          removeItem: (key: string) => {
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem(key)
+            }
+          }
+        }
       }
     })
   }

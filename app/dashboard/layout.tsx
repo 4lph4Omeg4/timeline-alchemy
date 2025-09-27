@@ -24,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const ensureAdminOrganization = async (userId: string) => {
     try {
       // Check if admin already has an organization
-      const { data: existingOrg, error: checkError } = await supabase
+      const { data: existingOrg, error: checkError } = await (supabase as any)
         .from('org_members')
         .select('org_id, organizations(*)')
         .eq('user_id', userId)
@@ -109,7 +109,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         await ensureAdminOrganization(user.id)
 
         // For admin: fetch all active organizations
-        const { data: orgs, error: orgError } = await supabase
+        const { data: orgs, error: orgError } = await (supabase as any)
           .from('organizations')
           .select(`
             *,
@@ -125,7 +125,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
 
         // For admin: fetch all active clients
-        const { data: clientsData, error: clientsError } = await supabase
+        const { data: clientsData, error: clientsError } = await (supabase as any)
           .from('clients')
           .select(`
             *,
@@ -138,7 +138,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       } else {
         // For regular users: check if they have an organization, create one if not
-        const { data: orgs, error } = await supabase
+        const { data: orgs, error } = await (supabase as any)
           .from('org_members')
           .select(`
             *,
@@ -155,7 +155,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           
           // Try to fetch again after a short delay
           setTimeout(async () => {
-            const { data: retryOrgs, error: retryError } = await supabase
+            const { data: retryOrgs, error: retryError } = await (supabase as any)
               .from('org_members')
               .select(`
                 *,
