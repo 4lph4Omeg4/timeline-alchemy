@@ -52,26 +52,51 @@ export default function ContentListPage() {
         .eq('user_id', user.id)
         .single()
 
-      // Build query to get both user's own content and admin-created packages
-      let query = supabase
+      console.log('User client data:', userClient)
+
+      // Fetch user's own content
+      let userQuery = supabase
         .from('blog_posts')
         .select('*')
         .eq('org_id', orgMember.org_id)
+        .eq('created_by_admin', false)
+        .is('client_id', null)
         .order('created_at', { ascending: false })
 
-      // If user is a client, show both their own content AND admin-created packages for them
-      if (userClient?.client_id) {
-        query = query.or(`created_by_admin.eq.false,created_by_admin.eq.true,client_id.eq.${userClient.client_id}`)
-      } else {
-        // Regular users only see their own content
-        query = query.eq('created_by_admin', false)
-      }
-
       if (filter !== 'all') {
-        query = query.eq('state', filter)
+        userQuery = userQuery.eq('state', filter)
       }
 
-      const { data, error } = await query
+      const { data: userPosts, error: userError } = await userQuery
+
+      // If user is a client, also fetch admin packages assigned to them
+      let adminPackages: any[] = []
+      if (userClient?.client_id) {
+        let adminQuery = supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('org_id', orgMember.org_id)
+          .eq('created_by_admin', true)
+          .eq('client_id', userClient.client_id)
+          .order('created_at', { ascending: false })
+
+        if (filter !== 'all') {
+          adminQuery = adminQuery.eq('state', filter)
+        }
+
+        const { data: adminData, error: adminError } = await adminQuery
+        if (!adminError) {
+          adminPackages = adminData || []
+        }
+      }
+
+      // Combine both results
+      const data = [...(userPosts || []), ...adminPackages]
+      const error = userError
+
+      console.log('User posts:', userPosts)
+      console.log('Admin packages:', adminPackages)
+      console.log('Combined data:', data)
 
       if (error) {
         console.error('Error fetching posts:', error)
