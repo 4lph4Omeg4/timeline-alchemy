@@ -119,6 +119,33 @@ export default function ContentListPage() {
     }
   }
 
+  const handleRecyclePost = async (postId: string) => {
+    if (!confirm('Are you sure you want to recycle this published post back to draft? This will remove the published date but keep all content.')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .update({
+          state: 'draft',
+          published_at: null,
+        })
+        .eq('id', postId)
+
+      if (error) {
+        console.error('Error recycling post:', error)
+        toast.error('Failed to recycle post')
+      } else {
+        toast.success('Post recycled to draft successfully')
+        fetchPosts() // Refresh the list
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      toast.error('An unexpected error occurred')
+    }
+  }
+
   const getStateColor = (state: string) => {
     switch (state) {
       case 'draft':
@@ -237,11 +264,38 @@ export default function ContentListPage() {
                     )}
                     
                     {post.state === 'published' && (
-                      <Link href={`/dashboard/content/view/${post.id}`}>
-                        <Button size="sm" variant="outline" className="flex-1">
-                          View
+                      <>
+                        <Link href={`/dashboard/content/package/${post.id}`}>
+                          <Button size="sm" className="flex-1">
+                            📦 View Package
+                          </Button>
+                        </Link>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRecyclePost(post.id)}
+                          className="flex-1"
+                        >
+                          ♻️ Recycle
                         </Button>
-                      </Link>
+                      </>
+                    )}
+
+                    {post.state === 'scheduled' && (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handlePublishPost(post.id)}
+                          className="flex-1"
+                        >
+                          Publish Now
+                        </Button>
+                        <Link href={`/dashboard/content/edit/${post.id}`}>
+                          <Button size="sm" variant="outline" className="flex-1">
+                            Edit
+                          </Button>
+                        </Link>
+                      </>
                     )}
                     
                     <Button

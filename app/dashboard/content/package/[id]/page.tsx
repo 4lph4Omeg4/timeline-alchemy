@@ -1,0 +1,389 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { BlogPost } from '@/types/index'
+import { formatDate } from '@/lib/utils'
+import Link from 'next/link'
+import toast from 'react-hot-toast'
+
+interface GeneratedContent {
+  blogPost: {
+    title: string
+    content: string
+    excerpt: string
+    tags: string[]
+  }
+  image: {
+    url: string
+    prompt: string
+  }
+  socialPosts: {
+    facebook: string
+    instagram: string
+    twitter: string
+    linkedin: string
+    tiktok: string
+  }
+}
+
+export default function ContentPackagePage() {
+  const params = useParams()
+  const router = useRouter()
+  const [post, setPost] = useState<BlogPost | null>(null)
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (params.id) {
+      fetchPost()
+    }
+  }, [params.id])
+
+  const fetchPost = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/auth/signin')
+        return
+      }
+
+      // Get user's organization
+      const { data: orgMember, error: orgError } = await supabase
+        .from('org_members')
+        .select('org_id')
+        .eq('user_id', user.id)
+        .eq('role', 'owner')
+        .single()
+
+      if (orgError || !orgMember) {
+        console.error('Error getting user organization:', orgError)
+        toast.error('No organization found')
+        router.push('/create-organization')
+        return
+      }
+
+      // Fetch the post
+      const { data: postData, error: postError } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('id', params.id)
+        .eq('org_id', orgMember.org_id)
+        .single()
+
+      if (postError || !postData) {
+        console.error('Error fetching post:', postError)
+        toast.error('Post not found')
+        router.push('/dashboard/content/list')
+        return
+      }
+
+      setPost(postData)
+
+      // Try to fetch associated images
+      const { data: images } = await supabase
+        .from('images')
+        .select('*')
+        .eq('post_id', params.id)
+        .eq('org_id', orgMember.org_id)
+
+      // For now, we'll create a mock generated content structure
+      // In a real app, you might store the complete generated content in the database
+      const mockGeneratedContent: GeneratedContent = {
+        blogPost: {
+          title: postData.title,
+          content: postData.content,
+          excerpt: postData.content.substring(0, 200) + '...',
+          tags: ['AI Generated', 'Content Package']
+        },
+        image: images && images.length > 0 ? {
+          url: images[0].url,
+          prompt: 'AI generated image for: ' + postData.title
+        } : {
+          url: '',
+          prompt: ''
+        },
+        socialPosts: {
+          facebook: `Check out this amazing content: ${postData.title}\n\n${postData.content.substring(0, 200)}...`,
+          instagram: `✨ ${postData.title} ✨\n\n${postData.content.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
+          twitter: `${postData.title}\n\n${postData.content.substring(0, 100)}...\n\n#AI #Content`,
+          linkedin: `Professional insight: ${postData.title}\n\n${postData.content.substring(0, 180)}...\n\n#Professional #AI #Content`,
+          tiktok: `${postData.title} 🚀\n\n${postData.content.substring(0, 120)}...\n\n#AI #Trending #Content`
+        }
+      }
+
+      setGeneratedContent(mockGeneratedContent)
+
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      toast.error('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRecyclePost = async () => {
+    if (!post) return
+
+    if (!confirm('Are you sure you want to recycle this published post back to draft? This will remove the published date but keep all content.')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .update({
+          state: 'draft',
+          published_at: null,
+        })
+        .eq('id', post.id)
+
+      if (error) {
+        console.error('Error recycling post:', error)
+        toast.error('Failed to recycle post')
+      } else {
+        toast.success('Post recycled to draft successfully')
+        router.push('/dashboard/content/list')
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      toast.error('An unexpected error occurred')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!post || !generatedContent) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Content Not Found</h1>
+          <p className="text-gray-300 mt-2">The requested content package could not be found.</p>
+        </div>
+        <Link href="/dashboard/content/list">
+          <Button>Back to Content Library</Button>
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-white">{post.title}</h1>
+            <Badge className="bg-green-600 text-white">Published</Badge>
+          </div>
+          <p className="text-gray-300">
+            Published {formatDate(post.published_at || post.created_at)}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleRecyclePost}
+          >
+            ♻️ Recycle to Draft
+          </Button>
+          <Link href="/dashboard/content/list">
+            <Button variant="outline">Back to Library</Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Blog Post */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">📝 Blog Post</CardTitle>
+          <CardDescription className="text-gray-300">
+            Complete blog post content
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {generatedContent.blogPost.tags.map((tag, index) => (
+              <Badge key={index} variant="secondary" className="bg-gray-700 text-gray-300">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+          <div className="prose prose-invert max-w-none">
+            <div 
+              className="text-gray-300 leading-relaxed whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{ __html: generatedContent.blogPost.content }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Generated Image */}
+      {generatedContent.image.url && (
+        <Card className="bg-gray-900 border-gray-800">
+          <CardHeader>
+            <CardTitle className="text-white">🖼️ Generated Image</CardTitle>
+            <CardDescription className="text-gray-300">
+              AI-generated image that complements your content
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <img 
+                src={generatedContent.image.url} 
+                alt={generatedContent.image.prompt}
+                className="w-full max-w-md mx-auto rounded-lg shadow-lg"
+              />
+              <p className="text-sm text-gray-400 text-center">
+                <strong>Prompt:</strong> {generatedContent.image.prompt}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Social Media Posts */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
+          <CardDescription className="text-gray-300">
+            Platform-optimized posts ready for publishing
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Facebook */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">f</span>
+              </div>
+              <h4 className="font-semibold text-white">Facebook</h4>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <p className="text-gray-300">{generatedContent.socialPosts.facebook}</p>
+            </div>
+          </div>
+
+          <Separator className="bg-gray-700" />
+
+          {/* Instagram */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">📷</span>
+              </div>
+              <h4 className="font-semibold text-white">Instagram</h4>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <p className="text-gray-300">{generatedContent.socialPosts.instagram}</p>
+            </div>
+          </div>
+
+          <Separator className="bg-gray-700" />
+
+          {/* Twitter/X */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">𝕏</span>
+              </div>
+              <h4 className="font-semibold text-white">Twitter/X</h4>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <p className="text-gray-300">{generatedContent.socialPosts.twitter}</p>
+            </div>
+          </div>
+
+          <Separator className="bg-gray-700" />
+
+          {/* LinkedIn */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 bg-blue-700 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">in</span>
+              </div>
+              <h4 className="font-semibold text-white">LinkedIn</h4>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <p className="text-gray-300">{generatedContent.socialPosts.linkedin}</p>
+            </div>
+          </div>
+
+          <Separator className="bg-gray-700" />
+
+          {/* TikTok */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">🎵</span>
+              </div>
+              <h4 className="font-semibold text-white">TikTok</h4>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <p className="text-gray-300">{generatedContent.socialPosts.tiktok}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Copy to Clipboard Actions */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">📋 Quick Actions</CardTitle>
+          <CardDescription className="text-gray-300">
+            Copy content for easy sharing
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(generatedContent.blogPost.content)
+                toast.success('Blog content copied to clipboard!')
+              }}
+            >
+              Copy Blog Content
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const allSocialPosts = Object.entries(generatedContent.socialPosts)
+                  .map(([platform, content]) => `${platform.toUpperCase()}:\n${content}`)
+                  .join('\n\n')
+                navigator.clipboard.writeText(allSocialPosts)
+                toast.success('All social posts copied to clipboard!')
+              }}
+            >
+              Copy All Social Posts
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const fullPackage = `BLOG POST:\n${generatedContent.blogPost.content}\n\nSOCIAL MEDIA POSTS:\n${Object.entries(generatedContent.socialPosts)
+                  .map(([platform, content]) => `${platform.toUpperCase()}:\n${content}`)
+                  .join('\n\n')}`
+                navigator.clipboard.writeText(fullPackage)
+                toast.success('Complete package copied to clipboard!')
+              }}
+            >
+              Copy Full Package
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
