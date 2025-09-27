@@ -114,7 +114,7 @@ export default function DebugPage() {
 
       } catch (error) {
         console.error('Unexpected error:', error)
-        setDebugData({ error: error.message })
+        setDebugData({ error: error instanceof Error ? error.message : String(error) })
       } finally {
         setLoading(false)
       }
