@@ -155,30 +155,78 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             setOrganizations(orgDetails)
           }
         } else {
-          // User doesn't have an organization yet - the database trigger should have created one
-          // Let's wait a moment and try again, or show a message
-          console.log('No organization found for user. This might be a new user - organization should be created automatically.')
+          // User doesn't have an organization yet - try to create one manually
+          console.log('No organization found for user. Attempting to create organization manually.')
           
-          // Try to fetch again after a short delay
-          setTimeout(async () => {
-            const { data: retryOrgs, error: retryError } = await (supabase as any)
-              .from('org_members')
-              .select('org_id, role, created_at')
-              .eq('user_id', user.id)
+          try {
+            // Create organization manually as fallback
+            const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
+            const { data: newOrg, error: orgError } = await (supabase as any)
+              .from('organizations')
+              .insert({
+                name: userName + "'s Organization",
+                plan: 'basic'
+              })
+              .select()
+              .single()
 
-            if (retryOrgs && retryOrgs.length > 0) {
-              // Fetch organization details for each org_id
-              const orgIds = retryOrgs.map((org: any) => org.org_id)
-              const { data: orgDetails } = await (supabase as any)
-                .from('organizations')
-                .select('*')
-                .in('id', orgIds)
-              
-              if (orgDetails) {
-                setOrganizations(orgDetails)
+            if (newOrg && !orgError) {
+              // Add user as owner
+              const { error: memberError } = await (supabase as any)
+                .from('org_members')
+                .insert({
+                  org_id: newOrg.id,
+                  user_id: user.id,
+                  role: 'owner'
+                })
+
+              if (!memberError) {
+                // Create subscription
+                await (supabase as any)
+                  .from('subscriptions')
+                  .insert({
+                    org_id: newOrg.id,
+                    stripe_customer_id: 'temp-customer-' + newOrg.id,
+                    stripe_subscription_id: 'temp-sub-' + newOrg.id,
+                    plan: 'basic',
+                    status: 'active'
+                  })
+
+                // Create default client
+                await (supabase as any)
+                  .from('clients')
+                  .insert({
+                    org_id: newOrg.id,
+                    name: userName + "'s Client",
+                    contact_info: { email: user.email }
+                  })
+
+                console.log('Successfully created organization manually:', newOrg)
+                setOrganizations([newOrg])
               }
             }
-          }, 2000)
+          } catch (error) {
+            console.error('Failed to create organization manually:', error)
+            // Try to fetch again after a delay in case the trigger eventually works
+            setTimeout(async () => {
+              const { data: retryOrgs } = await (supabase as any)
+                .from('org_members')
+                .select('org_id, role, created_at')
+                .eq('user_id', user.id)
+
+              if (retryOrgs && retryOrgs.length > 0) {
+                const orgIds = retryOrgs.map((org: any) => org.org_id)
+                const { data: orgDetails } = await (supabase as any)
+                  .from('organizations')
+                  .select('*')
+                  .in('id', orgIds)
+                
+                if (orgDetails) {
+                  setOrganizations(orgDetails)
+                }
+              }
+            }, 3000)
+          }
         }
       }
 
