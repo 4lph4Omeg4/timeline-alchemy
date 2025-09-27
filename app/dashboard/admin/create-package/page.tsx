@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Client } from '@/types/index'
+import { Switch } from '@/components/ui/switch'
+import { Client, BlogPost } from '@/types/index'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { Loader } from '@/components/Loader'
@@ -18,6 +19,9 @@ export default function AdminCreatePackagePage() {
   const [content, setContent] = useState('')
   const [selectedClient, setSelectedClient] = useState<string>('')
   const [clients, setClients] = useState<Client[]>([])
+  const [existingContent, setExistingContent] = useState<BlogPost[]>([])
+  const [useExistingContent, setUseExistingContent] = useState(false)
+  const [selectedContent, setSelectedContent] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
@@ -47,11 +51,10 @@ export default function AdminCreatePackagePage() {
           return
         }
 
-        // Fetch all clients for this organization
+        // Fetch all clients (not just from admin's organization)
         const { data: clientsData, error: clientsError } = await supabase
           .from('clients')
           .select('*')
-          .eq('org_id', orgMember.org_id)
           .order('name')
 
         if (clientsError) {
@@ -59,6 +62,22 @@ export default function AdminCreatePackagePage() {
           toast.error('Failed to fetch clients')
         } else {
           setClients(clientsData || [])
+        }
+
+        // Fetch existing content from admin's organization
+        const { data: contentData, error: contentError } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('org_id', orgMember.org_id)
+          .eq('created_by_admin', false) // Only show content created by users, not other admin packages
+          .order('created_at', { ascending: false })
+          .limit(50) // Limit to prevent too many options
+
+        if (contentError) {
+          console.error('Error fetching existing content:', contentError)
+          toast.error('Failed to fetch existing content')
+        } else {
+          setExistingContent(contentData || [])
         }
       } catch (error) {
         console.error('Unexpected error:', error)
@@ -72,8 +91,18 @@ export default function AdminCreatePackagePage() {
   }, [])
 
   const handleSavePackage = async () => {
-    if (!title.trim() || !content.trim() || !selectedClient) {
+    if (!selectedClient) {
+      toast.error('Please select a client')
+      return
+    }
+
+    if (!useExistingContent && (!title.trim() || !content.trim())) {
       toast.error('Please fill in all required fields')
+      return
+    }
+
+    if (useExistingContent && !selectedContent) {
+      toast.error('Please select existing content')
       return
     }
 
@@ -98,14 +127,26 @@ export default function AdminCreatePackagePage() {
         return
       }
 
+      let finalTitle = title
+      let finalContent = content
+
+      // If using existing content, get the data from selected content
+      if (useExistingContent) {
+        const selectedPost = existingContent.find(post => post.id === selectedContent)
+        if (selectedPost) {
+          finalTitle = selectedPost.title
+          finalContent = selectedPost.content
+        }
+      }
+
       // Create the package for the selected client
       const { data: packageData, error: packageError } = await supabase
         .from('blog_posts')
         .insert({
           org_id: orgMember.org_id,
           client_id: selectedClient,
-          title,
-          content,
+          title: finalTitle,
+          content: finalContent,
           state: 'draft',
           created_by_admin: true,
         })
@@ -169,28 +210,67 @@ export default function AdminCreatePackagePage() {
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="title" className="text-white">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-2 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-              placeholder="Enter package title"
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="use-existing"
+              checked={useExistingContent}
+              onCheckedChange={setUseExistingContent}
             />
+            <Label htmlFor="use-existing" className="text-white">
+              Use existing content
+            </Label>
           </div>
 
-          <div>
-            <Label htmlFor="content" className="text-white">Content</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="mt-2 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-              rows={15}
-              placeholder="Enter the main content for this package"
-            />
-          </div>
+          {useExistingContent ? (
+            <div>
+              <Label htmlFor="existing-content" className="text-white">Select Content</Label>
+              <Select value={selectedContent} onValueChange={setSelectedContent}>
+                <SelectTrigger className="mt-2 bg-gray-700 border-gray-600 text-white">
+                  <SelectValue placeholder="Select existing content" />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingContent.map((post) => (
+                    <SelectItem key={post.id} value={post.id}>
+                      {post.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedContent && (
+                <div className="mt-2 p-3 bg-gray-800 rounded-lg">
+                  <h4 className="text-white font-medium mb-2">Preview:</h4>
+                  <p className="text-gray-300 text-sm">
+                    {existingContent.find(p => p.id === selectedContent)?.content.substring(0, 200)}...
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div>
+                <Label htmlFor="title" className="text-white">Title</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="mt-2 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                  placeholder="Enter package title"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="content" className="text-white">Content</Label>
+                <Textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="mt-2 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                  rows={15}
+                  placeholder="Enter the main content for this package"
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex space-x-4 pt-4">
             <Button 
@@ -201,7 +281,7 @@ export default function AdminCreatePackagePage() {
             </Button>
             <Button 
               onClick={handleSavePackage}
-              disabled={saving || !title.trim() || !content.trim() || !selectedClient}
+              disabled={saving || !selectedClient || (!useExistingContent && (!title.trim() || !content.trim())) || (useExistingContent && !selectedContent)}
             >
               {saving ? (
                 <>
