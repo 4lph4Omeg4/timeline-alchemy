@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, Database } from '../../../lib/supabase-typed'
+import { supabase, Database } from '@/lib/supabase'
 
 type OrganizationInsert = Database['public']['Tables']['organizations']['Insert']
 

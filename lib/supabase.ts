@@ -3,10 +3,24 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
-// Client-side Supabase instance (for browser) - singleton pattern
+// Global singleton instances
 let supabaseClient: ReturnType<typeof createClient> | null = null
+let supabaseAdminClient: ReturnType<typeof createClient> | null = null
 
+// Client-side Supabase instance (for browser) - singleton pattern
 export const supabase = (() => {
+  if (typeof window === 'undefined') {
+    // Server-side: create a new instance
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    })
+  }
+  
+  // Client-side: use singleton
   if (!supabaseClient) {
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
@@ -20,8 +34,6 @@ export const supabase = (() => {
 })()
 
 // Server-side Supabase instance (for API routes) - singleton pattern
-let supabaseAdminClient: ReturnType<typeof createClient> | null = null
-
 export const supabaseAdmin = (() => {
   if (!supabaseAdminClient) {
     supabaseAdminClient = createClient(
