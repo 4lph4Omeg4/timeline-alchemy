@@ -369,7 +369,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="ml-4">
-                          <Link href={`/dashboard/content/${post.id}`}>
+                          <Link href={`/dashboard/content/package/${post.id}`}>
                             <Button variant="outline" size="sm">
                               Edit
                             </Button>

@@ -278,7 +278,7 @@ export default function SchedulerPage() {
                             </Button>
                           </>
                         )}
-                        <Link href={`/dashboard/content/${post.id}`}>
+                        <Link href={`/dashboard/content/package/${post.id}`}>
                           <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-700">
                             Edit
                           </Button>

@@ -45,12 +45,27 @@ export default function ContentListPage() {
         return
       }
 
-      // Build query based on filter
+      // Get user's client information
+      const { data: userClient, error: clientError } = await supabase
+        .from('user_clients')
+        .select('client_id')
+        .eq('user_id', user.id)
+        .single()
+
+      // Build query to get both user's own content and admin-created packages
       let query = supabase
         .from('blog_posts')
         .select('*')
         .eq('org_id', orgMember.org_id)
         .order('created_at', { ascending: false })
+
+      // If user is a client, show both their own content AND admin-created packages for them
+      if (userClient?.client_id) {
+        query = query.or(`created_by_admin.eq.false,created_by_admin.eq.true,client_id.eq.${userClient.client_id}`)
+      } else {
+        // Regular users only see their own content
+        query = query.eq('created_by_admin', false)
+      }
 
       if (filter !== 'all') {
         query = query.eq('state', filter)
@@ -178,7 +193,7 @@ export default function ContentListPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Content Library</h1>
           <p className="text-gray-300 mt-2">
-            Manage and view all your saved content
+            Manage your content and view packages created for you by your admin.
           </p>
         </div>
         <Link href="/dashboard/content/new">
@@ -231,7 +246,14 @@ export default function ContentListPage() {
                   </Badge>
                 </div>
                 <CardDescription className="text-gray-400">
-                  Created {formatDate(post.created_at)}
+                  <div className="flex items-center space-x-2">
+                    <span>Created {formatDate(post.created_at)}</span>
+                    {post.created_by_admin && (
+                      <Badge className="bg-purple-600 text-white text-xs">
+                        Admin Package
+                      </Badge>
+                    )}
+                  </div>
                   {post.published_at && (
                     <span className="block">
                       Published {formatDate(post.published_at)}

@@ -34,6 +34,8 @@ export interface BlogPost {
   published_at?: string
   created_at: string
   updated_at: string
+  client_id?: string
+  created_by_admin?: boolean
 }
 
 export interface SocialConnection {
