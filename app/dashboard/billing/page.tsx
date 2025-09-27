@@ -7,10 +7,13 @@ import { Button } from '@/components/ui/button'
 import { STRIPE_PLANS, PlanType } from '@/lib/stripe'
 import { Subscription } from '@/types/index'
 import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
+  const [processing, setProcessing] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -47,6 +50,134 @@ export default function BillingPage() {
 
     fetchSubscription()
   }, [])
+
+  // Handle URL parameters for success/cancel
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const canceled = urlParams.get('canceled')
+
+    if (success) {
+      toast.success('Subscription activated successfully!')
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh subscription data
+      fetchSubscription()
+    } else if (canceled) {
+      toast.error('Subscription setup was canceled')
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [])
+
+  const fetchSubscription = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Get user's organization
+      const { data: orgMember } = await supabase
+        .from('org_members')
+        .select('org_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single()
+
+      if (!orgMember) return
+
+      // Get subscription
+      const { data: sub, error } = await (supabase as any)
+        .from('subscriptions')
+        .select('*')
+        .eq('org_id', (orgMember as any).org_id)
+        .single()
+
+      if (sub) {
+        setSubscription(sub)
+      }
+    } catch (error) {
+      console.error('Error fetching subscription:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubscribe = async (plan: PlanType) => {
+    setProcessing(plan)
+    try {
+      // You'll need to replace these with your actual Stripe price IDs
+      const priceIds: Record<PlanType, string> = {
+        basic: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID || 'price_basic',
+        pro: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_pro',
+        enterprise: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise',
+      }
+
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: priceIds[plan],
+          plan: plan,
+        }),
+      })
+
+      const { sessionId, error } = await response.json()
+
+      if (error) {
+        toast.error(error)
+        return
+      }
+
+      // Redirect to Stripe Checkout
+      const stripe = (await import('@stripe/stripe-js')).loadStripe(
+        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+      )
+
+      if (stripe) {
+        const { error: stripeError } = await stripe.redirectToCheckout({
+          sessionId,
+        })
+
+        if (stripeError) {
+          toast.error('Failed to redirect to checkout')
+        }
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+      toast.error('Failed to start subscription process')
+    } finally {
+      setProcessing(null)
+    }
+  }
+
+  const handleManageSubscription = async () => {
+    setProcessing('manage')
+    try {
+      const response = await fetch('/api/stripe/customer-portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const { url, error } = await response.json()
+
+      if (error) {
+        toast.error(error)
+        return
+      }
+
+      // Redirect to Stripe Customer Portal
+      window.location.href = url
+    } catch (error) {
+      console.error('Error creating customer portal session:', error)
+      toast.error('Failed to open customer portal')
+    } finally {
+      setProcessing(null)
+    }
+  }
 
   const handleUpgrade = async (plan: PlanType) => {
     try {
@@ -153,13 +284,12 @@ export default function BillingPage() {
                 </p>
               </div>
               <div className="flex space-x-2">
-                {subscription.status === 'active' && (
-                  <Button variant="outline" onClick={handleCancel}>
-                    Cancel Subscription
-                  </Button>
-                )}
-                <Button variant="outline">
-                  Manage Billing
+                <Button 
+                  variant="outline" 
+                  onClick={handleManageSubscription}
+                  disabled={processing === 'manage'}
+                >
+                  {processing === 'manage' ? 'Opening...' : 'Manage Billing'}
                 </Button>
               </div>
             </div>
@@ -210,15 +340,33 @@ export default function BillingPage() {
                   </ul>
 
                   <div className="mt-6">
-                    <Button
-                      className="w-full"
-                      variant={isCurrentPlan ? "outline" : "default"}
-                      disabled={isCurrentPlan}
-                      onClick={() => handleUpgrade(planKey as PlanType)}
-                    >
-                      {isCurrentPlan ? 'Current Plan' : 
-                       isUpgrade ? 'Upgrade' : 'Downgrade'}
-                    </Button>
+                    {subscription ? (
+                      isCurrentPlan ? (
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          disabled
+                        >
+                          Current Plan
+                        </Button>
+                      ) : (
+                        <Button
+                          className="w-full"
+                          onClick={() => handleSubscribe(planKey as PlanType)}
+                          disabled={processing === planKey}
+                        >
+                          {processing === planKey ? 'Processing...' : 'Change Plan'}
+                        </Button>
+                      )
+                    ) : (
+                      <Button
+                        className="w-full"
+                        onClick={() => handleSubscribe(planKey as PlanType)}
+                        disabled={processing === planKey}
+                      >
+                        {processing === planKey ? 'Processing...' : 'Subscribe'}
+                      </Button>
+                    )}
                   </div>
                 </div>
               )
