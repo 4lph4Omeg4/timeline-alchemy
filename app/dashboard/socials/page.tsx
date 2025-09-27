@@ -69,32 +69,54 @@ export default function SocialConnectionsPage() {
       }
     }
 
+    // Check for OAuth callback results
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const error = urlParams.get('error')
+    const username = urlParams.get('username')
+
+    if (success === 'twitter_connected' && username) {
+      toast.success(`Successfully connected to Twitter as @${username}!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else if (error) {
+      toast.error(`Connection failed: ${error}`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     fetchConnections()
   }, [])
 
   const handleConnect = async (platform: string) => {
     try {
-      // In a real implementation, this would redirect to the OAuth flow
-      // For now, we'll simulate the connection
-      toast.success(`Redirecting to ${platform} OAuth...`)
-      
-      // Simulate OAuth flow
-      setTimeout(() => {
-        const mockConnection = {
-          id: Math.random().toString(36).substr(2, 9),
-          org_id: 'mock-org-id',
-          platform: platform as any,
-          access_token: 'mock-access-token',
-          refresh_token: 'mock-refresh-token',
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
+      if (platform === 'twitter') {
+        // Generate state parameter for security
+        const state = Math.random().toString(36).substring(2, 15)
         
-        setConnections(prev => [...prev, mockConnection])
-        toast.success(`Successfully connected to ${platform}!`)
-      }, 2000)
+        // Store state in localStorage for verification
+        localStorage.setItem('twitter_oauth_state', state)
+        
+        // Twitter OAuth 2.0 URL
+        const authUrl = new URL('https://twitter.com/i/oauth2/authorize')
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '')
+        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/twitter/callback`)
+        authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read offline.access')
+        authUrl.searchParams.set('state', state)
+        authUrl.searchParams.set('code_challenge', 'challenge')
+        authUrl.searchParams.set('code_challenge_method', 'plain')
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to Twitter OAuth
+        window.location.href = authUrl.toString()
+      } else {
+        // For other platforms, show coming soon message
+        toast.info(`${platform} integration coming soon!`)
+      }
     } catch (error) {
+      console.error('OAuth error:', error)
       toast.error(`Failed to connect to ${platform}`)
     }
   }

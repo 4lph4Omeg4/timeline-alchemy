@@ -144,10 +144,53 @@ async function publishToSocialPlatform(connection: any, post: any) {
 }
 
 async function publishToTwitter(accessToken: string, post: any) {
-  // Twitter API v2 implementation would go here
-  console.log(`Publishing to Twitter: ${post.title}`)
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  try {
+    // Twitter API v2 implementation
+    console.log(`Publishing to Twitter: ${post.title}`)
+    
+    // Prepare tweet content (Twitter has a 280 character limit)
+    let tweetText = post.title
+    
+    // Add content if there's space
+    if (post.content && tweetText.length + post.content.length < 250) {
+      tweetText += `\n\n${post.content}`
+    } else if (post.content) {
+      // Truncate content if too long
+      const maxContentLength = 250 - tweetText.length - 3 // 3 for "..."
+      tweetText += `\n\n${post.content.substring(0, maxContentLength)}...`
+    }
+    
+    // Create tweet
+    const tweetResponse = await fetch('https://api.twitter.com/2/tweets', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: tweetText
+      }),
+    })
+    
+    if (!tweetResponse.ok) {
+      const errorData = await tweetResponse.text()
+      console.error('Twitter API error:', errorData)
+      throw new Error(`Twitter API error: ${tweetResponse.status}`)
+    }
+    
+    const tweetData = await tweetResponse.json()
+    console.log('Tweet published successfully:', tweetData.data.id)
+    
+    return {
+      success: true,
+      tweetId: tweetData.data.id,
+      url: `https://twitter.com/user/status/${tweetData.data.id}`
+    }
+    
+  } catch (error) {
+    console.error('Error publishing to Twitter:', error)
+    throw error
+  }
 }
 
 async function publishToLinkedIn(accessToken: string, post: any) {
