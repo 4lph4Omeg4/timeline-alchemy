@@ -70,6 +70,16 @@ export default function SocialConnectionsPage() {
   const [connections, setConnections] = useState<SocialConnection[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Helper function to check if a platform is connected
+  const isPlatformConnected = (platform: string) => {
+    return connections.some(conn => conn.platform === platform)
+  }
+
+  // Helper function to get connection info for a platform
+  const getConnectionInfo = (platform: string) => {
+    return connections.find(conn => conn.platform === platform)
+  }
+
   useEffect(() => {
     const fetchConnections = async () => {
       try {
@@ -100,6 +110,14 @@ export default function SocialConnectionsPage() {
       toast.success(`Successfully connected to Twitter as @${username}!`)
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
+    } else if (success === 'linkedin_connected') {
+      toast.success(`Successfully connected to LinkedIn!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
     } else if (error) {
       let errorMessage = `Connection failed: ${error}`
       if (details) {
@@ -140,6 +158,22 @@ export default function SocialConnectionsPage() {
         toast.success(`Redirecting to ${platform} OAuth...`)
         
         // Redirect to Twitter OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'linkedin') {
+        // Generate state parameter for security
+        const state = Math.random().toString(36).substring(2, 15)
+        
+        // LinkedIn OAuth 2.0 URL
+        const authUrl = new URL('https://www.linkedin.com/oauth/v2/authorization')
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || '')
+        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/linkedin/callback`)
+        authUrl.searchParams.set('scope', 'w_member_social')
+        authUrl.searchParams.set('state', state)
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to LinkedIn OAuth
         window.location.href = authUrl.toString()
       } else {
         // For other platforms, show coming soon message
@@ -259,10 +293,12 @@ export default function SocialConnectionsPage() {
                       : 'bg-yellow-400 hover:bg-yellow-500 text-black font-semibold'
                   }`}
                   variant={isConnected(platform.id) ? "default" : "default"}
-                  onClick={() => handleConnect(platform.id)}
-                  disabled={isConnected(platform.id)}
+                  onClick={() => isConnected(platform.id) 
+                    ? handleDisconnect(connections.find(conn => conn.platform === platform.id)?.id || '') 
+                    : handleConnect(platform.id)
+                  }
                 >
-                  {isConnected(platform.id) ? '✓ Connected' : 'Connect Account'}
+                  {isConnected(platform.id) ? '✓ Connected - Click to Disconnect' : 'Connect Account'}
                 </Button>
               </div>
             ))}

@@ -146,7 +146,7 @@ async function publishToSocialPlatform(connection: any, post: any) {
 async function publishToTwitter(accessToken: string, post: any) {
   try {
     // Twitter API v2 implementation
-    console.log(`Publishing to Twitter: ${post.title}`)
+  console.log(`Publishing to Twitter: ${post.title}`)
     
     // Prepare tweet content (Twitter has a 280 character limit)
     let tweetText = post.title
@@ -194,9 +194,72 @@ async function publishToTwitter(accessToken: string, post: any) {
 }
 
 async function publishToLinkedIn(accessToken: string, post: any) {
-  // LinkedIn API implementation would go here
+  try {
+    // LinkedIn API implementation
   console.log(`Publishing to LinkedIn: ${post.title}`)
-  await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Prepare LinkedIn post content
+    const linkedinText = {
+      text: `${post.title}\n\n${post.content || ''}`
+    }
+    
+    // Create LinkedIn post
+    const postResponse = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0',
+      },
+      body: JSON.stringify({
+        author: 'urn:li:person:' + await getLinkedInUserId(accessToken),
+        lifecycleState: 'PUBLISHED',
+        specificContent: {
+          'com.linkedin.ugc.ShareContent': {
+            shareCommentary: linkedinText,
+            shareMediaCategory: 'NONE'
+          }
+        },
+        visibility: {
+          'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+        }
+      }),
+    })
+    
+    if (!postResponse.ok) {
+      const errorData = await postResponse.text()
+      console.error('LinkedIn API error:', errorData)
+      throw new Error(`LinkedIn API error: ${postResponse.status}`)
+    }
+    
+    const postData = await postResponse.json()
+    console.log('LinkedIn post published successfully:', postData.id)
+    
+    return {
+      success: true,
+      postId: postData.id,
+      url: `https://linkedin.com/feed/update/${postData.id}`
+    }
+    
+  } catch (error) {
+    console.error('Error publishing to LinkedIn:', error)
+    throw error
+  }
+}
+
+async function getLinkedInUserId(accessToken: string): Promise<string> {
+  const userResponse = await fetch('https://api.linkedin.com/v2/people/~', {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  })
+  
+  if (!userResponse.ok) {
+    throw new Error('Failed to get LinkedIn user ID')
+  }
+  
+  const userData = await userResponse.json()
+  return userData.id
 }
 
 async function publishToInstagram(accessToken: string, post: any) {
