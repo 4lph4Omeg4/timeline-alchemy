@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       code,
       grant_type: 'authorization_code',
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/twitter/callback`,
-      code_verifier,
+      code_verifier: codeVerifier,
     })
 
     console.log('Exchanging code for token with body:', tokenRequestBody.toString())
