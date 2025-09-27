@@ -311,12 +311,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="min-h-screen bg-black">
         {/* Header */}
         <header className="bg-gray-900 shadow-sm border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/dashboard" className="flex items-center">
                 <Logo size="md" showText={false} />
-                <span className="ml-3 text-xl font-bold text-gray-900 dark:text-white">Timeline Alchemy</span>
+                <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Timeline Alchemy</span>
               </Link>
             </div>
 

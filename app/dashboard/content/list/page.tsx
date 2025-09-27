@@ -237,6 +237,11 @@ export default function ContentListPage() {
                       Published {formatDate(post.published_at)}
                     </span>
                   )}
+                  {post.scheduled_for && (
+                    <span className="block text-blue-400">
+                      Scheduled for {formatDate(post.scheduled_for)}
+                    </span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -283,6 +288,11 @@ export default function ContentListPage() {
 
                     {post.state === 'scheduled' && (
                       <>
+                        <Link href={`/dashboard/content/package/${post.id}`}>
+                          <Button size="sm" className="flex-1">
+                            📦 View Package
+                          </Button>
+                        </Link>
                         <Button
                           size="sm"
                           onClick={() => handlePublishPost(post.id)}
