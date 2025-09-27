@@ -74,13 +74,19 @@ export default function SocialConnectionsPage() {
     const success = urlParams.get('success')
     const error = urlParams.get('error')
     const username = urlParams.get('username')
+    const details = urlParams.get('details')
 
     if (success === 'twitter_connected' && username) {
       toast.success(`Successfully connected to Twitter as @${username}!`)
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
     } else if (error) {
-      toast.error(`Connection failed: ${error}`)
+      let errorMessage = `Connection failed: ${error}`
+      if (details) {
+        errorMessage += ` (${details})`
+      }
+      toast.error(errorMessage)
+      console.error('OAuth error details:', { error, details })
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
     }

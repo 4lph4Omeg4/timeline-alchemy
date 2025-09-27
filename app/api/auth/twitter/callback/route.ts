@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state')
     const error = searchParams.get('error')
 
+    console.log('Twitter OAuth callback received:', { code: !!code, state, error })
+
     // Handle OAuth errors
     if (error) {
       console.error('Twitter OAuth error:', error)
@@ -19,12 +21,30 @@ export async function GET(request: NextRequest) {
     }
 
     if (!code) {
+      console.error('No authorization code received from Twitter')
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_code`
       )
     }
 
+    // Check if we have the required environment variables
+    if (!process.env.TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
+      console.error('Missing Twitter API credentials')
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=missing_credentials`
+      )
+    }
+
     // Exchange code for access token
+    const tokenRequestBody = new URLSearchParams({
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/twitter/callback`,
+      code_verifier: 'challenge', // In production, store this in session/state
+    })
+
+    console.log('Exchanging code for token with body:', tokenRequestBody.toString())
+
     const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
       method: 'POST',
       headers: {
@@ -33,19 +53,20 @@ export async function GET(request: NextRequest) {
           `${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`
         ).toString('base64')}`,
       },
-      body: new URLSearchParams({
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/twitter/callback`,
-        code_verifier: 'challenge', // In production, store this in session/state
-      }),
+      body: tokenRequestBody,
     })
+
+    console.log('Token response status:', tokenResponse.status)
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text()
-      console.error('Token exchange failed:', errorData)
+      console.error('Token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: errorData
+      })
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=token_exchange_failed`
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=token_exchange_failed&details=${encodeURIComponent(errorData)}`
       )
     }
 
