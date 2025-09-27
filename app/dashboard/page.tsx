@@ -21,6 +21,7 @@ export default function DashboardPage() {
     totalClients: 0,
     totalPosts: 0,
   })
+  const [activeUsers, setActiveUsers] = useState<any[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -37,26 +38,50 @@ export default function DashboardPage() {
 
         if (isAdminUser) {
           // Admin dashboard data
-          const { data: allPosts } = await supabase
+          const { data: allPosts } = await (supabase as any)
             .from('blog_posts')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(10)
 
-          const { data: totalOrgs } = await supabase
+          const { data: totalOrgs } = await (supabase as any)
             .from('organizations')
             .select('id')
 
-          const { data: activeSubs } = await supabase
+          const { data: activeSubs } = await (supabase as any)
             .from('subscriptions')
             .select('id')
             .eq('status', 'active')
 
-          const { data: totalClients } = await supabase
+          const { data: totalClients } = await (supabase as any)
             .from('clients')
             .select('id')
 
+          // Fetch active users with subscriptions
+          const { data: usersWithSubs } = await (supabase as any)
+            .from('org_members')
+            .select(`
+              user_id,
+              role,
+              created_at,
+              organizations!inner(
+                id,
+                name,
+                plan,
+                created_at,
+                subscriptions!inner(
+                  id,
+                  plan,
+                  status,
+                  created_at
+                )
+              )
+            `)
+            .eq('organizations.subscriptions.status', 'active')
+            .order('created_at', { ascending: false })
+
           setPosts(allPosts || [])
+          setActiveUsers(usersWithSubs || [])
           setAdminStats({
             totalOrganizations: totalOrgs?.length || 0,
             activeSubscriptions: activeSubs?.length || 0,
@@ -267,6 +292,50 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Active Users (Admin only) */}
+      {isAdmin && (
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white">Active Users with Subscriptions</CardTitle>
+            <CardDescription className="text-gray-300">
+              Users with active subscriptions across all organizations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {activeUsers.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">No active users found</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {activeUsers.map((user, index) => (
+                  <div key={user.user_id || index} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-white">
+                          User ID: {user.user_id}
+                        </h3>
+                        <div className="text-sm text-gray-300 mt-1">
+                          <p><strong>Organization:</strong> {user.organizations?.name}</p>
+                          <p><strong>Plan:</strong> {user.organizations?.subscriptions?.plan}</p>
+                          <p><strong>Role:</strong> {user.role}</p>
+                        </div>
+                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-400">
+                          <span className="px-2 py-1 rounded-full bg-green-900 text-green-300">
+                            {user.organizations?.subscriptions?.status}
+                          </span>
+                          <span>Joined: {formatDate(user.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Posts */}
       <Card className="bg-gray-800 border-gray-700">

@@ -14,12 +14,27 @@ export default function ClientsPage() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const { data: clientsData, error } = await supabase
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        // Get user's organization
+        const { data: orgMember } = await (supabase as any)
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (!orgMember) return
+
+        // Fetch clients for user's organization
+        const { data: clientsData, error } = await (supabase as any)
           .from('clients')
           .select(`
             *,
             organizations(name, plan)
           `)
+          .eq('org_id', (orgMember as any).org_id)
           .order('created_at', { ascending: false })
 
         if (clientsData) {
