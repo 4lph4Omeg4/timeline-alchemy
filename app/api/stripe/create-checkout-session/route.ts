@@ -1,22 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
+// Server-side Supabase client
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
+
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, plan } = await request.json()
+    const { priceId, plan, userId } = await request.json()
 
-    if (!priceId || !plan) {
+    if (!priceId || !plan || !userId) {
       return NextResponse.json(
-        { error: 'Missing priceId or plan' },
+        { error: 'Missing priceId, plan, or userId' },
         { status: 400 }
       )
     }
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Get user details
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId)
 
     if (userError || !user) {
       return NextResponse.json(
@@ -26,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's organization
-    const { data: orgMember, error: orgError } = await supabase
+    const { data: orgMember, error: orgError } = await supabaseAdmin
       .from('org_members')
       .select('org_id, organizations(*)')
       .eq('user_id', user.id)
@@ -44,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // Check if customer already exists
     let customerId: string
-    const existingSubscription = await supabase
+    const existingSubscription = await supabaseAdmin
       .from('subscriptions')
       .select('stripe_customer_id')
       .eq('org_id', orgMember.org_id)

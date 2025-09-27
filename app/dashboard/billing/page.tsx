@@ -105,6 +105,13 @@ export default function BillingPage() {
   const handleSubscribe = async (plan: PlanType) => {
     setProcessing(plan)
     try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast.error('Please sign in to subscribe')
+        return
+      }
+
       // You'll need to replace these with your actual Stripe price IDs
       const priceIds: Record<PlanType, string> = {
         basic: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID || 'price_basic',
@@ -120,6 +127,7 @@ export default function BillingPage() {
         body: JSON.stringify({
           priceId: priceIds[plan],
           plan: plan,
+          userId: user.id,
         }),
       })
 
@@ -186,6 +194,13 @@ export default function BillingPage() {
       return
     }
 
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      toast.error('Please sign in to change plans')
+      return
+    }
+
     setProcessing(newPlan)
     try {
       const response = await fetch('/api/stripe/change-plan', {
@@ -195,6 +210,7 @@ export default function BillingPage() {
         },
         body: JSON.stringify({
           newPlan: newPlan,
+          userId: user.id,
         }),
       })
 
