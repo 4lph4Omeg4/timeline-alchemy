@@ -38,6 +38,10 @@ BEGIN
   INSERT INTO subscriptions (org_id, stripe_customer_id, stripe_subscription_id, plan, status)
   VALUES (new_org_id, 'temp-' || new_org_id, 'temp-sub-' || new_org_id, 'basic', 'active');
   
+  -- Create a default client for the organization (RLS is disabled, so this should work)
+  INSERT INTO clients (org_id, name, contact_info)
+  VALUES (new_org_id, user_name || '''s Client', '{"email": "' || NEW.email || '"}');
+  
   RETURN NEW;
 EXCEPTION
   WHEN OTHERS THEN

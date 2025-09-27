@@ -37,6 +37,8 @@ export default function ClientsPage() {
           .eq('org_id', (orgMember as any).org_id)
           .order('created_at', { ascending: false })
 
+        console.log('Clients query result:', { clientsData, error, orgId: (orgMember as any).org_id })
+
         if (clientsData) {
           setClients(clientsData)
         }

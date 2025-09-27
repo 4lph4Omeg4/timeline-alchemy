@@ -54,9 +54,11 @@ export default function DashboardPage() {
             .select('id')
             .eq('status', 'active')
 
-          const { data: totalClients } = await (supabase as any)
+          const { data: totalClients, error: clientsError } = await (supabase as any)
             .from('clients')
             .select('id')
+
+          console.log('Admin clients count query:', { totalClients, clientsError })
 
           // Fetch all organizations with their subscriptions
           const { data: allOrgsWithSubs } = await (supabase as any)
