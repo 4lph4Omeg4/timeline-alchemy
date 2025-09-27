@@ -113,16 +113,39 @@ export async function GET(request: NextRequest) {
     const twitterUserId = userData.data.id
     const twitterUsername = userData.data.username
 
+    // Get the current authenticated user from Supabase
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      console.error('Supabase authentication error:', userError?.message)
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=auth_required`
+      )
+    }
+
+    // Get the user's organization
+    const { data: orgMember, error: orgError } = await supabase
+      .from('org_members')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .single()
+
+    if (orgError || !orgMember) {
+      console.error('Error getting user organization:', orgError)
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_organization`
+      )
+    }
+
     // Calculate token expiration
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString()
 
     // Store connection in database
-    // Note: You'll need to get the current user's org_id from session
-    // For now, using a placeholder - you'll need to implement proper session handling
     const { error: dbError } = await supabase
       .from('social_connections')
       .upsert({
-        org_id: 'placeholder-org-id', // TODO: Get from user session
+        org_id: orgMember.org_id,
         platform: 'twitter',
         access_token,
         refresh_token,

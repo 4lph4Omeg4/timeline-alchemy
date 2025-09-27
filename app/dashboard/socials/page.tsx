@@ -83,9 +83,34 @@ export default function SocialConnectionsPage() {
   useEffect(() => {
     const fetchConnections = async () => {
       try {
+        // Get the current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (userError || !user) {
+          console.error('Error getting user:', userError)
+          setLoading(false)
+          return
+        }
+
+        // Get the user's organization
+        const { data: orgMember, error: orgError } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .eq('role', 'owner')
+          .single()
+
+        if (orgError || !orgMember) {
+          console.error('Error getting user organization:', orgError)
+          setLoading(false)
+          return
+        }
+
+        // Fetch connections for the user's organization
         const { data, error } = await supabase
           .from('social_connections')
           .select('*')
+          .eq('org_id', orgMember.org_id)
 
         if (error) {
           console.error('Error fetching connections:', error)
