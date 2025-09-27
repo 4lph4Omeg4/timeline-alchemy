@@ -113,7 +113,7 @@ export default function SocialConnectionsPage() {
         window.location.href = authUrl.toString()
       } else {
         // For other platforms, show coming soon message
-        toast.info(`${platform} integration coming soon!`)
+        toast.success(`${platform} integration coming soon!`)
       }
     } catch (error) {
       console.error('OAuth error:', error)
