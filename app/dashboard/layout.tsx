@@ -7,7 +7,11 @@ import { User, Organization, Client } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/Logo'
+import { Modal } from '@/components/ui/modal'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -19,6 +23,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [clients, setClients] = useState<Client[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [editOrgModal, setEditOrgModal] = useState(false)
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null)
+  const [newOrgName, setNewOrgName] = useState('')
   const router = useRouter()
 
   const ensureAdminOrganization = async (userId: string) => {
@@ -251,6 +258,47 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push('/')
   }
 
+  const handleEditOrgName = (org: Organization) => {
+    setEditingOrg(org)
+    setNewOrgName(org.name)
+    setEditOrgModal(true)
+  }
+
+  const handleSaveOrgName = async () => {
+    if (!editingOrg || !newOrgName.trim()) return
+
+    try {
+      const { error } = await (supabase as any)
+        .from('organizations')
+        .update({ 
+          name: newOrgName.trim(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingOrg.id)
+
+      if (error) {
+        toast.error('Failed to update organization name')
+        console.error('Error updating organization:', error)
+      } else {
+        // Update local state
+        setOrganizations(prev => 
+          prev.map(org => 
+            org.id === editingOrg.id 
+              ? { ...org, name: newOrgName.trim(), updated_at: new Date().toISOString() }
+              : org
+          )
+        )
+        toast.success('Organization name updated successfully')
+        setEditOrgModal(false)
+        setEditingOrg(null)
+        setNewOrgName('')
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred')
+      console.error('Unexpected error:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -351,13 +399,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     {organizations.map((org) => (
                       <div
                         key={org.id}
-                        className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer"
+                        className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
                       >
-                        <div className="font-medium text-white">{org.name}</div>
-                        <div className="text-sm text-gray-300 capitalize">{org.plan}</div>
-                        {isAdmin && (
-                          <div className="text-xs text-green-400">Active</div>
-                        )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-white">{org.name}</div>
+                            <div className="text-sm text-gray-300 capitalize">{org.plan}</div>
+                            {isAdmin && (
+                              <div className="text-xs text-green-400">Active</div>
+                            )}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditOrgName(org)
+                            }}
+                            className="ml-2 border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white"
+                          >
+                            Edit
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -371,6 +434,51 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Edit Organization Modal */}
+      <Modal
+        isOpen={editOrgModal}
+        onClose={() => {
+          setEditOrgModal(false)
+          setEditingOrg(null)
+          setNewOrgName('')
+        }}
+        title="Edit Organization Name"
+      >
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="orgName" className="text-white">Organization Name</Label>
+            <Input
+              id="orgName"
+              value={newOrgName}
+              onChange={(e) => setNewOrgName(e.target.value)}
+              placeholder="Enter organization name"
+              className="mt-1 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-yellow-400"
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditOrgModal(false)
+                setEditingOrg(null)
+                setNewOrgName('')
+              }}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveOrgName}
+              disabled={!newOrgName.trim() || newOrgName.trim() === editingOrg?.name}
+              className="bg-yellow-400 text-black hover:bg-yellow-500 disabled:bg-gray-600 disabled:text-gray-400"
+            >
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
