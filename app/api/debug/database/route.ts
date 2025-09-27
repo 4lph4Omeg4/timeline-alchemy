@@ -78,7 +78,7 @@ export async function GET() {
   } catch (error) {
     console.error('Database debug error:', error)
     return NextResponse.json(
-      { error: 'Database debug failed', details: error.message },
+      { error: 'Database debug failed', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
