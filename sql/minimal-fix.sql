@@ -40,7 +40,7 @@ BEGIN
   
   -- Create a default client for the organization (RLS is disabled, so this should work)
   INSERT INTO clients (org_id, name, contact_info)
-  VALUES (new_org_id, user_name || '''s Client', '{"email": "' || NEW.email || '"}');
+  VALUES (new_org_id, user_name || '''s Client', ('{"email": "' || NEW.email || '"}')::jsonb);
   
   RETURN NEW;
 EXCEPTION
