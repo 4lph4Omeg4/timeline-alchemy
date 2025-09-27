@@ -3,20 +3,40 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
-// Client-side Supabase instance (for browser)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Client-side Supabase instance (for browser) - singleton pattern
+let supabaseClient: ReturnType<typeof createClient> | null = null
 
-// Server-side Supabase instance (for API routes)
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+export const supabase = (() => {
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    })
   }
-)
+  return supabaseClient
+})()
+
+// Server-side Supabase instance (for API routes) - singleton pattern
+let supabaseAdminClient: ReturnType<typeof createClient> | null = null
+
+export const supabaseAdmin = (() => {
+  if (!supabaseAdminClient) {
+    supabaseAdminClient = createClient(
+      supabaseUrl,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+  }
+  return supabaseAdminClient
+})()
 
 // Database types
 export interface Database {
