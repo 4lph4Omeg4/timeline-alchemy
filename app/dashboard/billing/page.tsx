@@ -198,9 +198,15 @@ export default function BillingPage() {
         }),
       })
 
-      const { success, message, error } = await response.json()
+      const { success, message, error, redirectToCheckout } = await response.json()
 
       if (error) {
+        if (redirectToCheckout) {
+          // If it's a trial subscription, redirect to checkout instead
+          toast.error('Trial subscription detected. Redirecting to checkout...')
+          await handleSubscribe(newPlan)
+          return
+        }
         toast.error(error)
         return
       }
@@ -291,10 +297,16 @@ export default function BillingPage() {
                 </p>
                 <p className={`text-sm ${
                   subscription.status === 'active' ? 'text-green-400' :
+                  subscription.status === 'trialing' ? 'text-blue-400' :
                   subscription.status === 'canceled' ? 'text-red-400' :
                   'text-yellow-400'
                 }`}>
-                  Status: {subscription.status}
+                  Status: {subscription.status === 'trialing' ? 'Trial' : subscription.status}
+                  {subscription.status === 'trialing' && (
+                    <span className="block text-xs text-gray-400 mt-1">
+                      Subscribe to continue after trial
+                    </span>
+                  )}
                 </p>
               </div>
               <div className="flex space-x-2">
@@ -378,7 +390,8 @@ export default function BillingPage() {
                           onClick={() => handleChangePlan(planKey as PlanType)}
                           disabled={processing === planKey}
                         >
-                          {processing === planKey ? 'Processing...' : 'Change Plan'}
+                          {processing === planKey ? 'Processing...' : 
+                           subscription.stripe_customer_id.startsWith('temp-') ? 'Subscribe' : 'Change Plan'}
                         </Button>
                       )
                     ) : (

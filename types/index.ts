@@ -53,7 +53,7 @@ export interface Subscription {
   stripe_customer_id: string
   stripe_subscription_id: string
   plan: 'basic' | 'pro' | 'enterprise'
-  status: 'active' | 'canceled' | 'past_due' | 'unpaid'
+  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing'
   created_at: string
   updated_at: string
 }

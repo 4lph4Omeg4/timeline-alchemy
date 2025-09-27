@@ -62,6 +62,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // If this is a trial subscription, redirect to checkout instead of changing plan
+    if (subscription.stripe_customer_id.startsWith('temp-')) {
+      return NextResponse.json(
+        { error: 'Trial subscription detected. Please subscribe first.', redirectToCheckout: true },
+        { status: 400 }
+      )
+    }
+
     const stripe = getStripe()
 
     // Get the new price ID
@@ -108,7 +116,7 @@ export async function POST(request: NextRequest) {
       .from('subscriptions')
       .update({
         plan: newPlan,
-        status: updatedSubscription.status,
+        status: updatedSubscription.status === 'active' ? 'active' : updatedSubscription.status,
         updated_at: new Date().toISOString(),
       })
       .eq('org_id', orgMember.org_id)

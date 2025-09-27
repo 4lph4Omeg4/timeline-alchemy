@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to add user to organization' }, { status: 500 })
     }
 
-    // Create a basic subscription for the organization
+    // Create a trial subscription for the organization (no payment required initially)
     const { error: subError } = await (supabase as any)
       .from('subscriptions')
       .insert({
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         stripe_customer_id: 'temp-' + orgData.id,
         stripe_subscription_id: 'temp-sub-' + orgData.id,
         plan: 'basic',
-        status: 'active'
+        status: 'trialing' // Changed from 'active' to 'trialing'
       })
 
     if (subError) {

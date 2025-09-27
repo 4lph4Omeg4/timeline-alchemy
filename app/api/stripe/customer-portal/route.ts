@@ -45,6 +45,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // If this is a trial subscription, redirect to checkout instead
+    if (subscription.stripe_customer_id.startsWith('temp-')) {
+      return NextResponse.json(
+        { error: 'Trial subscription detected. Please subscribe first.', redirectToCheckout: true },
+        { status: 400 }
+      )
+    }
+
     const stripe = getStripe()
 
     // Create customer portal session
