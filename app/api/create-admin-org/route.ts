@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     if (existingOrg) {
       return NextResponse.json({
         message: 'Admin already has an organization',
-        organization: existingOrg.organizations
+        organization: (existingOrg as any).organizations
       })
     }
 
