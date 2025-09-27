@@ -180,64 +180,77 @@ export default function BillingPage() {
     }
   }
 
-  const handleUpgrade = async (plan: PlanType) => {
+  const handleChangePlan = async (newPlan: PlanType) => {
+    if (!subscription) {
+      toast.error('No subscription found. Please contact support.')
+      return
+    }
+
+    setProcessing(newPlan)
     try {
-      if (!subscription) {
-        toast.error('No subscription found. Please contact support.')
+      const response = await fetch('/api/stripe/change-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          newPlan: newPlan,
+        }),
+      })
+
+      const { success, message, error } = await response.json()
+
+      if (error) {
+        toast.error(error)
         return
       }
 
-      toast.success(`Upgrading to ${STRIPE_PLANS[plan].name}...`)
-      
-      // Update subscription in database
-      const { error } = await (supabase as any)
-        .from('subscriptions')
-        .update({ 
-          plan: plan,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', subscription.id)
-
-      if (error) {
-        throw error
+      if (success) {
+        toast.success(message || `Successfully changed to ${STRIPE_PLANS[newPlan].name}!`)
+        // Refresh subscription data
+        await fetchSubscription()
       }
-
-      // Update local state
-      setSubscription(prev => prev ? { ...prev, plan, updated_at: new Date().toISOString() } : null)
-      
-      toast.success(`Successfully upgraded to ${STRIPE_PLANS[plan].name}!`)
     } catch (error) {
-      console.error('Error upgrading plan:', error)
-      toast.error('Failed to upgrade plan. Please try again.')
+      console.error('Error changing plan:', error)
+      toast.error('Failed to change plan. Please try again.')
+    } finally {
+      setProcessing(null)
     }
   }
 
   const handleCancel = async () => {
-    try {
-      if (!subscription) return
+    if (!subscription) return
 
-      toast.success('Canceling subscription...')
-      
-      // Update subscription in database
-      const { error } = await (supabase as any)
-        .from('subscriptions')
-        .update({ 
-          status: 'canceled',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', subscription.id)
+    if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of your billing period.')) {
+      return
+    }
+
+    setProcessing('cancel')
+    try {
+      const response = await fetch('/api/stripe/cancel-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const { success, message, error } = await response.json()
 
       if (error) {
-        throw error
+        toast.error(error)
+        return
       }
 
-      // Update local state
-      setSubscription(prev => prev ? { ...prev, status: 'canceled', updated_at: new Date().toISOString() } : null)
-      
-      toast.success('Subscription canceled successfully')
+      if (success) {
+        toast.success(message || 'Subscription canceled successfully')
+        // Refresh subscription data
+        await fetchSubscription()
+      }
     } catch (error) {
       console.error('Error canceling subscription:', error)
       toast.error('Failed to cancel subscription. Please try again.')
+    } finally {
+      setProcessing(null)
     }
   }
 
@@ -292,6 +305,15 @@ export default function BillingPage() {
                 >
                   {processing === 'manage' ? 'Opening...' : 'Manage Billing'}
                 </Button>
+                {subscription.status === 'active' && (
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleCancel}
+                    disabled={processing === 'cancel'}
+                  >
+                    {processing === 'cancel' ? 'Canceling...' : 'Cancel'}
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -353,7 +375,7 @@ export default function BillingPage() {
                       ) : (
                         <Button
                           className="w-full"
-                          onClick={() => handleSubscribe(planKey as PlanType)}
+                          onClick={() => handleChangePlan(planKey as PlanType)}
                           disabled={processing === planKey}
                         >
                           {processing === planKey ? 'Processing...' : 'Change Plan'}
