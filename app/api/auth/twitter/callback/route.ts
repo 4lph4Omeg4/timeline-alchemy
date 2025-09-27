@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+
+// Server-side Supabase client
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,11 +57,20 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Extract code verifier from state parameter
+    // Extract code verifier and org_id from state parameter
     let codeVerifier: string
+    let orgId: string
     try {
       const stateData = JSON.parse(atob(state || ''))
       codeVerifier = stateData.codeVerifier
+      orgId = stateData.org_id
+      
+      if (!orgId) {
+        console.error('No org_id found in state')
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_organization`
+        )
+      }
     } catch (error) {
       console.error('Failed to decode state parameter:', error)
       return NextResponse.redirect(
@@ -113,44 +134,24 @@ export async function GET(request: NextRequest) {
     const twitterUserId = userData.data.id
     const twitterUsername = userData.data.username
 
-    // Get the current authenticated user from Supabase
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      console.error('Supabase authentication error:', userError?.message)
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=auth_required`
-      )
-    }
-
-    // Get the user's organization
-    const { data: orgMember, error: orgError } = await supabase
-      .from('org_members')
-      .select('org_id')
-      .eq('user_id', user.id)
-      .eq('role', 'owner')
-      .single()
-
-    if (orgError || !orgMember) {
-      console.error('Error getting user organization:', orgError)
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_organization`
-      )
-    }
+    // Use org_id from state parameter (no need to authenticate user)
+    console.log('Using org_id from state:', orgId)
 
     // Calculate token expiration
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString()
 
     // Store connection in database
-    const { error: dbError } = await supabase
+    const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({
-        org_id: orgMember.org_id,
+        org_id: orgId,
         platform: 'twitter',
         access_token,
         refresh_token,
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
+        platform_user_id: twitterUserId,
+        platform_username: twitterUsername,
       }, {
         onConflict: 'org_id,platform'
       })

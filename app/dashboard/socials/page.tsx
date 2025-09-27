@@ -167,9 +167,29 @@ export default function SocialConnectionsPage() {
         const codeChallenge = await generateCodeChallenge(codeVerifier)
         
         // Encode state with code verifier
+        // Get user's organization ID to include in state
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          toast.error('Please sign in to connect social accounts')
+          return
+        }
+
+        const { data: orgMember } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .eq('role', 'owner')
+          .single()
+
+        if (!orgMember) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
         const state = btoa(JSON.stringify({
           state: stateParam,
-          codeVerifier: codeVerifier
+          codeVerifier: codeVerifier,
+          org_id: orgMember.org_id
         }))
         
         const authUrl = new URL('https://twitter.com/i/oauth2/authorize')
@@ -186,8 +206,31 @@ export default function SocialConnectionsPage() {
         // Redirect to Twitter OAuth
         window.location.href = authUrl.toString()
       } else if (platform === 'linkedin') {
+        // Get user's organization ID to include in state
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          toast.error('Please sign in to connect social accounts')
+          return
+        }
+
+        const { data: orgMember } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .eq('role', 'owner')
+          .single()
+
+        if (!orgMember) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
         // Generate state parameter for security
-        const state = Math.random().toString(36).substring(2, 15)
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const state = btoa(JSON.stringify({
+          state: stateParam,
+          org_id: orgMember.org_id
+        }))
         
         // LinkedIn OAuth 2.0 URL
         const authUrl = new URL('https://www.linkedin.com/oauth/v2/authorization')
