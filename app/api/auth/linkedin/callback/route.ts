@@ -30,14 +30,14 @@ export async function GET(request: NextRequest) {
 
     // Check if we have the required environment variables
     console.log('Environment check:', {
-      LINKEDIN_CLIENT_ID: process.env.LINKEDIN_CLIENT_ID ? 'SET' : 'NOT SET',
+      NEXT_PUBLIC_LINKEDIN_CLIENT_ID: process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID ? 'SET' : 'NOT SET',
       LINKEDIN_CLIENT_SECRET: process.env.LINKEDIN_CLIENT_SECRET ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
     })
     
-    if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
+    if (!process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
       console.error('Missing LinkedIn API credentials:', {
-        LINKEDIN_CLIENT_ID: !!process.env.LINKEDIN_CLIENT_ID,
+        NEXT_PUBLIC_LINKEDIN_CLIENT_ID: !!process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID,
         LINKEDIN_CLIENT_SECRET: !!process.env.LINKEDIN_CLIENT_SECRET
       })
       return NextResponse.redirect(
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     const tokenRequestBody = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      client_id: process.env.LINKEDIN_CLIENT_ID,
+      client_id: process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID,
       client_secret: process.env.LINKEDIN_CLIENT_SECRET,
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/linkedin/callback`,
     })

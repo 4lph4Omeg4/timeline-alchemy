@@ -30,14 +30,14 @@ export async function GET(request: NextRequest) {
 
     // Check if we have the required environment variables
     console.log('Environment check:', {
-      TWITTER_CLIENT_ID: process.env.TWITTER_CLIENT_ID ? 'SET' : 'NOT SET',
+      NEXT_PUBLIC_TWITTER_CLIENT_ID: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID ? 'SET' : 'NOT SET',
       TWITTER_CLIENT_SECRET: process.env.TWITTER_CLIENT_SECRET ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
     })
     
-    if (!process.env.TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
+    if (!process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
       console.error('Missing Twitter API credentials:', {
-        TWITTER_CLIENT_ID: !!process.env.TWITTER_CLIENT_ID,
+        NEXT_PUBLIC_TWITTER_CLIENT_ID: !!process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID,
         TWITTER_CLIENT_SECRET: !!process.env.TWITTER_CLIENT_SECRET
       })
       return NextResponse.redirect(
@@ -71,9 +71,9 @@ export async function GET(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${Buffer.from(
-          `${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`
-        ).toString('base64')}`,
+            'Authorization': `Basic ${Buffer.from(
+              `${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`
+            ).toString('base64')}`,
       },
       body: tokenRequestBody,
     })
