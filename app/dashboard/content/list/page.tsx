@@ -180,7 +180,7 @@ export default function ContentListPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Content Library</h1>
           <p className="text-gray-300 mt-2">
-            Manage your content and view all packages created by your admin.
+            Manage your content and view packages created by your admin.
           </p>
         </div>
         <Link href="/dashboard/content/new">
@@ -214,9 +214,6 @@ export default function ContentListPage() {
                 : `No ${filter} content found. Try creating some content or check other filters.`
               }
             </p>
-            <Link href="/dashboard/content/new">
-              <Button>Create Your First Post</Button>
-            </Link>
           </CardContent>
         </Card>
       ) : (
