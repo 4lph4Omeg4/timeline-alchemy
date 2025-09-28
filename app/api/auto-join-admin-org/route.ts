@@ -9,11 +9,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    // Find the admin organization (Timeline Alchemy Admin)
+    // Find the admin organization (Admin Organization)
     const { data: adminOrg, error: orgError } = await supabaseAdmin
       .from('organizations')
       .select('id')
-      .eq('name', 'Timeline Alchemy Admin')
+      .eq('name', 'Admin Organization')
       .single()
 
     if (orgError || !adminOrg) {

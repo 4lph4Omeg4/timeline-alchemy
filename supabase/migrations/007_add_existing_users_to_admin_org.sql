@@ -5,12 +5,12 @@
 INSERT INTO organizations (id, name, plan, created_at, updated_at)
 SELECT 
   '00000000-0000-0000-0000-000000000001'::uuid,
-  'Timeline Alchemy Admin',
+  'Admin Organization',
   'enterprise',
   NOW(),
   NOW()
 WHERE NOT EXISTS (
-  SELECT 1 FROM organizations WHERE name = 'Timeline Alchemy Admin'
+  SELECT 1 FROM organizations WHERE name = 'Admin Organization'
 );
 
 -- Add all existing users to the admin organization as clients

@@ -30,11 +30,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const ensureAdminOrganization = async (userId: string) => {
     try {
-      // First, check if "Timeline Alchemy Admin" organization already exists
+      // First, check if "Admin Organization" organization already exists
       const { data: existingAdminOrg, error: orgCheckError } = await (supabase as any)
         .from('organizations')
         .select('id')
-        .eq('name', 'Timeline Alchemy Admin')
+        .eq('name', 'Admin Organization')
         .single()
 
       if (existingAdminOrg) {
@@ -70,7 +70,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       const { data: newOrg, error: orgError } = await (supabase as any)
         .from('organizations')
         .insert({
-          name: 'Timeline Alchemy Admin',
+          name: 'Admin Organization',
           plan: 'enterprise'
         })
         .select()
