@@ -193,12 +193,14 @@ export default function ContentPackagePage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleRecyclePost}
-          >
-            ♻️ Recycle to Draft
-          </Button>
+          {!post.created_by_admin && (
+            <Button
+              variant="outline"
+              onClick={handleRecyclePost}
+            >
+              ♻️ Recycle to Draft
+            </Button>
+          )}
           <Link href="/dashboard/content/list">
             <Button variant="outline">Back to Library</Button>
           </Link>
@@ -334,6 +336,73 @@ export default function ContentPackagePage() {
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300">{generatedContent.socialPosts.tiktok}</p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Publishing Options */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">🚀 Publishing Options</CardTitle>
+          <CardDescription className="text-gray-300">
+            Publish this content to your social media platforms
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.open(`https://twitter.com/compose/tweet?text=${encodeURIComponent(generatedContent.socialPosts.twitter)}`, '_blank')
+              }}
+            >
+              🐦 Publish to Twitter
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(generatedContent.socialPosts.linkedin)}`, '_blank')
+              }}
+            >
+              💼 Publish to LinkedIn
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(generatedContent.socialPosts.facebook)}`, '_blank')
+              }}
+            >
+              📘 Publish to Facebook
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(generatedContent.socialPosts.instagram)
+                toast.success('Instagram post copied to clipboard!')
+              }}
+            >
+              📷 Copy Instagram Post
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(generatedContent.socialPosts.tiktok)
+                toast.success('TikTok post copied to clipboard!')
+              }}
+            >
+              🎵 Copy TikTok Post
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const blogUrl = window.location.href
+                const shareText = `${generatedContent.blogPost.title}\n\n${blogUrl}`
+                navigator.clipboard.writeText(shareText)
+                toast.success('Blog link copied to clipboard!')
+              }}
+            >
+              🔗 Copy Blog Link
+            </Button>
           </div>
         </CardContent>
       </Card>

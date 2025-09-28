@@ -260,18 +260,28 @@ export default function ContentListPage() {
                   <div className="flex flex-wrap gap-2">
                     {post.state === 'draft' && (
                       <>
-                        <Button
-                          size="sm"
-                          onClick={() => handlePublishPost(post.id)}
-                          className="flex-1"
-                        >
-                          Publish
-                        </Button>
-                        <Link href={`/dashboard/content/edit/${post.id}`}>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            Edit
-                          </Button>
-                        </Link>
+                        {post.created_by_admin ? (
+                          <Link href={`/dashboard/content/package/${post.id}`}>
+                            <Button size="sm" className="flex-1">
+                              📦 View Package
+                            </Button>
+                          </Link>
+                        ) : (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => handlePublishPost(post.id)}
+                              className="flex-1"
+                            >
+                              Publish
+                            </Button>
+                            <Link href={`/dashboard/content/edit/${post.id}`}>
+                              <Button size="sm" variant="outline" className="flex-1">
+                                Edit
+                              </Button>
+                            </Link>
+                          </>
+                        )}
                       </>
                     )}
                     
@@ -282,14 +292,16 @@ export default function ContentListPage() {
                             📦 View Package
                           </Button>
                         </Link>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRecyclePost(post.id)}
-                          className="flex-1"
-                        >
-                          ♻️ Recycle
-                        </Button>
+                        {!post.created_by_admin && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRecyclePost(post.id)}
+                            className="flex-1"
+                          >
+                            ♻️ Recycle
+                          </Button>
+                        )}
                       </>
                     )}
 
@@ -300,28 +312,34 @@ export default function ContentListPage() {
                             📦 View Package
                           </Button>
                         </Link>
-                        <Button
-                          size="sm"
-                          onClick={() => handlePublishPost(post.id)}
-                          className="flex-1"
-                        >
-                          Publish Now
-                        </Button>
-                        <Link href={`/dashboard/content/edit/${post.id}`}>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            Edit
-                          </Button>
-                        </Link>
+                        {!post.created_by_admin && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => handlePublishPost(post.id)}
+                              className="flex-1"
+                            >
+                              Publish Now
+                            </Button>
+                            <Link href={`/dashboard/content/edit/${post.id}`}>
+                              <Button size="sm" variant="outline" className="flex-1">
+                                Edit
+                              </Button>
+                            </Link>
+                          </>
+                        )}
                       </>
                     )}
                     
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDeletePost(post.id)}
-                    >
-                      Delete
-                    </Button>
+                    {!post.created_by_admin && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeletePost(post.id)}
+                      >
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
