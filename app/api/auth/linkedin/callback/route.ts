@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
 
     // Redirect to auth callback to ensure user is properly authenticated
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?linkedin_success=true&userId=${linkedinUserId}`
+      `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?linkedin_success=true&userId=${linkedinUserId}&orgId=${orgId}`
     )
 
   } catch (error) {

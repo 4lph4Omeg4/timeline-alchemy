@@ -172,8 +172,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Redirect to auth callback to ensure user is properly authenticated
+    // Add a small delay to ensure database operations are complete
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?twitter_success=true&username=${twitterUsername}`
+      `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?twitter_success=true&username=${twitterUsername}&orgId=${orgId}`
     )
 
   } catch (error) {

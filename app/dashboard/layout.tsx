@@ -112,7 +112,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError) {
+        console.error('Auth error in dashboard layout:', userError)
+        router.push('/auth/signin')
+        return
+      }
       
       if (!user) {
         router.push('/auth/signin')
@@ -130,6 +136,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       // Check if user is admin (sh4m4ni4k@sh4m4ni4k.nl)
       const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
       setIsAdmin(isAdminUser)
+
+      // Always ensure user is in admin organization (for both admin and regular users)
+      try {
+        await fetch('/api/auto-join-admin-org', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        })
+      } catch (orgError) {
+        console.error('Error ensuring admin org membership:', orgError)
+      }
 
       if (isAdminUser) {
         // Ensure admin has an organization

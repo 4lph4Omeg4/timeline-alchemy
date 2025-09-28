@@ -83,21 +83,40 @@ export default function SocialConnectionsPage() {
   useEffect(() => {
     const fetchConnections = async () => {
       try {
+        // First try to refresh the session
+        const { error: refreshError } = await supabase.auth.refreshSession()
+        if (refreshError) {
+          console.error('Session refresh failed:', refreshError)
+        }
+
         // Get the current user
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
         if (userError) {
           console.error('Auth error:', userError)
           toast.error('Authentication error. Please sign in again.')
-          setLoading(false)
+          // Redirect to signin page
+          window.location.href = '/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials')
           return
         }
         
         if (!user) {
           console.error('No user found')
           toast.error('Please sign in to view social connections')
-          setLoading(false)
+          // Redirect to signin page
+          window.location.href = '/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials')
           return
+        }
+
+        // Ensure user is in admin organization
+        try {
+          await fetch('/api/auto-join-admin-org', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id }),
+          })
+        } catch (orgError) {
+          console.error('Error ensuring admin org membership:', orgError)
         }
 
         // Get the user's organization

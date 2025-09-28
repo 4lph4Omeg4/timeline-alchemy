@@ -16,14 +16,44 @@ export default function AuthCallback() {
         const twitterSuccess = urlParams.get('twitter_success')
         
         if (linkedinSuccess) {
-          // LinkedIn OAuth was successful, redirect to socials page
+          // LinkedIn OAuth was successful, ensure user is in admin org
+          const orgId = urlParams.get('orgId')
+          if (orgId) {
+            try {
+              const { data: { user } } = await supabase.auth.getUser()
+              if (user) {
+                await fetch('/api/auto-join-admin-org', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: user.id }),
+                })
+              }
+            } catch (error) {
+              console.error('Error ensuring admin org membership:', error)
+            }
+          }
           router.push('/dashboard/socials?success=linkedin_connected')
           return
         }
         
         if (twitterSuccess) {
-          // Twitter OAuth was successful, redirect to socials page
+          // Twitter OAuth was successful, ensure user is in admin org
+          const orgId = urlParams.get('orgId')
           const username = urlParams.get('username')
+          if (orgId) {
+            try {
+              const { data: { user } } = await supabase.auth.getUser()
+              if (user) {
+                await fetch('/api/auto-join-admin-org', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: user.id }),
+                })
+              }
+            } catch (error) {
+              console.error('Error ensuring admin org membership:', error)
+            }
+          }
           router.push(`/dashboard/socials?success=twitter_connected&username=${username}`)
           return
         }
