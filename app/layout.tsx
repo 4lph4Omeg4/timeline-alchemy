@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://timeline-alchemy-8jfn96z6x-the-chosen-ones.vercel.app'),
   title: 'Timeline Alchemy - AI Content Creation Platform',
   description: 'Create, schedule, and publish AI-generated content across all your social media platforms.',
   keywords: ['AI content creation', 'social media automation', 'content scheduling', 'AI tools', 'social media management'],
