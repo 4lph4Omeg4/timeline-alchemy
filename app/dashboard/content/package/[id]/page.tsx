@@ -249,7 +249,7 @@ export default function ContentPackagePage() {
             <div 
               className="text-gray-300 leading-relaxed whitespace-pre-wrap"
               dangerouslySetInnerHTML={{ 
-                __html: post.content.replace(/^.*?Content:\s*/s, '') 
+                __html: post.content.replace(/^[\s\S]*?Content:\s*/, '') 
               }}
             />
           </div>
