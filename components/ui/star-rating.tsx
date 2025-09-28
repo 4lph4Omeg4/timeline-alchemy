@@ -118,7 +118,7 @@ export function RatingInput({
   return (
     <div className={`space-y-4 ${className}`}>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-white mb-2">
           Rate this package
         </label>
         <StarRating
@@ -130,14 +130,14 @@ export function RatingInput({
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-white mb-2">
           Write a review (optional)
         </label>
         <textarea
           value={reviewText}
           onChange={(e) => setReviewText(e.target.value)}
           placeholder="Share your thoughts about this package..."
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full p-3 bg-gray-800 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           rows={3}
         />
       </div>
