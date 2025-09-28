@@ -91,6 +91,17 @@ export default function DebugPage() {
           console.error('Error fetching database info:', error)
         }
 
+        // Test if columns exist
+        let columnTest = null
+        try {
+          const columnResponse = await fetch('/api/test-columns')
+          if (columnResponse.ok) {
+            columnTest = await columnResponse.json()
+          }
+        } catch (error) {
+          console.error('Error testing columns:', error)
+        }
+
         setDebugData({
           user,
           orgMember,
@@ -101,6 +112,7 @@ export default function DebugPage() {
           userClients,
           testPosts,
           databaseInfo,
+          columnTest,
           errors: {
             userError,
             orgError,
