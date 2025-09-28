@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin organization not found' }, { status: 404 })
     }
 
-    const adminOrgId = adminOrg.id
+    const adminOrgId = (adminOrg as { id: string }).id
 
     // Check if user is already a member
     const { data: existingMember, error: checkError } = await supabaseAdmin
