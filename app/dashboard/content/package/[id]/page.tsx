@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { StarRating, RatingInput } from '@/components/ui/star-rating'
 import { BlogPost } from '@/types/index'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
@@ -38,6 +39,9 @@ export default function ContentPackagePage() {
   const [post, setPost] = useState<BlogPost | null>(null)
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
   const [loading, setLoading] = useState(true)
+  const [ratings, setRatings] = useState<any[]>([])
+  const [userRating, setUserRating] = useState<any>(null)
+  const [showRatingForm, setShowRatingForm] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -86,6 +90,9 @@ export default function ContentPackagePage() {
 
       setPost(postData)
 
+      // Fetch ratings for this post
+      await fetchRatings(postData.id, user.id)
+
       // Try to fetch associated images - allow access to user's org images OR admin package images
       const { data: images } = await supabase
         .from('images')
@@ -93,13 +100,17 @@ export default function ContentPackagePage() {
         .eq('post_id', params.id)
         .or(`org_id.eq.${orgMember.org_id},and(post_id.eq.${params.id})`)
 
+      // Extract the actual excerpt from the content
+      const excerptMatch = postData.content.match(/^([\s\S]*?)(?=Content:|$)/);
+      const actualExcerpt = excerptMatch ? excerptMatch[1].trim() : postData.content;
+
       // For now, we'll create a mock generated content structure
       // In a real app, you might store the complete generated content in the database
       const mockGeneratedContent: GeneratedContent = {
         blogPost: {
           title: postData.title,
           content: postData.content,
-          excerpt: postData.content.substring(0, 200) + '...',
+          excerpt: actualExcerpt,
           tags: ['AI Generated', 'Content Package']
         },
         image: images && images.length > 0 ? {
@@ -125,6 +136,62 @@ export default function ContentPackagePage() {
       toast.error('An unexpected error occurred')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchRatings = async (postId: string, userId: string) => {
+    try {
+      const response = await fetch(`/api/ratings?postId=${postId}&userId=${userId}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setRatings(data.ratings || [])
+        // Find user's rating
+        const userRatingData = data.ratings?.find((rating: any) => rating.user_id === userId)
+        setUserRating(userRatingData || null)
+      }
+    } catch (error) {
+      console.error('Error fetching ratings:', error)
+    }
+  }
+
+  const handleRatingSubmit = async (rating: number, reviewText?: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        toast.error('You must be logged in to rate packages')
+        return
+      }
+
+      const response = await fetch('/api/ratings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          postId: params.id,
+          rating: rating,
+          reviewText: reviewText
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('Rating submitted successfully!')
+        setShowRatingForm(false)
+        // Refresh ratings
+        await fetchRatings(params.id as string, user.id)
+        // Refresh post to update average rating
+        await fetchPost()
+      } else {
+        toast.error(data.error || 'Failed to submit rating')
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error)
+      toast.error('An unexpected error occurred')
     }
   }
 
@@ -475,6 +542,78 @@ export default function ContentPackagePage() {
               Copy Full Package
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Rating Section */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">⭐ Rate This Package</CardTitle>
+          <CardDescription className="text-gray-300">
+            Help others discover great content by rating this package
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Current Rating Display */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <StarRating 
+                rating={post.average_rating || 0} 
+                size="lg" 
+                showNumber={true}
+              />
+              <span className="text-gray-400">
+                ({post.rating_count || 0} {post.rating_count === 1 ? 'rating' : 'ratings'})
+              </span>
+            </div>
+          </div>
+
+          {/* User's Current Rating */}
+          {userRating && (
+            <div className="bg-gray-800 p-4 rounded-lg">
+              <h4 className="text-white font-medium mb-2">Your Rating</h4>
+              <div className="flex items-center space-x-2">
+                <StarRating rating={userRating.rating} size="md" />
+                <span className="text-gray-300">{userRating.rating}/5 stars</span>
+              </div>
+              {userRating.review_text && (
+                <p className="text-gray-400 mt-2 italic">"{userRating.review_text}"</p>
+              )}
+            </div>
+          )}
+
+          {/* Rating Form */}
+          {!userRating && (
+            <div className="bg-gray-800 p-4 rounded-lg">
+              <h4 className="text-white font-medium mb-4">Rate this package</h4>
+              <RatingInput
+                onSubmit={handleRatingSubmit}
+                className="max-w-md"
+              />
+            </div>
+          )}
+
+          {/* Recent Reviews */}
+          {ratings.length > 0 && (
+            <div>
+              <h4 className="text-white font-medium mb-4">Recent Reviews</h4>
+              <div className="space-y-3">
+                {ratings.slice(0, 3).map((rating) => (
+                  <div key={rating.id} className="bg-gray-800 p-3 rounded-lg">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <StarRating rating={rating.rating} size="sm" />
+                      <span className="text-gray-400 text-sm">
+                        {formatDate(rating.created_at)}
+                      </span>
+                    </div>
+                    {rating.review_text && (
+                      <p className="text-gray-300 text-sm">"{rating.review_text}"</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

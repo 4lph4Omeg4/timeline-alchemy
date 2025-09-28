@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { StarRating } from '@/components/ui/star-rating'
 import { BlogPost } from '@/types/index'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
@@ -15,11 +16,12 @@ export default function ContentListPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'draft' | 'scheduled' | 'published'>('all')
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rating' | 'title'>('newest')
   const router = useRouter()
 
   useEffect(() => {
     fetchPosts()
-  }, [filter])
+  }, [filter, sortBy])
 
   const fetchPosts = async () => {
     try {
@@ -51,10 +53,25 @@ export default function ContentListPage() {
         .from('blog_posts')
         .select('*')
         .or(`org_id.eq.${orgMember.org_id},and(created_by_admin.eq.true)`)
-        .order('created_at', { ascending: false })
 
       if (filter !== 'all') {
         query = query.eq('state', filter)
+      }
+
+      // Apply sorting
+      switch (sortBy) {
+        case 'newest':
+          query = query.order('created_at', { ascending: false })
+          break
+        case 'oldest':
+          query = query.order('created_at', { ascending: true })
+          break
+        case 'rating':
+          query = query.order('average_rating', { ascending: false }).order('rating_count', { ascending: false })
+          break
+        case 'title':
+          query = query.order('title', { ascending: true })
+          break
       }
 
       const { data, error } = await query
@@ -203,6 +220,26 @@ export default function ContentListPage() {
         ))}
       </div>
 
+      {/* Sort Options */}
+      <div className="flex items-center space-x-4">
+        <span className="text-gray-300 text-sm font-medium">Sort by:</span>
+        <div className="flex space-x-2">
+          {(['newest', 'oldest', 'rating', 'title'] as const).map((sortType) => (
+            <Button
+              key={sortType}
+              variant={sortBy === sortType ? 'default' : 'outline'}
+              onClick={() => setSortBy(sortType)}
+              size="sm"
+              className="capitalize"
+            >
+              {sortType === 'newest' ? 'Newest First' : 
+               sortType === 'oldest' ? 'Oldest First' :
+               sortType === 'rating' ? 'Top Rated' : 'Title A-Z'}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       {/* Content Grid */}
       {posts.length === 0 ? (
         <Card className="bg-gray-900 border-gray-800">
@@ -249,6 +286,17 @@ export default function ContentListPage() {
                       Scheduled for {formatDate(post.scheduled_for)}
                     </span>
                   )}
+                  {/* Rating Display */}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <StarRating 
+                      rating={post.average_rating || 0} 
+                      size="sm" 
+                      showNumber={true}
+                    />
+                    <span className="text-xs text-gray-500">
+                      ({post.rating_count || 0} {post.rating_count === 1 ? 'rating' : 'ratings'})
+                    </span>
+                  </div>
                 </CardDescription>
               </CardHeader>
               <CardContent>

@@ -377,6 +377,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="mr-3">📦</span>
                   Packages
                 </Link>
+                <Link href="/dashboard/leaderboard" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
+                  <span className="mr-3">🏆</span>
+                  Leaderboard
+                </Link>
                 <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">📅</span>
                   Schedule
