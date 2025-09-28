@@ -10,6 +10,16 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // Check if this is a LinkedIn success callback
+        const urlParams = new URLSearchParams(window.location.search)
+        const linkedinSuccess = urlParams.get('linkedin_success')
+        
+        if (linkedinSuccess) {
+          // LinkedIn OAuth was successful, redirect to socials page
+          router.push('/dashboard/socials?success=linkedin_connected')
+          return
+        }
+
         const { data, error } = await supabase.auth.getSession()
         
         if (error) {
