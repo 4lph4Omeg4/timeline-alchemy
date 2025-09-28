@@ -45,7 +45,7 @@ export default function ContentListPage() {
         return
       }
 
-      // Simplified approach: get all posts from the organization
+      // Get all posts from the organization (both user-created and admin-created packages)
       let query = supabase
         .from('blog_posts')
         .select('*')
@@ -180,7 +180,7 @@ export default function ContentListPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Content Library</h1>
           <p className="text-gray-300 mt-2">
-            Manage your content and view packages created for you by your admin.
+            Manage your content and view all packages created by your admin.
           </p>
         </div>
         <Link href="/dashboard/content/new">
@@ -210,7 +210,7 @@ export default function ContentListPage() {
             <h3 className="text-xl font-semibold text-white mb-2">No content found</h3>
             <p className="text-gray-400 text-center mb-6">
               {filter === 'all' 
-                ? "You haven't created any content yet. Start by creating your first post!"
+                ? "No content found in your organization. Start by creating your first post or ask your admin to create packages for you!"
                 : `No ${filter} content found. Try creating some content or check other filters.`
               }
             </p>

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Client, BlogPost } from '@/types/index'
+import { BlogPost } from '@/types/index'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { Loader } from '@/components/Loader'
@@ -17,8 +17,6 @@ import { Loader } from '@/components/Loader'
 export default function AdminCreatePackagePage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [selectedClient, setSelectedClient] = useState<string>('')
-  const [clients, setClients] = useState<Client[]>([])
   const [existingContent, setExistingContent] = useState<BlogPost[]>([])
   const [useExistingContent, setUseExistingContent] = useState(false)
   const [selectedContent, setSelectedContent] = useState<string>('')
@@ -27,7 +25,7 @@ export default function AdminCreatePackagePage() {
   const router = useRouter()
 
   useEffect(() => {
-    const fetchClients = async () => {
+    const fetchData = async () => {
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
@@ -51,18 +49,6 @@ export default function AdminCreatePackagePage() {
           return
         }
 
-        // Fetch all clients (not just from admin's organization)
-        const { data: clientsData, error: clientsError } = await supabase
-          .from('clients')
-          .select('*')
-          .order('name')
-
-        if (clientsError) {
-          console.error('Error fetching clients:', clientsError)
-          toast.error('Failed to fetch clients')
-        } else {
-          setClients(clientsData || [])
-        }
 
         // Fetch existing content from admin's organization
         const { data: contentData, error: contentError } = await supabase
@@ -87,14 +73,10 @@ export default function AdminCreatePackagePage() {
       }
     }
 
-    fetchClients()
+    fetchData()
   }, [])
 
   const handleSavePackage = async () => {
-    if (!selectedClient) {
-      toast.error('Please select a client')
-      return
-    }
 
     if (!useExistingContent && (!title.trim() || !content.trim())) {
       toast.error('Please fill in all required fields')
@@ -139,12 +121,11 @@ export default function AdminCreatePackagePage() {
         }
       }
 
-      // Create the package for the selected client
+      // Create the package (available to all users in the organization)
       const { data: packageData, error: packageError } = await supabase
         .from('blog_posts')
         .insert({
           org_id: orgMember.org_id,
-          client_id: selectedClient,
           title: finalTitle,
           content: finalContent,
           state: 'draft',
@@ -190,25 +171,10 @@ export default function AdminCreatePackagePage() {
         <CardHeader>
           <CardTitle className="text-white">Package Details</CardTitle>
           <CardDescription className="text-gray-300">
-            Fill in the content details for this client package.
+            Create a content package that will be available to all users in your organization.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="client" className="text-white">Client</Label>
-            <Select value={selectedClient} onValueChange={setSelectedClient}>
-              <SelectTrigger className="mt-2 bg-gray-700 border-gray-600 text-white">
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="flex items-center space-x-2">
             <Switch
@@ -281,7 +247,7 @@ export default function AdminCreatePackagePage() {
             </Button>
             <Button 
               onClick={handleSavePackage}
-              disabled={saving || !selectedClient || (!useExistingContent && (!title.trim() || !content.trim())) || (useExistingContent && !selectedContent)}
+              disabled={saving || (!useExistingContent && (!title.trim() || !content.trim())) || (useExistingContent && !selectedContent)}
             >
               {saving ? (
                 <>

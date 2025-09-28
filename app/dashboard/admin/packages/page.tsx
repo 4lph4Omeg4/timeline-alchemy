@@ -18,8 +18,6 @@ interface AdminPackage {
   created_at: string
   published_at: string | null
   scheduled_for: string | null
-  client_name: string
-  client_id: string
 }
 
 export default function AdminPackagesPage() {
@@ -51,7 +49,7 @@ export default function AdminPackagesPage() {
         return
       }
 
-      // Fetch admin-created packages with client information
+      // Fetch admin-created packages
       const { data: packagesData, error: packagesError } = await supabase
         .from('blog_posts')
         .select(`
@@ -61,11 +59,7 @@ export default function AdminPackagesPage() {
           state,
           created_at,
           published_at,
-          scheduled_for,
-          client_id,
-          clients (
-            name
-          )
+          scheduled_for
         `)
         .eq('org_id', orgMember.org_id)
         .eq('created_by_admin', true)
@@ -86,8 +80,6 @@ export default function AdminPackagesPage() {
         created_at: pkg.created_at,
         published_at: pkg.published_at,
         scheduled_for: pkg.scheduled_for,
-        client_name: pkg.clients?.name || 'Unknown Client',
-        client_id: pkg.client_id,
       }))
 
       setPackages(packagesList)
@@ -199,7 +191,6 @@ export default function AdminPackagesPage() {
                   </Badge>
                 </div>
                 <CardDescription className="text-gray-400">
-                  <div className="text-blue-400 font-medium">Client: {pkg.client_name}</div>
                   <div>Created {formatDate(pkg.created_at)}</div>
                   {pkg.published_at && (
                     <div>Published {formatDate(pkg.published_at)}</div>
