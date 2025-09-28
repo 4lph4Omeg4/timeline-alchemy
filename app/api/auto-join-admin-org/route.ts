@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         org_id: adminOrgId,
         user_id: userId,
         role: 'client'
-      })
+      } as any)
       .select()
       .single()
 
