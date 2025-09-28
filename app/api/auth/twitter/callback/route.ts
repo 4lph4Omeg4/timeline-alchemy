@@ -28,6 +28,14 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Twitter OAuth error:', error)
       console.error('Full search params:', Object.fromEntries(searchParams.entries()))
+      
+      // If it's an auth_required error, redirect to signin first
+      if (error === 'auth_required') {
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL}/auth/signin?redirectTo=${encodeURIComponent('/dashboard/socials')}`
+        )
+      }
+      
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=${encodeURIComponent(error)}`
       )
