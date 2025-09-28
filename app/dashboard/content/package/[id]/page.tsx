@@ -221,7 +221,7 @@ export default function ContentPackagePage() {
         <CardContent>
           <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
             <p className="text-gray-200 leading-relaxed text-lg italic">
-              "{generatedContent.blogPost.excerpt}"
+              {post.content.substring(0, 300)}...
             </p>
           </div>
         </CardContent>
@@ -248,7 +248,7 @@ export default function ContentPackagePage() {
           <div className="prose prose-invert max-w-none">
             <div 
               className="text-gray-300 leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: generatedContent.blogPost.content }}
+              dangerouslySetInnerHTML={{ __html: post.content }}
             />
           </div>
         </CardContent>
