@@ -13,6 +13,7 @@ import { BlogPost } from '@/types/index'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { Loader } from '@/components/Loader'
+import { generateAndSaveImage } from '@/lib/ai'
 
 export default function AdminCreatePackagePage() {
   const [title, setTitle] = useState('')
@@ -140,7 +141,17 @@ export default function AdminCreatePackagePage() {
         return
       }
 
-      toast.success('Package created successfully!')
+      // Generate and save an image for the package
+      try {
+        toast.loading('Generating image for package...', { id: 'image-generation' })
+        const imageUrl = await generateAndSaveImage(finalTitle, packageData.id, orgMember.org_id)
+        toast.success('Package created with image successfully!', { id: 'image-generation' })
+      } catch (imageError) {
+        console.error('Error generating image:', imageError)
+        toast.dismiss('image-generation')
+        toast.success('Package created successfully! (Image generation failed)')
+      }
+
       router.push('/dashboard/admin/packages')
     } catch (error) {
       console.error('Unexpected error:', error)
