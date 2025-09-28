@@ -83,6 +83,19 @@ export default function MigratePage() {
               <pre className="text-gray-300 text-sm bg-gray-800 p-4 rounded-lg overflow-auto max-h-96">
                 {JSON.stringify(results, null, 2)}
               </pre>
+              
+              {results.results?.sql_commands && (
+                <div className="mt-4">
+                  <h4 className="text-white font-medium mb-2">SQL Commands to Run:</h4>
+                  <div className="bg-gray-800 p-4 rounded-lg">
+                    {results.results.sql_commands.map((sql: string, index: number) => (
+                      <div key={index} className="mb-2">
+                        <code className="text-green-400 text-sm">{sql}</code>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
