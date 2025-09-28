@@ -6,8 +6,8 @@ export class TwitterOAuth {
 
   constructor() {
     this.client = new TwitterApi({
-      clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID!,
-      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+      appKey: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID!,
+      appSecret: process.env.TWITTER_CLIENT_SECRET!,
     })
   }
 
@@ -49,13 +49,7 @@ export class TwitterOAuth {
 
   // Create a Twitter client with stored tokens
   createClientWithTokens(accessToken: string, refreshToken?: string) {
-    return new TwitterApi({
-      clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID!,
-      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
-    }, {
-      accessToken,
-      refreshToken,
-    })
+    return new TwitterApi(accessToken, refreshToken)
   }
 
   // Post a tweet
