@@ -30,20 +30,40 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const ensureAdminOrganization = async (userId: string) => {
     try {
-      // Check if admin already has an organization
-      const { data: existingOrg, error: checkError } = await (supabase as any)
-        .from('org_members')
-        .select('org_id, organizations(*)')
-        .eq('user_id', userId)
-        .eq('role', 'owner')
+      // First, check if "Timeline Alchemy Admin" organization already exists
+      const { data: existingAdminOrg, error: orgCheckError } = await (supabase as any)
+        .from('organizations')
+        .select('id')
+        .eq('name', 'Timeline Alchemy Admin')
         .single()
 
-      if (existingOrg) {
-        console.log('Admin already has organization:', (existingOrg as any).organizations)
-        return // Admin already has an organization
+      if (existingAdminOrg) {
+        // Organization exists, check if admin is already a member
+        const { data: existingMember, error: memberCheckError } = await (supabase as any)
+          .from('org_members')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('org_id', existingAdminOrg.id)
+          .single()
+
+        if (!existingMember) {
+          // Admin is not a member, add them as owner
+          const { error: memberError } = await (supabase as any)
+            .from('org_members')
+            .insert({
+              org_id: existingAdminOrg.id,
+              user_id: userId,
+              role: 'owner'
+            })
+
+          if (memberError) {
+            console.error('Error adding admin to existing organization:', memberError)
+          }
+        }
+        return // Organization already exists
       }
 
-      // Only create if no organization exists
+      // Organization doesn't exist, create it
       console.log('Creating admin organization...')
       
       // Create admin organization
