@@ -69,12 +69,12 @@ export default function ContentPackagePage() {
         return
       }
 
-      // Fetch the post
+      // Fetch the post - allow access to user's org content OR admin packages from any org
       const { data: postData, error: postError } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('id', params.id)
-        .eq('org_id', orgMember.org_id)
+        .or(`org_id.eq.${orgMember.org_id},and(created_by_admin.eq.true)`)
         .single()
 
       if (postError || !postData) {
@@ -86,12 +86,12 @@ export default function ContentPackagePage() {
 
       setPost(postData)
 
-      // Try to fetch associated images
+      // Try to fetch associated images - allow access to user's org images OR admin package images
       const { data: images } = await supabase
         .from('images')
         .select('*')
         .eq('post_id', params.id)
-        .eq('org_id', orgMember.org_id)
+        .or(`org_id.eq.${orgMember.org_id},and(post_id.eq.${params.id})`)
 
       // For now, we'll create a mock generated content structure
       // In a real app, you might store the complete generated content in the database
