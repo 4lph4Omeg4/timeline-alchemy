@@ -400,6 +400,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <span className="mr-3">📈</span>
                       Analytics
                     </Link>
+                    <Link href="/dashboard/debug-packages" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
+                      <span className="mr-3">🔍</span>
+                      Debug Packages
+                    </Link>
                   </>
                 )}
               </div>

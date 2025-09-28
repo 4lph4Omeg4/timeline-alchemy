@@ -140,7 +140,7 @@ export default function AdminCreatePackagePage() {
         return
       }
 
-      toast.success('Package created successfully for client!')
+      toast.success('Package created successfully!')
       router.push('/dashboard/admin/packages')
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -161,9 +161,9 @@ export default function AdminCreatePackagePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Create Package for Client</h1>
+        <h1 className="text-3xl font-bold text-white">Create Content Package</h1>
         <p className="text-gray-300 mt-2">
-          Create a content package that will be visible to your selected client.
+          Create a content package that will be available to all users in your organization.
         </p>
       </div>
 
