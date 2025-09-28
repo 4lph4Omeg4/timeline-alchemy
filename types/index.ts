@@ -36,6 +36,8 @@ export interface BlogPost {
   updated_at: string
   client_id?: string
   created_by_admin?: boolean
+  average_rating?: number
+  rating_count?: number
 }
 
 export interface SocialConnection {
