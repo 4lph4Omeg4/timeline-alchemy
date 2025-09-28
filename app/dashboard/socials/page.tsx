@@ -86,8 +86,16 @@ export default function SocialConnectionsPage() {
         // Get the current user
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
-        if (userError || !user) {
-          console.error('Error getting user:', userError)
+        if (userError) {
+          console.error('Auth error:', userError)
+          toast.error('Authentication error. Please sign in again.')
+          setLoading(false)
+          return
+        }
+        
+        if (!user) {
+          console.error('No user found')
+          toast.error('Please sign in to view social connections')
           setLoading(false)
           return
         }
@@ -168,7 +176,12 @@ export default function SocialConnectionsPage() {
         
         // Encode state with code verifier
         // Get user's organization ID to include in state
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError) {
+          console.error('Auth error:', userError)
+          toast.error('Authentication error. Please sign in again.')
+          return
+        }
         if (!user) {
           toast.error('Please sign in to connect social accounts')
           return
@@ -207,7 +220,12 @@ export default function SocialConnectionsPage() {
         window.location.href = authUrl.toString()
       } else if (platform === 'linkedin') {
         // Get user's organization ID to include in state
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError) {
+          console.error('Auth error:', userError)
+          toast.error('Authentication error. Please sign in again.')
+          return
+        }
         if (!user) {
           toast.error('Please sign in to connect social accounts')
           return

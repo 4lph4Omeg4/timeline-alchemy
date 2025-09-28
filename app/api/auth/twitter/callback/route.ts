@@ -163,9 +163,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Redirect back to socials page with success
+    // Redirect to auth callback to ensure user is properly authenticated
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=twitter_connected&username=${twitterUsername}`
+      `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?twitter_success=true&username=${twitterUsername}`
     )
 
   } catch (error) {

@@ -10,13 +10,21 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Check if this is a LinkedIn success callback
+        // Check if this is a social media success callback
         const urlParams = new URLSearchParams(window.location.search)
         const linkedinSuccess = urlParams.get('linkedin_success')
+        const twitterSuccess = urlParams.get('twitter_success')
         
         if (linkedinSuccess) {
           // LinkedIn OAuth was successful, redirect to socials page
           router.push('/dashboard/socials?success=linkedin_connected')
+          return
+        }
+        
+        if (twitterSuccess) {
+          // Twitter OAuth was successful, redirect to socials page
+          const username = urlParams.get('username')
+          router.push(`/dashboard/socials?success=twitter_connected&username=${username}`)
           return
         }
 
