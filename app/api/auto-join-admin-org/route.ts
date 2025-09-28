@@ -21,18 +21,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin organization not found' }, { status: 404 })
     }
 
+    const adminOrgId = adminOrg.id
+
     // Check if user is already a member
     const { data: existingMember, error: checkError } = await supabaseAdmin
       .from('org_members')
       .select('id')
       .eq('user_id', userId)
-      .eq('org_id', adminOrg.id)
+      .eq('org_id', adminOrgId)
       .single()
 
     if (existingMember) {
       return NextResponse.json({ 
         message: 'User is already a member of the admin organization',
-        orgId: adminOrg.id 
+        orgId: adminOrgId 
       })
     }
 
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
     const { data: newMember, error: memberError } = await supabaseAdmin
       .from('org_members')
       .insert({
-        org_id: adminOrg.id,
+        org_id: adminOrgId,
         user_id: userId,
         role: 'client'
       })
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       message: 'User successfully added to admin organization',
-      orgId: adminOrg.id,
+      orgId: adminOrgId,
       member: newMember
     })
 
