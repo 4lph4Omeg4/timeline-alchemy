@@ -137,15 +137,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
       setIsAdmin(isAdminUser)
 
-      // Always ensure user is in admin organization (for both admin and regular users)
-      try {
-        await fetch('/api/auto-join-admin-org', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id }),
-        })
-      } catch (orgError) {
-        console.error('Error ensuring admin org membership:', orgError)
+      // Only ensure admin org membership for non-admin users
+      if (!isAdminUser) {
+        try {
+          await fetch('/api/auto-join-admin-org', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id }),
+          })
+        } catch (orgError) {
+          console.error('Error ensuring admin org membership:', orgError)
+        }
       }
 
       if (isAdminUser) {
@@ -394,10 +396,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="mr-3">📦</span>
                   Packages
                 </Link>
-                <Link href="/dashboard/leaderboard" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
-                  <span className="mr-3">🏆</span>
-                  Leaderboard
-                </Link>
+        <Link href="/dashboard/leaderboard" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
+          <span className="mr-3">🏆</span>
+          Leaderboard
+        </Link>
+        <Link href="/dashboard/debug-auth" className="flex items-center px-3 py-2 text-gray-200 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors">
+          <span className="mr-3">🐛</span>
+          Debug Auth
+        </Link>
                 <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">📅</span>
                   Schedule

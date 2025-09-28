@@ -83,40 +83,21 @@ export default function SocialConnectionsPage() {
   useEffect(() => {
     const fetchConnections = async () => {
       try {
-        // First try to refresh the session
-        const { error: refreshError } = await supabase.auth.refreshSession()
-        if (refreshError) {
-          console.error('Session refresh failed:', refreshError)
-        }
-
         // Get the current user
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
         if (userError) {
           console.error('Auth error:', userError)
           toast.error('Authentication error. Please sign in again.')
-          // Redirect to signin page
-          window.location.href = '/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials')
+          router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
           return
         }
         
         if (!user) {
           console.error('No user found')
           toast.error('Please sign in to view social connections')
-          // Redirect to signin page
-          window.location.href = '/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials')
+          router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
           return
-        }
-
-        // Ensure user is in admin organization
-        try {
-          await fetch('/api/auto-join-admin-org', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id }),
-          })
-        } catch (orgError) {
-          console.error('Error ensuring admin org membership:', orgError)
         }
 
         // Get the user's organization
@@ -187,30 +168,13 @@ export default function SocialConnectionsPage() {
 
   const handleConnect = async (platform: string) => {
     try {
-      // Debug: Check current session status
-      const { data: sessionData } = await supabase.auth.getSession()
-      console.log('Current session status:', {
-        hasSession: !!sessionData.session,
-        userId: sessionData.session?.user?.id,
-        expiresAt: sessionData.session?.expires_at
-      })
-
-      // If session is close to expiring, refresh it
-      if (sessionData.session?.expires_at) {
-        const expiresAt = new Date(sessionData.session.expires_at * 1000)
-        const now = new Date()
-        const timeUntilExpiry = expiresAt.getTime() - now.getTime()
-        
-        // If session expires in less than 5 minutes, refresh it
-        if (timeUntilExpiry < 5 * 60 * 1000) {
-          console.log('Session close to expiry, refreshing...')
-          const { error: refreshError } = await supabase.auth.refreshSession()
-          if (refreshError) {
-            console.error('Session refresh failed:', refreshError)
-            toast.error('Session expired. Please sign in again.')
-            return
-          }
-        }
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        toast.error('Please sign in to connect social accounts')
+        router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
+        return
       }
 
       if (platform === 'twitter') {
@@ -218,19 +182,6 @@ export default function SocialConnectionsPage() {
         const stateParam = Math.random().toString(36).substring(2, 15)
         const codeVerifier = generateCodeVerifier()
         const codeChallenge = await generateCodeChallenge(codeVerifier)
-        
-        // Encode state with code verifier
-        // Get user's organization ID to include in state
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        if (userError) {
-          console.error('Auth error:', userError)
-          toast.error('Authentication error. Please sign in again.')
-          return
-        }
-        if (!user) {
-          toast.error('Please sign in to connect social accounts')
-          return
-        }
 
         const { data: orgMember } = await supabase
           .from('org_members')
@@ -264,17 +215,6 @@ export default function SocialConnectionsPage() {
         // Redirect to Twitter OAuth
         window.location.href = authUrl.toString()
       } else if (platform === 'linkedin') {
-        // Get user's organization ID to include in state
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        if (userError) {
-          console.error('Auth error:', userError)
-          toast.error('Authentication error. Please sign in again.')
-          return
-        }
-        if (!user) {
-          toast.error('Please sign in to connect social accounts')
-          return
-        }
 
         const { data: orgMember } = await supabase
           .from('org_members')

@@ -167,9 +167,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Redirect to auth callback to ensure user is properly authenticated
+    // Redirect directly to socials page with success message
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?linkedin_success=true&userId=${linkedinUserId}&orgId=${orgId}`
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=linkedin_connected`
     )
 
   } catch (error) {
