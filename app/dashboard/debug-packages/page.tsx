@@ -202,6 +202,12 @@ export default function DebugPackagesPage() {
           <CardTitle className="text-white">Organization Memberships</CardTitle>
           <CardDescription className="text-gray-300">
             User's organization memberships: {debugInfo.orgMembers.length}
+            {debugInfo.orgMembers.some(m => m.organizations?.name === 'Admin Organization') && (
+              <span className="text-green-400 ml-2">✅ In Admin Organization</span>
+            )}
+            {!debugInfo.orgMembers.some(m => m.organizations?.name === 'Admin Organization') && (
+              <span className="text-red-400 ml-2">❌ NOT in Admin Organization</span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -234,6 +240,8 @@ export default function DebugPackagesPage() {
             Total posts: {debugInfo.blogPosts.length} | 
             Admin packages: {debugInfo.blogPosts.filter(p => p.created_by_admin).length} |
             User posts: {debugInfo.blogPosts.filter(p => !p.created_by_admin).length}
+            <br />
+            Admin packages in Admin Organization: {debugInfo.blogPosts.filter(p => p.created_by_admin && p.org_id === debugInfo.orgMembers.find(m => m.organizations?.name === 'Admin Organization')?.org_id).length}
           </CardDescription>
         </CardHeader>
         <CardContent>

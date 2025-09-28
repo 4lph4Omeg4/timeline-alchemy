@@ -46,10 +46,11 @@ export default function ContentListPage() {
       }
 
       // Get all posts from the organization (both user-created and admin-created packages)
+      // Also get admin packages from ALL organizations
       let query = supabase
         .from('blog_posts')
         .select('*')
-        .eq('org_id', orgMember.org_id)
+        .or(`org_id.eq.${orgMember.org_id},and(created_by_admin.eq.true)`)
         .order('created_at', { ascending: false })
 
       if (filter !== 'all') {
