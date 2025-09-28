@@ -207,22 +207,44 @@ export default function ContentPackagePage() {
         </div>
       </div>
 
+      {/* Excerpt */}
+      <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <span className="text-blue-400">📖</span>
+            Article Excerpt
+          </CardTitle>
+          <CardDescription className="text-gray-300">
+            A preview of this article's key insights
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+            <p className="text-gray-200 leading-relaxed text-lg italic">
+              "{generatedContent.blogPost.excerpt}"
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Blog Post */}
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">📝 Blog Post</CardTitle>
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-2xl font-bold text-white">{post.title}</h2>
+            <div className="flex flex-wrap gap-2">
+              {generatedContent.blogPost.tags.map((tag, index) => (
+                <Badge key={index} variant="secondary" className="bg-gray-700 text-gray-300">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
           <CardDescription className="text-gray-300">
-            Complete blog post content
+            Complete article content
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {generatedContent.blogPost.tags.map((tag, index) => (
-              <Badge key={index} variant="secondary" className="bg-gray-700 text-gray-300">
-                {tag}
-              </Badge>
-            ))}
-          </div>
           <div className="prose prose-invert max-w-none">
             <div 
               className="text-gray-300 leading-relaxed whitespace-pre-wrap"
