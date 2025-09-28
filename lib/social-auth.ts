@@ -49,7 +49,12 @@ export class TwitterOAuth {
 
   // Create a Twitter client with stored tokens
   createClientWithTokens(accessToken: string, refreshToken?: string) {
-    return new TwitterApi(accessToken, refreshToken)
+    return new TwitterApi({
+      appKey: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID!,
+      appSecret: process.env.TWITTER_CLIENT_SECRET!,
+      accessToken,
+      accessSecret: refreshToken || '',
+    })
   }
 
   // Post a tweet
