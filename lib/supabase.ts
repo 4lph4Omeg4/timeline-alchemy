@@ -27,6 +27,7 @@ export const supabase = (() => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: 'timeline-alchemy-auth', // Unique storage key
         storage: {
           getItem: (key: string) => {
             if (typeof window !== 'undefined') {
@@ -48,7 +49,7 @@ export const supabase = (() => {
       },
       global: {
         headers: {
-          'X-Client-Info': 'supabase-js-web'
+          'X-Client-Info': 'timeline-alchemy-web'
         }
       }
     })

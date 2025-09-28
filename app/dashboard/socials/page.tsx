@@ -168,6 +168,32 @@ export default function SocialConnectionsPage() {
 
   const handleConnect = async (platform: string) => {
     try {
+      // Debug: Check current session status
+      const { data: sessionData } = await supabase.auth.getSession()
+      console.log('Current session status:', {
+        hasSession: !!sessionData.session,
+        userId: sessionData.session?.user?.id,
+        expiresAt: sessionData.session?.expires_at
+      })
+
+      // If session is close to expiring, refresh it
+      if (sessionData.session?.expires_at) {
+        const expiresAt = new Date(sessionData.session.expires_at * 1000)
+        const now = new Date()
+        const timeUntilExpiry = expiresAt.getTime() - now.getTime()
+        
+        // If session expires in less than 5 minutes, refresh it
+        if (timeUntilExpiry < 5 * 60 * 1000) {
+          console.log('Session close to expiry, refreshing...')
+          const { error: refreshError } = await supabase.auth.refreshSession()
+          if (refreshError) {
+            console.error('Session refresh failed:', refreshError)
+            toast.error('Session expired. Please sign in again.')
+            return
+          }
+        }
+      }
+
       if (platform === 'twitter') {
         // Generate state parameter for security and include code verifier
         const stateParam = Math.random().toString(36).substring(2, 15)
