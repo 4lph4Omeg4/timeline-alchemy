@@ -39,7 +39,7 @@ export default function DebugAuthPage() {
         
       } catch (error) {
         console.error('Debug auth error:', error)
-        setAuthState({ error: error.message })
+        setAuthState({ error: error instanceof Error ? error.message : 'Unknown error' })
       } finally {
         setLoading(false)
       }
@@ -59,7 +59,7 @@ export default function DebugAuthPage() {
         window.location.reload()
       }
     } catch (error) {
-      toast.error('Session refresh error: ' + error.message)
+      toast.error('Session refresh error: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -86,7 +86,7 @@ export default function DebugAuthPage() {
         toast.error('Failed to join admin organization: ' + data.error)
       }
     } catch (error) {
-      toast.error('Error joining admin organization: ' + error.message)
+      toast.error('Error joining admin organization: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
