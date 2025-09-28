@@ -365,10 +365,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="mr-3">🔗</span>
                   Socials
                 </Link>
-                <Link href="/dashboard/content/list" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
-                  <span className="mr-3">📦</span>
-                  Packages
-                </Link>
                 <Link href="/dashboard/billing" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">💳</span>
                   Billing

@@ -64,8 +64,8 @@ export default function AssignClientPage() {
           setClients(clientsData || [])
         }
 
-        // Fetch all users in the organization via API
-        const response = await fetch(`/api/admin/users?orgId=${orgMember.org_id}&currentUserId=${user.id}`)
+        // Fetch all users in the organization via simple API
+        const response = await fetch(`/api/admin/users-simple?orgId=${orgMember.org_id}&currentUserId=${user.id}`)
         
         if (!response.ok) {
           console.error('Error fetching users:', response.statusText)

@@ -45,58 +45,20 @@ export default function ContentListPage() {
         return
       }
 
-      // Get user's client information
-      const { data: userClient, error: clientError } = await supabase
-        .from('user_clients')
-        .select('client_id')
-        .eq('user_id', user.id)
-        .single()
-
-      console.log('User client data:', userClient)
-
-      // Fetch user's own content
-      let userQuery = supabase
+      // Simplified approach: get all posts from the organization
+      let query = supabase
         .from('blog_posts')
         .select('*')
         .eq('org_id', orgMember.org_id)
-        .eq('created_by_admin', false)
-        .is('client_id', null)
         .order('created_at', { ascending: false })
 
       if (filter !== 'all') {
-        userQuery = userQuery.eq('state', filter)
+        query = query.eq('state', filter)
       }
 
-      const { data: userPosts, error: userError } = await userQuery
+      const { data, error } = await query
 
-      // If user is a client, also fetch admin packages assigned to them
-      let adminPackages: any[] = []
-      if (userClient?.client_id) {
-        let adminQuery = supabase
-          .from('blog_posts')
-          .select('*')
-          .eq('org_id', orgMember.org_id)
-          .eq('created_by_admin', true)
-          .eq('client_id', userClient.client_id)
-          .order('created_at', { ascending: false })
-
-        if (filter !== 'all') {
-          adminQuery = adminQuery.eq('state', filter)
-        }
-
-        const { data: adminData, error: adminError } = await adminQuery
-        if (!adminError) {
-          adminPackages = adminData || []
-        }
-      }
-
-      // Combine both results
-      const data = [...(userPosts || []), ...adminPackages]
-      const error = userError
-
-      console.log('User posts:', userPosts)
-      console.log('Admin packages:', adminPackages)
-      console.log('Combined data:', data)
+      console.log('All posts in organization:', data)
 
       if (error) {
         console.error('Error fetching posts:', error)
