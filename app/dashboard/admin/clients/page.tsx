@@ -28,23 +28,13 @@ export default function AdminClientsPage() {
         return
       }
 
-      // Get admin's organizations (remove role filter to find any organization)
-      const { data: orgMembers, error: orgError } = await supabase
-        .from('org_members')
-        .select('org_id')
-        .eq('user_id', user.id)
-
-      if (orgError || !orgMembers || orgMembers.length === 0) {
-        console.error('Error getting admin organizations:', orgError)
-        toast.error('No organization found. Please contact support.')
-        setLoading(false)
-        return
-      }
-
-      // Fetch all clients (not just from admin's organization)
+      // Fetch all clients from admin organization (global clients)
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
-        .select('*')
+        .select(`
+          *,
+          organizations(name)
+        `)
         .order('name')
 
       if (clientsError) {
@@ -79,19 +69,19 @@ export default function AdminClientsPage() {
         return
       }
 
-      // Get admin's organizations (remove role filter to find any organization)
-      const { data: orgMembers } = await supabase
-        .from('org_members')
-        .select('org_id')
-        .eq('user_id', user.id)
+      // Find the admin organization (where all clients should be created)
+      const { data: adminOrg } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('name', 'Admin Organization')
+        .single()
 
-      if (!orgMembers || orgMembers.length === 0) {
-        toast.error('No organization found. Please contact support.')
+      if (!adminOrg) {
+        toast.error('Admin organization not found. Please contact support.')
         return
       }
 
-      // Use the first organization found
-      const orgId = orgMembers[0].org_id
+      const orgId = adminOrg.id
 
       // Create the client
       const { data: clientData, error: clientError } = await supabase
@@ -231,6 +221,7 @@ export default function AdminClientsPage() {
                   {client.contact_info?.email && (
                     <div>Email: {client.contact_info.email}</div>
                   )}
+                  <div>Organization: {client.organizations?.name || 'Unknown'}</div>
                   <div>Created {new Date(client.created_at).toLocaleDateString()}</div>
                 </CardDescription>
               </CardHeader>
