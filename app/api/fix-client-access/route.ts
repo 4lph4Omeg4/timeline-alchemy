@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     // This is a one-time fix to ensure all users have access to admin organization
     
     // First, ensure the Admin Organization exists
-    const { data: adminOrg, error: orgError } = await supabaseAdmin
+    const { data: adminOrg, error: orgError } = await (supabaseAdmin as any)
       .from('organizations')
       .select('id')
       .eq('name', 'Admin Organization')
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     if (!adminOrg) {
       // Create admin organization if it doesn't exist
-      const { data: newOrg, error: createError } = await supabaseAdmin
+      const { data: newOrg, error: createError } = await (supabaseAdmin as any)
         .from('organizations')
         .insert({
           name: 'Admin Organization',
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     }))
 
     // Insert members (ignore conflicts)
-    const { error: membersError } = await supabaseAdmin
+    const { error: membersError } = await (supabaseAdmin as any)
       .from('org_members')
       .upsert(membersToInsert, { 
         onConflict: 'org_id,user_id',
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure admin organization has a subscription
-    const { error: subError } = await supabaseAdmin
+    const { error: subError } = await (supabaseAdmin as any)
       .from('subscriptions')
       .upsert({
         org_id: adminOrgId,
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Move all clients to admin organization
-    const { error: clientsError } = await supabaseAdmin
+    const { error: clientsError } = await (supabaseAdmin as any)
       .from('clients')
       .update({ org_id: adminOrgId })
 
