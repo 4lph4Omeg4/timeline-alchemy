@@ -230,12 +230,12 @@ export default function SocialConnectionsPage() {
         authUrl.searchParams.set('response_type', 'code')
         console.log('Twitter OAuth setup:', {
           clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID ? 'SET' : 'NOT SET',
-          redirectUri: `${window.location.origin}/api/auth/twitter/callback`,
+          redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/twitter/callback`,
           orgId: orgMember.org_id
         })
         
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '')
-        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/twitter/callback`)
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/twitter/callback`)
         authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read')
         authUrl.searchParams.set('state', state)
         authUrl.searchParams.set('code_challenge', codeChallenge)
@@ -273,7 +273,7 @@ export default function SocialConnectionsPage() {
         const authUrl = new URL('https://www.linkedin.com/oauth/v2/authorization')
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || '')
-        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/linkedin/callback`)
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/linkedin/callback`)
         authUrl.searchParams.set('scope', 'openid profile w_member_social')
         authUrl.searchParams.set('state', state)
         
@@ -307,7 +307,7 @@ export default function SocialConnectionsPage() {
         // Facebook OAuth URL (using Facebook Pages API)
         const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth')
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '')
-        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/facebook/callback`)
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/facebook/callback`)
         authUrl.searchParams.set('scope', 'pages_manage_posts,pages_read_engagement')
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('state', state)
@@ -342,7 +342,7 @@ export default function SocialConnectionsPage() {
         // YouTube OAuth URL
         const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID || '')
-        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/youtube/callback`)
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/youtube/callback`)
         authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl')
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('access_type', 'offline')

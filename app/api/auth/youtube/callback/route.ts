@@ -112,19 +112,19 @@ export async function GET(request: NextRequest) {
     if (dbError) {
       console.error('Database error:', dbError)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=database_error&details=${encodeURIComponent(dbError.message)}`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=database_error&details=${encodeURIComponent(dbError.message)}`
       )
     }
 
     // Redirect back to socials page with success
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?success=youtube_connected&username=${encodeURIComponent(accountName)}`
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?success=youtube_connected&username=${encodeURIComponent(accountName)}`
     )
 
   } catch (error) {
     console.error('YouTube OAuth callback error:', error)
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=unexpected_error&details=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=unexpected_error&details=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
     )
   }
 }
