@@ -131,7 +131,7 @@ export default function ContentPage() {
         await (supabase as any)
           .from('images')
           .insert({
-            org_id: (orgMember as any).org_id,
+            org_id: orgId,
             post_id: (blogPost as any).id,
             url: generatedContent.image.url
           })
