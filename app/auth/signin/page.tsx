@@ -41,21 +41,7 @@ export default function SignInPage() {
       } else {
         toast.success('Welcome back!')
         
-        // Add user to admin organization
-        try {
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user) {
-            await fetch('/api/auto-join-admin-org', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ userId: user.id }),
-            })
-          }
-        } catch (orgError) {
-          console.error('Error adding user to admin organization:', orgError)
-        }
+        // Organization creation is handled in dashboard layout
         
         router.push(redirectTo)
       }
