@@ -126,16 +126,23 @@ export async function GET(request: NextRequest) {
     const { access_token, expires_in } = tokenData
 
     // Get user info from LinkedIn
-    const userResponse = await fetch('https://api.linkedin.com/v2/people/~', {
+    const userResponse = await fetch('https://api.linkedin.com/v2/people/~:(id,firstName,lastName,displayName)', {
       headers: {
         'Authorization': `Bearer ${access_token}`,
       },
     })
 
+    console.log('LinkedIn user info response status:', userResponse.status)
+
     if (!userResponse.ok) {
-      console.error('Failed to get LinkedIn user info')
+      const errorData = await userResponse.text()
+      console.error('Failed to get LinkedIn user info:', {
+        status: userResponse.status,
+        statusText: userResponse.statusText,
+        error: errorData
+      })
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=user_info_failed`
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=user_info_failed&details=${encodeURIComponent(errorData)}`
       )
     }
 

@@ -129,16 +129,23 @@ export async function GET(request: NextRequest) {
     const { access_token, refresh_token, expires_in } = tokenData
 
     // Get user info from Twitter
-    const userResponse = await fetch('https://api.twitter.com/2/users/me', {
+    const userResponse = await fetch('https://api.twitter.com/2/users/me?user.fields=id,username,name,public_metrics', {
       headers: {
         'Authorization': `Bearer ${access_token}`,
       },
     })
 
+    console.log('Twitter user info response status:', userResponse.status)
+
     if (!userResponse.ok) {
-      console.error('Failed to get user info')
+      const errorData = await userResponse.text()
+      console.error('Failed to get Twitter user info:', {
+        status: userResponse.status,
+        statusText: userResponse.statusText,
+        error: errorData
+      })
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=user_info_failed`
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=user_info_failed&details=${encodeURIComponent(errorData)}`
       )
     }
 
