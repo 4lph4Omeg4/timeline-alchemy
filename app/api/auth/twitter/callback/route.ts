@@ -149,11 +149,16 @@ export async function GET(request: NextRequest) {
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString()
 
     // Store connection in database
+    const accountId = `twitter_${twitterUserId}`
+    const accountName = `@${twitterUsername}`
+    
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({
         org_id: orgId,
         platform: 'twitter',
+        account_id: accountId,
+        account_name: accountName,
         access_token,
         refresh_token,
         expires_at: expiresAt,
@@ -161,7 +166,7 @@ export async function GET(request: NextRequest) {
         platform_user_id: twitterUserId,
         platform_username: twitterUsername,
       }, {
-        onConflict: 'org_id,platform'
+        onConflict: 'org_id,platform,account_id'
       })
 
     if (dbError) {

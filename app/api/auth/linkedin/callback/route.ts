@@ -146,11 +146,16 @@ export async function GET(request: NextRequest) {
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString()
 
     // Store connection in database
+    const accountId = `linkedin_${linkedinUserId}`
+    const accountName = linkedinUsername
+    
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({
         org_id: orgId,
         platform: 'linkedin',
+        account_id: accountId,
+        account_name: accountName,
         access_token,
         refresh_token: null, // Set to null as it's often not provided for this scope
         expires_at: expiresAt,
@@ -158,7 +163,7 @@ export async function GET(request: NextRequest) {
         platform_user_id: linkedinUserId,
         platform_username: linkedinUsername,
       }, {
-        onConflict: 'org_id,platform'
+        onConflict: 'org_id,platform,account_id'
       })
 
     if (dbError) {

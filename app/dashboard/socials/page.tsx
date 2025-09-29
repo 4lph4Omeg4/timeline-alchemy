@@ -122,6 +122,8 @@ export default function SocialConnectionsPage() {
           .select('*')
           .eq('org_id', orgMember.org_id)
 
+        console.log('Social connections query result:', { data, error, orgId: orgMember.org_id })
+
         if (error) {
           console.error('Error fetching connections:', error)
         } else {
@@ -205,6 +207,12 @@ export default function SocialConnectionsPage() {
         
         const authUrl = new URL('https://twitter.com/i/oauth2/authorize')
         authUrl.searchParams.set('response_type', 'code')
+        console.log('Twitter OAuth setup:', {
+          clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID ? 'SET' : 'NOT SET',
+          redirectUri: `${window.location.origin}/api/auth/twitter/callback`,
+          orgId: orgMember.org_id
+        })
+        
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '')
         authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/twitter/callback`)
         authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read offline.access')
