@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
           .update({
             account_id: accountId,
             account_name: accountName
-          })
+          } as any)
           .eq('id', conn.id)
 
         if (updateError) {
