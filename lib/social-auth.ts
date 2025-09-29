@@ -62,8 +62,12 @@ export class TwitterOAuth {
     try {
       const client = this.createClientWithTokens(accessToken, refreshToken)
       
+      // Add hashtags to content
+      const hashtags = '#tmline_alchemy #sh4m4ni4k'
+      const tweetContent = `${content}\n\n${hashtags}`
+      
       const tweet = await client.v2.tweet({
-        text: content,
+        text: tweetContent,
       })
 
       return tweet.data
@@ -177,8 +181,12 @@ export class LinkedInOAuth {
       const profileData = await profileResponse.json()
       const personUrn = `urn:li:person:${profileData.sub}`
 
-      // Create a text share
-      const shareResponse = await fetch('https://api.linkedin.com/v2/shares', {
+      // Add hashtags to content
+      const hashtags = '#TimelineAlchemy #sh4m4ni4k'
+      const linkedInContent = `${content}\n\n${hashtags}`
+
+      // Create a text share using the correct API endpoint
+      const shareResponse = await fetch('https://api.linkedin.com/v2/ugcPosts', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -191,10 +199,13 @@ export class LinkedInOAuth {
           specificContent: {
             'com.linkedin.ugc.ShareContent': {
               shareCommentary: {
-                text: content,
+                text: linkedInContent,
               },
               shareMediaCategory: 'NONE',
             },
+          },
+          visibility: {
+            'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
           },
         }),
       })

@@ -146,19 +146,25 @@ async function publishToSocialPlatform(connection: any, post: any) {
 async function publishToTwitter(accessToken: string, post: any) {
   try {
     // Twitter API v2 implementation
-  console.log(`Publishing to Twitter: ${post.title}`)
+    console.log(`Publishing to Twitter: ${post.title}`)
     
     // Prepare tweet content (Twitter has a 280 character limit)
+    const hashtags = '#tmline_alchemy #sh4m4ni4k'
+    const hashtagLength = hashtags.length + 1 // +1 for space
+    
     let tweetText = post.title
     
-    // Add content if there's space
-    if (post.content && tweetText.length + post.content.length < 250) {
+    // Add content if there's space (reserve space for hashtags)
+    const maxContentLength = 280 - hashtagLength - tweetText.length - 2 // -2 for \n\n
+    if (post.content && post.content.length <= maxContentLength) {
       tweetText += `\n\n${post.content}`
     } else if (post.content) {
       // Truncate content if too long
-      const maxContentLength = 250 - tweetText.length - 3 // 3 for "..."
-      tweetText += `\n\n${post.content.substring(0, maxContentLength)}...`
+      tweetText += `\n\n${post.content.substring(0, maxContentLength - 3)}...`
     }
+    
+    // Add hashtags
+    tweetText += `\n\n${hashtags}`
     
     // Create tweet
     const tweetResponse = await fetch('https://api.twitter.com/2/tweets', {
@@ -198,9 +204,26 @@ async function publishToLinkedIn(accessToken: string, post: any) {
     // LinkedIn API implementation
   console.log(`Publishing to LinkedIn: ${post.title}`)
     
-    // Prepare LinkedIn post content
+    // Prepare LinkedIn post content (LinkedIn has ~3000 character limit)
+    const hashtags = '#TimelineAlchemy #sh4m4ni4k'
+    const hashtagLength = hashtags.length + 1 // +1 for space
+    
+    let linkedInText = post.title
+    
+    // Add content if there's space (reserve space for hashtags)
+    const maxContentLength = 3000 - hashtagLength - linkedInText.length - 2 // -2 for \n\n
+    if (post.content && post.content.length <= maxContentLength) {
+      linkedInText += `\n\n${post.content}`
+    } else if (post.content) {
+      // Truncate content if too long
+      linkedInText += `\n\n${post.content.substring(0, maxContentLength - 3)}...`
+    }
+    
+    // Add hashtags
+    linkedInText += `\n\n${hashtags}`
+    
     const linkedinText = {
-      text: `${post.title}\n\n${post.content || ''}`
+      text: linkedInText
     }
     
     // Create LinkedIn post
