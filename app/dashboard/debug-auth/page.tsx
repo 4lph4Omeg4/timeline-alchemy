@@ -90,6 +90,28 @@ export default function DebugAuthPage() {
     }
   }
 
+  const handleFixDatabaseSchema = async () => {
+    try {
+      toast.loading('Fixing database schema...', { id: 'db-fix' })
+      
+      const response = await fetch('/api/fix-database-schema', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await response.json()
+      
+      if (response.ok) {
+        toast.success('Database schema fixed successfully!', { id: 'db-fix' })
+        window.location.reload()
+      } else {
+        toast.error('Failed to fix database schema: ' + data.error, { id: 'db-fix' })
+      }
+    } catch (error) {
+      toast.error('Error fixing database schema: ' + (error instanceof Error ? error.message : 'Unknown error'), { id: 'db-fix' })
+    }
+  }
+
   if (loading) {
     return <div className="p-6">Loading debug info...</div>
   }
@@ -161,6 +183,9 @@ export default function DebugAuthPage() {
             </Button>
             <Button onClick={handleJoinAdminOrg} variant="outline">
               Join Admin Organization
+            </Button>
+            <Button onClick={handleFixDatabaseSchema} variant="outline" className="bg-red-600 hover:bg-red-700">
+              🔧 Fix Database Schema
             </Button>
             <Button onClick={() => window.location.reload()} variant="outline">
               Reload Page

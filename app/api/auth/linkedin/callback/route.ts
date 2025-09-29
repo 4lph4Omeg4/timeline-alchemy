@@ -66,16 +66,20 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Extract org_id from state parameter
+    // Extract org_id and user_id from state parameter
     let orgId: string
+    let userId: string
     try {
       const stateData = JSON.parse(atob(state || ''))
       orgId = stateData.org_id
+      userId = stateData.user_id
       
-      if (!orgId) {
-        console.error('No org_id found in state')
+      console.log('LinkedIn OAuth state decoded:', { orgId, userId })
+      
+      if (!orgId || !userId) {
+        console.error('Missing org_id or user_id in state:', { orgId, userId })
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_organization`
+          `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=invalid_state_data`
         )
       }
     } catch (error) {

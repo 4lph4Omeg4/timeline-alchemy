@@ -65,18 +65,22 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Extract code verifier and org_id from state parameter
+    // Extract code verifier, org_id, and user_id from state parameter
     let codeVerifier: string
     let orgId: string
+    let userId: string
     try {
       const stateData = JSON.parse(atob(state || ''))
       codeVerifier = stateData.codeVerifier
       orgId = stateData.org_id
+      userId = stateData.user_id
       
-      if (!orgId) {
-        console.error('No org_id found in state')
+      console.log('Twitter OAuth state decoded:', { orgId, userId, hasCodeVerifier: !!codeVerifier })
+      
+      if (!orgId || !userId) {
+        console.error('Missing org_id or user_id in state:', { orgId, userId })
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_organization`
+          `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=invalid_state_data`
         )
       }
     } catch (error) {

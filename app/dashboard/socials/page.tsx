@@ -199,11 +199,15 @@ export default function SocialConnectionsPage() {
           return
         }
 
-        const state = btoa(JSON.stringify({
+        const stateData = {
           state: stateParam,
           codeVerifier: codeVerifier,
-          org_id: orgMember.org_id
-        }))
+          org_id: orgMember.org_id,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('Twitter OAuth state data:', stateData)
         
         const authUrl = new URL('https://twitter.com/i/oauth2/authorize')
         authUrl.searchParams.set('response_type', 'code')
@@ -240,10 +244,14 @@ export default function SocialConnectionsPage() {
 
         // Generate state parameter for security
         const stateParam = Math.random().toString(36).substring(2, 15)
-        const state = btoa(JSON.stringify({
+        const stateData = {
           state: stateParam,
-          org_id: orgMember.org_id
-        }))
+          org_id: orgMember.org_id,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('LinkedIn OAuth state data:', stateData)
         
         // LinkedIn OAuth 2.0 URL
         const authUrl = new URL('https://www.linkedin.com/oauth/v2/authorization')
