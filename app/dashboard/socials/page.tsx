@@ -253,7 +253,7 @@ export default function SocialConnectionsPage() {
         console.log('Twitter OAuth setup:', {
           clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID ? 'SET' : 'NOT SET',
           redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/twitter/callback`,
-          orgId: orgMember.org_id
+          orgId: userOrgId
         })
         
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '')
