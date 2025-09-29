@@ -72,6 +72,26 @@ export default function SocialConnectionsPage() {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  // Helper function to get user's personal organization ID
+  const getUserOrgId = async (userId: string) => {
+    const { data: orgMembers } = await supabase
+      .from('org_members')
+      .select('org_id, role')
+      .eq('user_id', userId)
+
+    if (!orgMembers || orgMembers.length === 0) {
+      return null
+    }
+
+    // Find the user's personal organization (not Admin Organization)
+    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+    if (!userOrgId) {
+      userOrgId = orgMembers[0].org_id
+    }
+
+    return userOrgId
+  }
+
   // Helper function to check if a platform is connected
   const isPlatformConnected = (platform: string) => {
     return connections.some(conn => conn.platform === platform)
@@ -102,15 +122,11 @@ export default function SocialConnectionsPage() {
           return
         }
 
-        // Get the user's organization - try to find any organization the user belongs to
-        const { data: orgMember, error: orgError } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        // Get the user's personal organization ID
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (orgError || !orgMember) {
-          console.error('Error getting user organization:', orgError)
+        if (!userOrgId) {
+          console.error('No organization found for user')
           toast.error('No organization found. Please create an organization first.')
           setLoading(false)
           return
@@ -120,9 +136,9 @@ export default function SocialConnectionsPage() {
         const { data, error } = await supabase
           .from('social_connections')
           .select('*')
-          .eq('org_id', orgMember.org_id)
+          .eq('org_id', userOrgId)
 
-        console.log('Social connections query result:', { data, error, orgId: orgMember.org_id })
+        console.log('Social connections query result:', { data, error, orgId: userOrgId })
 
         if (error) {
           console.error('Error fetching connections:', error)
@@ -215,13 +231,9 @@ export default function SocialConnectionsPage() {
         const codeVerifier = generateCodeVerifier()
         const codeChallenge = await generateCodeChallenge(codeVerifier)
 
-        const { data: orgMember } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (!orgMember) {
+        if (!userOrgId) {
           toast.error('No organization found. Please create an organization first.')
           return
         }
@@ -229,7 +241,7 @@ export default function SocialConnectionsPage() {
         const stateData = {
           state: stateParam,
           codeVerifier: codeVerifier,
-          org_id: orgMember.org_id,
+          org_id: userOrgId,
           user_id: user.id
         }
         const state = btoa(JSON.stringify(stateData))
@@ -257,13 +269,9 @@ export default function SocialConnectionsPage() {
         window.location.href = authUrl.toString()
       } else if (platform === 'linkedin') {
 
-        const { data: orgMember } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (!orgMember) {
+        if (!userOrgId) {
           toast.error('No organization found. Please create an organization first.')
           return
         }
@@ -272,7 +280,7 @@ export default function SocialConnectionsPage() {
         const stateParam = Math.random().toString(36).substring(2, 15)
         const stateData = {
           state: stateParam,
-          org_id: orgMember.org_id,
+          org_id: userOrgId,
           user_id: user.id
         }
         const state = btoa(JSON.stringify(stateData))
@@ -292,13 +300,9 @@ export default function SocialConnectionsPage() {
         // Redirect to LinkedIn OAuth
         window.location.href = authUrl.toString()
       } else if (platform === 'facebook') {
-        const { data: orgMember } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (!orgMember) {
+        if (!userOrgId) {
           toast.error('No organization found. Please create an organization first.')
           return
         }
@@ -307,7 +311,7 @@ export default function SocialConnectionsPage() {
         const stateParam = Math.random().toString(36).substring(2, 15)
         const stateData = {
           state: stateParam,
-          org_id: orgMember.org_id,
+          org_id: userOrgId,
           user_id: user.id
         }
         const state = btoa(JSON.stringify(stateData))
@@ -327,13 +331,9 @@ export default function SocialConnectionsPage() {
         // Redirect to Facebook OAuth
         window.location.href = authUrl.toString()
       } else if (platform === 'youtube') {
-        const { data: orgMember } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (!orgMember) {
+        if (!userOrgId) {
           toast.error('No organization found. Please create an organization first.')
           return
         }
@@ -342,7 +342,7 @@ export default function SocialConnectionsPage() {
         const stateParam = Math.random().toString(36).substring(2, 15)
         const stateData = {
           state: stateParam,
-          org_id: orgMember.org_id,
+          org_id: userOrgId,
           user_id: user.id
         }
         const state = btoa(JSON.stringify(stateData))
