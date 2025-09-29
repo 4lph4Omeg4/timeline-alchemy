@@ -11,13 +11,13 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('YouTube OAuth error:', error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=${error}&details=oauth_error`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=${error}&details=oauth_error`
       )
     }
 
     if (!code || !state) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=missing_parameters&details=no_code_or_state`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=missing_parameters&details=no_code_or_state`
       )
     }
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     } catch (e) {
       console.error('Invalid state parameter:', e)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=invalid_state&details=state_parse_error`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=invalid_state&details=state_parse_error`
       )
     }
 
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     if (!orgId || !userId) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=missing_org_or_user&details=no_org_id_or_user_id`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=missing_org_or_user&details=no_org_id_or_user_id`
       )
     }
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         client_secret: process.env.YOUTUBE_CLIENT_SECRET || '',
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/youtube/callback`,
+        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/api/auth/youtube/callback`,
       }),
     })
 
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       const errorData = await tokenResponse.text()
       console.error('YouTube token exchange failed:', errorData)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=token_exchange_failed&details=${encodeURIComponent(errorData)}`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=token_exchange_failed&details=${encodeURIComponent(errorData)}`
       )
     }
 
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       const errorData = await channelResponse.text()
       console.error('YouTube channel fetch failed:', errorData)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=channel_fetch_failed&details=${encodeURIComponent(errorData)}`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=channel_fetch_failed&details=${encodeURIComponent(errorData)}`
       )
     }
 
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     if (!channel) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/socials?error=no_channel_found&details=no_youtube_channel`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=no_channel_found&details=no_youtube_channel`
       )
     }
 
