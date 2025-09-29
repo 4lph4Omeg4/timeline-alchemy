@@ -258,7 +258,7 @@ export default function SocialConnectionsPage() {
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || '')
         authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/linkedin/callback`)
-        authUrl.searchParams.set('scope', 'w_member_social')
+        authUrl.searchParams.set('scope', 'openid profile w_member_social')
         authUrl.searchParams.set('state', state)
         
         toast.success(`Redirecting to ${platform} OAuth...`)

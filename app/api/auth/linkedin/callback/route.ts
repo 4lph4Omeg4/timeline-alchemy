@@ -125,8 +125,8 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenResponse.json()
     const { access_token, expires_in } = tokenData
 
-    // Get user info from LinkedIn
-    const userResponse = await fetch('https://api.linkedin.com/v2/people/~:(id,firstName,lastName,displayName)', {
+    // Get user info from LinkedIn using the correct API endpoint
+    const userResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
       headers: {
         'Authorization': `Bearer ${access_token}`,
       },
@@ -147,8 +147,8 @@ export async function GET(request: NextRequest) {
     }
 
     const userData = await userResponse.json()
-    const linkedinUserId = userData.id
-    const linkedinUsername = userData.firstName ? `${userData.firstName} ${userData.lastName || ''}`.trim() : userData.displayName || `User ${linkedinUserId}`
+    const linkedinUserId = userData.sub // 'sub' is the user ID in OpenID Connect
+    const linkedinUsername = userData.name || userData.given_name ? `${userData.given_name || ''} ${userData.family_name || ''}`.trim() : `User ${linkedinUserId}`
 
     // Use org_id from state parameter (no need to authenticate user)
     console.log('Using org_id from state:', orgId)

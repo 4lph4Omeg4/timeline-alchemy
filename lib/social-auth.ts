@@ -106,7 +106,7 @@ export class LinkedInOAuth {
       response_type: 'code',
       client_id: this.clientId,
       redirect_uri: callbackUrl,
-      scope: 'r_liteprofile r_emailaddress w_member_social',
+      scope: 'openid profile w_member_social',
       state: state || Math.random().toString(36).substring(2, 15),
     })
 
@@ -136,8 +136,8 @@ export class LinkedInOAuth {
 
       const tokenData = await tokenResponse.json()
 
-      // Get user profile
-      const profileResponse = await fetch('https://api.linkedin.com/v2/people/~:(id,firstName,lastName,profilePicture(displayImage~:playableStreams))', {
+      // Get user profile using OpenID Connect userinfo endpoint
+      const profileResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
         headers: {
           'Authorization': `Bearer ${tokenData.access_token}`,
         },
@@ -163,8 +163,8 @@ export class LinkedInOAuth {
   // Post to LinkedIn
   async postToLinkedIn(accessToken: string, content: string) {
     try {
-      // Get user's profile to get the person URN
-      const profileResponse = await fetch('https://api.linkedin.com/v2/people/~', {
+      // Get user's profile to get the person URN using userinfo endpoint
+      const profileResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
@@ -175,7 +175,7 @@ export class LinkedInOAuth {
       }
 
       const profileData = await profileResponse.json()
-      const personUrn = `urn:li:person:${profileData.id}`
+      const personUrn = `urn:li:person:${profileData.sub}`
 
       // Create a text share
       const shareResponse = await fetch('https://api.linkedin.com/v2/shares', {
