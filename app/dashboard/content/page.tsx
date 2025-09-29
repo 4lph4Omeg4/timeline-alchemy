@@ -114,7 +114,7 @@ export default function ContentPage() {
       const { data: blogPost, error: blogError } = await (supabase as any)
         .from('blog_posts')
         .insert({
-          org_id: (orgMember as any).org_id,
+          org_id: orgId,
           title: generatedContent.blogPost.title,
           content: generatedContent.blogPost.content,
           state: 'draft'
