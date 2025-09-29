@@ -39,28 +39,34 @@ export default function ClientsPage() {
           error = result.error
           console.log('Admin clients query result:', { clientsData, error })
         } else {
-          // Regular user: get user's organization
-          const { data: orgMember } = await (supabase as any)
+          // Regular user: get user's organizations
+          const { data: orgMembers } = await (supabase as any)
             .from('org_members')
             .select('org_id')
             .eq('user_id', user.id)
-            .single()
 
-          if (!orgMember) return
+          if (!orgMembers || orgMembers.length === 0) {
+            console.log('No organizations found for user')
+            setClients([])
+            return
+          }
 
-          // Fetch clients for user's organization
+          // Get all organization IDs the user belongs to
+          const orgIds = orgMembers.map((member: any) => member.org_id)
+
+          // Fetch clients for all user's organizations
           const result = await (supabase as any)
             .from('clients')
             .select(`
               *,
               organizations(name, plan)
             `)
-            .eq('org_id', (orgMember as any).org_id)
+            .in('org_id', orgIds)
             .order('created_at', { ascending: false })
           
           clientsData = result.data
           error = result.error
-          console.log('User clients query result:', { clientsData, error, orgId: (orgMember as any).org_id })
+          console.log('User clients query result:', { clientsData, error, orgIds })
         }
 
         if (clientsData) {
@@ -105,7 +111,14 @@ export default function ClientsPage() {
         <CardContent>
           {clients.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400">No clients found</p>
+              <p className="text-gray-400">
+                {isAdmin ? 'No clients found across all organizations' : 'No clients found in your organization'}
+              </p>
+              {!isAdmin && (
+                <p className="text-gray-500 text-sm mt-2">
+                  If you believe this is an error, please contact support.
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-4">

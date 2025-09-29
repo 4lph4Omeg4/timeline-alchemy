@@ -28,16 +28,15 @@ export default function AdminClientsPage() {
         return
       }
 
-      // Get admin's organization
-      const { data: orgMember, error: orgError } = await supabase
+      // Get admin's organizations (remove role filter to find any organization)
+      const { data: orgMembers, error: orgError } = await supabase
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .single()
 
-      if (orgError || !orgMember) {
-        console.error('Error getting admin organization:', orgError)
+      if (orgError || !orgMembers || orgMembers.length === 0) {
+        console.error('Error getting admin organizations:', orgError)
+        toast.error('No organization found. Please contact support.')
         setLoading(false)
         return
       }
@@ -80,24 +79,25 @@ export default function AdminClientsPage() {
         return
       }
 
-      // Get admin's organization
-      const { data: orgMember } = await supabase
+      // Get admin's organizations (remove role filter to find any organization)
+      const { data: orgMembers } = await supabase
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .single()
 
-      if (!orgMember) {
-        toast.error('No organization found. Please create an organization first.')
+      if (!orgMembers || orgMembers.length === 0) {
+        toast.error('No organization found. Please contact support.')
         return
       }
+
+      // Use the first organization found
+      const orgId = orgMembers[0].org_id
 
       // Create the client
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .insert({
-          org_id: orgMember.org_id,
+          org_id: orgId,
           name: newClientName,
           contact_info: newClientEmail ? { email: newClientEmail } : null,
         })
