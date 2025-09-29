@@ -286,9 +286,72 @@ async function getLinkedInUserId(accessToken: string): Promise<string> {
 }
 
 async function publishToInstagram(accessToken: string, post: any) {
-  // Instagram API implementation would go here
-  console.log(`Publishing to Instagram: ${post.title}`)
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  try {
+    console.log(`Publishing to Instagram: ${post.title}`)
+    
+    // Instagram Graph API implementation for posting content
+    const hashtags = '#TimelineAlchemy #sh4m4ni4k'
+    const instagramContent = `${post.title}\n\n${post.content || ''}\n\n${hashtags}`
+    
+    // Get Instagram Business Account ID (this would be stored during OAuth)
+    // For now, we'll use a placeholder - in real implementation, this would be stored in the database
+    
+    // Create Instagram media container
+    const mediaResponse = await fetch(`https://graph.instagram.com/v18.0/me/media`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        image_url: 'https://via.placeholder.com/1080x1080/000000/FFFFFF?text=Timeline+Alchemy', // Placeholder image
+        caption: instagramContent,
+        access_token: accessToken,
+      }),
+    })
+
+    if (!mediaResponse.ok) {
+      const errorData = await mediaResponse.text()
+      console.error('Instagram media creation failed:', errorData)
+      throw new Error(`Instagram media creation failed: ${mediaResponse.status}`)
+    }
+
+    const mediaData = await mediaResponse.json()
+    const mediaId = mediaData.id
+
+    // Publish the media
+    const publishResponse = await fetch(`https://graph.instagram.com/v18.0/${mediaId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        creation_id: mediaId,
+        access_token: accessToken,
+      }),
+    })
+
+    if (!publishResponse.ok) {
+      const errorData = await publishResponse.text()
+      console.error('Instagram publish failed:', errorData)
+      throw new Error(`Instagram publish failed: ${publishResponse.status}`)
+    }
+
+    const publishData = await publishResponse.json()
+    console.log('Instagram post published successfully:', publishData.id)
+    
+    return {
+      success: true,
+      postId: publishData.id,
+      url: `https://www.instagram.com/p/${publishData.id}/`,
+      content: instagramContent
+    }
+    
+  } catch (error) {
+    console.error('Instagram publishing error:', error)
+    throw error
+  }
 }
 
 async function publishToFacebook(accessToken: string, post: any) {
