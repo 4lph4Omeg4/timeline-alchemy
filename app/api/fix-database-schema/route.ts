@@ -5,44 +5,27 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Running database schema fix for social_connections...')
 
-    // Check current schema
-    const { data: columns, error: columnsError } = await supabaseAdmin
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', 'social_connections')
-      .eq('table_schema', 'public')
+    // Try to query the social_connections table directly to check if columns exist
+    const { data: testData, error: testError } = await supabaseAdmin
+      .from('social_connections')
+      .select('account_id, account_name')
+      .limit(1)
 
-    if (columnsError) {
-      console.error('Error checking columns:', columnsError)
-      return NextResponse.json(
-        { error: 'Failed to check database schema' },
-        { status: 500 }
-      )
-    }
+    console.log('Test query result:', { testData, testError })
 
-    const columnNames = columns?.map((col: any) => col.column_name) || []
-    console.log('Current columns:', columnNames)
-
-    // Check if account_id exists
-    const hasAccountId = columnNames.includes('account_id')
-    const hasAccountName = columnNames.includes('account_name')
-
-    console.log('Schema status:', { hasAccountId, hasAccountName })
-
-    // If columns don't exist, we need to add them manually
-    if (!hasAccountId || !hasAccountName) {
+    if (testError) {
+      console.error('Columns do not exist:', testError)
       return NextResponse.json({
         success: false,
-        message: 'Database schema needs manual update. Please run the migration manually.',
+        message: 'Database schema needs manual update. The account_id and account_name columns are missing.',
         details: {
-          hasAccountId,
-          hasAccountName,
-          requiredColumns: ['account_id', 'account_name']
+          error: testError.message,
+          suggestion: 'Please run the migration manually or add the columns via Supabase dashboard'
         }
       })
     }
 
-    // Update existing records to have account_id if they don't
+    // If we get here, columns exist, so update existing records
     const { data: existingConnections, error: fetchError } = await supabaseAdmin
       .from('social_connections')
       .select('*')
@@ -50,7 +33,15 @@ export async function POST(request: NextRequest) {
 
     if (fetchError) {
       console.error('Error fetching connections:', fetchError)
-    } else if (existingConnections && existingConnections.length > 0) {
+      return NextResponse.json({
+        success: false,
+        message: 'Error fetching existing connections',
+        details: { error: fetchError.message }
+      })
+    }
+
+    let updatedCount = 0
+    if (existingConnections && existingConnections.length > 0) {
       console.log(`Found ${existingConnections.length} connections without account_id`)
       
       // Update each connection
@@ -61,7 +52,7 @@ export async function POST(request: NextRequest) {
           ? `@${conn.platform_username || 'user'}`
           : conn.platform_username || `${conn.platform} Account`
 
-        const { error: updateError } = await (supabaseAdmin as any)
+        const { error: updateError } = await supabaseAdmin
           .from('social_connections')
           .update({
             account_id: accountId,
@@ -73,6 +64,7 @@ export async function POST(request: NextRequest) {
           console.error(`Error updating connection ${conn.id}:`, updateError)
         } else {
           console.log(`✅ Updated connection ${conn.id}`)
+          updatedCount++
         }
       }
     }
@@ -81,16 +73,19 @@ export async function POST(request: NextRequest) {
       success: true, 
       message: 'Database schema check completed',
       details: {
-        hasAccountId,
-        hasAccountName,
-        updatedConnections: existingConnections?.length || 0
+        columnsExist: true,
+        updatedConnections: updatedCount,
+        totalConnections: existingConnections?.length || 0
       }
     })
 
   } catch (error) {
     console.error('Database schema fix error:', error)
     return NextResponse.json(
-      { error: 'Failed to check database schema' },
+      { 
+        error: 'Failed to check database schema',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
