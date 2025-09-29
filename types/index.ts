@@ -47,6 +47,9 @@ export interface SocialConnection {
   access_token: string
   refresh_token?: string
   expires_at?: string
+  account_id?: string
+  account_name?: string
+  account_username?: string
   created_at: string
   updated_at: string
 }

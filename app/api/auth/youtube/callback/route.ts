@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
 
     const accountId = channel.id
     const accountName = channel.snippet?.title || 'YouTube Channel'
+    const accountUsername = channel.snippet?.customUrl || `Channel ${channel.id}`
     const expiresAt = new Date(Date.now() + (expires_in * 1000)).toISOString()
 
     // Store the connection in the database
@@ -117,6 +118,7 @@ export async function GET(request: NextRequest) {
         platform: 'youtube',
         account_id: accountId,
         account_name: accountName,
+        account_username: accountUsername,
         access_token: accessToken,
         refresh_token: refreshToken,
         expires_at: expiresAt,

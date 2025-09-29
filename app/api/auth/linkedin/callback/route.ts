@@ -159,6 +159,7 @@ export async function GET(request: NextRequest) {
     // Store connection in database
     const accountId = `linkedin_${linkedinUserId}`
     const accountName = linkedinUsername
+    const accountUsername = userData.preferred_username || userData.email || `User ${linkedinUserId}`
     
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
@@ -167,6 +168,7 @@ export async function GET(request: NextRequest) {
         platform: 'linkedin',
         account_id: accountId,
         account_name: accountName,
+        account_username: accountUsername,
         access_token,
         refresh_token: null, // Set to null as it's often not provided for this scope
         expires_at: expiresAt,

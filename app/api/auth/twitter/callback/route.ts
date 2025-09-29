@@ -167,7 +167,8 @@ export async function GET(request: NextRequest) {
 
     // Store connection in database
     const accountId = `twitter_${twitterUserId}`
-    const accountName = `@${twitterUsername}`
+    const accountName = userData.data.name || `@${twitterUsername}`
+    const accountUsername = `@${twitterUsername}`
     
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
@@ -176,6 +177,7 @@ export async function GET(request: NextRequest) {
         platform: 'twitter',
         account_id: accountId,
         account_name: accountName,
+        account_username: accountUsername,
         access_token,
         refresh_token,
         expires_at: expiresAt,

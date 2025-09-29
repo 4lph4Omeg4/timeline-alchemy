@@ -147,6 +147,7 @@ export async function GET(request: NextRequest) {
     // Store connection in database
     const accountId = `facebook_${facebookUserId}`
     const accountName = facebookUsername
+    const accountUsername = facebookUsername // Facebook doesn't have separate username
     
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
@@ -155,6 +156,7 @@ export async function GET(request: NextRequest) {
         platform: 'facebook',
         account_id: accountId,
         account_name: accountName,
+        account_username: accountUsername,
         access_token,
         refresh_token: null, // Facebook Pages API doesn't provide refresh tokens
         expires_at: expiresAt,

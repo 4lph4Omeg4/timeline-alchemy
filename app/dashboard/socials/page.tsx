@@ -446,9 +446,19 @@ export default function SocialConnectionsPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-white text-lg">{platform?.name}</h3>
-                        <p className="text-sm text-gray-300">
-                          Connected on {new Date(connection.created_at).toLocaleDateString()}
-                        </p>
+                        <div className="text-sm text-gray-300 space-y-1">
+                          {connection.account_name && (
+                            <p className="text-green-400 font-medium">
+                              {connection.account_name}
+                              {connection.account_username && connection.account_username !== connection.account_name && (
+                                <span className="text-gray-400 ml-2">({connection.account_username})</span>
+                              )}
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-400">
+                            Connected on {new Date(connection.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                     </div>
                     <Button
@@ -463,24 +473,35 @@ export default function SocialConnectionsPage() {
               })}
               
               {/* Show Instagram as connected if Facebook is connected */}
-              {connections.some(conn => conn.platform === 'facebook') && !connections.some(conn => conn.platform === 'instagram') && (
-                <div className="flex items-center justify-between p-6 border border-green-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg">
-                      <SocialIcon platform="instagram" size="lg" className="text-white" />
+              {connections.some(conn => conn.platform === 'facebook') && !connections.some(conn => conn.platform === 'instagram') && (() => {
+                const facebookConnection = connections.find(conn => conn.platform === 'facebook')
+                return (
+                  <div className="flex items-center justify-between p-6 border border-green-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg">
+                        <SocialIcon platform="instagram" size="lg" className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white text-lg">Instagram</h3>
+                        <div className="text-sm text-gray-300 space-y-1">
+                          <p className="text-green-400 font-medium">
+                            Connected via Facebook Pages
+                            {facebookConnection?.account_name && (
+                              <span className="text-gray-400 ml-2">({facebookConnection.account_name})</span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Connected on {facebookConnection ? new Date(facebookConnection.created_at).toLocaleDateString() : 'Unknown'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-white text-lg">Instagram</h3>
-                      <p className="text-sm text-green-400">
-                        Connected via Facebook Pages
-                      </p>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-400 text-sm font-medium">✓ Active</span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-green-400 text-sm font-medium">✓ Active</span>
-                  </div>
-                </div>
-              )}
+                )
+              })()}
             </div>
           </CardContent>
         </Card>
