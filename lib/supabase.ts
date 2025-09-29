@@ -20,40 +20,40 @@ export const supabase = (() => {
     })
   }
   
-  // Client-side: use singleton with explicit storage key
-  if (!supabaseClient) {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'timeline-alchemy-auth', // Unique storage key
-        storage: {
-          getItem: (key: string) => {
-            if (typeof window !== 'undefined') {
-              return window.localStorage.getItem(key)
-            }
-            return null
-          },
-          setItem: (key: string, value: string) => {
-            if (typeof window !== 'undefined') {
-              window.localStorage.setItem(key, value)
-            }
-          },
-          removeItem: (key: string) => {
-            if (typeof window !== 'undefined') {
-              window.localStorage.removeItem(key)
-            }
+// Client-side: use singleton with explicit storage key
+if (!supabaseClient) {
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'timeline-alchemy-auth-v2', // Updated storage key
+      storage: {
+        getItem: (key: string) => {
+          if (typeof window !== 'undefined') {
+            return window.localStorage.getItem(key)
+          }
+          return null
+        },
+        setItem: (key: string, value: string) => {
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(key, value)
+          }
+        },
+        removeItem: (key: string) => {
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem(key)
           }
         }
-      },
-      global: {
-        headers: {
-          'X-Client-Info': 'timeline-alchemy-web'
-        }
       }
-    })
-  }
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'timeline-alchemy-web-v2' // Updated client info
+      }
+    }
+  })
+}
   return supabaseClient
 })()
 
