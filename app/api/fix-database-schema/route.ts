@@ -55,10 +55,11 @@ export async function POST(request: NextRequest) {
       
       // Update each connection
       for (const connection of existingConnections) {
-        const accountId = `${connection.platform}_${connection.platform_user_id || Date.now()}`
-        const accountName = connection.platform === 'twitter' 
-          ? `@${connection.platform_username || 'user'}`
-          : connection.platform_username || `${connection.platform} Account`
+        const conn = connection as any
+        const accountId = `${conn.platform}_${conn.platform_user_id || Date.now()}`
+        const accountName = conn.platform === 'twitter' 
+          ? `@${conn.platform_username || 'user'}`
+          : conn.platform_username || `${conn.platform} Account`
 
         const { error: updateError } = await supabaseAdmin
           .from('social_connections')
@@ -66,12 +67,12 @@ export async function POST(request: NextRequest) {
             account_id: accountId,
             account_name: accountName
           })
-          .eq('id', connection.id)
+          .eq('id', conn.id)
 
         if (updateError) {
-          console.error(`Error updating connection ${connection.id}:`, updateError)
+          console.error(`Error updating connection ${conn.id}:`, updateError)
         } else {
-          console.log(`✅ Updated connection ${connection.id}`)
+          console.log(`✅ Updated connection ${conn.id}`)
         }
       }
     }
