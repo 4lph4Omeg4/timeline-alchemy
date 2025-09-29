@@ -139,15 +139,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       // Only ensure admin org membership for non-admin users
       if (!isAdminUser) {
-        try {
-          await fetch('/api/auto-join-admin-org', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id }),
-          })
-        } catch (orgError) {
-          console.error('Error ensuring admin org membership:', orgError)
-        }
+        // Auto-join admin org functionality removed - users will create their own orgs
+        console.log('Non-admin user detected, will create organization if needed')
       }
 
       if (isAdminUser) {
@@ -400,10 +393,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <span className="mr-3">🏆</span>
           Leaderboard
         </Link>
-        <Link href="/dashboard/debug-auth" className="flex items-center px-3 py-2 text-gray-200 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors">
-          <span className="mr-3">🐛</span>
-          Debug Auth
-        </Link>
                 <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">📅</span>
                   Schedule
@@ -435,21 +424,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <span className="mr-3">📦</span>
                       Admin Packages
                     </Link>
-                    <Link href="/dashboard/admin/migrate" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
-                      <span className="mr-3">🔧</span>
-                      Migrate DB
-                    </Link>
-                    <Link href="/dashboard/admin/debug" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
-                      <span className="mr-3">🐛</span>
-                      Debug
-                    </Link>
                     <Link href="/dashboard/analytics" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                       <span className="mr-3">📈</span>
                       Analytics
-                    </Link>
-                    <Link href="/dashboard/debug-packages" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
-                      <span className="mr-3">🔍</span>
-                      Debug Packages
                     </Link>
                   </>
                 )}
