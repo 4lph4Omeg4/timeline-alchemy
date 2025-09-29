@@ -161,6 +161,12 @@ export default function SocialConnectionsPage() {
       window.history.replaceState({}, document.title, window.location.pathname)
       // Refresh connections to show updated state
       fetchConnections()
+    } else if (success === 'facebook_connected' && username) {
+      toast.success(`Successfully connected to Facebook as ${username}!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
     } else if (error) {
       let errorMessage = `Connection failed: ${error}`
       if (details) {
@@ -292,11 +298,11 @@ export default function SocialConnectionsPage() {
         
         console.log('Instagram OAuth state data:', stateData)
         
-        // Instagram OAuth URL (using Facebook Pages API)
+        // Instagram OAuth URL (using Facebook Pages API for Instagram Business accounts)
         const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth')
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '')
         authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/instagram/callback`)
-        authUrl.searchParams.set('scope', 'pages_manage_posts,pages_read_engagement')
+        authUrl.searchParams.set('scope', 'pages_manage_posts,pages_read_engagement,instagram_basic')
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('state', state)
         
