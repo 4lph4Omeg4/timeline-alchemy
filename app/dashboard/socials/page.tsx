@@ -178,6 +178,16 @@ export default function SocialConnectionsPage() {
       if (details) {
         errorMessage += ` (${details})`
       }
+      
+      // Provide more specific error messages
+      if (error === 'oauth_not_configured') {
+        errorMessage = 'YouTube OAuth is not properly configured. Please contact administrator.'
+      } else if (error === 'invalid_request') {
+        errorMessage = 'Invalid OAuth request. Please check your YouTube app configuration.'
+      } else if (error === 'access_denied') {
+        errorMessage = 'Access denied. Please try again and grant the required permissions.'
+      }
+      
       toast.error(errorMessage)
       console.error('OAuth error details:', { error, details })
       console.error('Full URL params:', Object.fromEntries(urlParams.entries()))
@@ -339,15 +349,24 @@ export default function SocialConnectionsPage() {
         
         console.log('YouTube OAuth state data:', stateData)
         
+        // Check if YouTube client ID is configured
+        const youtubeClientId = process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID
+        if (!youtubeClientId) {
+          toast.error('YouTube Client ID not configured. Please contact administrator.')
+          return
+        }
+
         // YouTube OAuth URL
         const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID || '')
+        authUrl.searchParams.set('client_id', youtubeClientId)
         authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/youtube/callback`)
-        authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl')
+        authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly')
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('access_type', 'offline')
         authUrl.searchParams.set('prompt', 'consent')
         authUrl.searchParams.set('state', state)
+        
+        console.log('YouTube OAuth URL:', authUrl.toString())
         
         toast.success(`Redirecting to ${platform} OAuth...`)
         

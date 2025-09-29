@@ -43,6 +43,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Check if required environment variables are configured
+    const youtubeClientId = process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID
+    const youtubeClientSecret = process.env.YOUTUBE_CLIENT_SECRET
+    
+    if (!youtubeClientId || !youtubeClientSecret) {
+      console.error('YouTube OAuth credentials not configured')
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=oauth_not_configured&details=missing_youtube_credentials`
+      )
+    }
+
     // Exchange authorization code for access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -50,8 +61,8 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID || '',
-        client_secret: process.env.YOUTUBE_CLIENT_SECRET || '',
+        client_id: youtubeClientId,
+        client_secret: youtubeClientSecret,
         code,
         grant_type: 'authorization_code',
         redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/api/auth/youtube/callback`,
