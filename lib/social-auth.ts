@@ -312,3 +312,61 @@ export class InstagramOAuth {
     }
   }
 }
+
+// YouTube posting functionality
+export class YouTubeOAuth {
+  // Post video to YouTube
+  async postVideo(accessToken: string, refreshToken: string, title: string, description: string, videoUrl?: string) {
+    try {
+      const hashtags = '#TimelineAlchemy #sh4m4ni4k'
+      const fullDescription = `${description}\n\n${hashtags}`
+      
+      // For now, we'll create a placeholder video post
+      // In a real implementation, you would upload a video file
+      const videoData = {
+        snippet: {
+          title: title,
+          description: fullDescription,
+          tags: ['TimelineAlchemy', 'sh4m4ni4k'],
+          categoryId: '22', // People & Blogs category
+        },
+        status: {
+          privacyStatus: 'public',
+        },
+      }
+
+      // This is a placeholder - actual video upload would require file handling
+      console.log('YouTube video post data:', videoData)
+      
+      return {
+        success: true,
+        message: 'YouTube video post created (placeholder)',
+        videoData
+      }
+    } catch (error) {
+      console.error('YouTube post error:', error)
+      throw new Error('Failed to post to YouTube')
+    }
+  }
+
+  // Get YouTube channel info
+  async getChannelInfo(accessToken: string) {
+    try {
+      const response = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get channel info')
+      }
+
+      const data = await response.json()
+      return data.items?.[0] || null
+    } catch (error) {
+      console.error('YouTube channel info error:', error)
+      throw new Error('Failed to get YouTube channel info')
+    }
+  }
+}

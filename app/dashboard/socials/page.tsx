@@ -167,6 +167,12 @@ export default function SocialConnectionsPage() {
       window.history.replaceState({}, document.title, window.location.pathname)
       // Refresh connections to show updated state
       fetchConnections()
+    } else if (success === 'youtube_connected' && username) {
+      toast.success(`Successfully connected to YouTube as ${username}!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
     } else if (error) {
       let errorMessage = `Connection failed: ${error}`
       if (details) {
@@ -309,6 +315,43 @@ export default function SocialConnectionsPage() {
         toast.success(`Redirecting to ${platform} OAuth...`)
         
         // Redirect to Facebook OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'youtube') {
+        const { data: orgMember } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (!orgMember) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
+        // Generate state parameter for security
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const stateData = {
+          state: stateParam,
+          org_id: orgMember.org_id,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('YouTube OAuth state data:', stateData)
+        
+        // YouTube OAuth URL
+        const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID || '')
+        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/youtube/callback`)
+        authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl')
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('access_type', 'offline')
+        authUrl.searchParams.set('prompt', 'consent')
+        authUrl.searchParams.set('state', state)
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to YouTube OAuth
         window.location.href = authUrl.toString()
       } else {
         // For other platforms, show coming soon message
