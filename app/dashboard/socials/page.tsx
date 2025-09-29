@@ -399,6 +399,26 @@ export default function SocialConnectionsPage() {
                   </div>
                 )
               })}
+              
+              {/* Show Instagram as connected if Facebook is connected */}
+              {connections.some(conn => conn.platform === 'facebook') && !connections.some(conn => conn.platform === 'instagram') && (
+                <div className="flex items-center justify-between p-6 border border-green-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg">
+                      <SocialIcon platform="instagram" size="lg" className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white text-lg">Instagram</h3>
+                      <p className="text-sm text-green-400">
+                        Connected via Facebook Pages
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-400 text-sm font-medium">✓ Active</span>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -414,7 +434,7 @@ export default function SocialConnectionsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {socialPlatforms.map((platform) => (
+            {socialPlatforms.filter(platform => platform.id !== 'instagram').map((platform) => (
               <div key={platform.id} className="border border-gray-700 rounded-xl p-6 bg-gray-800 hover:bg-gray-750 transition-all duration-200 hover:border-gray-600 hover:shadow-lg">
                 <div className="flex items-center space-x-4 mb-4">
                   <div className={`w-12 h-12 rounded-xl ${platform.color} flex items-center justify-center text-white shadow-md`}>
