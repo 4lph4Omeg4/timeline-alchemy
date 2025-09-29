@@ -96,18 +96,19 @@ export default function ContentPage() {
         return
       }
 
-      // Get user's first organization
-      const { data: orgMember } = await supabase
+      // Get user's organizations
+      const { data: orgMembers } = await supabase
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
-        .limit(1)
-        .single()
 
-      if (!orgMember) {
+      if (!orgMembers || orgMembers.length === 0) {
         router.push('/create-organization')
         return
       }
+
+      // Use the first organization found
+      const orgId = orgMembers[0].org_id
 
       // Save blog post
       const { data: blogPost, error: blogError } = await (supabase as any)
