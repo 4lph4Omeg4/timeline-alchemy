@@ -275,7 +275,7 @@ export default function SocialConnectionsPage() {
         
         // Redirect to LinkedIn OAuth
         window.location.href = authUrl.toString()
-      } else if (platform === 'instagram') {
+      } else if (platform === 'facebook') {
         const { data: orgMember } = await supabase
           .from('org_members')
           .select('org_id')
@@ -296,19 +296,19 @@ export default function SocialConnectionsPage() {
         }
         const state = btoa(JSON.stringify(stateData))
         
-        console.log('Instagram OAuth state data:', stateData)
+        console.log('Facebook OAuth state data:', stateData)
         
-        // Instagram OAuth URL (using Facebook Pages API for Instagram Business accounts)
+        // Facebook OAuth URL (using Facebook Pages API)
         const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth')
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '')
-        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/instagram/callback`)
-        authUrl.searchParams.set('scope', 'pages_manage_posts,pages_read_engagement,instagram_basic')
+        authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/facebook/callback`)
+        authUrl.searchParams.set('scope', 'pages_manage_posts,pages_read_engagement')
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('state', state)
         
         toast.success(`Redirecting to ${platform} OAuth...`)
         
-        // Redirect to Instagram OAuth
+        // Redirect to Facebook OAuth
         window.location.href = authUrl.toString()
       } else {
         // For other platforms, show coming soon message

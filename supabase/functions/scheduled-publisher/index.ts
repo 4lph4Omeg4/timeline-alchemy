@@ -355,9 +355,66 @@ async function publishToInstagram(accessToken: string, post: any) {
 }
 
 async function publishToFacebook(accessToken: string, post: any) {
-  // Facebook API implementation would go here
-  console.log(`Publishing to Facebook: ${post.title}`)
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  try {
+    console.log(`Publishing to Facebook: ${post.title}`)
+    
+    // Facebook Graph API implementation for posting content
+    const hashtags = '#TimelineAlchemy #sh4m4ni4k'
+    const facebookContent = `${post.title}\n\n${post.content || ''}\n\n${hashtags}`
+    
+    // Get user's pages (Facebook Pages API)
+    const pagesResponse = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`)
+    
+    if (!pagesResponse.ok) {
+      const errorData = await pagesResponse.text()
+      console.error('Failed to get Facebook pages:', errorData)
+      throw new Error(`Failed to get Facebook pages: ${pagesResponse.status}`)
+    }
+    
+    const pagesData = await pagesResponse.json()
+    const pages = pagesData.data
+    
+    if (!pages || pages.length === 0) {
+      throw new Error('No Facebook pages found for this user')
+    }
+    
+    // Use the first page (you can modify this to select a specific page)
+    const page = pages[0]
+    const pageAccessToken = page.access_token
+    const pageId = page.id
+    
+    // Post to Facebook Page
+    const postResponse = await fetch(`https://graph.facebook.com/v18.0/${pageId}/feed`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        message: facebookContent,
+        access_token: pageAccessToken,
+      }),
+    })
+
+    if (!postResponse.ok) {
+      const errorData = await postResponse.text()
+      console.error('Facebook post failed:', errorData)
+      throw new Error(`Facebook post failed: ${postResponse.status}`)
+    }
+
+    const postData = await postResponse.json()
+    console.log('Facebook post published successfully:', postData.id)
+    
+    return {
+      success: true,
+      postId: postData.id,
+      url: `https://www.facebook.com/${pageId}/posts/${postData.id}`,
+      content: facebookContent
+    }
+    
+  } catch (error) {
+    console.error('Facebook publishing error:', error)
+    throw error
+  }
 }
 
 async function publishToYouTube(accessToken: string, post: any) {
