@@ -292,11 +292,11 @@ export default function SocialConnectionsPage() {
         
         console.log('Instagram OAuth state data:', stateData)
         
-        // Instagram OAuth URL
-        const authUrl = new URL('https://api.instagram.com/oauth/authorize')
+        // Instagram OAuth URL (using Facebook Pages API)
+        const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth')
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '')
         authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/instagram/callback`)
-        authUrl.searchParams.set('scope', 'instagram_basic,instagram_content_publish')
+        authUrl.searchParams.set('scope', 'pages_manage_posts,pages_read_engagement')
         authUrl.searchParams.set('response_type', 'code')
         authUrl.searchParams.set('state', state)
         

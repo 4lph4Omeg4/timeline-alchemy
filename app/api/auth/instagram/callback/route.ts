@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Exchange code for access token using Instagram Graph API
+    // Exchange code for access token using Facebook Pages API
     const tokenRequestBody = new URLSearchParams({
       client_id: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
       client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
@@ -90,9 +90,9 @@ export async function GET(request: NextRequest) {
       code,
     })
 
-    console.log('Exchanging code for Instagram Graph API token')
+    console.log('Exchanging code for Facebook Pages API token')
 
-    const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
+    const tokenResponse = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
