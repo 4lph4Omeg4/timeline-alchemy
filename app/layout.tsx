@@ -6,7 +6,7 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://timeline-alchemy-8jfn96z6x-the-chosen-ones.vercel.app'),
+  metadataBase: new URL('https://www.timeline-alchemy.nl'),
   title: 'Timeline Alchemy - AI Content Creation Platform',
   description: 'Create, schedule, and publish AI-generated content across all your social media platforms.',
   keywords: ['AI content creation', 'social media automation', 'content scheduling', 'AI tools', 'social media management'],
@@ -27,17 +27,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://timeline-alchemy.com',
+    url: 'https://www.timeline-alchemy.nl',
     siteName: 'Timeline Alchemy',
     title: 'Timeline Alchemy - AI Content Creation Platform',
     description: 'Create, schedule, and publish AI-generated content across all your social media platforms.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/images/ta-og-image.png',
         width: 1200,
         height: 630,
         alt: 'Timeline Alchemy - AI Content Creation Platform',
-        type: 'image/jpeg',
+        type: 'image/png',
       },
     ],
   },
@@ -48,14 +48,17 @@ export const metadata: Metadata = {
     title: 'Timeline Alchemy - AI Content Creation Platform',
     description: 'Create, schedule, and publish AI-generated content across all your social media platforms.',
     images: {
-      url: '/og-image.jpg',
+      url: '/images/ta-og-image.png',
       alt: 'Timeline Alchemy - AI Content Creation Platform',
     },
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: [
+      { url: '/images/ta-favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/images/ta-favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/images/ta-favicon.ico',
+    apple: '/images/ta-apple-touch-icon.png',
   },
 }
 
