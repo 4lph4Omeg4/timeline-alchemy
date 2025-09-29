@@ -61,12 +61,12 @@ export async function POST(request: NextRequest) {
           ? `@${conn.platform_username || 'user'}`
           : conn.platform_username || `${conn.platform} Account`
 
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await (supabaseAdmin as any)
           .from('social_connections')
           .update({
             account_id: accountId,
             account_name: accountName
-          } as any)
+          })
           .eq('id', conn.id)
 
         if (updateError) {
