@@ -339,6 +339,10 @@ export default function SocialConnectionsPage() {
   }
 
   const isConnected = (platform: string) => {
+    if (platform === 'instagram') {
+      // Instagram is connected if Facebook is connected (since Instagram posts through Facebook Pages)
+      return connections.some(conn => conn.platform === 'facebook')
+    }
     return connections.some(conn => conn.platform === platform)
   }
 

@@ -221,3 +221,94 @@ export class LinkedInOAuth {
     }
   }
 }
+
+// Instagram posting through Facebook Pages API
+export class InstagramOAuth {
+  // Post to Instagram via Facebook Pages API
+  async postToInstagram(facebookAccessToken: string, content: string) {
+    try {
+      // Get Facebook Pages
+      const pagesResponse = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${facebookAccessToken}`)
+      
+      if (!pagesResponse.ok) {
+        throw new Error('Failed to get Facebook pages')
+      }
+      
+      const pagesData = await pagesResponse.json()
+      const pages = pagesData.data
+      
+      if (!pages || pages.length === 0) {
+        throw new Error('No Facebook pages found')
+      }
+      
+      // Find pages with Instagram Business accounts connected
+      const instagramPages = []
+      for (const page of pages) {
+        try {
+          const instagramResponse = await fetch(`https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${page.access_token}`)
+          if (instagramResponse.ok) {
+            const instagramData = await instagramResponse.json()
+            if (instagramData.instagram_business_account) {
+              instagramPages.push({
+                ...page,
+                instagram_account_id: instagramData.instagram_business_account.id
+              })
+            }
+          }
+        } catch (error) {
+          console.log(`Page ${page.id} has no Instagram Business account`)
+        }
+      }
+      
+      if (instagramPages.length === 0) {
+        throw new Error('No Instagram Business accounts found connected to Facebook Pages')
+      }
+      
+      // Use the first Instagram-enabled page
+      const instagramPage = instagramPages[0]
+      const hashtags = '#TimelineAlchemy #sh4m4ni4k'
+      const instagramContent = `${content}\n\n${hashtags}`
+      
+      // Create Instagram media container
+      const mediaResponse = await fetch(`https://graph.facebook.com/v18.0/${instagramPage.instagram_account_id}/media`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          image_url: 'https://via.placeholder.com/1080x1080/000000/FFFFFF?text=Timeline+Alchemy', // Placeholder image
+          caption: instagramContent,
+          access_token: instagramPage.access_token,
+        }),
+      })
+
+      if (!mediaResponse.ok) {
+        throw new Error('Failed to create Instagram media')
+      }
+
+      const mediaData = await mediaResponse.json()
+      const mediaId = mediaData.id
+
+      // Publish the media
+      const publishResponse = await fetch(`https://graph.facebook.com/v18.0/${instagramPage.instagram_account_id}/media_publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          creation_id: mediaId,
+          access_token: instagramPage.access_token,
+        }),
+      })
+
+      if (!publishResponse.ok) {
+        throw new Error('Failed to publish to Instagram')
+      }
+
+      return await publishResponse.json()
+    } catch (error) {
+      console.error('Instagram post error:', error)
+      throw new Error('Failed to post to Instagram')
+    }
+  }
+}

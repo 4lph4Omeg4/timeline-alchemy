@@ -84,6 +84,27 @@ serve(async (req) => {
             })
           }
         }
+        
+        // Also try to publish to Instagram if Facebook is connected
+        const facebookConnection = socialConnections.find(conn => conn.platform === 'facebook')
+        if (facebookConnection) {
+          try {
+            await publishToInstagram(facebookConnection.access_token, post)
+            results.push({
+              postId: post.id,
+              platform: 'instagram',
+              status: 'success'
+            })
+          } catch (error) {
+            console.error(`Error publishing to Instagram via Facebook:`, error)
+            results.push({
+              postId: post.id,
+              platform: 'instagram',
+              status: 'error',
+              error: error.message
+            })
+          }
+        }
       } catch (error) {
         console.error(`Error processing post ${post.id}:`, error)
         results.push({
@@ -146,7 +167,7 @@ async function publishToSocialPlatform(connection: any, post: any) {
 async function publishToTwitter(accessToken: string, post: any) {
   try {
     // Twitter API v2 implementation
-    console.log(`Publishing to Twitter: ${post.title}`)
+  console.log(`Publishing to Twitter: ${post.title}`)
     
     // Prepare tweet content (Twitter has a 280 character limit)
     const hashtags = '#tmline_alchemy #sh4m4ni4k'
@@ -287,26 +308,61 @@ async function getLinkedInUserId(accessToken: string): Promise<string> {
 
 async function publishToInstagram(accessToken: string, post: any) {
   try {
-    console.log(`Publishing to Instagram: ${post.title}`)
+  console.log(`Publishing to Instagram: ${post.title}`)
     
-    // Instagram Graph API implementation for posting content
+    // Instagram posts through Facebook Pages API
+    // First get the Facebook Pages access token
+    const pagesResponse = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`)
+    
+    if (!pagesResponse.ok) {
+      throw new Error('Failed to get Facebook pages')
+    }
+    
+    const pagesData = await pagesResponse.json()
+    const pages = pagesData.data
+    
+    if (!pages || pages.length === 0) {
+      throw new Error('No Facebook pages found')
+    }
+    
+    // Find pages with Instagram Business accounts connected
+    const instagramPages = []
+    for (const page of pages) {
+      try {
+        const instagramResponse = await fetch(`https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${page.access_token}`)
+        if (instagramResponse.ok) {
+          const instagramData = await instagramResponse.json()
+          if (instagramData.instagram_business_account) {
+            instagramPages.push({
+              ...page,
+              instagram_account_id: instagramData.instagram_business_account.id
+            })
+          }
+        }
+      } catch (error) {
+        console.log(`Page ${page.id} has no Instagram Business account`)
+      }
+    }
+    
+    if (instagramPages.length === 0) {
+      throw new Error('No Instagram Business accounts found connected to Facebook Pages')
+    }
+    
+    // Use the first Instagram-enabled page
+    const instagramPage = instagramPages[0]
     const hashtags = '#TimelineAlchemy #sh4m4ni4k'
     const instagramContent = `${post.title}\n\n${post.content || ''}\n\n${hashtags}`
     
-    // Get Instagram Business Account ID (this would be stored during OAuth)
-    // For now, we'll use a placeholder - in real implementation, this would be stored in the database
-    
     // Create Instagram media container
-    const mediaResponse = await fetch(`https://graph.instagram.com/v18.0/me/media`, {
+    const mediaResponse = await fetch(`https://graph.facebook.com/v18.0/${instagramPage.instagram_account_id}/media`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
         image_url: 'https://via.placeholder.com/1080x1080/000000/FFFFFF?text=Timeline+Alchemy', // Placeholder image
         caption: instagramContent,
-        access_token: accessToken,
+        access_token: instagramPage.access_token,
       }),
     })
 
@@ -320,15 +376,14 @@ async function publishToInstagram(accessToken: string, post: any) {
     const mediaId = mediaData.id
 
     // Publish the media
-    const publishResponse = await fetch(`https://graph.instagram.com/v18.0/${mediaId}`, {
+    const publishResponse = await fetch(`https://graph.facebook.com/v18.0/${instagramPage.instagram_account_id}/media_publish`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
         creation_id: mediaId,
-        access_token: accessToken,
+        access_token: instagramPage.access_token,
       }),
     })
 
@@ -356,7 +411,7 @@ async function publishToInstagram(accessToken: string, post: any) {
 
 async function publishToFacebook(accessToken: string, post: any) {
   try {
-    console.log(`Publishing to Facebook: ${post.title}`)
+  console.log(`Publishing to Facebook: ${post.title}`)
     
     // Facebook Graph API implementation for posting content
     const hashtags = '#TimelineAlchemy #sh4m4ni4k'
