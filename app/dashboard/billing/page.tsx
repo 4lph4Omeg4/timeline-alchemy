@@ -21,21 +21,25 @@ export default function BillingPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        // Get user's organization
-        const { data: orgMember } = await supabase
+        // Get user's organizations
+        const { data: orgMembers } = await supabase
           .from('org_members')
-          .select('org_id')
+          .select('org_id, role')
           .eq('user_id', user.id)
-          .limit(1)
-          .single()
 
-        if (!orgMember) return
+        if (!orgMembers || orgMembers.length === 0) return
+
+        // Find the user's personal organization (not Admin Organization)
+        let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+        if (!userOrgId) {
+          userOrgId = orgMembers[0].org_id
+        }
 
         // Get subscription
         const { data: sub, error } = await (supabase as any)
           .from('subscriptions')
           .select('*')
-          .eq('org_id', (orgMember as any).org_id)
+          .eq('org_id', userOrgId)
           .single()
 
         if (sub) {
@@ -75,21 +79,25 @@ export default function BillingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Get user's organization
-      const { data: orgMember } = await supabase
+      // Get user's organizations
+      const { data: orgMembers } = await supabase
         .from('org_members')
-        .select('org_id')
+        .select('org_id, role')
         .eq('user_id', user.id)
-        .limit(1)
-        .single()
 
-      if (!orgMember) return
+      if (!orgMembers || orgMembers.length === 0) return
+
+      // Find the user's personal organization (not Admin Organization)
+      let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+      if (!userOrgId) {
+        userOrgId = orgMembers[0].org_id
+      }
 
       // Get subscription
       const { data: sub, error } = await (supabase as any)
         .from('subscriptions')
         .select('*')
-        .eq('org_id', (orgMember as any).org_id)
+        .eq('org_id', userOrgId)
         .single()
 
       if (sub) {

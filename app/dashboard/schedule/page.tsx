@@ -21,23 +21,24 @@ export default function SchedulerPage() {
         if (!user) return
 
         // Get user's organization
-        const { data: orgMember, error: orgError } = await supabase
+        const { data: orgMembers, error: orgError } = await supabase
           .from('org_members')
-          .select('org_id')
+          .select('org_id, role')
           .eq('user_id', user.id)
-          .eq('role', 'owner')
-          .single()
 
-        if (orgError || !orgMember) {
-          console.error('Error getting user organization:', orgError)
+        if (orgError || !orgMembers || orgMembers.length === 0) {
+          console.error('Error getting user organizations:', orgError)
           setLoading(false)
           return
         }
 
+        // Get all organization IDs the user belongs to
+        const orgIds = orgMembers.map(member => member.org_id)
+
         const { data, error } = await supabase
           .from('blog_posts')
           .select('*')
-          .eq('org_id', orgMember.org_id)
+          .in('org_id', orgIds)
           .order('scheduled_for', { ascending: true })
 
         if (error) {
@@ -68,21 +69,22 @@ export default function SchedulerPage() {
       if (error) {
         console.error('Error scheduling post:', error)
       } else {
-        // Refresh posts - get user's org first
+        // Refresh posts - get user's orgs first
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          const { data: orgMember } = await supabase
+          const { data: orgMembers } = await supabase
             .from('org_members')
-            .select('org_id')
+            .select('org_id, role')
             .eq('user_id', user.id)
-            .eq('role', 'owner')
-            .single()
           
-          if (orgMember) {
+          if (orgMembers && orgMembers.length > 0) {
+            // Get all organization IDs the user belongs to
+            const orgIds = orgMembers.map(member => member.org_id)
+            
             const { data } = await supabase
               .from('blog_posts')
               .select('*')
-              .eq('org_id', orgMember.org_id)
+              .in('org_id', orgIds)
               .order('scheduled_for', { ascending: true })
             
             setPosts(data || [])
@@ -107,21 +109,22 @@ export default function SchedulerPage() {
       if (error) {
         console.error('Error publishing post:', error)
       } else {
-        // Refresh posts - get user's org first
+        // Refresh posts - get user's orgs first
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          const { data: orgMember } = await supabase
+          const { data: orgMembers } = await supabase
             .from('org_members')
-            .select('org_id')
+            .select('org_id, role')
             .eq('user_id', user.id)
-            .eq('role', 'owner')
-            .single()
           
-          if (orgMember) {
+          if (orgMembers && orgMembers.length > 0) {
+            // Get all organization IDs the user belongs to
+            const orgIds = orgMembers.map(member => member.org_id)
+            
             const { data } = await supabase
               .from('blog_posts')
               .select('*')
-              .eq('org_id', orgMember.org_id)
+              .in('org_id', orgIds)
               .order('scheduled_for', { ascending: true })
             
             setPosts(data || [])
