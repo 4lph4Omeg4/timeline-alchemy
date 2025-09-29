@@ -33,11 +33,11 @@ export const metadata: Metadata = {
     description: 'Create, schedule, and publish AI-generated content across all your social media platforms.',
     images: [
       {
-        url: '/images/ta-og-image.png',
+        url: '/images/ta-og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Timeline Alchemy - AI Content Creation Platform',
-        type: 'image/png',
+        type: 'image/jpeg',
       },
     ],
   },
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     title: 'Timeline Alchemy - AI Content Creation Platform',
     description: 'Create, schedule, and publish AI-generated content across all your social media platforms.',
     images: {
-      url: '/images/ta-og-image.png',
+      url: '/images/ta-og-image.jpg',
       alt: 'Timeline Alchemy - AI Content Creation Platform',
     },
   },
