@@ -70,22 +70,7 @@ export default function SignUpPage() {
           toast.dismiss() // Dismiss the loading toast
           toast.success('Account created successfully! Please check your email to confirm your account.')
           
-          // Automatically add user to admin organization after successful signup
-          try {
-            const { data: { user: newUser } } = await supabase.auth.getUser()
-            if (newUser) {
-              await fetch('/api/auto-join-admin-org', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userId: newUser.id }),
-              })
-            }
-          } catch (orgError) {
-            console.error('Error adding user to admin organization:', orgError)
-            // Don't show error to user, this is a background process
-          }
+          // Organization creation is handled in dashboard layout
           
           router.push('/auth/signin')
         }

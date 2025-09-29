@@ -96,24 +96,25 @@ export default function ContentPage() {
         return
       }
 
-      // Get user's first organization
-      const { data: orgMember } = await supabase
+      // Get user's organizations
+      const { data: orgMembers } = await supabase
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
-        .limit(1)
-        .single()
 
-      if (!orgMember) {
+      if (!orgMembers || orgMembers.length === 0) {
         router.push('/create-organization')
         return
       }
+
+      // Use the first organization found
+      const orgId = orgMembers[0].org_id
 
       // Save blog post
       const { data: blogPost, error: blogError } = await (supabase as any)
         .from('blog_posts')
         .insert({
-          org_id: (orgMember as any).org_id,
+          org_id: orgId,
           title: generatedContent.blogPost.title,
           content: generatedContent.blogPost.content,
           state: 'draft'
@@ -130,7 +131,7 @@ export default function ContentPage() {
         await (supabase as any)
           .from('images')
           .insert({
-            org_id: (orgMember as any).org_id,
+            org_id: orgId,
             post_id: (blogPost as any).id,
             url: generatedContent.image.url
           })

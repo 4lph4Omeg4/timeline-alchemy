@@ -32,27 +32,28 @@ export default function ContentListPage() {
         return
       }
 
-      // Get user's organization
-      const { data: orgMember, error: orgError } = await supabase
+      // Get user's organizations
+      const { data: orgMembers, error: orgError } = await supabase
         .from('org_members')
-        .select('org_id')
+        .select('org_id, role')
         .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .single()
 
-      if (orgError || !orgMember) {
-        console.error('Error getting user organization:', orgError)
+      if (orgError || !orgMembers || orgMembers.length === 0) {
+        console.error('Error getting user organizations:', orgError)
         toast.error('No organization found. Please create an organization first.')
         router.push('/create-organization')
         return
       }
 
-      // Get all posts from the organization (both user-created and admin-created packages)
+      // Get all organization IDs the user belongs to
+      const orgIds = orgMembers.map(member => member.org_id)
+
+      // Get all posts from user's organizations (both user-created and admin-created packages)
       // Also get admin packages from ALL organizations
       let query = supabase
         .from('blog_posts')
         .select('*')
-        .or(`org_id.eq.${orgMember.org_id},and(created_by_admin.eq.true)`)
+        .in('org_id', orgIds)
 
       if (filter !== 'all') {
         query = query.eq('state', filter)

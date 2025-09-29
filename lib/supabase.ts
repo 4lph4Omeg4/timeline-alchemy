@@ -170,6 +170,9 @@ export interface Database {
           access_token: string
           refresh_token: string | null
           expires_at: string | null
+          account_id: string | null
+          account_name: string | null
+          account_username: string | null
           created_at: string
           updated_at: string
         }
@@ -180,6 +183,9 @@ export interface Database {
           access_token: string
           refresh_token?: string | null
           expires_at?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          account_username?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -190,6 +196,9 @@ export interface Database {
           access_token?: string
           refresh_token?: string | null
           expires_at?: string | null
+          account_id?: string | null
+          account_name?: string | null
+          account_username?: string | null
           created_at?: string
           updated_at?: string
         }

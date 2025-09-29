@@ -72,6 +72,26 @@ export default function SocialConnectionsPage() {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  // Helper function to get user's personal organization ID
+  const getUserOrgId = async (userId: string) => {
+    const { data: orgMembers } = await supabase
+      .from('org_members')
+      .select('org_id, role')
+      .eq('user_id', userId)
+
+    if (!orgMembers || orgMembers.length === 0) {
+      return null
+    }
+
+    // Find the user's personal organization (not Admin Organization)
+    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+    if (!userOrgId) {
+      userOrgId = orgMembers[0].org_id
+    }
+
+    return userOrgId
+  }
+
   // Helper function to check if a platform is connected
   const isPlatformConnected = (platform: string) => {
     return connections.some(conn => conn.platform === platform)
@@ -102,15 +122,11 @@ export default function SocialConnectionsPage() {
           return
         }
 
-        // Get the user's organization - try to find any organization the user belongs to
-        const { data: orgMember, error: orgError } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        // Get the user's personal organization ID
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (orgError || !orgMember) {
-          console.error('Error getting user organization:', orgError)
+        if (!userOrgId) {
+          console.error('No organization found for user')
           toast.error('No organization found. Please create an organization first.')
           setLoading(false)
           return
@@ -120,9 +136,9 @@ export default function SocialConnectionsPage() {
         const { data, error } = await supabase
           .from('social_connections')
           .select('*')
-          .eq('org_id', orgMember.org_id)
+          .eq('org_id', userOrgId)
 
-        console.log('Social connections query result:', { data, error, orgId: orgMember.org_id })
+        console.log('Social connections query result:', { data, error, orgId: userOrgId })
 
         if (error) {
           console.error('Error fetching connections:', error)
@@ -215,13 +231,9 @@ export default function SocialConnectionsPage() {
         const codeVerifier = generateCodeVerifier()
         const codeChallenge = await generateCodeChallenge(codeVerifier)
 
-        const { data: orgMember } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (!orgMember) {
+        if (!userOrgId) {
           toast.error('No organization found. Please create an organization first.')
           return
         }
@@ -229,7 +241,7 @@ export default function SocialConnectionsPage() {
         const stateData = {
           state: stateParam,
           codeVerifier: codeVerifier,
-          org_id: orgMember.org_id,
+          org_id: userOrgId,
           user_id: user.id
         }
         const state = btoa(JSON.stringify(stateData))
@@ -241,7 +253,7 @@ export default function SocialConnectionsPage() {
         console.log('Twitter OAuth setup:', {
           clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID ? 'SET' : 'NOT SET',
           redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/twitter/callback`,
-          orgId: orgMember.org_id
+          orgId: userOrgId
         })
         
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '')
@@ -257,13 +269,9 @@ export default function SocialConnectionsPage() {
         window.location.href = authUrl.toString()
       } else if (platform === 'linkedin') {
 
-        const { data: orgMember } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (!orgMember) {
+        if (!userOrgId) {
           toast.error('No organization found. Please create an organization first.')
           return
         }
@@ -272,7 +280,7 @@ export default function SocialConnectionsPage() {
         const stateParam = Math.random().toString(36).substring(2, 15)
         const stateData = {
           state: stateParam,
-          org_id: orgMember.org_id,
+          org_id: userOrgId,
           user_id: user.id
         }
         const state = btoa(JSON.stringify(stateData))
@@ -292,13 +300,9 @@ export default function SocialConnectionsPage() {
         // Redirect to LinkedIn OAuth
         window.location.href = authUrl.toString()
       } else if (platform === 'facebook') {
-        const { data: orgMember } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (!orgMember) {
+        if (!userOrgId) {
           toast.error('No organization found. Please create an organization first.')
           return
         }
@@ -307,7 +311,7 @@ export default function SocialConnectionsPage() {
         const stateParam = Math.random().toString(36).substring(2, 15)
         const stateData = {
           state: stateParam,
-          org_id: orgMember.org_id,
+          org_id: userOrgId,
           user_id: user.id
         }
         const state = btoa(JSON.stringify(stateData))
@@ -327,13 +331,9 @@ export default function SocialConnectionsPage() {
         // Redirect to Facebook OAuth
         window.location.href = authUrl.toString()
       } else if (platform === 'youtube') {
-        const { data: orgMember } = await supabase
-          .from('org_members')
-          .select('org_id')
-          .eq('user_id', user.id)
-          .single()
+        const userOrgId = await getUserOrgId(user.id)
 
-        if (!orgMember) {
+        if (!userOrgId) {
           toast.error('No organization found. Please create an organization first.')
           return
         }
@@ -342,7 +342,7 @@ export default function SocialConnectionsPage() {
         const stateParam = Math.random().toString(36).substring(2, 15)
         const stateData = {
           state: stateParam,
-          org_id: orgMember.org_id,
+          org_id: userOrgId,
           user_id: user.id
         }
         const state = btoa(JSON.stringify(stateData))
@@ -446,9 +446,19 @@ export default function SocialConnectionsPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-white text-lg">{platform?.name}</h3>
-                        <p className="text-sm text-gray-300">
-                          Connected on {new Date(connection.created_at).toLocaleDateString()}
-                        </p>
+                        <div className="text-sm text-gray-300 space-y-1">
+                          {connection.account_name && (
+                            <p className="text-green-400 font-medium">
+                              {connection.account_name}
+                              {connection.account_username && connection.account_username !== connection.account_name && (
+                                <span className="text-gray-400 ml-2">({connection.account_username})</span>
+                              )}
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-400">
+                            Connected on {new Date(connection.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                     </div>
                     <Button
@@ -463,24 +473,35 @@ export default function SocialConnectionsPage() {
               })}
               
               {/* Show Instagram as connected if Facebook is connected */}
-              {connections.some(conn => conn.platform === 'facebook') && !connections.some(conn => conn.platform === 'instagram') && (
-                <div className="flex items-center justify-between p-6 border border-green-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg">
-                      <SocialIcon platform="instagram" size="lg" className="text-white" />
+              {connections.some(conn => conn.platform === 'facebook') && !connections.some(conn => conn.platform === 'instagram') && (() => {
+                const facebookConnection = connections.find(conn => conn.platform === 'facebook')
+                return (
+                  <div className="flex items-center justify-between p-6 border border-green-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg">
+                        <SocialIcon platform="instagram" size="lg" className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white text-lg">Instagram</h3>
+                        <div className="text-sm text-gray-300 space-y-1">
+                          <p className="text-green-400 font-medium">
+                            Connected via Facebook Pages
+                            {facebookConnection?.account_name && (
+                              <span className="text-gray-400 ml-2">({facebookConnection.account_name})</span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Connected on {facebookConnection ? new Date(facebookConnection.created_at).toLocaleDateString() : 'Unknown'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-white text-lg">Instagram</h3>
-                      <p className="text-sm text-green-400">
-                        Connected via Facebook Pages
-                      </p>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-400 text-sm font-medium">✓ Active</span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-green-400 text-sm font-medium">✓ Active</span>
-                  </div>
-                </div>
-              )}
+                )
+              })()}
             </div>
           </CardContent>
         </Card>

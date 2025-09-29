@@ -82,23 +82,27 @@ export default function ContentEditorPage() {
         return
       }
 
-      // Get user's first organization
-      const { data: orgMember } = await supabase
+      // Get user's organizations
+      const { data: orgMembers } = await supabase
         .from('org_members')
-        .select('org_id')
+        .select('org_id, role')
         .eq('user_id', user.id)
-        .limit(1)
-        .single()
 
-      if (!orgMember) {
+      if (!orgMembers || orgMembers.length === 0) {
         toast.error('No organization found. Please create an organization first.')
         return
+      }
+
+      // Find the user's personal organization (not Admin Organization)
+      let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+      if (!userOrgId) {
+        userOrgId = orgMembers[0].org_id
       }
 
       const { error } = await (supabase as any)
         .from('blog_posts')
         .insert({
-          org_id: (orgMember as any).org_id,
+          org_id: userOrgId,
           title,
           content,
           state: 'draft',
