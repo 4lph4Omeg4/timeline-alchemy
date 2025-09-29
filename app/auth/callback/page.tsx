@@ -37,21 +37,8 @@ export default function AuthCallback() {
         }
 
         if (data.session) {
-          // User is authenticated, automatically add them to admin organization
-          try {
-            await fetch('/api/auto-join-admin-org', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ userId: data.session.user.id }),
-            })
-          } catch (orgError) {
-            console.error('Error adding user to admin organization:', orgError)
-            // Don't block the user flow, this is a background process
-          }
-          
-          // Redirect to dashboard
+          // User is authenticated, redirect to dashboard
+          // Organization creation is handled in dashboard layout
           router.push('/dashboard')
         } else {
           // No session, redirect to sign in
