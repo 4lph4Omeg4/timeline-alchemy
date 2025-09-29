@@ -219,7 +219,7 @@ export default function SocialConnectionsPage() {
         
         authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '')
         authUrl.searchParams.set('redirect_uri', `${window.location.origin}/api/auth/twitter/callback`)
-        authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read offline.access')
+        authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read')
         authUrl.searchParams.set('state', state)
         authUrl.searchParams.set('code_challenge', codeChallenge)
         authUrl.searchParams.set('code_challenge_method', 'S256')

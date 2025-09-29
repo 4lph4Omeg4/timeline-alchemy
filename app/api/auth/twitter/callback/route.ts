@@ -128,6 +128,12 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenResponse.json()
     const { access_token, refresh_token, expires_in } = tokenData
 
+    console.log('Token data received:', {
+      hasAccessToken: !!access_token,
+      hasRefreshToken: !!refresh_token,
+      expiresIn: expires_in
+    })
+
     // Get user info from Twitter
     const userResponse = await fetch('https://api.twitter.com/2/users/me?user.fields=id,username,name,public_metrics', {
       headers: {
