@@ -171,8 +171,6 @@ export async function GET(request: NextRequest) {
         refresh_token: null, // Set to null as it's often not provided for this scope
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
-        platform_user_id: linkedinUserId,
-        platform_username: linkedinUsername,
       }, {
         onConflict: 'org_id,platform,account_id'
       })

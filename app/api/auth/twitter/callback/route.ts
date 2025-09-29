@@ -180,8 +180,6 @@ export async function GET(request: NextRequest) {
         refresh_token,
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
-        platform_user_id: twitterUserId,
-        platform_username: twitterUsername,
       }, {
         onConflict: 'org_id,platform,account_id'
       })

@@ -102,16 +102,16 @@ export default function SocialConnectionsPage() {
           return
         }
 
-        // Get the user's organization
+        // Get the user's organization - try to find any organization the user belongs to
         const { data: orgMember, error: orgError } = await supabase
           .from('org_members')
           .select('org_id')
           .eq('user_id', user.id)
-          .eq('role', 'owner')
           .single()
 
         if (orgError || !orgMember) {
           console.error('Error getting user organization:', orgError)
+          toast.error('No organization found. Please create an organization first.')
           setLoading(false)
           return
         }
@@ -191,7 +191,6 @@ export default function SocialConnectionsPage() {
           .from('org_members')
           .select('org_id')
           .eq('user_id', user.id)
-          .eq('role', 'owner')
           .single()
 
         if (!orgMember) {
@@ -234,7 +233,6 @@ export default function SocialConnectionsPage() {
           .from('org_members')
           .select('org_id')
           .eq('user_id', user.id)
-          .eq('role', 'owner')
           .single()
 
         if (!orgMember) {
