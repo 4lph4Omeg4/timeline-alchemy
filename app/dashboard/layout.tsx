@@ -30,27 +30,47 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const ensureAdminOrganization = async (userId: string) => {
     try {
-      // Check if admin already has an organization
-      const { data: existingOrg, error: checkError } = await (supabase as any)
-        .from('org_members')
-        .select('org_id, organizations(*)')
-        .eq('user_id', userId)
-        .eq('role', 'owner')
+      // First, check if "Admin Organization" organization already exists
+      const { data: existingAdminOrg, error: orgCheckError } = await (supabase as any)
+        .from('organizations')
+        .select('id')
+        .eq('name', 'Admin Organization')
         .single()
 
-      if (existingOrg) {
-        console.log('Admin already has organization:', (existingOrg as any).organizations)
-        return // Admin already has an organization
+      if (existingAdminOrg) {
+        // Organization exists, check if admin is already a member
+        const { data: existingMember, error: memberCheckError } = await (supabase as any)
+          .from('org_members')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('org_id', existingAdminOrg.id)
+          .single()
+
+        if (!existingMember) {
+          // Admin is not a member, add them as owner
+          const { error: memberError } = await (supabase as any)
+            .from('org_members')
+            .insert({
+              org_id: existingAdminOrg.id,
+              user_id: userId,
+              role: 'owner'
+            })
+
+          if (memberError) {
+            console.error('Error adding admin to existing organization:', memberError)
+          }
+        }
+        return // Organization already exists
       }
 
-      // Only create if no organization exists
+      // Organization doesn't exist, create it
       console.log('Creating admin organization...')
       
       // Create admin organization
       const { data: newOrg, error: orgError } = await (supabase as any)
         .from('organizations')
         .insert({
-          name: 'Timeline Alchemy Admin',
+          name: 'Admin Organization',
           plan: 'enterprise'
         })
         .select()
@@ -92,7 +112,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError) {
+        console.error('Auth error in dashboard layout:', userError)
+        router.push('/auth/signin')
+        return
+      }
       
       if (!user) {
         router.push('/auth/signin')
@@ -110,6 +136,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       // Check if user is admin (sh4m4ni4k@sh4m4ni4k.nl)
       const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
       setIsAdmin(isAdminUser)
+
+      // Only ensure admin org membership for non-admin users
+      if (!isAdminUser) {
+        // Auto-join admin org functionality removed - users will create their own orgs
+        console.log('Non-admin user detected, will create organization if needed')
+      }
 
       if (isAdminUser) {
         // Ensure admin has an organization
@@ -311,12 +343,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="min-h-screen bg-black">
         {/* Header */}
         <header className="bg-gray-900 shadow-sm border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/dashboard" className="flex items-center">
                 <Logo size="md" showText={false} />
-                <span className="ml-3 text-xl font-bold text-gray-900 dark:text-white">Timeline Alchemy</span>
+                <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Timeline Alchemy</span>
               </Link>
             </div>
 
@@ -353,6 +385,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="mr-3">📝</span>
                   Content
                 </Link>
+                <Link href="/dashboard/content/list" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
+                  <span className="mr-3">📦</span>
+                  Packages
+                </Link>
+        <Link href="/dashboard/leaderboard" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
+          <span className="mr-3">🏆</span>
+          Leaderboard
+        </Link>
                 <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                   <span className="mr-3">📅</span>
                   Schedule
@@ -376,9 +416,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <span className="mr-3">📋</span>
                       Subscriptions
                     </Link>
-                    <Link href="/dashboard/clients" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
+                    <Link href="/dashboard/admin/clients" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                       <span className="mr-3">👥</span>
-                      Clients
+                      Manage Clients
+                    </Link>
+                    <Link href="/dashboard/admin/packages" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
+                      <span className="mr-3">📦</span>
+                      Admin Packages
                     </Link>
                     <Link href="/dashboard/analytics" className="flex items-center px-3 py-2 text-gray-200 hover:text-yellow-400 hover:bg-gray-800 rounded-lg transition-colors">
                       <span className="mr-3">📈</span>

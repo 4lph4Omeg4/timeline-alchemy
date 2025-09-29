@@ -16,9 +16,28 @@ export default function SchedulerPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) return
+
+        // Get user's organization
+        const { data: orgMember, error: orgError } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .eq('role', 'owner')
+          .single()
+
+        if (orgError || !orgMember) {
+          console.error('Error getting user organization:', orgError)
+          setLoading(false)
+          return
+        }
+
         const { data, error } = await supabase
           .from('blog_posts')
           .select('*')
+          .eq('org_id', orgMember.org_id)
           .order('scheduled_for', { ascending: true })
 
         if (error) {
@@ -49,13 +68,26 @@ export default function SchedulerPage() {
       if (error) {
         console.error('Error scheduling post:', error)
       } else {
-        // Refresh posts
-        const { data } = await supabase
-          .from('blog_posts')
-          .select('*')
-          .order('scheduled_for', { ascending: true })
-        
-        setPosts(data || [])
+        // Refresh posts - get user's org first
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: orgMember } = await supabase
+            .from('org_members')
+            .select('org_id')
+            .eq('user_id', user.id)
+            .eq('role', 'owner')
+            .single()
+          
+          if (orgMember) {
+            const { data } = await supabase
+              .from('blog_posts')
+              .select('*')
+              .eq('org_id', orgMember.org_id)
+              .order('scheduled_for', { ascending: true })
+            
+            setPosts(data || [])
+          }
+        }
       }
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -75,13 +107,26 @@ export default function SchedulerPage() {
       if (error) {
         console.error('Error publishing post:', error)
       } else {
-        // Refresh posts
-        const { data } = await supabase
-          .from('blog_posts')
-          .select('*')
-          .order('scheduled_for', { ascending: true })
-        
-        setPosts(data || [])
+        // Refresh posts - get user's org first
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: orgMember } = await supabase
+            .from('org_members')
+            .select('org_id')
+            .eq('user_id', user.id)
+            .eq('role', 'owner')
+            .single()
+          
+          if (orgMember) {
+            const { data } = await supabase
+              .from('blog_posts')
+              .select('*')
+              .eq('org_id', orgMember.org_id)
+              .order('scheduled_for', { ascending: true })
+            
+            setPosts(data || [])
+          }
+        }
       }
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -233,7 +278,7 @@ export default function SchedulerPage() {
                             </Button>
                           </>
                         )}
-                        <Link href={`/dashboard/content/${post.id}`}>
+                        <Link href={`/dashboard/content/package/${post.id}`}>
                           <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-700">
                             Edit
                           </Button>

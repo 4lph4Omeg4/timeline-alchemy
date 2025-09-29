@@ -34,6 +34,10 @@ export interface BlogPost {
   published_at?: string
   created_at: string
   updated_at: string
+  client_id?: string
+  created_by_admin?: boolean
+  average_rating?: number
+  rating_count?: number
 }
 
 export interface SocialConnection {
@@ -53,7 +57,7 @@ export interface Subscription {
   stripe_customer_id: string
   stripe_subscription_id: string
   plan: 'basic' | 'pro' | 'enterprise'
-  status: 'active' | 'canceled' | 'past_due' | 'unpaid'
+  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing'
   created_at: string
   updated_at: string
 }

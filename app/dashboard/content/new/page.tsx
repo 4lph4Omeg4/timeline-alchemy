@@ -108,7 +108,7 @@ export default function ContentEditorPage() {
         toast.error('Failed to save post')
       } else {
         toast.success('Post saved successfully!')
-        router.push('/dashboard')
+        router.push('/dashboard/content/list')
       }
     } catch (error) {
       toast.error('An unexpected error occurred')

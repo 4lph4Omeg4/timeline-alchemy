@@ -137,7 +137,7 @@ export default function ContentPage() {
       }
 
       showToast('Content saved successfully!')
-      router.push(`/dashboard/content/${(blogPost as any).id}`)
+      router.push(`/dashboard/content/package/${(blogPost as any).id}`)
     } catch (error) {
       console.error('Error saving content:', error)
       showToast('Failed to save content. Please try again.', 'error')

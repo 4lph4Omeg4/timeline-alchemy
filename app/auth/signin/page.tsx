@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,17 @@ export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [redirectTo, setRedirectTo] = useState('/dashboard')
   const router = useRouter()
+
+  useEffect(() => {
+    // Get redirectTo from URL params on client side
+    const urlParams = new URLSearchParams(window.location.search)
+    const redirect = urlParams.get('redirectTo')
+    if (redirect) {
+      setRedirectTo(redirect)
+    }
+  }, [])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,7 +40,24 @@ export default function SignInPage() {
         toast.error(error.message)
       } else {
         toast.success('Welcome back!')
-        router.push('/dashboard')
+        
+        // Add user to admin organization
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            await fetch('/api/auto-join-admin-org', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ userId: user.id }),
+            })
+          }
+        } catch (orgError) {
+          console.error('Error adding user to admin organization:', orgError)
+        }
+        
+        router.push(redirectTo)
       }
     } catch (error) {
       toast.error('An unexpected error occurred')

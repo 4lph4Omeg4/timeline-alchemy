@@ -255,6 +255,42 @@ export async function generateImage(prompt: string): Promise<string> {
   }
 }
 
+export async function generateAndSaveImage(prompt: string, postId: string, orgId: string): Promise<string> {
+  try {
+    // Generate the image first
+    const temporaryUrl = await generateImage(prompt)
+    
+    if (!temporaryUrl) {
+      throw new Error('No image URL returned from generation')
+    }
+
+    // Save the image permanently
+    const response = await fetch('/api/save-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageUrl: temporaryUrl,
+        postId: postId,
+        orgId: orgId,
+        prompt: prompt
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to save image')
+    }
+
+    return data.permanentUrl
+  } catch (error) {
+    console.error('Error generating and saving image:', error)
+    throw new Error('Failed to generate and save image')
+  }
+}
+
 function generateHashtags(prompt: string, platform?: string): string[] {
   const words = prompt.toLowerCase().split(' ')
   const hashtags = words

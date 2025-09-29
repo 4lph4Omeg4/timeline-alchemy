@@ -109,15 +109,25 @@ export default function DashboardPage() {
             totalPosts: allPosts?.length || 0,
           })
         } else {
-          // Regular user dashboard data
-          const { data: postsData, error: postsError } = await supabase
-            .from('blog_posts')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(5)
+          // Regular user dashboard data - get user's organization first
+          const { data: orgMember, error: orgError } = await supabase
+            .from('org_members')
+            .select('org_id')
+            .eq('user_id', user.id)
+            .eq('role', 'owner')
+            .single()
 
-          if (postsData) {
-            setPosts(postsData)
+          if (orgMember && !orgError) {
+            const { data: postsData, error: postsError } = await supabase
+              .from('blog_posts')
+              .select('*')
+              .eq('org_id', orgMember.org_id)
+              .order('created_at', { ascending: false })
+              .limit(5)
+
+            if (postsData) {
+              setPosts(postsData)
+            }
           }
 
           // Fetch usage stats
@@ -126,6 +136,7 @@ export default function DashboardPage() {
           const { data: postsThisMonth } = await supabase
             .from('blog_posts')
             .select('id')
+            .eq('org_id', orgMember?.org_id)
             .gte('created_at', `${currentMonth}-01`)
 
           const { data: organizations } = await supabase
@@ -136,6 +147,7 @@ export default function DashboardPage() {
           const { data: socialConnections } = await supabase
             .from('social_connections')
             .select('id')
+            .eq('org_id', orgMember?.org_id)
 
           setUsageStats({
             postsThisMonth: postsThisMonth?.length || 0,
@@ -357,7 +369,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="ml-4">
-                          <Link href={`/dashboard/content/${post.id}`}>
+                          <Link href={`/dashboard/content/package/${post.id}`}>
                             <Button variant="outline" size="sm">
                               Edit
                             </Button>

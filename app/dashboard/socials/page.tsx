@@ -1,12 +1,33 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SocialConnection } from '@/types/index'
 import { SocialIcon } from '@/components/ui/social-icons'
 import toast from 'react-hot-toast'
+
+// PKCE helper functions
+function generateCodeVerifier(): string {
+  const array = new Uint8Array(32)
+  crypto.getRandomValues(array)
+  return btoa(String.fromCharCode.apply(null, Array.from(array)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
+}
+
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(verifier)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(digest))))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
+}
 
 const socialPlatforms = [
   {
@@ -49,13 +70,59 @@ const socialPlatforms = [
 export default function SocialConnectionsPage() {
   const [connections, setConnections] = useState<SocialConnection[]>([])
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  // Helper function to check if a platform is connected
+  const isPlatformConnected = (platform: string) => {
+    return connections.some(conn => conn.platform === platform)
+  }
+
+  // Helper function to get connection info for a platform
+  const getConnectionInfo = (platform: string) => {
+    return connections.find(conn => conn.platform === platform)
+  }
 
   useEffect(() => {
     const fetchConnections = async () => {
       try {
+        // Get the current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (userError) {
+          console.error('Auth error:', userError)
+          toast.error('Authentication error. Please sign in again.')
+          router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
+          return
+        }
+        
+        if (!user) {
+          console.error('No user found')
+          toast.error('Please sign in to view social connections')
+          router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
+          return
+        }
+
+        // Get the user's organization - try to find any organization the user belongs to
+        const { data: orgMember, error: orgError } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (orgError || !orgMember) {
+          console.error('Error getting user organization:', orgError)
+          toast.error('No organization found. Please create an organization first.')
+          setLoading(false)
+          return
+        }
+
+        // Fetch connections for the user's organization
         const { data, error } = await supabase
           .from('social_connections')
           .select('*')
+          .eq('org_id', orgMember.org_id)
+
+        console.log('Social connections query result:', { data, error, orgId: orgMember.org_id })
 
         if (error) {
           console.error('Error fetching connections:', error)
@@ -69,32 +136,248 @@ export default function SocialConnectionsPage() {
       }
     }
 
+    // Check for OAuth callback results
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const error = urlParams.get('error')
+    const username = urlParams.get('username')
+    const details = urlParams.get('details')
+
+    if (success === 'twitter_connected' && username) {
+      toast.success(`Successfully connected to Twitter as @${username}!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
+    } else if (success === 'linkedin_connected') {
+      toast.success(`Successfully connected to LinkedIn!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
+    } else if (success === 'instagram_connected' && username) {
+      toast.success(`Successfully connected to Instagram as @${username}!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
+    } else if (success === 'facebook_connected' && username) {
+      toast.success(`Successfully connected to Facebook as ${username}!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
+    } else if (success === 'youtube_connected' && username) {
+      toast.success(`Successfully connected to YouTube as ${username}!`)
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh connections to show updated state
+      fetchConnections()
+    } else if (error) {
+      let errorMessage = `Connection failed: ${error}`
+      if (details) {
+        errorMessage += ` (${details})`
+      }
+      
+      // Provide more specific error messages
+      if (error === 'oauth_not_configured') {
+        errorMessage = 'YouTube OAuth is not properly configured. Please contact administrator.'
+      } else if (error === 'invalid_request') {
+        errorMessage = 'Invalid OAuth request. Please check your YouTube app configuration.'
+      } else if (error === 'access_denied') {
+        errorMessage = 'Access denied. Please try again and grant the required permissions.'
+      }
+      
+      toast.error(errorMessage)
+      console.error('OAuth error details:', { error, details })
+      console.error('Full URL params:', Object.fromEntries(urlParams.entries()))
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     fetchConnections()
   }, [])
 
   const handleConnect = async (platform: string) => {
     try {
-      // In a real implementation, this would redirect to the OAuth flow
-      // For now, we'll simulate the connection
-      toast.success(`Redirecting to ${platform} OAuth...`)
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
       
-      // Simulate OAuth flow
-      setTimeout(() => {
-        const mockConnection = {
-          id: Math.random().toString(36).substr(2, 9),
-          org_id: 'mock-org-id',
-          platform: platform as any,
-          access_token: 'mock-access-token',
-          refresh_token: 'mock-refresh-token',
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+      if (userError || !user) {
+        toast.error('Please sign in to connect social accounts')
+        router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
+        return
+      }
+
+      if (platform === 'twitter') {
+        // Generate state parameter for security and include code verifier
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const codeVerifier = generateCodeVerifier()
+        const codeChallenge = await generateCodeChallenge(codeVerifier)
+
+        const { data: orgMember } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (!orgMember) {
+          toast.error('No organization found. Please create an organization first.')
+          return
         }
+
+        const stateData = {
+          state: stateParam,
+          codeVerifier: codeVerifier,
+          org_id: orgMember.org_id,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
         
-        setConnections(prev => [...prev, mockConnection])
-        toast.success(`Successfully connected to ${platform}!`)
-      }, 2000)
+        console.log('Twitter OAuth state data:', stateData)
+        
+        const authUrl = new URL('https://twitter.com/i/oauth2/authorize')
+        authUrl.searchParams.set('response_type', 'code')
+        console.log('Twitter OAuth setup:', {
+          clientId: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID ? 'SET' : 'NOT SET',
+          redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/twitter/callback`,
+          orgId: orgMember.org_id
+        })
+        
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || '')
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/twitter/callback`)
+        authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read')
+        authUrl.searchParams.set('state', state)
+        authUrl.searchParams.set('code_challenge', codeChallenge)
+        authUrl.searchParams.set('code_challenge_method', 'S256')
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to Twitter OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'linkedin') {
+
+        const { data: orgMember } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (!orgMember) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
+        // Generate state parameter for security
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const stateData = {
+          state: stateParam,
+          org_id: orgMember.org_id,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('LinkedIn OAuth state data:', stateData)
+        
+        // LinkedIn OAuth 2.0 URL
+        const authUrl = new URL('https://www.linkedin.com/oauth/v2/authorization')
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || '')
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/linkedin/callback`)
+        authUrl.searchParams.set('scope', 'openid profile w_member_social')
+        authUrl.searchParams.set('state', state)
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to LinkedIn OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'facebook') {
+        const { data: orgMember } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (!orgMember) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
+        // Generate state parameter for security
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const stateData = {
+          state: stateParam,
+          org_id: orgMember.org_id,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('Facebook OAuth state data:', stateData)
+        
+        // Facebook OAuth URL (using Facebook Pages API)
+        const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '')
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/facebook/callback`)
+        authUrl.searchParams.set('scope', 'pages_manage_posts,pages_read_engagement')
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('state', state)
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to Facebook OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'youtube') {
+        const { data: orgMember } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (!orgMember) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
+        // Generate state parameter for security
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const stateData = {
+          state: stateParam,
+          org_id: orgMember.org_id,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('YouTube OAuth state data:', stateData)
+        
+        // Check if YouTube client ID is configured
+        const youtubeClientId = process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID
+        if (!youtubeClientId) {
+          toast.error('YouTube Client ID not configured. Please contact administrator.')
+          return
+        }
+
+        // YouTube OAuth URL
+        const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
+        authUrl.searchParams.set('client_id', youtubeClientId)
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/youtube/callback`)
+        authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly')
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('access_type', 'offline')
+        authUrl.searchParams.set('prompt', 'consent')
+        authUrl.searchParams.set('state', state)
+        
+        console.log('YouTube OAuth URL:', authUrl.toString())
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to YouTube OAuth
+        window.location.href = authUrl.toString()
+      } else {
+        // For other platforms, show coming soon message
+        toast.success(`${platform} integration coming soon!`)
+      }
     } catch (error) {
+      console.error('OAuth error:', error)
       toast.error(`Failed to connect to ${platform}`)
     }
   }
@@ -118,6 +401,10 @@ export default function SocialConnectionsPage() {
   }
 
   const isConnected = (platform: string) => {
+    if (platform === 'instagram') {
+      // Instagram is connected if Facebook is connected (since Instagram posts through Facebook Pages)
+      return connections.some(conn => conn.platform === 'facebook')
+    }
     return connections.some(conn => conn.platform === platform)
   }
 
@@ -174,6 +461,26 @@ export default function SocialConnectionsPage() {
                   </div>
                 )
               })}
+              
+              {/* Show Instagram as connected if Facebook is connected */}
+              {connections.some(conn => conn.platform === 'facebook') && !connections.some(conn => conn.platform === 'instagram') && (
+                <div className="flex items-center justify-between p-6 border border-green-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg">
+                      <SocialIcon platform="instagram" size="lg" className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white text-lg">Instagram</h3>
+                      <p className="text-sm text-green-400">
+                        Connected via Facebook Pages
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-400 text-sm font-medium">✓ Active</span>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -207,10 +514,12 @@ export default function SocialConnectionsPage() {
                       : 'bg-yellow-400 hover:bg-yellow-500 text-black font-semibold'
                   }`}
                   variant={isConnected(platform.id) ? "default" : "default"}
-                  onClick={() => handleConnect(platform.id)}
-                  disabled={isConnected(platform.id)}
+                  onClick={() => isConnected(platform.id) 
+                    ? handleDisconnect(connections.find(conn => conn.platform === platform.id)?.id || '') 
+                    : handleConnect(platform.id)
+                  }
                 >
-                  {isConnected(platform.id) ? '✓ Connected' : 'Connect Account'}
+                  {isConnected(platform.id) ? '✓ Connected - Click to Disconnect' : 'Connect Account'}
                 </Button>
               </div>
             ))}
