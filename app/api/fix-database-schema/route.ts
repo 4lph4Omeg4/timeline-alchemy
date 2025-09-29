@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const columnNames = columns?.map(col => col.column_name) || []
+    const columnNames = columns?.map((col: any) => col.column_name) || []
     console.log('Current columns:', columnNames)
 
     // Check if account_id exists
