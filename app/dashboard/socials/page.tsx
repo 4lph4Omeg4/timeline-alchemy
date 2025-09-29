@@ -496,7 +496,7 @@ export default function SocialConnectionsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {socialPlatforms.filter(platform => platform.id !== 'instagram').map((platform) => (
+            {socialPlatforms.map((platform) => (
               <div key={platform.id} className="border border-gray-700 rounded-xl p-6 bg-gray-800 hover:bg-gray-750 transition-all duration-200 hover:border-gray-600 hover:shadow-lg">
                 <div className="flex items-center space-x-4 mb-4">
                   <div className={`w-12 h-12 rounded-xl ${platform.color} flex items-center justify-center text-white shadow-md`}>
