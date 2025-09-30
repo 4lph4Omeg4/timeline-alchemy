@@ -74,6 +74,7 @@ export default function ContentPackagePage() {
   const [loading, setLoading] = useState(true)
   const [ratings, setRatings] = useState<any[]>([])
   const [userRating, setUserRating] = useState<any>(null)
+  const [showRatingForm, setShowRatingForm] = useState(false)
   const [regeneratingSocial, setRegeneratingSocial] = useState(false)
 
   const handleRegenerateSocialPosts = async () => {
