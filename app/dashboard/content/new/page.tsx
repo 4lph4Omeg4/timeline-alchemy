@@ -288,9 +288,9 @@ export default function ContentEditorPage() {
                          <Label>Social Media Posts</Label>
                          <div className="space-y-3">
                            {Object.entries(socialPosts).map(([platform, post]) => (
-                             <div key={platform} className="border border-gray-300 rounded-lg p-3 bg-gray-100">
+                             <div key={platform} className="border border-gray-600 rounded-lg p-3 bg-gray-800">
                                <div className="flex items-center gap-2 mb-2">
-                                 <span className="text-blue-600 font-semibold capitalize text-sm">{platform}</span>
+                                 <span className="text-blue-400 font-semibold capitalize text-sm">{platform}</span>
                                </div>
                                <Textarea
                                  value={post}
@@ -300,7 +300,7 @@ export default function ContentEditorPage() {
                                      [platform]: e.target.value
                                    }))
                                  }}
-                                 className="text-sm bg-white border-gray-300"
+                                 className="text-sm bg-gray-700 border-gray-600 text-white"
                                  rows={3}
                                />
                              </div>
