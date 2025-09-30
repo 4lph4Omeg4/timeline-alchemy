@@ -163,29 +163,32 @@ export default function ContentPackagePage() {
         .eq('post_id', params.id)
         .or(`org_id.eq.${orgMember.org_id},and(post_id.eq.${params.id})`)
 
-      // Extract the actual excerpt from the content (first 150 characters)
+      console.log('Fetched images for post:', images)
+
+      // Use existing content directly - no generation, no processing
       const cleanContent = postData.content
-        .replace(/^[\s\S]*?Content:\s*/, '') // Remove "Content:" prefix
+        .replace(/^[\s\S]*?Content:\s*/, '') // Remove "Content:" prefix if it exists
         .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
         .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
         .trim()
-      const actualExcerpt = cleanContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
+      
+      // Use existing excerpt or create simple one
+      const actualExcerpt = postData.excerpt || cleanContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
 
-      // Generate proper social media posts using AI (only if not already generated)
+      // Use existing social posts or create simple fallback
       let socialPosts
       if (postData.social_posts && Object.keys(postData.social_posts).length > 0) {
-        // Use existing social posts from database
         socialPosts = postData.social_posts
         console.log('Using existing social posts from database')
       } else {
-        // Use fallback posts for all cases to avoid AI generation delays
-        console.log('Using fallback social posts (no AI generation)')
+        // Simple fallback posts - no AI generation
+        console.log('Using simple fallback social posts')
         socialPosts = {
-          facebook: `Check out this amazing content: ${postData.title}\n\n${cleanContent.substring(0, 200)}...`,
-          instagram: `✨ ${postData.title} ✨\n\n${cleanContent.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
-          twitter: `${postData.title}\n\n${cleanContent.substring(0, 100)}...\n\n#AI #Content`,
-          linkedin: `Professional insight: ${postData.title}\n\n${cleanContent.substring(0, 180)}...\n\n#Professional #AI #Content`,
-          tiktok: `${postData.title} 🚀\n\n${cleanContent.substring(0, 120)}...\n\n#AI #Trending #Content`
+          facebook: `Check out this content: ${postData.title}`,
+          instagram: `✨ ${postData.title} ✨`,
+          twitter: `${postData.title}`,
+          linkedin: `Professional insight: ${postData.title}`,
+          tiktok: `${postData.title} 🚀`
         }
       }
 

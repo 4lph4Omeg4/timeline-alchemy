@@ -107,6 +107,7 @@ export default function ContentEditorPage() {
       }
 
       const responseData = await response.json()
+      console.log('Generated image URL:', responseData.imageUrl)
       setGeneratedImageUrl(responseData.imageUrl)
       toast.success('Image generated successfully!')
     } catch (error) {
@@ -147,13 +148,56 @@ export default function ContentEditorPage() {
         userOrgId = orgMembers[0].org_id
       }
 
-      // First save the blog post
+      // Generate social media posts and excerpt when saving
+      let socialPosts = null
+      let finalExcerpt = excerpt
+      
+      if (content.trim()) {
+        try {
+          // Generate social media posts
+          const socialResponse = await fetch('/api/generate-social-posts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title,
+              content,
+              platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+            })
+          })
+          
+          if (socialResponse.ok) {
+            const socialData = await socialResponse.json()
+            socialPosts = socialData.socialPosts
+          }
+          
+          // Generate excerpt if not provided
+          if (!finalExcerpt.trim()) {
+            finalExcerpt = content.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
+          }
+        } catch (error) {
+          console.log('Could not generate social posts, using fallback:', error)
+          // Use simple fallback
+          socialPosts = {
+            facebook: `Check out this content: ${title}`,
+            instagram: `✨ ${title} ✨`,
+            twitter: `${title}`,
+            linkedin: `Professional insight: ${title}`,
+            tiktok: `${title} 🚀`
+          }
+        }
+      }
+
+      // First save the blog post with excerpt and social posts
       const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .insert({
           org_id: userOrgId,
           title,
           content,
+          excerpt: finalExcerpt,
+          social_posts: socialPosts,
           state: 'draft',
         })
         .select()
@@ -166,6 +210,7 @@ export default function ContentEditorPage() {
 
       // If there's a generated image, save it too
       if (generatedImageUrl) {
+        console.log('Saving image with URL:', generatedImageUrl)
         const { error: imageError } = await (supabase as any)
           .from('images')
           .insert({
@@ -176,11 +221,15 @@ export default function ContentEditorPage() {
 
         if (imageError) {
           console.error('Failed to save image:', imageError)
-          // Don't fail the whole operation if image save fails
+          toast.error('Post saved but image failed to save')
+        } else {
+          console.log('Image saved successfully')
+          toast.success('Post and image saved successfully!')
         }
+      } else {
+        toast.success('Post saved successfully!')
       }
 
-      toast.success('Post saved successfully!')
       router.push('/dashboard/content/list')
     } catch (error) {
       toast.error('An unexpected error occurred')
@@ -321,8 +370,18 @@ export default function ContentEditorPage() {
                       src={generatedImageUrl} 
                       alt="Generated content image" 
                       className="max-w-full h-auto rounded-lg"
+                      onError={(e) => {
+                        console.error('Image failed to load:', generatedImageUrl)
+                        e.currentTarget.style.display = 'none'
+                      }}
+                      onLoad={() => {
+                        console.log('Image loaded successfully:', generatedImageUrl)
+                      }}
                     />
                     <p className="text-sm text-gray-600 mt-2">
+                      Image URL: {generatedImageUrl.substring(0, 50)}...
+                    </p>
+                    <p className="text-sm text-gray-600">
                       Image will be saved with your post
                     </p>
                   </div>
