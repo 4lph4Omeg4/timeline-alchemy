@@ -180,7 +180,19 @@ export default function ContentEditorPage() {
 
              console.log('Post saved successfully:', postData.id)
 
-             // Social posts will be saved to database once columns exist
+             // Save social posts to separate table
+             if (Object.keys(socialPosts).length > 0) {
+               for (const [platform, content] of Object.entries(socialPosts)) {
+                 await supabase
+                   .from('social_posts')
+                   .insert({
+                     post_id: postData.id,
+                     platform,
+                     content
+                   })
+               }
+               console.log('Social posts saved to database:', socialPosts)
+             }
 
              // If there's a generated image, save it too
              if (generatedImageUrl) {

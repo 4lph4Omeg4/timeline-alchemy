@@ -137,12 +137,13 @@ Focus on the specific topic requested without adding unrelated business concepts
        - Follow with the content in clean paragraphs
        - Write MINIMUM 3 paragraphs with proper spacing
        - Each paragraph should be 3-5 sentences
-       - Leave EXACTLY ONE EMPTY LINE between each paragraph (not more)
+       - Leave EXACTLY ONE EMPTY LINE between each paragraph
        - End with a strong conclusion
        - Make it ready to copy and paste directly into any platform
        - NO formatting markers, NO labels, NO prefixes
        - DO NOT repeat any content - each paragraph should be unique
-       - DO NOT duplicate the first paragraph at the end`
+       - DO NOT duplicate the first paragraph at the end
+       - Use double line breaks (\n\n) between paragraphs`
     : `Create a social media post about: ${prompt}
 
 IMPORTANT OUTPUT FORMAT:

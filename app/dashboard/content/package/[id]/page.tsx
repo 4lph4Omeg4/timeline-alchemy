@@ -175,8 +175,19 @@ export default function ContentPackagePage() {
                .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
                .trim()
              
-             // Use existing social posts from database only
-             setSocialPosts(postData.social_posts || {})
+             // Load social posts from separate table
+             const { data: socialPostsData } = await supabase
+               .from('social_posts')
+               .select('platform, content')
+               .eq('post_id', postData.id)
+             
+             const socialPostsMap = {}
+             if (socialPostsData) {
+               socialPostsData.forEach(post => {
+                 socialPostsMap[post.platform] = post.content
+               })
+             }
+             setSocialPosts(socialPostsMap)
 
       // Set the actual generated content with real data
       const actualGeneratedContent: GeneratedContent = {
