@@ -29,6 +29,8 @@ export interface BlogPost {
   org_id: string
   title: string
   content: string
+  excerpt?: string
+  social_posts?: Record<string, string>
   state: 'draft' | 'scheduled' | 'published'
   scheduled_for?: string
   published_at?: string
