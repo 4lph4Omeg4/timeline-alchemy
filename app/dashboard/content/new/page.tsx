@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { generateContent, generateImage, MINLI_CAMPERDEALER_PROFILE, MINLI_TANKSTATION_PROFILE } from '@/lib/ai'
+import { MINLI_CAMPERDEALER_PROFILE, MINLI_TANKSTATION_PROFILE } from '@/lib/ai'
 import { AIGenerateRequest, BusinessProfile, BusinessType } from '@/types/index'
 import toast from 'react-hot-toast'
 
@@ -53,12 +53,24 @@ export default function ContentEditorPage() {
         businessProfile: getBusinessProfile(),
       }
 
-      const response = await generateContent(request)
-      
-      if (response.title) {
-        setTitle(response.title)
+      const response = await fetch('/api/generate-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate content')
       }
-      setContent(response.content)
+
+      const responseData = await response.json()
+      
+      if (responseData.title) {
+        setTitle(responseData.title)
+      }
+      setContent(responseData.content)
       
       toast.success('Content generated successfully!')
     } catch (error) {
@@ -76,9 +88,22 @@ export default function ContentEditorPage() {
 
     setLoading(true)
     try {
-      const imageUrl = await generateImage(title)
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: title }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate image')
+      }
+
+      const responseData = await response.json()
       toast.success('Image generated successfully!')
       // In a real app, you'd save this image URL to the database
+      console.log('Generated image URL:', responseData.imageUrl)
     } catch (error) {
       toast.error('Failed to generate image')
     } finally {
