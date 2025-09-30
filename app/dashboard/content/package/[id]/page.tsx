@@ -76,6 +76,8 @@ export default function ContentPackagePage() {
   const [userRating, setUserRating] = useState<any>(null)
   const [showRatingForm, setShowRatingForm] = useState(false)
   const [regeneratingSocial, setRegeneratingSocial] = useState(false)
+  const [actualExcerpt, setActualExcerpt] = useState('')
+  const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
 
   const handleRegenerateSocialPosts = async () => {
     if (!post) return
@@ -91,11 +93,12 @@ export default function ContentPackagePage() {
         .update({ social_posts: socialPosts })
         .eq('id', post.id)
       
-      // Update the local state
-      setGeneratedContent(prev => prev ? {
-        ...prev,
-        socialPosts
-      } : null)
+             // Update the local state
+             setSocialPosts(socialPosts)
+             setGeneratedContent(prev => prev ? {
+               ...prev,
+               socialPosts
+             } : null)
       
       toast.success('Social media posts regenerated!')
     } catch (error) {
@@ -163,38 +166,24 @@ export default function ContentPackagePage() {
         .eq('post_id', params.id)
         .or(`org_id.eq.${orgMember.org_id},and(post_id.eq.${params.id})`)
 
-      // Extract the actual excerpt from the content (first 150 characters)
-      const cleanContent = postData.content.replace(/^[\s\S]*?Content:\s*/, '').trim()
-      const actualExcerpt = cleanContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
+      console.log('Fetched images for post:', images)
 
-      // Generate proper social media posts using AI (only if not already generated)
-      let socialPosts
-      if (postData.social_posts) {
-        // Use existing social posts from database
-        socialPosts = postData.social_posts
-      } else {
-        // Generate new social posts and save them
-        socialPosts = await generateSocialMediaPosts(postData.title, cleanContent)
-        
-        // Try to save the generated social posts to the database
-        try {
-          await supabase
-            .from('blog_posts')
-            .update({ social_posts: socialPosts })
-            .eq('id', postData.id)
-        } catch (error) {
-          console.log('Could not save social posts to database (column might not exist yet):', error)
-          // Continue without saving - this is not critical
-        }
-      }
+             // Use existing content directly - no generation, no processing
+             const cleanContent = postData.content
+               .replace(/^[\s\S]*?Content:\s*/, '') // Remove "Content:" prefix if it exists
+               .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
+               .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
+               .trim()
+             
+             // Use existing social posts from database only - no generation
+             setSocialPosts(postData.social_posts || {})
 
-      // For now, we'll create a mock generated content structure
-      // In a real app, you might store the complete generated content in the database
-      const mockGeneratedContent: GeneratedContent = {
+      // Set the actual generated content with real data
+      const actualGeneratedContent: GeneratedContent = {
         blogPost: {
           title: postData.title,
           content: cleanContent,
-          excerpt: actualExcerpt,
+          excerpt: '',
           tags: ['AI Generated', 'Content Package']
         },
         image: images && images.length > 0 ? {
@@ -204,10 +193,10 @@ export default function ContentPackagePage() {
           url: '',
           prompt: ''
         },
-        socialPosts: socialPosts
+        socialPosts: (socialPosts || {}) as any
       }
 
-      setGeneratedContent(mockGeneratedContent)
+      setGeneratedContent(actualGeneratedContent)
 
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -352,25 +341,27 @@ export default function ContentPackagePage() {
         </div>
       </div>
 
-      {/* Excerpt */}
-      <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <span className="text-blue-400">📖</span>
-            Article Excerpt
-          </CardTitle>
-          <CardDescription className="text-gray-300">
-            A preview of this article's key insights
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-            <p className="text-gray-200 leading-relaxed text-lg italic">
-              {generatedContent.blogPost.excerpt}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+             {/* Excerpt */}
+             {actualExcerpt && (
+               <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30">
+                 <CardHeader>
+                   <CardTitle className="text-white flex items-center gap-2">
+                     <span className="text-blue-400">📖</span>
+                     Article Excerpt
+                   </CardTitle>
+                   <CardDescription className="text-gray-300">
+                     A preview of this article's key insights
+                   </CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                     <p className="text-gray-200 leading-relaxed text-lg italic">
+                       {actualExcerpt}
+                     </p>
+                   </div>
+                 </CardContent>
+               </Card>
+             )}
 
       {/* Blog Post */}
       <Card className="bg-gray-900 border-gray-800">
@@ -425,27 +416,28 @@ export default function ContentPackagePage() {
         </Card>
       )}
 
-      {/* Social Media Posts */}
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
-              <CardDescription className="text-gray-300">
-                Platform-optimized posts ready for publishing
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRegenerateSocialPosts}
-              disabled={regeneratingSocial}
-            >
-              {regeneratingSocial ? 'Regenerating...' : '🔄 Regenerate Posts'}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
+             {/* Social Media Posts */}
+             {(Object.keys(socialPosts).length > 0 || (generatedContent && generatedContent.socialPosts)) && (
+               <Card className="bg-gray-900 border-gray-800">
+                 <CardHeader>
+                   <div className="flex justify-between items-start">
+                     <div>
+                       <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
+                       <CardDescription className="text-gray-300">
+                         Platform-optimized posts ready for publishing
+                       </CardDescription>
+                     </div>
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={handleRegenerateSocialPosts}
+                       disabled={regeneratingSocial}
+                     >
+                       {regeneratingSocial ? 'Regenerating...' : '🔄 Regenerate Posts'}
+                     </Button>
+                   </div>
+                 </CardHeader>
+                 <CardContent className="space-y-6">
           {/* Facebook */}
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -520,6 +512,7 @@ export default function ContentPackagePage() {
           </div>
         </CardContent>
       </Card>
+             )}
 
       {/* Publishing Options */}
       <Card className="bg-gray-900 border-gray-800">

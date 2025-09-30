@@ -8,37 +8,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MINLI_CAMPERDEALER_PROFILE, MINLI_TANKSTATION_PROFILE } from '@/lib/ai'
-import { AIGenerateRequest, BusinessProfile, BusinessType } from '@/types/index'
+import { AIGenerateRequest } from '@/types/index'
 import toast from 'react-hot-toast'
 
 export default function ContentEditorPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [excerpt, setExcerpt] = useState('')
+  const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
   const [prompt, setPrompt] = useState('')
   const [generatedImageUrl, setGeneratedImageUrl] = useState('')
   const [contentLoading, setContentLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [businessType, setBusinessType] = useState<BusinessType>('general')
-  const [customBusinessProfile, setCustomBusinessProfile] = useState<BusinessProfile | null>(null)
   const router = useRouter()
-
-  // Get business profile based on selection
-  const getBusinessProfile = (): BusinessProfile | undefined => {
-    if (customBusinessProfile) return customBusinessProfile
-    
-    switch (businessType) {
-      case 'camperdealer':
-        return MINLI_CAMPERDEALER_PROFILE
-      case 'tankstation':
-        return MINLI_TANKSTATION_PROFILE
-      default:
-        return undefined
-    }
-  }
 
   const handleGenerateContent = async () => {
     if (!prompt.trim()) {
@@ -47,42 +30,71 @@ export default function ContentEditorPage() {
     }
 
     setContentLoading(true)
+    setImageLoading(true)
+    
     try {
-      const request: AIGenerateRequest = {
-        prompt,
-        type: 'blog',
-        tone: 'professional',
-        length: 'medium',
-        businessProfile: getBusinessProfile(),
+      // Generate everything in parallel
+      const [contentResponse, socialResponse, imageResponse] = await Promise.all([
+        // Generate blog content
+        fetch('/api/generate-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            type: 'blog',
+            tone: 'professional',
+            length: 'medium',
+          }),
+        }),
+        
+        // Generate social media posts
+        fetch('/api/generate-social-posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: prompt, // Use prompt as title for social posts
+            content: prompt,
+            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+          }),
+        }),
+        
+        // Generate image
+        fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        })
+      ])
+
+      // Process content response
+      if (contentResponse.ok) {
+        const contentData = await contentResponse.json()
+        if (contentData.title) setTitle(contentData.title)
+        if (contentData.excerpt) setExcerpt(contentData.excerpt)
+        setContent(contentData.content)
       }
 
-      const response = await fetch('/api/generate-content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to generate content')
+      // Process social posts response
+      if (socialResponse.ok) {
+        const socialData = await socialResponse.json()
+        setSocialPosts(socialData.socialPosts)
+        console.log('Social posts generated:', socialData.socialPosts)
       }
 
-      const responseData = await response.json()
+      // Process image response
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json()
+        setGeneratedImageUrl(imageData.imageUrl)
+        console.log('Image generated:', imageData.imageUrl)
+      }
       
-      if (responseData.title) {
-        setTitle(responseData.title)
-      }
-      if (responseData.excerpt) {
-        setExcerpt(responseData.excerpt)
-      }
-      setContent(responseData.content)
-      
-      toast.success('Content generated successfully!')
+      toast.success('Complete content package generated!')
     } catch (error) {
+      console.error('Error generating content:', error)
       toast.error('Failed to generate content')
     } finally {
       setContentLoading(false)
+      setImageLoading(false)
     }
   }
 
@@ -107,6 +119,7 @@ export default function ContentEditorPage() {
       }
 
       const responseData = await response.json()
+      console.log('Generated image URL:', responseData.imageUrl)
       setGeneratedImageUrl(responseData.imageUrl)
       toast.success('Image generated successfully!')
     } catch (error) {
@@ -147,7 +160,7 @@ export default function ContentEditorPage() {
         userOrgId = orgMembers[0].org_id
       }
 
-      // First save the blog post
+      // First save the blog post (without excerpt/social_posts until database is updated)
       const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .insert({
@@ -160,12 +173,16 @@ export default function ContentEditorPage() {
         .single()
 
       if (postError) {
+        console.error('Post save error:', postError)
         toast.error('Failed to save post')
         return
       }
 
+      console.log('Post saved successfully:', postData.id)
+
       // If there's a generated image, save it too
       if (generatedImageUrl) {
+        console.log('Saving image with URL:', generatedImageUrl)
         const { error: imageError } = await (supabase as any)
           .from('images')
           .insert({
@@ -176,11 +193,15 @@ export default function ContentEditorPage() {
 
         if (imageError) {
           console.error('Failed to save image:', imageError)
-          // Don't fail the whole operation if image save fails
+          toast.error('Post saved but image failed to save')
+        } else {
+          console.log('Image saved successfully')
+          toast.success('Post and image saved successfully!')
         }
+      } else {
+        toast.success('Post saved successfully!')
       }
 
-      toast.success('Post saved successfully!')
       router.push('/dashboard/content/list')
     } catch (error) {
       toast.error('An unexpected error occurred')
@@ -210,25 +231,6 @@ export default function ContentEditorPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="businessType">Business Type</Label>
-                <Select value={businessType} onValueChange={(value: BusinessType) => setBusinessType(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select business type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General Business</SelectItem>
-                    <SelectItem value="camperdealer">Camper Dealer</SelectItem>
-                    <SelectItem value="tankstation">Gas Station</SelectItem>
-                    <SelectItem value="restaurant">Restaurant</SelectItem>
-                    <SelectItem value="retail">Retail</SelectItem>
-                    <SelectItem value="service">Service Business</SelectItem>
-                    <SelectItem value="hospitality">Hospitality</SelectItem>
-                    <SelectItem value="automotive">Automotive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="prompt">Content Prompt</Label>
                 <Textarea
                   id="prompt"
@@ -238,21 +240,13 @@ export default function ContentEditorPage() {
                   rows={4}
                 />
               </div>
-              <Button 
-                onClick={handleGenerateContent} 
-                disabled={contentLoading || imageLoading}
-                className="w-full"
-              >
-                {contentLoading ? 'Generating Content...' : 'Generate Content'}
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={handleGenerateImage} 
-                disabled={imageLoading || contentLoading || !title.trim()}
-                className="w-full"
-              >
-                {imageLoading ? 'Generating Image...' : 'Generate Image'}
-              </Button>
+                     <Button 
+                       onClick={handleGenerateContent} 
+                       disabled={contentLoading || imageLoading}
+                       className="w-full"
+                     >
+                       {contentLoading || imageLoading ? 'Generating Complete Package...' : 'Generate Complete Package'}
+                     </Button>
             </CardContent>
           </Card>
         </div>
@@ -277,57 +271,80 @@ export default function ContentEditorPage() {
                 />
               </div>
               
-              {/* Excerpt */}
-              {excerpt && (
-                <div className="space-y-2">
-                  <Label htmlFor="excerpt">Excerpt</Label>
-                  <Textarea
-                    id="excerpt"
-                    placeholder="Post excerpt..."
-                    value={excerpt}
-                    onChange={(e) => setExcerpt(e.target.value)}
-                    rows={3}
-                    className="text-sm"
-                  />
-                </div>
-              )}
+                     <div className="space-y-2">
+                       <Label htmlFor="content">Content</Label>
+                       <Textarea
+                         id="content"
+                         placeholder="Write your post content here..."
+                         value={content}
+                         onChange={(e) => setContent(e.target.value)}
+                         rows={20}
+                         className="whitespace-pre-wrap"
+                       />
+                     </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
-                  placeholder="Write your post content here..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={20}
-                />
-              </div>
-              
-              {/* Generated Image Display */}
-              {generatedImageUrl && (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label>Generated Image</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setGeneratedImageUrl('')}
-                    >
-                      Remove Image
-                    </Button>
-                  </div>
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <img 
-                      src={generatedImageUrl} 
-                      alt="Generated content image" 
-                      className="max-w-full h-auto rounded-lg"
-                    />
-                    <p className="text-sm text-gray-600 mt-2">
-                      Image will be saved with your post
-                    </p>
-                  </div>
-                </div>
-              )}
+                     {/* Social Media Posts */}
+                     {Object.keys(socialPosts).length > 0 && (
+                       <div className="space-y-2">
+                         <Label>Social Media Posts</Label>
+                         <div className="space-y-3">
+                           {Object.entries(socialPosts).map(([platform, post]) => (
+                             <div key={platform} className="border border-gray-600 rounded-lg p-3 bg-gray-800">
+                               <div className="flex items-center gap-2 mb-2">
+                                 <span className="text-blue-400 font-semibold capitalize text-sm">{platform}</span>
+                               </div>
+                               <Textarea
+                                 value={post}
+                                 onChange={(e) => {
+                                   setSocialPosts(prev => ({
+                                     ...prev,
+                                     [platform]: e.target.value
+                                   }))
+                                 }}
+                                 className="text-sm bg-gray-700 border-gray-600 text-white"
+                                 rows={3}
+                               />
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+
+                     {/* Generated Image Display */}
+                     {generatedImageUrl && (
+                       <div className="space-y-2">
+                         <div className="flex justify-between items-center">
+                           <Label>Generated Image</Label>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => setGeneratedImageUrl('')}
+                           >
+                             Remove Image
+                           </Button>
+                         </div>
+                         <div className="border border-gray-600 rounded-lg p-4 bg-gray-800">
+                           <img 
+                             src={generatedImageUrl} 
+                             alt="Generated content image" 
+                             className="max-w-full h-auto rounded-lg"
+                             onError={(e) => {
+                               console.error('Image failed to load:', generatedImageUrl)
+                               e.currentTarget.style.display = 'none'
+                             }}
+                             onLoad={() => {
+                               console.log('Image loaded successfully:', generatedImageUrl)
+                             }}
+                           />
+                           <p className="text-sm text-gray-300 mt-2">
+                             Image URL: {generatedImageUrl.substring(0, 50)}...
+                           </p>
+                           <p className="text-sm text-gray-300">
+                             Image will be saved with your post
+                           </p>
+                         </div>
+                       </div>
+                     )}
               <div className="flex justify-between">
                 <Button 
                   variant="outline" 

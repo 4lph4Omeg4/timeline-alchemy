@@ -12,8 +12,19 @@ export const getOpenAI = () => {
   })
 }
 
-// Professional content foundation with subtle non-dual elements
-const CONTENT_FOUNDATION = `You are a professional content writer creating engaging, valuable content for businesses. Focus on delivering exactly what the user requests while maintaining a natural, authentic tone. When relevant and natural, incorporate themes of connection and unity, but never force these elements if they don't fit the content purpose.`
+  // Simple content foundation
+  const CONTENT_FOUNDATION = `You are a professional content writer. Write exactly what the user requests in a clear, engaging way.
+
+CRITICAL OUTPUT REQUIREMENTS:
+- Write ONLY the actual content, no labels or prefixes
+- NEVER start with "Title:", "Introduction:", "Content:", "Conclusion:", etc.
+- NEVER use markdown formatting (#, **, *, etc.)
+- Write clean, professional text ready for immediate use
+- Each paragraph should be 3-5 sentences with proper spacing
+- Make it copy-paste ready for any platform
+- Focus ONLY on the specific topic requested
+- Do NOT add unrelated concepts or random business terms
+- Write in the same language as the prompt`
 
 // Business-specific prompt configurations
 const BUSINESS_PROMPTS: Record<BusinessType, {
@@ -24,56 +35,56 @@ const BUSINESS_PROMPTS: Record<BusinessType, {
   adaptation: string
 }> = {
   camperdealer: {
-    systemPrompt: `${CONTENT_FOUNDATION} Focus on adventure, freedom, travel, family memories, and the camper lifestyle. When relevant, naturally incorporate themes of connection and shared experiences.`,
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on adventure, freedom, travel, family memories, and the camper lifestyle. Let the natural unity of family adventures and shared experiences emerge organically.`,
     keywords: ['camper', 'RV', 'caravan', 'reizen', 'avontuur', 'vrijheid', 'familie', 'vakantie', 'outdoor'],
     hashtags: ['#camper', '#RV', '#reizen', '#avontuur', '#vrijheid', '#familie', '#vakantie'],
     tone: 'adventurous and authentic',
     adaptation: 'Focus on the practical benefits and experiences of camper travel'
   },
   tankstation: {
-    systemPrompt: `${CONTENT_FOUNDATION} Focus on convenience, 24/7 service, fuel efficiency, local community, and quick stops. When relevant, naturally incorporate themes of community and connection.`,
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on convenience, 24/7 service, fuel efficiency, local community, and quick stops. Let the natural interconnectedness of community service emerge naturally.`,
     keywords: ['tankstation', 'benzine', 'diesel', '24/7', 'gemak', 'lokale service', 'onderweg', 'snack'],
     hashtags: ['#tankstation', '#24/7', '#gemak', '#lokale service', '#onderweg'],
     tone: 'convenient and reliable',
     adaptation: 'Focus on practical service benefits and community value'
   },
   restaurant: {
-    systemPrompt: `${CONTENT_FOUNDATION} Focus on food quality, atmosphere, local ingredients, customer experience, and culinary expertise. When relevant, naturally incorporate themes of shared experiences and community.`,
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on food quality, atmosphere, local ingredients, customer experience, and culinary expertise. Let the natural unity of shared meals and community emerge organically.`,
     keywords: ['restaurant', 'eten', 'culinair', 'lokaal', 'kwaliteit', 'atmosfeer', 'gastvrijheid'],
     hashtags: ['#restaurant', '#eten', '#culinair', '#lokaal', '#kwaliteit'],
     tone: 'warm and authentic',
     adaptation: 'Focus on culinary excellence and customer experience'
   },
   retail: {
-    systemPrompt: `${CONTENT_FOUNDATION} Focus on product quality, customer service, shopping experience, and value. When relevant, naturally incorporate themes of meeting customer needs.`,
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on product quality, customer service, shopping experience, and value.`,
     keywords: ['winkel', 'producten', 'kwaliteit', 'klantenservice', 'shopping', 'waarde'],
     hashtags: ['#winkel', '#producten', '#kwaliteit', '#shopping'],
     tone: 'helpful and value-focused',
     adaptation: 'Focus on product value and customer satisfaction'
   },
   service: {
-    systemPrompt: `${CONTENT_FOUNDATION} Focus on expertise, reliability, customer satisfaction, and professional service. When relevant, naturally incorporate themes of trust and support.`,
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on expertise, reliability, customer satisfaction, and professional service.`,
     keywords: ['service', 'expertise', 'betrouwbaar', 'professioneel', 'kwaliteit', 'klanttevredenheid'],
     hashtags: ['#service', '#expertise', '#betrouwbaar', '#professioneel'],
     tone: 'professional and trustworthy',
     adaptation: 'Focus on service quality and customer satisfaction'
   },
   hospitality: {
-    systemPrompt: `${CONTENT_FOUNDATION} Focus on comfort, guest experience, amenities, and memorable stays. When relevant, naturally incorporate themes of care and hospitality.`,
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on comfort, guest experience, amenities, and memorable stays.`,
     keywords: ['hotel', 'accommodatie', 'gastvrijheid', 'comfort', 'ervaring', 'faciliteiten'],
     hashtags: ['#hotel', '#accommodatie', '#gastvrijheid', '#comfort'],
     tone: 'welcoming and comfortable',
     adaptation: 'Focus on guest comfort and memorable experiences'
   },
   automotive: {
-    systemPrompt: `${CONTENT_FOUNDATION} Focus on reliability, performance, safety, and customer service. When relevant, naturally incorporate themes of freedom and mobility.`,
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on reliability, performance, safety, and customer service.`,
     keywords: ['auto', 'garage', 'onderhoud', 'betrouwbaar', 'veiligheid', 'prestaties'],
     hashtags: ['#auto', '#garage', '#onderhoud', '#betrouwbaar'],
     tone: 'reliable and expert',
     adaptation: 'Focus on vehicle reliability and customer service'
   },
   general: {
-    systemPrompt: `${CONTENT_FOUNDATION} Focus on value, customer service, and quality. When relevant, naturally incorporate themes of mutual benefit and exchange.`,
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on value, customer service, and quality. Let the natural interconnectedness of business relationships emerge authentically.`,
     keywords: ['kwaliteit', 'service', 'klanttevredenheid', 'waarde'],
     hashtags: ['#kwaliteit', '#service', '#klanttevredenheid'],
     tone: 'professional and helpful',
@@ -111,55 +122,34 @@ interface GeneratedContent {
 export async function generateContent(request: AIGenerateRequest): Promise<AIGenerateResponse> {
   const { prompt, type, tone = 'professional', length = 'medium', platform, businessProfile } = request
 
-  let systemPrompt = ''
-  let userPrompt = ''
-  let hashtags: string[] = []
-
-  // Get business-specific configuration
-  const businessConfig = businessProfile ? BUSINESS_PROMPTS[businessProfile.type] : BUSINESS_PROMPTS.general
+  // Create simple system prompt without business-specific configurations
+  const systemPrompt = `${CONTENT_FOUNDATION}
   
-  if (type === 'blog') {
-    systemPrompt = `${businessConfig.systemPrompt} 
-    Write in a ${tone} tone. Create content that is ${length} in length. 
-    ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
-    ${businessConfig.adaptation}
-    Most importantly: Deliver exactly what the user is asking for in their prompt. Use relevant keywords: ${businessConfig.keywords.join(', ')}.
-    
-    FORMATTING REQUIREMENTS:
-    - Write a clear, engaging title
-    - Create well-structured paragraphs (3-5 sentences each)
-    - Use proper spacing between paragraphs
-    - Include a compelling introduction and conclusion
-    - Make content ready for immediate use on websites or social platforms
-    - Ensure proper line breaks and formatting
-    - NO markdown formatting (no #, **, *, etc.)
-    - Use plain text with proper paragraph breaks
-    - Content should be copy-paste ready without any formatting issues`
-    
-    userPrompt = `Write a blog post about: ${prompt}`
-    hashtags = businessConfig.hashtags
-  } else {
-    const platformSpecific = platform ? ` for ${platform}` : ''
-    systemPrompt = `${businessConfig.systemPrompt} 
-    You are a social media expert creating engaging posts${platformSpecific}. 
-    Write in a ${tone} tone. Keep it ${length} and engaging.
-    ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
-    ${businessConfig.adaptation}
-    Most importantly: Deliver exactly what the user is asking for in their prompt. Use relevant keywords: ${businessConfig.keywords.join(', ')}.
-    
-    FORMATTING REQUIREMENTS:
-    - Create engaging, platform-appropriate content
-    - Use proper line breaks for readability
-    - Include relevant hashtags naturally
-    - Make content ready for immediate posting
-    - Ensure proper formatting for the target platform
-    - NO markdown formatting (no #, **, *, etc.)
-    - Use plain text with proper line breaks
-    - Content should be copy-paste ready`
-    
-    userPrompt = `Create a social media post about: ${prompt}`
-    hashtags = businessConfig.hashtags
-  }
+Write in a ${tone} tone. Create content that is ${length} in length.
+Focus on the specific topic requested without adding unrelated business concepts.`
+
+  // Create unified user prompt
+  const userPrompt = type === 'blog' 
+    ? `Create a professional blog post about: ${prompt}
+
+IMPORTANT OUTPUT FORMAT:
+- Start with a clear, engaging title (no "Title:" label, just the title)
+- Follow with the content in clean paragraphs
+- Write MINIMUM 3 paragraphs with proper spacing
+- Each paragraph should be 3-5 sentences
+- Leave ONE EMPTY LINE between each paragraph
+- End with a strong conclusion
+- Make it ready to copy and paste directly into any platform
+- NO formatting markers, NO labels, NO prefixes`
+    : `Create a social media post about: ${prompt}
+
+IMPORTANT OUTPUT FORMAT:
+- Start directly with the post content, NO labels like "Title:", "Post:", etc.
+- Write engaging, platform-appropriate content
+- Include relevant hashtags naturally
+- Make it ready to copy and paste directly into ${platform || 'the platform'}
+- NO formatting markers, NO labels, NO prefixes
+- Keep it concise and engaging`
 
   try {
     const openai = getOpenAI()
@@ -179,31 +169,28 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
       // Improved content parsing for blog posts
       const lines = content.split('\n').filter(line => line.trim())
       
-      // Find title (usually first non-empty line, or marked with #)
+      // Find title (first non-empty line, should be the title)
       let title = 'Untitled'
       let contentStartIndex = 0
       
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (line.startsWith('#')) {
-          title = line.replace(/^#+\s*/, '')
-          contentStartIndex = i + 1
-          break
-        } else if (i === 0 && line.length > 0 && line.length < 100) {
-          // First line might be title if it's short
-          title = line
-          contentStartIndex = 1
-          break
-        }
+      if (lines.length > 0) {
+        // First line is the title
+        title = lines[0].trim()
+        contentStartIndex = 1
       }
       
       // Extract content (everything after title)
       const contentLines = lines.slice(contentStartIndex)
       let blogContent = contentLines.join('\n\n').trim()
       
-      // Clean up formatting
+      // Ensure proper paragraph spacing
       blogContent = blogContent
+        .replace(/\n\n/g, '\n\n') // Ensure double line breaks between paragraphs
         .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
+      
+      // Clean up formatting and remove all labels while preserving paragraph structure
+      blogContent = blogContent
+        .replace(/\n{3,}/g, '\n\n') // Keep max 2 line breaks between paragraphs
         .replace(/^\s+|\s+$/g, '') // Trim whitespace
         .replace(/\n\s+/g, '\n') // Remove leading spaces from lines
         .replace(/^#+\s*/gm, '') // Remove markdown headers
@@ -213,6 +200,8 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
         .replace(/^\d+\.\s*/gm, '') // Remove numbered lists
         .replace(/^[-*]\s*/gm, '') // Remove bullet points
+        .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
+        .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
         .trim()
       
       // Generate excerpt (first 150 characters of content)
@@ -222,11 +211,11 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
         content: blogContent,
         title,
         excerpt,
-        hashtags: hashtags.length > 0 ? hashtags : undefined,
+        hashtags: undefined,
         suggestions: generateSuggestions(blogContent),
       }
     } else {
-      // For social posts, clean up formatting
+      // For social posts, clean up formatting and remove labels
       const cleanedContent = content
         .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
         .replace(/^\s+|\s+$/g, '') // Trim whitespace
@@ -235,13 +224,13 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
         .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
         .replace(/`(.*?)`/g, '$1') // Remove code markdown
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
+        .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
+        .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
         .trim()
-      
-      const finalHashtags = hashtags.length > 0 ? hashtags : generateHashtags(prompt, platform)
       
       return {
         content: cleanedContent,
-        hashtags: finalHashtags,
+        hashtags: generateHashtags(prompt, platform),
         suggestions: generateSuggestions(cleanedContent),
       }
     }

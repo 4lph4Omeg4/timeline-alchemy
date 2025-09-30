@@ -122,34 +122,72 @@ export default function AdminCreatePackagePage() {
         }
       }
 
-      // Create the package (available to all users in the organization)
-      const { data: packageData, error: packageError } = await supabase
-        .from('blog_posts')
-        .insert({
-          org_id: orgMember.org_id,
-          title: finalTitle,
-          content: finalContent,
-          state: 'draft',
-          created_by_admin: true,
-        })
-        .select()
-        .single()
+      // If using existing content, copy ALL existing data (including images and social posts)
+      if (useExistingContent) {
+        const selectedPost = existingContent.find(post => post.id === selectedContent)
+        if (selectedPost) {
+          // Create package with ALL existing data
+          const { data: packageData, error: packageError } = await supabase
+            .from('blog_posts')
+            .insert({
+              org_id: orgMember.org_id,
+              title: selectedPost.title,
+              content: selectedPost.content,
+              excerpt: selectedPost.excerpt,
+              social_posts: selectedPost.social_posts,
+              state: 'draft',
+              created_by_admin: true,
+            })
+            .select()
+            .single()
 
-      if (packageError) {
-        console.error('Error creating package:', packageError)
-        toast.error('Failed to create package')
-        return
-      }
+          if (packageError) {
+            console.error('Error creating package:', packageError)
+            toast.error('Failed to create package')
+            return
+          }
 
-      // Generate and save an image for the package
-      try {
-        toast.loading('Generating image for package...', { id: 'image-generation' })
-        const imageUrl = await generateAndSaveImage(finalTitle, packageData.id, orgMember.org_id)
-        toast.success('Package created with image successfully!', { id: 'image-generation' })
-      } catch (imageError) {
-        console.error('Error generating image:', imageError)
-        toast.dismiss('image-generation')
-        toast.success('Package created successfully! (Image generation failed)')
+          // Copy ALL existing images
+          const { data: existingImages } = await supabase
+            .from('images')
+            .select('*')
+            .eq('post_id', selectedPost.id)
+
+          if (existingImages && existingImages.length > 0) {
+            for (const image of existingImages) {
+              await supabase
+                .from('images')
+                .insert({
+                  org_id: orgMember.org_id,
+                  post_id: packageData.id,
+                  url: image.url,
+                })
+            }
+          }
+
+          toast.success('Package created with existing content!')
+        }
+      } else {
+        // For new content, just create basic package
+        const { data: packageData, error: packageError } = await supabase
+          .from('blog_posts')
+          .insert({
+            org_id: orgMember.org_id,
+            title: finalTitle,
+            content: finalContent,
+            state: 'draft',
+            created_by_admin: true,
+          })
+          .select()
+          .single()
+
+        if (packageError) {
+          console.error('Error creating package:', packageError)
+          toast.error('Failed to create package')
+          return
+        }
+
+        toast.success('Package created!')
       }
 
       router.push('/dashboard/admin/packages')
