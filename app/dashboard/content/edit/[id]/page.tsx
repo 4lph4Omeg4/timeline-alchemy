@@ -124,6 +124,26 @@ export default function ContentEditPage() {
         })
         .eq('id', params.id)
 
+      // Update social posts
+      if (Object.keys(socialPosts).length > 0) {
+        // Delete existing social posts
+        await supabase
+          .from('social_posts')
+          .delete()
+          .eq('post_id', params.id)
+
+        // Insert updated social posts
+        for (const [platform, content] of Object.entries(socialPosts)) {
+          await supabase
+            .from('social_posts')
+            .insert({
+              post_id: params.id,
+              platform,
+              content
+            })
+        }
+      }
+
       if (error) {
         console.error('Error updating post:', error)
         toast.error('Failed to save changes')
@@ -253,16 +273,26 @@ export default function ContentEditPage() {
           )}
 
           {/* Social Media Posts */}
-          {(Object.keys(socialPosts).length > 0 || post?.social_posts) && (
+          {Object.keys(socialPosts).length > 0 && (
             <div>
               <Label className="text-white">Social Media Posts</Label>
               <div className="mt-2 space-y-4">
-                {Object.entries(socialPosts || post?.social_posts || {}).map(([platform, post]) => (
+                {Object.entries(socialPosts).map(([platform, post]) => (
                   <div key={platform} className="p-4 bg-gray-800 border border-gray-700 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-blue-400 font-semibold capitalize">{platform}</span>
                     </div>
-                    <p className="text-gray-300 text-sm">{post}</p>
+                    <Textarea
+                      value={post}
+                      onChange={(e) => {
+                        setSocialPosts(prev => ({
+                          ...prev,
+                          [platform]: e.target.value
+                        }))
+                      }}
+                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                      rows={3}
+                    />
                   </div>
                 ))}
               </div>
