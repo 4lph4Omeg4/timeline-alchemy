@@ -43,7 +43,7 @@ TikTok:
 Requirements:
 - Facebook: Engaging, conversational tone, 1-2 paragraphs, include relevant hashtags
 - Instagram: Visual, emoji-rich, 1-2 sentences, include 5-10 relevant hashtags
-- Twitter: Concise, punchy, under 280 characters, include 2-3 relevant hashtags
+- Twitter: CRITICAL - Must be under 280 characters total, concise and punchy, include 2-3 short hashtags
 - LinkedIn: Professional, business-focused, 1-2 paragraphs, include 3-5 relevant hashtags
 - TikTok: Trendy, engaging, short and punchy, include 3-5 trending hashtags
 
@@ -111,7 +111,9 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
             socialPosts.instagram = `✨ ${title} ✨\n\n${content.substring(0, 150)}...\n\n#AI #Content #Inspiration #Digital #Innovation`
             break
           case 'twitter':
-            socialPosts.twitter = `${title}\n\n${content.substring(0, 100)}...\n\n#AI #Content #Tech`
+            const shortContent = content.substring(0, 150).replace(/\n/g, ' ').trim()
+            const twitterPost = `${title}\n\n${shortContent}...\n\n#AI #Content`
+            socialPosts.twitter = twitterPost.length > 280 ? `${title}\n\n${shortContent.substring(0, 200)}...\n\n#AI` : twitterPost
             break
           case 'linkedin':
             socialPosts.linkedin = `Professional insight: ${title}\n\n${content.substring(0, 180)}...\n\n#Professional #AI #Content #Business`
@@ -121,6 +123,12 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
             break
         }
       }
+    }
+
+    // Post-processing: Ensure Twitter posts are under 280 characters
+    if (socialPosts.twitter && socialPosts.twitter.length > 280) {
+      const shortContent = content.substring(0, 100).replace(/\n/g, ' ').trim()
+      socialPosts.twitter = `${title}\n\n${shortContent}...\n\n#AI`
     }
 
     console.log('Final social posts:', socialPosts) // Debug logging
