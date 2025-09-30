@@ -13,6 +13,39 @@ import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
+// Function to generate proper social media posts
+const generateSocialMediaPosts = async (title: string, content: string) => {
+  try {
+    const response = await fetch('/api/generate-social-posts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title,
+        content,
+        platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+      })
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      return data.socialPosts
+    }
+  } catch (error) {
+    console.error('Error generating social posts:', error)
+  }
+
+  // Fallback to simple posts if AI generation fails
+  return {
+    facebook: `Check out this amazing content: ${title}\n\n${content.substring(0, 200)}...`,
+    instagram: `✨ ${title} ✨\n\n${content.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
+    twitter: `${title}\n\n${content.substring(0, 100)}...\n\n#AI #Content`,
+    linkedin: `Professional insight: ${title}\n\n${content.substring(0, 180)}...\n\n#Professional #AI #Content`,
+    tiktok: `${title} 🚀\n\n${content.substring(0, 120)}...\n\n#AI #Trending #Content`
+  }
+}
+
 interface GeneratedContent {
   blogPost: {
     title: string
@@ -42,6 +75,36 @@ export default function ContentPackagePage() {
   const [ratings, setRatings] = useState<any[]>([])
   const [userRating, setUserRating] = useState<any>(null)
   const [showRatingForm, setShowRatingForm] = useState(false)
+  const [regeneratingSocial, setRegeneratingSocial] = useState(false)
+
+  const handleRegenerateSocialPosts = async () => {
+    if (!post) return
+    
+    setRegeneratingSocial(true)
+    try {
+      const cleanContent = post.content.replace(/^[\s\S]*?Content:\s*/, '').trim()
+      const socialPosts = await generateSocialMediaPosts(post.title, cleanContent)
+      
+      // Update the database
+      await supabase
+        .from('blog_posts')
+        .update({ social_posts: socialPosts })
+        .eq('id', post.id)
+      
+      // Update the local state
+      setGeneratedContent(prev => prev ? {
+        ...prev,
+        socialPosts
+      } : null)
+      
+      toast.success('Social media posts regenerated!')
+    } catch (error) {
+      console.error('Error regenerating social posts:', error)
+      toast.error('Failed to regenerate social posts')
+    } finally {
+      setRegeneratingSocial(false)
+    }
+  }
 
   useEffect(() => {
     if (params.id) {
@@ -100,16 +163,37 @@ export default function ContentPackagePage() {
         .eq('post_id', params.id)
         .or(`org_id.eq.${orgMember.org_id},and(post_id.eq.${params.id})`)
 
-      // Extract the actual excerpt from the content
-      const excerptMatch = postData.content.match(/^([\s\S]*?)(?=Content:|$)/);
-      const actualExcerpt = excerptMatch ? excerptMatch[1].trim() : postData.content;
+      // Extract the actual excerpt from the content (first 150 characters)
+      const cleanContent = postData.content.replace(/^[\s\S]*?Content:\s*/, '').trim()
+      const actualExcerpt = cleanContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
+
+      // Generate proper social media posts using AI (only if not already generated)
+      let socialPosts
+      if (postData.social_posts) {
+        // Use existing social posts from database
+        socialPosts = postData.social_posts
+      } else {
+        // Generate new social posts and save them
+        socialPosts = await generateSocialMediaPosts(postData.title, cleanContent)
+        
+        // Try to save the generated social posts to the database
+        try {
+          await supabase
+            .from('blog_posts')
+            .update({ social_posts: socialPosts })
+            .eq('id', postData.id)
+        } catch (error) {
+          console.log('Could not save social posts to database (column might not exist yet):', error)
+          // Continue without saving - this is not critical
+        }
+      }
 
       // For now, we'll create a mock generated content structure
       // In a real app, you might store the complete generated content in the database
       const mockGeneratedContent: GeneratedContent = {
         blogPost: {
           title: postData.title,
-          content: postData.content,
+          content: cleanContent,
           excerpt: actualExcerpt,
           tags: ['AI Generated', 'Content Package']
         },
@@ -120,13 +204,7 @@ export default function ContentPackagePage() {
           url: '',
           prompt: ''
         },
-        socialPosts: {
-          facebook: `Check out this amazing content: ${postData.title}\n\n${postData.content.substring(0, 200)}...`,
-          instagram: `✨ ${postData.title} ✨\n\n${postData.content.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
-          twitter: `${postData.title}\n\n${postData.content.substring(0, 100)}...\n\n#AI #Content`,
-          linkedin: `Professional insight: ${postData.title}\n\n${postData.content.substring(0, 180)}...\n\n#Professional #AI #Content`,
-          tiktok: `${postData.title} 🚀\n\n${postData.content.substring(0, 120)}...\n\n#AI #Trending #Content`
-        }
+        socialPosts: socialPosts
       }
 
       setGeneratedContent(mockGeneratedContent)
@@ -314,11 +392,11 @@ export default function ContentPackagePage() {
         <CardContent className="space-y-4">
           <div className="prose prose-invert max-w-none">
             <div 
-              className="text-gray-300 leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ 
-                __html: post.content.replace(/^[\s\S]*?Content:\s*/, '') 
-              }}
-            />
+              className="text-gray-300 leading-relaxed whitespace-pre-wrap select-all"
+              style={{ maxHeight: 'none', overflow: 'visible' }}
+            >
+              {generatedContent.blogPost.content}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -350,10 +428,22 @@ export default function ContentPackagePage() {
       {/* Social Media Posts */}
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
-          <CardDescription className="text-gray-300">
-            Platform-optimized posts ready for publishing
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
+              <CardDescription className="text-gray-300">
+                Platform-optimized posts ready for publishing
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerateSocialPosts}
+              disabled={regeneratingSocial}
+            >
+              {regeneratingSocial ? 'Regenerating...' : '🔄 Regenerate Posts'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Facebook */}
@@ -365,7 +455,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">Facebook</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300">{generatedContent.socialPosts.facebook}</p>
+              <p className="text-gray-300 select-all">{generatedContent.socialPosts.facebook}</p>
             </div>
           </div>
 
@@ -380,7 +470,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">Instagram</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300">{generatedContent.socialPosts.instagram}</p>
+              <p className="text-gray-300 select-all">{generatedContent.socialPosts.instagram}</p>
             </div>
           </div>
 
@@ -395,7 +485,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">Twitter/X</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300">{generatedContent.socialPosts.twitter}</p>
+              <p className="text-gray-300 select-all">{generatedContent.socialPosts.twitter}</p>
             </div>
           </div>
 
@@ -410,7 +500,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">LinkedIn</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300">{generatedContent.socialPosts.linkedin}</p>
+              <p className="text-gray-300 select-all">{generatedContent.socialPosts.linkedin}</p>
             </div>
           </div>
 
@@ -425,7 +515,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">TikTok</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300">{generatedContent.socialPosts.tiktok}</p>
+              <p className="text-gray-300 select-all">{generatedContent.socialPosts.tiktok}</p>
             </div>
           </div>
         </CardContent>
