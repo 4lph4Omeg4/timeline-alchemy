@@ -21,6 +21,8 @@ export default function ContentEditPage() {
   const [saving, setSaving] = useState(false)
   const [post, setPost] = useState<BlogPost | null>(null)
   const [postImages, setPostImages] = useState<string[]>([])
+  const [excerpt, setExcerpt] = useState('')
+  const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (params.id) {
@@ -71,6 +73,8 @@ export default function ContentEditPage() {
       setPost(postData)
       setTitle(postData.title)
       setContent(postData.content)
+      setExcerpt(postData.excerpt || '')
+      setSocialPosts(postData.social_posts || {})
 
       // Fetch images for this post
       const { data: images, error: imagesError } = await supabase
@@ -224,6 +228,33 @@ export default function ContentEditPage() {
               rows={20}
             />
           </div>
+
+          {/* Excerpt */}
+          {excerpt && (
+            <div>
+              <Label className="text-white">Excerpt</Label>
+              <div className="mt-2 p-4 bg-gray-800 border border-gray-700 rounded-lg">
+                <p className="text-gray-300 italic">{excerpt}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Social Media Posts */}
+          {Object.keys(socialPosts).length > 0 && (
+            <div>
+              <Label className="text-white">Social Media Posts</Label>
+              <div className="mt-2 space-y-4">
+                {Object.entries(socialPosts).map(([platform, post]) => (
+                  <div key={platform} className="p-4 bg-gray-800 border border-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-blue-400 font-semibold capitalize">{platform}</span>
+                    </div>
+                    <p className="text-gray-300 text-sm">{post}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Post Images */}
           {postImages.length > 0 && (

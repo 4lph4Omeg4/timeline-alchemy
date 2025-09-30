@@ -165,32 +165,18 @@ export default function ContentPackagePage() {
 
       console.log('Fetched images for post:', images)
 
-      // Use existing content directly - no generation, no processing
-      const cleanContent = postData.content
-        .replace(/^[\s\S]*?Content:\s*/, '') // Remove "Content:" prefix if it exists
-        .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
-        .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
-        .trim()
-      
-      // Use existing excerpt or create simple one
-      const actualExcerpt = postData.excerpt || cleanContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
+             // Use existing content directly - no generation, no processing
+             const cleanContent = postData.content
+               .replace(/^[\s\S]*?Content:\s*/, '') // Remove "Content:" prefix if it exists
+               .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
+               .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
+               .trim()
+             
+             // Always use existing excerpt from database
+             const actualExcerpt = postData.excerpt || ''
 
-      // Use existing social posts or create simple fallback
-      let socialPosts
-      if (postData.social_posts && Object.keys(postData.social_posts).length > 0) {
-        socialPosts = postData.social_posts
-        console.log('Using existing social posts from database')
-      } else {
-        // Simple fallback posts - no AI generation
-        console.log('Using simple fallback social posts')
-        socialPosts = {
-          facebook: `Check out this content: ${postData.title}`,
-          instagram: `✨ ${postData.title} ✨`,
-          twitter: `${postData.title}`,
-          linkedin: `Professional insight: ${postData.title}`,
-          tiktok: `${postData.title} 🚀`
-        }
-      }
+             // Always use existing social posts from database
+             const socialPosts = postData.social_posts || {}
 
       // For now, we'll create a mock generated content structure
       // In a real app, you might store the complete generated content in the database
@@ -356,25 +342,27 @@ export default function ContentPackagePage() {
         </div>
       </div>
 
-      {/* Excerpt */}
-      <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <span className="text-blue-400">📖</span>
-            Article Excerpt
-          </CardTitle>
-          <CardDescription className="text-gray-300">
-            A preview of this article's key insights
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-            <p className="text-gray-200 leading-relaxed text-lg italic">
-              {generatedContent.blogPost.excerpt}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+             {/* Excerpt */}
+             {actualExcerpt && (
+               <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30">
+                 <CardHeader>
+                   <CardTitle className="text-white flex items-center gap-2">
+                     <span className="text-blue-400">📖</span>
+                     Article Excerpt
+                   </CardTitle>
+                   <CardDescription className="text-gray-300">
+                     A preview of this article's key insights
+                   </CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                     <p className="text-gray-200 leading-relaxed text-lg italic">
+                       {actualExcerpt}
+                     </p>
+                   </div>
+                 </CardContent>
+               </Card>
+             )}
 
       {/* Blog Post */}
       <Card className="bg-gray-900 border-gray-800">
@@ -429,27 +417,28 @@ export default function ContentPackagePage() {
         </Card>
       )}
 
-      {/* Social Media Posts */}
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
-              <CardDescription className="text-gray-300">
-                Platform-optimized posts ready for publishing
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRegenerateSocialPosts}
-              disabled={regeneratingSocial}
-            >
-              {regeneratingSocial ? 'Regenerating...' : '🔄 Regenerate Posts'}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
+             {/* Social Media Posts */}
+             {Object.keys(socialPosts).length > 0 && (
+               <Card className="bg-gray-900 border-gray-800">
+                 <CardHeader>
+                   <div className="flex justify-between items-start">
+                     <div>
+                       <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
+                       <CardDescription className="text-gray-300">
+                         Platform-optimized posts ready for publishing
+                       </CardDescription>
+                     </div>
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={handleRegenerateSocialPosts}
+                       disabled={regeneratingSocial}
+                     >
+                       {regeneratingSocial ? 'Regenerating...' : '🔄 Regenerate Posts'}
+                     </Button>
+                   </div>
+                 </CardHeader>
+                 <CardContent className="space-y-6">
           {/* Facebook */}
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -524,6 +513,7 @@ export default function ContentPackagePage() {
           </div>
         </CardContent>
       </Card>
+             )}
 
       {/* Publishing Options */}
       <Card className="bg-gray-900 border-gray-800">
