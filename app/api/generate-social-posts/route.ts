@@ -127,8 +127,23 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
 
     // Post-processing: Ensure Twitter posts are under 280 characters
     if (socialPosts.twitter && socialPosts.twitter.length > 280) {
-      const shortContent = content.substring(0, 100).replace(/\n/g, ' ').trim()
-      socialPosts.twitter = `${title}\n\n${shortContent}...\n\n#AI`
+      // Create a very short Twitter post
+      const shortTitle = title.length > 50 ? title.substring(0, 50) + '...' : title
+      const shortContent = content.substring(0, 150).replace(/\n/g, ' ').trim()
+      const hashtags = '#AI #Content'
+      
+      // Calculate available space for content
+      const availableSpace = 280 - shortTitle.length - hashtags.length - 10 // 10 for spacing
+      const finalContent = shortContent.length > availableSpace ? 
+        shortContent.substring(0, availableSpace) + '...' : 
+        shortContent
+      
+      socialPosts.twitter = `${shortTitle}\n\n${finalContent}\n\n${hashtags}`
+      
+      // Final safety check - if still too long, make it even shorter
+      if (socialPosts.twitter.length > 280) {
+        socialPosts.twitter = `${shortTitle}\n\n${shortContent.substring(0, 100)}...\n\n#AI`
+      }
     }
 
     console.log('Final social posts:', socialPosts) // Debug logging
