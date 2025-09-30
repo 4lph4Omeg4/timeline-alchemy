@@ -175,6 +175,7 @@ IMPORTANT OUTPUT FORMAT:
     })
 
     const content = completion.choices[0]?.message?.content || ''
+    console.log('Raw AI content:', JSON.stringify(content)) // Debug logging
 
     if (type === 'blog') {
       // Improved content parsing for blog posts
@@ -190,32 +191,18 @@ IMPORTANT OUTPUT FORMAT:
         contentStartIndex = 1
       }
       
-      // Extract content (everything after title)
-      const contentLines = lines.slice(contentStartIndex)
-      let blogContent = contentLines.join('\n').trim()
+      // Use raw content as-is - NO PARSING AT ALL
+      let blogContent = content
       
-      // Preserve paragraph spacing - don't remove line breaks
-      blogContent = blogContent
-        .replace(/\n{4,}/g, '\n\n\n') // Keep max 3 line breaks (title + 2 empty lines)
-        .replace(/\n{3,}/g, '\n\n') // Keep max 2 line breaks between paragraphs
+      // Only remove the title line if it exists
+      if (lines.length > 0) {
+        const titleLine = lines[0].trim()
+        if (titleLine) {
+          blogContent = content.replace(titleLine, '').trim()
+        }
+      }
       
-      // Clean up formatting and remove all labels while preserving paragraph structure
-      blogContent = blogContent
-        .replace(/\n{4,}/g, '\n\n\n') // Keep max 3 line breaks (preserve paragraph spacing)
-        .replace(/^\s+|\s+$/g, '') // Trim whitespace
-        .replace(/\n\s+/g, '\n') // Remove leading spaces from lines
-        .replace(/^#+\s*/gm, '') // Remove markdown headers
-        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
-        .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
-        .replace(/`(.*?)`/g, '$1') // Remove code markdown
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
-        .replace(/^\d+\.\s*/gm, '') // Remove numbered lists
-        .replace(/^[-*]\s*/gm, '') // Remove bullet points
-        .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
-        .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
-        // .replace(/([.!?])\s*([A-Z][a-z])/g, '$1\n\n$2') // Removed - causes too many line breaks
-        .replace(/\n{4,}/g, '\n\n\n') // Clean up excessive line breaks but preserve paragraph spacing
-        .trim()
+      console.log('Final blog content:', JSON.stringify(blogContent)) // Debug logging
       
       // Generate excerpt (first 150 characters of content)
       const excerpt = blogContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
