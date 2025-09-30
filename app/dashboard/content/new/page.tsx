@@ -160,15 +160,13 @@ export default function ContentEditorPage() {
         userOrgId = orgMembers[0].org_id
       }
 
-      // First save the blog post with excerpt and social posts
+      // First save the blog post (without excerpt/social_posts until database is updated)
       const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .insert({
           org_id: userOrgId,
           title,
           content,
-          excerpt: excerpt || content.substring(0, 150).replace(/\n/g, ' ').trim() + '...',
-          social_posts: Object.keys(socialPosts).length > 0 ? socialPosts : null,
           state: 'draft',
         })
         .select()
@@ -284,41 +282,68 @@ export default function ContentEditorPage() {
                 />
               </div>
               
-              {/* Generated Image Display */}
-              {generatedImageUrl && (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label>Generated Image</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setGeneratedImageUrl('')}
-                    >
-                      Remove Image
-                    </Button>
-                  </div>
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    <img 
-                      src={generatedImageUrl} 
-                      alt="Generated content image" 
-                      className="max-w-full h-auto rounded-lg"
-                      onError={(e) => {
-                        console.error('Image failed to load:', generatedImageUrl)
-                        e.currentTarget.style.display = 'none'
-                      }}
-                      onLoad={() => {
-                        console.log('Image loaded successfully:', generatedImageUrl)
-                      }}
-                    />
-                    <p className="text-sm text-gray-600 mt-2">
-                      Image URL: {generatedImageUrl.substring(0, 50)}...
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Image will be saved with your post
-                    </p>
-                  </div>
-                </div>
-              )}
+                     {/* Social Media Posts */}
+                     {Object.keys(socialPosts).length > 0 && (
+                       <div className="space-y-2">
+                         <Label>Social Media Posts</Label>
+                         <div className="space-y-3">
+                           {Object.entries(socialPosts).map(([platform, post]) => (
+                             <div key={platform} className="border rounded-lg p-3 bg-gray-50">
+                               <div className="flex items-center gap-2 mb-2">
+                                 <span className="text-blue-600 font-semibold capitalize text-sm">{platform}</span>
+                               </div>
+                               <Textarea
+                                 value={post}
+                                 onChange={(e) => {
+                                   setSocialPosts(prev => ({
+                                     ...prev,
+                                     [platform]: e.target.value
+                                   }))
+                                 }}
+                                 className="text-sm"
+                                 rows={3}
+                               />
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
+
+                     {/* Generated Image Display */}
+                     {generatedImageUrl && (
+                       <div className="space-y-2">
+                         <div className="flex justify-between items-center">
+                           <Label>Generated Image</Label>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={() => setGeneratedImageUrl('')}
+                           >
+                             Remove Image
+                           </Button>
+                         </div>
+                         <div className="border rounded-lg p-4 bg-gray-50">
+                           <img 
+                             src={generatedImageUrl} 
+                             alt="Generated content image" 
+                             className="max-w-full h-auto rounded-lg"
+                             onError={(e) => {
+                               console.error('Image failed to load:', generatedImageUrl)
+                               e.currentTarget.style.display = 'none'
+                             }}
+                             onLoad={() => {
+                               console.log('Image loaded successfully:', generatedImageUrl)
+                             }}
+                           />
+                           <p className="text-sm text-gray-600 mt-2">
+                             Image URL: {generatedImageUrl.substring(0, 50)}...
+                           </p>
+                           <p className="text-sm text-gray-600">
+                             Image will be saved with your post
+                           </p>
+                         </div>
+                       </div>
+                     )}
               <div className="flex justify-between">
                 <Button 
                   variant="outline" 
