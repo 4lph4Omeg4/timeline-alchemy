@@ -173,16 +173,15 @@ export default function ContentPackagePage() {
         // Use existing social posts from database
         socialPosts = postData.social_posts
         console.log('Using existing social posts from database')
-        } else {
-          // Use fallback posts for all cases to avoid AI generation delays
-          console.log('Using fallback social posts (no AI generation)')
-          socialPosts = {
-            facebook: `Check out this amazing content: ${postData.title}\n\n${cleanContent.substring(0, 200)}...`,
-            instagram: `✨ ${postData.title} ✨\n\n${cleanContent.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
-            twitter: `${postData.title}\n\n${cleanContent.substring(0, 100)}...\n\n#AI #Content`,
-            linkedin: `Professional insight: ${postData.title}\n\n${cleanContent.substring(0, 180)}...\n\n#Professional #AI #Content`,
-            tiktok: `${postData.title} 🚀\n\n${cleanContent.substring(0, 120)}...\n\n#AI #Trending #Content`
-          }
+      } else {
+        // Use fallback posts for all cases to avoid AI generation delays
+        console.log('Using fallback social posts (no AI generation)')
+        socialPosts = {
+          facebook: `Check out this amazing content: ${postData.title}\n\n${cleanContent.substring(0, 200)}...`,
+          instagram: `✨ ${postData.title} ✨\n\n${cleanContent.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
+          twitter: `${postData.title}\n\n${cleanContent.substring(0, 100)}...\n\n#AI #Content`,
+          linkedin: `Professional insight: ${postData.title}\n\n${cleanContent.substring(0, 180)}...\n\n#Professional #AI #Content`,
+          tiktok: `${postData.title} 🚀\n\n${cleanContent.substring(0, 120)}...\n\n#AI #Trending #Content`
         }
       }
 
