@@ -201,7 +201,7 @@ IMPORTANT OUTPUT FORMAT:
       
       // Clean up formatting and remove all labels while preserving paragraph structure
       blogContent = blogContent
-        .replace(/\n{3,}/g, '\n\n') // Keep max 2 line breaks between paragraphs
+        .replace(/\n{4,}/g, '\n\n\n') // Keep max 3 line breaks (preserve paragraph spacing)
         .replace(/^\s+|\s+$/g, '') // Trim whitespace
         .replace(/\n\s+/g, '\n') // Remove leading spaces from lines
         .replace(/^#+\s*/gm, '') // Remove markdown headers
