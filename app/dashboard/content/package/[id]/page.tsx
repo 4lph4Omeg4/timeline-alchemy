@@ -164,7 +164,11 @@ export default function ContentPackagePage() {
         .or(`org_id.eq.${orgMember.org_id},and(post_id.eq.${params.id})`)
 
       // Extract the actual excerpt from the content (first 150 characters)
-      const cleanContent = postData.content.replace(/^[\s\S]*?Content:\s*/, '').trim()
+      const cleanContent = postData.content
+        .replace(/^[\s\S]*?Content:\s*/, '') // Remove "Content:" prefix
+        .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
+        .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
+        .trim()
       const actualExcerpt = cleanContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
 
       // Generate proper social media posts using AI (only if not already generated)
