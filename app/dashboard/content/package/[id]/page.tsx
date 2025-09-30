@@ -181,7 +181,7 @@ export default function ContentPackagePage() {
                .select('platform, content')
                .eq('post_id', postData.id)
              
-             const socialPostsMap = {}
+             const socialPostsMap: Record<string, string> = {}
              if (socialPostsData) {
                socialPostsData.forEach(post => {
                  socialPostsMap[post.platform] = post.content
