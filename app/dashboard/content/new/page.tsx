@@ -86,6 +86,10 @@ export default function ContentEditorPage() {
         const imageData = await imageResponse.json()
         setGeneratedImageUrl(imageData.imageUrl)
         console.log('Image generated:', imageData.imageUrl)
+      } else {
+        const imageError = await imageResponse.text()
+        console.error('Image generation failed:', imageError)
+        toast.error('Image generation failed')
       }
       
       toast.success('Complete content package generated!')

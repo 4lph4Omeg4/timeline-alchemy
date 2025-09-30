@@ -143,7 +143,15 @@ Focus on the specific topic requested without adding unrelated business concepts
        - NO formatting markers, NO labels, NO prefixes
        - DO NOT repeat any content - each paragraph should be unique
        - DO NOT duplicate the first paragraph at the end
-       - Use double line breaks (\n\n) between paragraphs`
+       - CRITICAL: Use double line breaks (\n\n) between paragraphs
+       - Example format:
+         Title Here
+         
+         First paragraph content here.
+         
+         Second paragraph content here.
+         
+         Third paragraph content here.`
     : `Create a social media post about: ${prompt}
 
 IMPORTANT OUTPUT FORMAT:
