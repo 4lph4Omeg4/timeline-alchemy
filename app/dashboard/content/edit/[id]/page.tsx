@@ -75,7 +75,7 @@ export default function ContentEditPage() {
       setContent(postData.content)
       setExcerpt('') // Will be added after database update
       
-      // Use existing social posts from database only - no generation
+      // Use existing social posts from database only
       setSocialPosts(postData.social_posts || {})
 
       // Fetch images for this post

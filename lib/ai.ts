@@ -137,7 +137,7 @@ Focus on the specific topic requested without adding unrelated business concepts
        - Follow with the content in clean paragraphs
        - Write MINIMUM 3 paragraphs with proper spacing
        - Each paragraph should be 3-5 sentences
-       - Leave ONE EMPTY LINE between each paragraph
+       - Leave EXACTLY ONE EMPTY LINE between each paragraph (not more)
        - End with a strong conclusion
        - Make it ready to copy and paste directly into any platform
        - NO formatting markers, NO labels, NO prefixes
@@ -204,7 +204,7 @@ IMPORTANT OUTPUT FORMAT:
         .replace(/^[-*]\s*/gm, '') // Remove bullet points
         .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
         .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
-        .replace(/([.!?])\s*([A-Z][a-z])/g, '$1\n\n$2') // Ensure paragraph breaks after sentences
+        // .replace(/([.!?])\s*([A-Z][a-z])/g, '$1\n\n$2') // Removed - causes too many line breaks
         .replace(/\n{3,}/g, '\n\n') // Clean up excessive line breaks
         .trim()
       

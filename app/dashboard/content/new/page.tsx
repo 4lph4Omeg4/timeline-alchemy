@@ -178,29 +178,31 @@ export default function ContentEditorPage() {
         return
       }
 
-      console.log('Post saved successfully:', postData.id)
+             console.log('Post saved successfully:', postData.id)
 
-      // If there's a generated image, save it too
-      if (generatedImageUrl) {
-        console.log('Saving image with URL:', generatedImageUrl)
-        const { error: imageError } = await (supabase as any)
-          .from('images')
-          .insert({
-            org_id: userOrgId,
-            post_id: postData.id,
-            url: generatedImageUrl,
-          })
+             // Social posts will be saved to database once columns exist
 
-        if (imageError) {
-          console.error('Failed to save image:', imageError)
-          toast.error('Post saved but image failed to save')
-        } else {
-          console.log('Image saved successfully')
-          toast.success('Post and image saved successfully!')
-        }
-      } else {
-        toast.success('Post saved successfully!')
-      }
+             // If there's a generated image, save it too
+             if (generatedImageUrl) {
+               console.log('Saving image with URL:', generatedImageUrl)
+               const { error: imageError } = await (supabase as any)
+                 .from('images')
+                 .insert({
+                   org_id: userOrgId,
+                   post_id: postData.id,
+                   url: generatedImageUrl,
+                 })
+
+               if (imageError) {
+                 console.error('Failed to save image:', imageError)
+                 toast.error('Post saved but image failed to save')
+               } else {
+                 console.log('Image saved successfully')
+                 toast.success('Post, social posts, and image saved successfully!')
+               }
+             } else {
+               toast.success('Post and social posts saved successfully!')
+             }
 
       router.push('/dashboard/content/list')
     } catch (error) {

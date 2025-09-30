@@ -175,7 +175,7 @@ export default function ContentPackagePage() {
                .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
                .trim()
              
-             // Use existing social posts from database only - no generation
+             // Use existing social posts from database only
              setSocialPosts(postData.social_posts || {})
 
       // Set the actual generated content with real data
