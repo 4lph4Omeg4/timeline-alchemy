@@ -193,7 +193,7 @@ export default function ContentPackagePage() {
           url: '',
           prompt: ''
         },
-        socialPosts: socialPosts as any
+        socialPosts: socialPosts || {} as any
       }
 
       setGeneratedContent(actualGeneratedContent)
@@ -417,7 +417,7 @@ export default function ContentPackagePage() {
       )}
 
              {/* Social Media Posts */}
-             {Object.keys(socialPosts).length > 0 && (
+             {(Object.keys(socialPosts).length > 0 || (generatedContent && generatedContent.socialPosts)) && (
                <Card className="bg-gray-900 border-gray-800">
                  <CardHeader>
                    <div className="flex justify-between items-start">
