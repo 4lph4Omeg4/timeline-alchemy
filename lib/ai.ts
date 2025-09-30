@@ -132,15 +132,17 @@ Focus on the specific topic requested without adding unrelated business concepts
   const userPrompt = type === 'blog' 
     ? `Create a professional blog post about: ${prompt}
 
-IMPORTANT OUTPUT FORMAT:
-- Start with a clear, engaging title (no "Title:" label, just the title)
-- Follow with the content in clean paragraphs
-- Write MINIMUM 3 paragraphs with proper spacing
-- Each paragraph should be 3-5 sentences
-- Leave ONE EMPTY LINE between each paragraph
-- End with a strong conclusion
-- Make it ready to copy and paste directly into any platform
-- NO formatting markers, NO labels, NO prefixes`
+       IMPORTANT OUTPUT FORMAT:
+       - Start with a clear, engaging title (no "Title:" label, just the title)
+       - Follow with the content in clean paragraphs
+       - Write MINIMUM 3 paragraphs with proper spacing
+       - Each paragraph should be 3-5 sentences
+       - Leave ONE EMPTY LINE between each paragraph
+       - End with a strong conclusion
+       - Make it ready to copy and paste directly into any platform
+       - NO formatting markers, NO labels, NO prefixes
+       - DO NOT repeat any content - each paragraph should be unique
+       - DO NOT duplicate the first paragraph at the end`
     : `Create a social media post about: ${prompt}
 
 IMPORTANT OUTPUT FORMAT:
@@ -181,11 +183,11 @@ IMPORTANT OUTPUT FORMAT:
       
       // Extract content (everything after title)
       const contentLines = lines.slice(contentStartIndex)
-      let blogContent = contentLines.join('\n\n').trim()
+      let blogContent = contentLines.join('\n').trim()
       
       // Ensure proper paragraph spacing
       blogContent = blogContent
-        .replace(/\n\n/g, '\n\n') // Ensure double line breaks between paragraphs
+        .replace(/\n{2,}/g, '\n\n') // Ensure double line breaks between paragraphs
         .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
       
       // Clean up formatting and remove all labels while preserving paragraph structure
@@ -202,6 +204,8 @@ IMPORTANT OUTPUT FORMAT:
         .replace(/^[-*]\s*/gm, '') // Remove bullet points
         .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
         .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
+        .replace(/([.!?])\s*([A-Z][a-z])/g, '$1\n\n$2') // Ensure paragraph breaks after sentences
+        .replace(/\n{3,}/g, '\n\n') // Clean up excessive line breaks
         .trim()
       
       // Generate excerpt (first 150 characters of content)
