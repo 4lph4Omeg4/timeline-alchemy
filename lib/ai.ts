@@ -194,10 +194,10 @@ IMPORTANT OUTPUT FORMAT:
       const contentLines = lines.slice(contentStartIndex)
       let blogContent = contentLines.join('\n').trim()
       
-      // Ensure proper paragraph spacing
+      // Preserve paragraph spacing - don't remove line breaks
       blogContent = blogContent
-        .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
-        .replace(/\n\n\n/g, '\n\n') // Remove triple line breaks
+        .replace(/\n{4,}/g, '\n\n\n') // Keep max 3 line breaks (title + 2 empty lines)
+        .replace(/\n{3,}/g, '\n\n') // Keep max 2 line breaks between paragraphs
       
       // Clean up formatting and remove all labels while preserving paragraph structure
       blogContent = blogContent
@@ -214,7 +214,7 @@ IMPORTANT OUTPUT FORMAT:
         .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
         .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
         // .replace(/([.!?])\s*([A-Z][a-z])/g, '$1\n\n$2') // Removed - causes too many line breaks
-        .replace(/\n{3,}/g, '\n\n') // Clean up excessive line breaks
+        .replace(/\n{4,}/g, '\n\n\n') // Clean up excessive line breaks but preserve paragraph spacing
         .trim()
       
       // Generate excerpt (first 150 characters of content)
