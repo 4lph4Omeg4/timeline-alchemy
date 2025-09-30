@@ -122,71 +122,72 @@ export default function AdminCreatePackagePage() {
         }
       }
 
-      // Create the package (available to all users in the organization)
-      const { data: packageData, error: packageError } = await supabase
-        .from('blog_posts')
-        .insert({
-          org_id: orgMember.org_id,
-          title: finalTitle,
-          content: finalContent,
-          state: 'draft',
-          created_by_admin: true,
-          excerpt: finalContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...',
-        })
-        .select()
-        .single()
+      // If using existing content, copy ALL existing data (including images and social posts)
+      if (useExistingContent) {
+        const selectedPost = existingContent.find(post => post.id === selectedContent)
+        if (selectedPost) {
+          // Create package with ALL existing data
+          const { data: packageData, error: packageError } = await supabase
+            .from('blog_posts')
+            .insert({
+              org_id: orgMember.org_id,
+              title: selectedPost.title,
+              content: selectedPost.content,
+              excerpt: selectedPost.excerpt,
+              social_posts: selectedPost.social_posts,
+              state: 'draft',
+              created_by_admin: true,
+            })
+            .select()
+            .single()
 
-      if (packageError) {
-        console.error('Error creating package:', packageError)
-        toast.error('Failed to create package')
-        return
-      }
+          if (packageError) {
+            console.error('Error creating package:', packageError)
+            toast.error('Failed to create package')
+            return
+          }
 
-      // Generate social media posts for the package
-      try {
-        toast.loading('Generating social media posts...', { id: 'social-generation' })
-        
-        const response = await fetch('/api/generate-social-posts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+          // Copy ALL existing images
+          const { data: existingImages } = await supabase
+            .from('images')
+            .select('*')
+            .eq('post_id', selectedPost.id)
+
+          if (existingImages && existingImages.length > 0) {
+            for (const image of existingImages) {
+              await supabase
+                .from('images')
+                .insert({
+                  org_id: orgMember.org_id,
+                  post_id: packageData.id,
+                  url: image.url,
+                })
+            }
+          }
+
+          toast.success('Package created with existing content!')
+        }
+      } else {
+        // For new content, just create basic package
+        const { data: packageData, error: packageError } = await supabase
+          .from('blog_posts')
+          .insert({
+            org_id: orgMember.org_id,
             title: finalTitle,
             content: finalContent,
-            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+            state: 'draft',
+            created_by_admin: true,
           })
-        })
+          .select()
+          .single()
 
-        if (response.ok) {
-          const data = await response.json()
-          
-          // Update the package with social posts
-          await supabase
-            .from('blog_posts')
-            .update({ social_posts: data.socialPosts })
-            .eq('id', packageData.id)
-            
-          toast.success('Social media posts generated!', { id: 'social-generation' })
-        } else {
-          toast.dismiss('social-generation')
-          toast.error('Failed to generate social media posts')
+        if (packageError) {
+          console.error('Error creating package:', packageError)
+          toast.error('Failed to create package')
+          return
         }
-      } catch (socialError) {
-        console.error('Error generating social posts:', socialError)
-        toast.dismiss('social-generation')
-        toast.error('Failed to generate social media posts')
-      }
 
-      // Generate and save an image for the package
-      try {
-        toast.loading('Generating image for package...', { id: 'image-generation' })
-        const imageUrl = await generateAndSaveImage(finalTitle, packageData.id, orgMember.org_id)
-        toast.success('Package created with image successfully!', { id: 'image-generation' })
-      } catch (imageError) {
-        console.error('Error generating image:', imageError)
-        toast.dismiss('image-generation')
-        toast.success('Package created successfully! (Image generation failed)')
+        toast.success('Package created!')
       }
 
       router.push('/dashboard/admin/packages')
