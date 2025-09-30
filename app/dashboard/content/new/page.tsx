@@ -271,16 +271,17 @@ export default function ContentEditorPage() {
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
-                  placeholder="Write your post content here..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={20}
-                />
-              </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="content">Content</Label>
+                       <Textarea
+                         id="content"
+                         placeholder="Write your post content here..."
+                         value={content}
+                         onChange={(e) => setContent(e.target.value)}
+                         rows={20}
+                         className="whitespace-pre-wrap"
+                       />
+                     </div>
               
                      {/* Social Media Posts */}
                      {Object.keys(socialPosts).length > 0 && (

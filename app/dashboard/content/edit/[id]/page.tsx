@@ -75,26 +75,8 @@ export default function ContentEditPage() {
       setContent(postData.content)
       setExcerpt('') // Will be added after database update
       
-      // Generate social posts if they don't exist
-      try {
-        const socialResponse = await fetch('/api/generate-social-posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: postData.title,
-            content: postData.content,
-            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
-          })
-        })
-        
-        if (socialResponse.ok) {
-          const socialData = await socialResponse.json()
-          setSocialPosts(socialData.socialPosts)
-        }
-      } catch (error) {
-        console.error('Error generating social posts:', error)
-        setSocialPosts({})
-      }
+      // Use existing social posts from database only - no generation
+      setSocialPosts(postData.social_posts || {})
 
       // Fetch images for this post
       const { data: images, error: imagesError } = await supabase
@@ -237,17 +219,17 @@ export default function ContentEditPage() {
             />
           </div>
 
-          <div>
-            <Label htmlFor="content" className="text-white">Content</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="mt-2 bg-gray-800 border-gray-700 text-white min-h-[400px]"
-              placeholder="Write your post content here..."
-              rows={20}
-            />
-          </div>
+                 <div>
+                   <Label htmlFor="content" className="text-white">Content</Label>
+                   <Textarea
+                     id="content"
+                     value={content}
+                     onChange={(e) => setContent(e.target.value)}
+                     className="mt-2 bg-gray-800 border-gray-700 text-white min-h-[400px] whitespace-pre-wrap"
+                     placeholder="Write your post content here..."
+                     rows={20}
+                   />
+                 </div>
 
           {/* Excerpt */}
           {excerpt && (
