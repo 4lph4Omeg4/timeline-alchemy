@@ -131,6 +131,7 @@ export default function AdminCreatePackagePage() {
           content: finalContent,
           state: 'draft',
           created_by_admin: true,
+          excerpt: finalContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...',
         })
         .select()
         .single()
@@ -139,6 +140,42 @@ export default function AdminCreatePackagePage() {
         console.error('Error creating package:', packageError)
         toast.error('Failed to create package')
         return
+      }
+
+      // Generate social media posts for the package
+      try {
+        toast.loading('Generating social media posts...', { id: 'social-generation' })
+        
+        const response = await fetch('/api/generate-social-posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: finalTitle,
+            content: finalContent,
+            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+          })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          
+          // Update the package with social posts
+          await supabase
+            .from('blog_posts')
+            .update({ social_posts: data.socialPosts })
+            .eq('id', packageData.id)
+            
+          toast.success('Social media posts generated!', { id: 'social-generation' })
+        } else {
+          toast.dismiss('social-generation')
+          toast.error('Failed to generate social media posts')
+        }
+      } catch (socialError) {
+        console.error('Error generating social posts:', socialError)
+        toast.dismiss('social-generation')
+        toast.error('Failed to generate social media posts')
       }
 
       // Generate and save an image for the package

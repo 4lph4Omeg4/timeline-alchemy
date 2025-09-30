@@ -12,8 +12,8 @@ export const getOpenAI = () => {
   })
 }
 
-// Professional content foundation with natural non-dual elements
-const CONTENT_FOUNDATION = `You are a professional content writer creating engaging, valuable content for businesses. Focus on delivering exactly what the user requests while maintaining a natural, authentic tone. 
+  // Professional content foundation with natural non-dual elements
+  const CONTENT_FOUNDATION = `You are a professional content writer creating engaging, valuable content for businesses. Focus on delivering exactly what the user requests while maintaining a natural, authentic tone. 
 
 When writing, naturally weave in themes of interconnectedness, unity, and wholeness - not as forced concepts, but as the natural truth that emerges when we write authentically about business, service, and human connection. Let these themes arise organically from the content itself, like the way a good story naturally reveals deeper truths.
 
@@ -26,7 +26,8 @@ CRITICAL OUTPUT REQUIREMENTS:
 - Make it copy-paste ready for any platform
 - Focus on delivering value, not formatting
 - Always produce high-quality, engaging content
-- Let unity and connection emerge naturally from authentic business writing`
+- Let unity and connection emerge naturally from authentic business writing
+- Stay focused on the specific topic requested - don't add unrelated business concepts`
 
 // Business-specific prompt configurations
 const BUSINESS_PROMPTS: Record<BusinessType, {
@@ -140,8 +141,8 @@ Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
     ? `Create a professional blog post about: ${prompt}
 
 IMPORTANT OUTPUT FORMAT:
-- Start directly with the content, NO labels like "Title:", "Introduction:", "Content:", etc.
-- Write clean, professional paragraphs
+- Start with a clear, engaging title (no "Title:" label, just the title)
+- Follow with the content in clean paragraphs
 - Each paragraph should be 3-5 sentences
 - Use proper spacing between paragraphs
 - End with a strong conclusion
@@ -175,22 +176,14 @@ IMPORTANT OUTPUT FORMAT:
       // Improved content parsing for blog posts
       const lines = content.split('\n').filter(line => line.trim())
       
-      // Find title (usually first non-empty line, or marked with #)
+      // Find title (first non-empty line, should be the title)
       let title = 'Untitled'
       let contentStartIndex = 0
       
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (line.startsWith('#')) {
-          title = line.replace(/^#+\s*/, '')
-          contentStartIndex = i + 1
-          break
-        } else if (i === 0 && line.length > 0 && line.length < 100) {
-          // First line might be title if it's short
-          title = line
-          contentStartIndex = 1
-          break
-        }
+      if (lines.length > 0) {
+        // First line is the title
+        title = lines[0].trim()
+        contentStartIndex = 1
       }
       
       // Extract content (everything after title)
