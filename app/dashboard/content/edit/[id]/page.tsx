@@ -73,8 +73,8 @@ export default function ContentEditPage() {
       setPost(postData)
       setTitle(postData.title)
       setContent(postData.content)
-      setExcerpt(postData.excerpt || '')
-      setSocialPosts(postData.social_posts || {})
+      setExcerpt('') // Will be added after database update
+      setSocialPosts({}) // Will be added after database update
 
       // Fetch images for this post
       const { data: images, error: imagesError } = await supabase

@@ -175,12 +175,12 @@ export default function ContentPackagePage() {
                .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
                .trim()
              
-             // Always use existing excerpt from database
-             const excerpt = postData.excerpt || ''
+             // Will be added after database update
+             const excerpt = ''
              setActualExcerpt(excerpt)
 
-             // Always use existing social posts from database
-             const posts = postData.social_posts || {}
+             // Will be added after database update
+             const posts = {}
              setSocialPosts(posts)
 
       // For now, we'll create a mock generated content structure
