@@ -12,60 +12,72 @@ export const getOpenAI = () => {
   })
 }
 
+// Non-dual foundation with business-specific adaptation
+const NON_DUAL_FOUNDATION = `You are a professional content writer specializing in creating engaging content with a non-dual perspective. Focus on unity, interconnectedness, and seeing beyond binary thinking. Your content should reveal the underlying oneness in all experiences while serving the specific needs of each business.`
+
 // Business-specific prompt configurations
 const BUSINESS_PROMPTS: Record<BusinessType, {
   systemPrompt: string
   keywords: string[]
   hashtags: string[]
   tone: string
+  adaptation: string
 }> = {
   camperdealer: {
-    systemPrompt: `You are a content writer specializing in camper and RV dealership marketing. Focus on adventure, freedom, travel, family memories, and the camper lifestyle. Emphasize quality, reliability, and customer service.`,
-    keywords: ['camper', 'RV', 'caravan', 'reizen', 'avontuur', 'vrijheid', 'familie', 'vakantie', 'outdoor'],
-    hashtags: ['#camper', '#RV', '#reizen', '#avontuur', '#vrijheid', '#familie', '#vakantie'],
-    tone: 'adventurous and trustworthy'
+    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on adventure, freedom, travel, family memories, and the camper lifestyle. Show how travel connects us to the unity of all experiences.`,
+    keywords: ['camper', 'RV', 'caravan', 'reizen', 'avontuur', 'vrijheid', 'familie', 'vakantie', 'outdoor', 'verbinding', 'eenheid'],
+    hashtags: ['#camper', '#RV', '#reizen', '#avontuur', '#vrijheid', '#familie', '#vakantie', '#verbinding'],
+    tone: 'adventurous and unifying',
+    adaptation: 'Show how camper travel reveals the interconnectedness of all places and experiences'
   },
   tankstation: {
-    systemPrompt: `You are a content writer for gas stations and convenience stores. Focus on convenience, 24/7 service, fuel efficiency, local community, and quick stops. Emphasize reliability and customer service.`,
-    keywords: ['tankstation', 'benzine', 'diesel', '24/7', 'gemak', 'lokale service', 'onderweg', 'snack'],
-    hashtags: ['#tankstation', '#24/7', '#gemak', '#lokale service', '#onderweg'],
-    tone: 'convenient and reliable'
+    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on convenience, 24/7 service, fuel efficiency, local community, and quick stops. Show how every stop connects travelers to the unity of human experience.`,
+    keywords: ['tankstation', 'benzine', 'diesel', '24/7', 'gemak', 'lokale service', 'onderweg', 'snack', 'verbinding', 'gemeenschap'],
+    hashtags: ['#tankstation', '#24/7', '#gemak', '#lokale service', '#onderweg', '#verbinding'],
+    tone: 'convenient and connecting',
+    adaptation: 'Show how every stop connects travelers to the unity of human experience'
   },
   restaurant: {
-    systemPrompt: `You are a content writer for restaurants and cafes. Focus on food quality, atmosphere, local ingredients, customer experience, and culinary expertise. Emphasize taste and hospitality.`,
-    keywords: ['restaurant', 'eten', 'culinair', 'lokaal', 'kwaliteit', 'atmosfeer', 'gastvrijheid'],
-    hashtags: ['#restaurant', '#eten', '#culinair', '#lokaal', '#kwaliteit'],
-    tone: 'warm and appetizing'
+    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on food quality, atmosphere, local ingredients, customer experience, and culinary expertise. Show how sharing meals connects us to the unity of human experience.`,
+    keywords: ['restaurant', 'eten', 'culinair', 'lokaal', 'kwaliteit', 'atmosfeer', 'gastvrijheid', 'verbinding', 'gemeenschap'],
+    hashtags: ['#restaurant', '#eten', '#culinair', '#lokaal', '#kwaliteit', '#verbinding'],
+    tone: 'warm and unifying',
+    adaptation: 'Show how sharing meals connects us to the unity of human experience'
   },
   retail: {
-    systemPrompt: `You are a content writer for retail businesses. Focus on product quality, customer service, shopping experience, and value. Emphasize selection and customer satisfaction.`,
-    keywords: ['winkel', 'producten', 'kwaliteit', 'klantenservice', 'shopping', 'waarde'],
-    hashtags: ['#winkel', '#producten', '#kwaliteit', '#shopping'],
-    tone: 'helpful and value-focused'
+    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on product quality, customer service, shopping experience, and value. Show how commerce connects us to the unity of human needs and desires.`,
+    keywords: ['winkel', 'producten', 'kwaliteit', 'klantenservice', 'shopping', 'waarde', 'verbinding', 'behoeften'],
+    hashtags: ['#winkel', '#producten', '#kwaliteit', '#shopping', '#verbinding'],
+    tone: 'helpful and connecting',
+    adaptation: 'Show how commerce connects us to the unity of human needs and desires'
   },
   service: {
-    systemPrompt: `You are a content writer for service businesses. Focus on expertise, reliability, customer satisfaction, and professional service. Emphasize trust and quality work.`,
-    keywords: ['service', 'expertise', 'betrouwbaar', 'professioneel', 'kwaliteit', 'klanttevredenheid'],
-    hashtags: ['#service', '#expertise', '#betrouwbaar', '#professioneel'],
-    tone: 'professional and trustworthy'
+    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on expertise, reliability, customer satisfaction, and professional service. Show how service connects us to the unity of mutual support.`,
+    keywords: ['service', 'expertise', 'betrouwbaar', 'professioneel', 'kwaliteit', 'klanttevredenheid', 'verbinding', 'ondersteuning'],
+    hashtags: ['#service', '#expertise', '#betrouwbaar', '#professioneel', '#verbinding'],
+    tone: 'professional and connecting',
+    adaptation: 'Show how service connects us to the unity of mutual support'
   },
   hospitality: {
-    systemPrompt: `You are a content writer for hospitality businesses. Focus on comfort, guest experience, amenities, and memorable stays. Emphasize hospitality and attention to detail.`,
-    keywords: ['hotel', 'accommodatie', 'gastvrijheid', 'comfort', 'ervaring', 'faciliteiten'],
-    hashtags: ['#hotel', '#accommodatie', '#gastvrijheid', '#comfort'],
-    tone: 'welcoming and comfortable'
+    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on comfort, guest experience, amenities, and memorable stays. Show how hospitality connects us to the unity of human care.`,
+    keywords: ['hotel', 'accommodatie', 'gastvrijheid', 'comfort', 'ervaring', 'faciliteiten', 'verbinding', 'zorg'],
+    hashtags: ['#hotel', '#accommodatie', '#gastvrijheid', '#comfort', '#verbinding'],
+    tone: 'welcoming and caring',
+    adaptation: 'Show how hospitality connects us to the unity of human care'
   },
   automotive: {
-    systemPrompt: `You are a content writer for automotive businesses. Focus on reliability, performance, safety, and customer service. Emphasize expertise and trustworthiness.`,
-    keywords: ['auto', 'garage', 'onderhoud', 'betrouwbaar', 'veiligheid', 'prestaties'],
-    hashtags: ['#auto', '#garage', '#onderhoud', '#betrouwbaar'],
-    tone: 'reliable and expert'
+    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on reliability, performance, safety, and customer service. Show how mobility connects us to the unity of human movement and freedom.`,
+    keywords: ['auto', 'garage', 'onderhoud', 'betrouwbaar', 'veiligheid', 'prestaties', 'verbinding', 'vrijheid'],
+    hashtags: ['#auto', '#garage', '#onderhoud', '#betrouwbaar', '#verbinding'],
+    tone: 'reliable and liberating',
+    adaptation: 'Show how mobility connects us to the unity of human movement and freedom'
   },
   general: {
-    systemPrompt: `You are a professional content writer creating engaging content for businesses. Focus on value, customer service, and quality.`,
-    keywords: ['kwaliteit', 'service', 'klanttevredenheid', 'waarde'],
-    hashtags: ['#kwaliteit', '#service', '#klanttevredenheid'],
-    tone: 'professional and helpful'
+    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on value, customer service, and quality. Show how business connects us to the unity of human exchange and mutual benefit.`,
+    keywords: ['kwaliteit', 'service', 'klanttevredenheid', 'waarde', 'verbinding', 'uitwisseling'],
+    hashtags: ['#kwaliteit', '#service', '#klanttevredenheid', '#verbinding'],
+    tone: 'professional and connecting',
+    adaptation: 'Show how business connects us to the unity of human exchange and mutual benefit'
   }
 }
 
@@ -110,6 +122,7 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     systemPrompt = `${businessConfig.systemPrompt} 
     Write in a ${tone} tone. Create content that is ${length} in length. 
     ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
+    ${businessConfig.adaptation}
     Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
     
     userPrompt = `Write a blog post about: ${prompt}`
@@ -120,6 +133,7 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     You are a social media expert creating engaging posts${platformSpecific}. 
     Write in a ${tone} tone. Keep it ${length} and engaging.
     ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
+    ${businessConfig.adaptation}
     Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
     
     userPrompt = `Create a social media post about: ${prompt}`
@@ -332,9 +346,9 @@ export const MINLI_CAMPERDEALER_PROFILE: BusinessProfile = {
   type: 'camperdealer',
   name: 'Minli Caravan World',
   industry: 'Camper & RV Dealership',
-  targetAudience: ['camper enthousiasten', 'families', 'avonturiers', 'reizigers'],
-  keyServices: ['camper verkoop', 'onderhoud', 'accessoires', 'advies'],
-  brandVoice: 'avontuurlijk en betrouwbaar',
+  targetAudience: ['camper enthousiasten', 'families', 'avonturiers', 'reizigers', 'natuurliefhebbers'],
+  keyServices: ['camper verkoop', 'onderhoud', 'accessoires', 'advies', 'reizen naar eenheid'],
+  brandVoice: 'avontuurlijk en verbindend',
   location: 'Landgraaf'
 }
 
@@ -342,9 +356,9 @@ export const MINLI_TANKSTATION_PROFILE: BusinessProfile = {
   type: 'tankstation',
   name: 'Minli Tankstations',
   industry: 'Gas Station & Convenience',
-  targetAudience: ['forenzen', 'reizigers', 'lokale bewoners', 'chauffeurs'],
-  keyServices: ['brandstof', '24/7 service', 'snacks', 'pakketpunten', 'carwash'],
-  brandVoice: 'betrouwbaar en gemakkelijk',
+  targetAudience: ['forenzen', 'reizigers', 'lokale bewoners', 'chauffeurs', 'gemeenschapsleden'],
+  keyServices: ['brandstof', '24/7 service', 'snacks', 'pakketpunten', 'carwash', 'verbinding'],
+  brandVoice: 'betrouwbaar en verbindend',
   location: 'Zuid-Limburg'
 }
 
