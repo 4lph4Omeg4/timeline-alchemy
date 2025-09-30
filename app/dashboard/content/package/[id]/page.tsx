@@ -169,22 +169,20 @@ export default function ContentPackagePage() {
 
       // Generate proper social media posts using AI (only if not already generated)
       let socialPosts
-      if (postData.social_posts) {
+      if (postData.social_posts && Object.keys(postData.social_posts).length > 0) {
         // Use existing social posts from database
         socialPosts = postData.social_posts
-      } else {
-        // Generate new social posts and save them
-        socialPosts = await generateSocialMediaPosts(postData.title, cleanContent)
-        
-        // Try to save the generated social posts to the database
-        try {
-          await supabase
-            .from('blog_posts')
-            .update({ social_posts: socialPosts })
-            .eq('id', postData.id)
-        } catch (error) {
-          console.log('Could not save social posts to database (column might not exist yet):', error)
-          // Continue without saving - this is not critical
+        console.log('Using existing social posts from database')
+        } else {
+          // Use fallback posts for all cases to avoid AI generation delays
+          console.log('Using fallback social posts (no AI generation)')
+          socialPosts = {
+            facebook: `Check out this amazing content: ${postData.title}\n\n${cleanContent.substring(0, 200)}...`,
+            instagram: `✨ ${postData.title} ✨\n\n${cleanContent.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
+            twitter: `${postData.title}\n\n${cleanContent.substring(0, 100)}...\n\n#AI #Content`,
+            linkedin: `Professional insight: ${postData.title}\n\n${cleanContent.substring(0, 180)}...\n\n#Professional #AI #Content`,
+            tiktok: `${postData.title} 🚀\n\n${cleanContent.substring(0, 120)}...\n\n#AI #Trending #Content`
+          }
         }
       }
 
