@@ -182,16 +182,24 @@ export default function ContentEditorPage() {
 
              // Save social posts to separate table
              if (Object.keys(socialPosts).length > 0) {
-               for (const [platform, content] of Object.entries(socialPosts)) {
-                 await supabase
-                   .from('social_posts')
-                   .insert({
-                     post_id: postData.id,
-                     platform,
-                     content
-                   })
+               try {
+                 for (const [platform, content] of Object.entries(socialPosts)) {
+                   const { error: socialError } = await supabase
+                     .from('social_posts')
+                     .insert({
+                       post_id: postData.id,
+                       platform,
+                       content
+                     })
+                   
+                   if (socialError) {
+                     console.error('Error saving social post:', socialError)
+                   }
+                 }
+                 console.log('Social posts saved to database:', socialPosts)
+               } catch (error) {
+                 console.error('Error saving social posts:', error)
                }
-               console.log('Social posts saved to database:', socialPosts)
              }
 
              // If there's a generated image, save it too
