@@ -30,64 +30,71 @@ export default function ContentEditorPage() {
     }
 
     setContentLoading(true)
+    setImageLoading(true)
+    
     try {
-      const request: AIGenerateRequest = {
-        prompt,
-        type: 'blog',
-        tone: 'professional',
-        length: 'medium',
-      }
-
-      const response = await fetch('/api/generate-content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to generate content')
-      }
-
-      const responseData = await response.json()
-      
-      if (responseData.title) {
-        setTitle(responseData.title)
-      }
-      if (responseData.excerpt) {
-        setExcerpt(responseData.excerpt)
-      }
-      setContent(responseData.content)
-      
-      // Generate social media posts automatically
-      try {
-        const socialResponse = await fetch('/api/generate-social-posts', {
+      // Generate everything in parallel
+      const [contentResponse, socialResponse, imageResponse] = await Promise.all([
+        // Generate blog content
+        fetch('/api/generate-content', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            title: responseData.title || 'Untitled',
-            content: responseData.content,
+            prompt,
+            type: 'blog',
+            tone: 'professional',
+            length: 'medium',
+          }),
+        }),
+        
+        // Generate social media posts
+        fetch('/api/generate-social-posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: prompt, // Use prompt as title for social posts
+            content: prompt,
             platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
-          })
+          }),
+        }),
+        
+        // Generate image
+        fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
         })
+      ])
 
-        if (socialResponse.ok) {
-          const socialData = await socialResponse.json()
-          setSocialPosts(socialData.socialPosts)
-          console.log('Social posts generated:', socialData.socialPosts)
-        }
-      } catch (socialError) {
-        console.error('Error generating social posts:', socialError)
+      // Process content response
+      if (contentResponse.ok) {
+        const contentData = await contentResponse.json()
+        if (contentData.title) setTitle(contentData.title)
+        if (contentData.excerpt) setExcerpt(contentData.excerpt)
+        setContent(contentData.content)
+      }
+
+      // Process social posts response
+      if (socialResponse.ok) {
+        const socialData = await socialResponse.json()
+        setSocialPosts(socialData.socialPosts)
+        console.log('Social posts generated:', socialData.socialPosts)
+      }
+
+      // Process image response
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json()
+        setGeneratedImageUrl(imageData.imageUrl)
+        console.log('Image generated:', imageData.imageUrl)
       }
       
-      toast.success('Content generated successfully!')
+      toast.success('Complete content package generated!')
     } catch (error) {
+      console.error('Error generating content:', error)
       toast.error('Failed to generate content')
     } finally {
       setContentLoading(false)
+      setImageLoading(false)
     }
   }
 
@@ -235,21 +242,13 @@ export default function ContentEditorPage() {
                   rows={4}
                 />
               </div>
-              <Button 
-                onClick={handleGenerateContent} 
-                disabled={contentLoading || imageLoading}
-                className="w-full"
-              >
-                {contentLoading ? 'Generating Content...' : 'Generate Content'}
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={handleGenerateImage} 
-                disabled={imageLoading || contentLoading || !title.trim()}
-                className="w-full"
-              >
-                {imageLoading ? 'Generating Image...' : 'Generate Image'}
-              </Button>
+                     <Button 
+                       onClick={handleGenerateContent} 
+                       disabled={contentLoading || imageLoading}
+                       className="w-full"
+                     >
+                       {contentLoading || imageLoading ? 'Generating Complete Package...' : 'Generate Complete Package'}
+                     </Button>
             </CardContent>
           </Card>
         </div>

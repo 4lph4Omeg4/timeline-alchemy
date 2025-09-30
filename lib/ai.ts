@@ -12,10 +12,8 @@ export const getOpenAI = () => {
   })
 }
 
-  // Professional content foundation with natural non-dual elements
-  const CONTENT_FOUNDATION = `You are a professional content writer creating engaging, valuable content for businesses. Focus on delivering exactly what the user requests while maintaining a natural, authentic tone. 
-
-When writing, naturally weave in themes of interconnectedness, unity, and wholeness - not as forced concepts, but as the natural truth that emerges when we write authentically about business, service, and human connection. Let these themes arise organically from the content itself, like the way a good story naturally reveals deeper truths.
+  // Simple content foundation
+  const CONTENT_FOUNDATION = `You are a professional content writer. Write exactly what the user requests in a clear, engaging way.
 
 CRITICAL OUTPUT REQUIREMENTS:
 - Write ONLY the actual content, no labels or prefixes
@@ -24,11 +22,9 @@ CRITICAL OUTPUT REQUIREMENTS:
 - Write clean, professional text ready for immediate use
 - Each paragraph should be 3-5 sentences with proper spacing
 - Make it copy-paste ready for any platform
-- Focus on delivering value, not formatting
-- Always produce high-quality, engaging content
-- Let unity and connection emerge naturally from authentic business writing
-- Stay focused on the specific topic requested - don't add unrelated business concepts
-- NEVER mention "klanttevredenheid" or random business terms unless specifically requested`
+- Focus ONLY on the specific topic requested
+- Do NOT add unrelated concepts or random business terms
+- Write in the same language as the prompt`
 
 // Business-specific prompt configurations
 const BUSINESS_PROMPTS: Record<BusinessType, {
@@ -126,16 +122,11 @@ interface GeneratedContent {
 export async function generateContent(request: AIGenerateRequest): Promise<AIGenerateResponse> {
   const { prompt, type, tone = 'professional', length = 'medium', platform, businessProfile } = request
 
-  // Get business-specific configuration
-  const businessConfig = businessProfile ? BUSINESS_PROMPTS[businessProfile.type] : BUSINESS_PROMPTS.general
-  
-  // Create unified system prompt
-  const systemPrompt = `${businessConfig.systemPrompt}
+  // Create simple system prompt without business-specific configurations
+  const systemPrompt = `${CONTENT_FOUNDATION}
   
 Write in a ${tone} tone. Create content that is ${length} in length.
-${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
-${businessConfig.adaptation}
-Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
+Focus on the specific topic requested without adding unrelated business concepts.`
 
   // Create unified user prompt
   const userPrompt = type === 'blog' 
@@ -215,7 +206,7 @@ IMPORTANT OUTPUT FORMAT:
         content: blogContent,
         title,
         excerpt,
-        hashtags: businessConfig.hashtags.length > 0 ? businessConfig.hashtags : undefined,
+        hashtags: undefined,
         suggestions: generateSuggestions(blogContent),
       }
     } else {
@@ -232,11 +223,9 @@ IMPORTANT OUTPUT FORMAT:
         .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
         .trim()
       
-      const finalHashtags = businessConfig.hashtags.length > 0 ? businessConfig.hashtags : generateHashtags(prompt, platform)
-      
       return {
         content: cleanedContent,
-        hashtags: finalHashtags,
+        hashtags: generateHashtags(prompt, platform),
         suggestions: generateSuggestions(cleanedContent),
       }
     }

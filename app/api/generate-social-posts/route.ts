@@ -12,13 +12,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: 'system',
-          content: `You are a social media expert creating platform-specific posts. Create engaging, platform-appropriate content for each platform. Make each post unique and optimized for its platform's audience and character limits.
-
-CRITICAL REQUIREMENTS:
-- Focus ONLY on the content provided
-- Do NOT add random business terms like "klanttevredenheid" unless specifically mentioned in the content
-- Stay relevant to the actual topic
-- Create platform-appropriate content without adding unrelated concepts`
+          content: `You are a social media expert. Create platform-specific posts based ONLY on the content provided. Do not add unrelated concepts or random terms.`
         },
         {
           role: 'user',
