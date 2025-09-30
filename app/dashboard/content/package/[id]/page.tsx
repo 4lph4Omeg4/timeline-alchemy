@@ -74,7 +74,36 @@ export default function ContentPackagePage() {
   const [loading, setLoading] = useState(true)
   const [ratings, setRatings] = useState<any[]>([])
   const [userRating, setUserRating] = useState<any>(null)
-  const [showRatingForm, setShowRatingForm] = useState(false)
+  const [regeneratingSocial, setRegeneratingSocial] = useState(false)
+
+  const handleRegenerateSocialPosts = async () => {
+    if (!post) return
+    
+    setRegeneratingSocial(true)
+    try {
+      const cleanContent = post.content.replace(/^[\s\S]*?Content:\s*/, '').trim()
+      const socialPosts = await generateSocialMediaPosts(post.title, cleanContent)
+      
+      // Update the database
+      await supabase
+        .from('blog_posts')
+        .update({ social_posts: socialPosts })
+        .eq('id', post.id)
+      
+      // Update the local state
+      setGeneratedContent(prev => prev ? {
+        ...prev,
+        socialPosts
+      } : null)
+      
+      toast.success('Social media posts regenerated!')
+    } catch (error) {
+      console.error('Error regenerating social posts:', error)
+      toast.error('Failed to regenerate social posts')
+    } finally {
+      setRegeneratingSocial(false)
+    }
+  }
 
   useEffect(() => {
     if (params.id) {
@@ -137,8 +166,26 @@ export default function ContentPackagePage() {
       const cleanContent = postData.content.replace(/^[\s\S]*?Content:\s*/, '').trim()
       const actualExcerpt = cleanContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
 
-      // Generate proper social media posts using AI
-      const socialPosts = await generateSocialMediaPosts(postData.title, cleanContent)
+      // Generate proper social media posts using AI (only if not already generated)
+      let socialPosts
+      if (postData.social_posts) {
+        // Use existing social posts from database
+        socialPosts = postData.social_posts
+      } else {
+        // Generate new social posts and save them
+        socialPosts = await generateSocialMediaPosts(postData.title, cleanContent)
+        
+        // Try to save the generated social posts to the database
+        try {
+          await supabase
+            .from('blog_posts')
+            .update({ social_posts: socialPosts })
+            .eq('id', postData.id)
+        } catch (error) {
+          console.log('Could not save social posts to database (column might not exist yet):', error)
+          // Continue without saving - this is not critical
+        }
+      }
 
       // For now, we'll create a mock generated content structure
       // In a real app, you might store the complete generated content in the database
@@ -380,10 +427,22 @@ export default function ContentPackagePage() {
       {/* Social Media Posts */}
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
-          <CardDescription className="text-gray-300">
-            Platform-optimized posts ready for publishing
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
+              <CardDescription className="text-gray-300">
+                Platform-optimized posts ready for publishing
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerateSocialPosts}
+              disabled={regeneratingSocial}
+            >
+              {regeneratingSocial ? 'Regenerating...' : '🔄 Regenerate Posts'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Facebook */}
