@@ -123,7 +123,15 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     Write in a ${tone} tone. Create content that is ${length} in length. 
     ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
     ${businessConfig.adaptation}
-    Most importantly: Deliver exactly what the user is asking for in their prompt. Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
+    Most importantly: Deliver exactly what the user is asking for in their prompt. Use relevant keywords: ${businessConfig.keywords.join(', ')}.
+    
+    FORMATTING REQUIREMENTS:
+    - Write a clear, engaging title
+    - Create well-structured paragraphs (3-5 sentences each)
+    - Use proper spacing between paragraphs
+    - Include a compelling introduction and conclusion
+    - Make content ready for immediate use on websites or social platforms
+    - Ensure proper line breaks and formatting`
     
     userPrompt = `Write a blog post about: ${prompt}`
     hashtags = businessConfig.hashtags
@@ -134,7 +142,14 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     Write in a ${tone} tone. Keep it ${length} and engaging.
     ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
     ${businessConfig.adaptation}
-    Most importantly: Deliver exactly what the user is asking for in their prompt. Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
+    Most importantly: Deliver exactly what the user is asking for in their prompt. Use relevant keywords: ${businessConfig.keywords.join(', ')}.
+    
+    FORMATTING REQUIREMENTS:
+    - Create engaging, platform-appropriate content
+    - Use proper line breaks for readability
+    - Include relevant hashtags naturally
+    - Make content ready for immediate posting
+    - Ensure proper formatting for the target platform`
     
     userPrompt = `Create a social media post about: ${prompt}`
     hashtags = businessConfig.hashtags
@@ -155,25 +170,60 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     const content = completion.choices[0]?.message?.content || ''
 
     if (type === 'blog') {
-      // Extract title and content for blog posts
-      const lines = content.split('\n')
-      const title = lines.find(line => line.trim() && !line.startsWith('#'))?.trim() || 'Untitled'
-      const blogContent = content.replace(title, '').trim()
+      // Improved content parsing for blog posts
+      const lines = content.split('\n').filter(line => line.trim())
+      
+      // Find title (usually first non-empty line, or marked with #)
+      let title = 'Untitled'
+      let contentStartIndex = 0
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (line.startsWith('#')) {
+          title = line.replace(/^#+\s*/, '')
+          contentStartIndex = i + 1
+          break
+        } else if (i === 0 && line.length > 0 && line.length < 100) {
+          // First line might be title if it's short
+          title = line
+          contentStartIndex = 1
+          break
+        }
+      }
+      
+      // Extract content (everything after title)
+      const contentLines = lines.slice(contentStartIndex)
+      let blogContent = contentLines.join('\n\n').trim()
+      
+      // Clean up formatting
+      blogContent = blogContent
+        .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
+        .replace(/^\s+|\s+$/g, '') // Trim whitespace
+        .replace(/\n\s+/g, '\n') // Remove leading spaces from lines
+      
+      // Generate excerpt (first 150 characters of content)
+      const excerpt = blogContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
       
       return {
         content: blogContent,
         title,
+        excerpt,
         hashtags: hashtags.length > 0 ? hashtags : undefined,
-        suggestions: generateSuggestions(content),
+        suggestions: generateSuggestions(blogContent),
       }
     } else {
-      // For social posts, use business-specific hashtags or generate new ones
+      // For social posts, clean up formatting
+      const cleanedContent = content
+        .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
+        .replace(/^\s+|\s+$/g, '') // Trim whitespace
+        .trim()
+      
       const finalHashtags = hashtags.length > 0 ? hashtags : generateHashtags(prompt, platform)
       
       return {
-        content,
+        content: cleanedContent,
         hashtags: finalHashtags,
-        suggestions: generateSuggestions(content),
+        suggestions: generateSuggestions(cleanedContent),
       }
     }
   } catch (error) {

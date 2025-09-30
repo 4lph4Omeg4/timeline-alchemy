@@ -130,6 +130,7 @@ export interface AIGenerateRequest {
 export interface AIGenerateResponse {
   content: string
   title?: string
+  excerpt?: string
   hashtags?: string[]
   suggestions?: string[]
 }

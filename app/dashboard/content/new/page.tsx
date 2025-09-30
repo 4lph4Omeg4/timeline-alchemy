@@ -16,6 +16,7 @@ import toast from 'react-hot-toast'
 export default function ContentEditorPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [excerpt, setExcerpt] = useState('')
   const [prompt, setPrompt] = useState('')
   const [generatedImageUrl, setGeneratedImageUrl] = useState('')
   const [contentLoading, setContentLoading] = useState(false)
@@ -71,6 +72,9 @@ export default function ContentEditorPage() {
       
       if (responseData.title) {
         setTitle(responseData.title)
+      }
+      if (responseData.excerpt) {
+        setExcerpt(responseData.excerpt)
       }
       setContent(responseData.content)
       
@@ -272,6 +276,22 @@ export default function ContentEditorPage() {
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
+              
+              {/* Excerpt */}
+              {excerpt && (
+                <div className="space-y-2">
+                  <Label htmlFor="excerpt">Excerpt</Label>
+                  <Textarea
+                    id="excerpt"
+                    placeholder="Post excerpt..."
+                    value={excerpt}
+                    onChange={(e) => setExcerpt(e.target.value)}
+                    rows={3}
+                    className="text-sm"
+                  />
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label htmlFor="content">Content</Label>
                 <Textarea

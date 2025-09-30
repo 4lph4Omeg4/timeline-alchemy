@@ -20,6 +20,7 @@ export default function ContentEditPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [post, setPost] = useState<BlogPost | null>(null)
+  const [postImages, setPostImages] = useState<string[]>([])
 
   useEffect(() => {
     if (params.id) {
@@ -36,27 +37,28 @@ export default function ContentEditPage() {
         return
       }
 
-      // Get user's organization
-      const { data: orgMember, error: orgError } = await supabase
+      // Get user's organizations (any role)
+      const { data: orgMembers, error: orgError } = await supabase
         .from('org_members')
-        .select('org_id')
+        .select('org_id, role')
         .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .single()
 
-      if (orgError || !orgMember) {
-        console.error('Error getting user organization:', orgError)
+      if (orgError || !orgMembers || orgMembers.length === 0) {
+        console.error('Error getting user organizations:', orgError)
         toast.error('No organization found')
         router.push('/create-organization')
         return
       }
+
+      // Get all organization IDs the user belongs to
+      const orgIds = orgMembers.map(member => member.org_id)
 
       // Fetch the post
       const { data: postData, error: postError } = await supabase
         .from('blog_posts')
         .select('*')
         .eq('id', params.id)
-        .eq('org_id', orgMember.org_id)
+        .in('org_id', orgIds)
         .single()
 
       if (postError || !postData) {
@@ -69,6 +71,16 @@ export default function ContentEditPage() {
       setPost(postData)
       setTitle(postData.title)
       setContent(postData.content)
+
+      // Fetch images for this post
+      const { data: images, error: imagesError } = await supabase
+        .from('images')
+        .select('url')
+        .eq('post_id', params.id)
+
+      if (!imagesError && images) {
+        setPostImages(images.map(img => img.url))
+      }
 
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -212,6 +224,24 @@ export default function ContentEditPage() {
               rows={20}
             />
           </div>
+
+          {/* Post Images */}
+          {postImages.length > 0 && (
+            <div>
+              <Label className="text-white">Post Images</Label>
+              <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {postImages.map((imageUrl, index) => (
+                  <div key={index} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
+                    <img 
+                      src={imageUrl} 
+                      alt={`Post image ${index + 1}`} 
+                      className="max-w-full h-auto rounded-lg"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-4">
