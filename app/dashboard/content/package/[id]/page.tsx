@@ -76,6 +76,8 @@ export default function ContentPackagePage() {
   const [userRating, setUserRating] = useState<any>(null)
   const [showRatingForm, setShowRatingForm] = useState(false)
   const [regeneratingSocial, setRegeneratingSocial] = useState(false)
+  const [actualExcerpt, setActualExcerpt] = useState('')
+  const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
 
   const handleRegenerateSocialPosts = async () => {
     if (!post) return
@@ -91,11 +93,12 @@ export default function ContentPackagePage() {
         .update({ social_posts: socialPosts })
         .eq('id', post.id)
       
-      // Update the local state
-      setGeneratedContent(prev => prev ? {
-        ...prev,
-        socialPosts
-      } : null)
+             // Update the local state
+             setSocialPosts(socialPosts)
+             setGeneratedContent(prev => prev ? {
+               ...prev,
+               socialPosts
+             } : null)
       
       toast.success('Social media posts regenerated!')
     } catch (error) {
@@ -173,10 +176,12 @@ export default function ContentPackagePage() {
                .trim()
              
              // Always use existing excerpt from database
-             const actualExcerpt = postData.excerpt || ''
+             const excerpt = postData.excerpt || ''
+             setActualExcerpt(excerpt)
 
              // Always use existing social posts from database
-             const socialPosts = postData.social_posts || {}
+             const posts = postData.social_posts || {}
+             setSocialPosts(posts)
 
       // For now, we'll create a mock generated content structure
       // In a real app, you might store the complete generated content in the database
@@ -184,7 +189,7 @@ export default function ContentPackagePage() {
         blogPost: {
           title: postData.title,
           content: cleanContent,
-          excerpt: actualExcerpt,
+          excerpt: excerpt,
           tags: ['AI Generated', 'Content Package']
         },
         image: images && images.length > 0 ? {
@@ -194,7 +199,7 @@ export default function ContentPackagePage() {
           url: '',
           prompt: ''
         },
-        socialPosts: socialPosts
+        socialPosts: posts
       }
 
       setGeneratedContent(mockGeneratedContent)
