@@ -193,7 +193,7 @@ export default function ContentPackagePage() {
           url: '',
           prompt: ''
         },
-        socialPosts: socialPosts || {} as any
+        socialPosts: (socialPosts || {}) as any
       }
 
       setGeneratedContent(actualGeneratedContent)
