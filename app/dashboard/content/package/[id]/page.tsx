@@ -199,7 +199,7 @@ export default function ContentPackagePage() {
           url: '',
           prompt: ''
         },
-        socialPosts: posts
+        socialPosts: posts as any
       }
 
       setGeneratedContent(mockGeneratedContent)
