@@ -41,10 +41,10 @@ TikTok:
 [Post content here]
 
 Requirements:
-- Facebook: Engaging, conversational tone, 1-2 paragraphs, include relevant hashtags
-- Instagram: Visual, emoji-rich, 1-2 sentences, include 5-10 relevant hashtags
+- Facebook: Engaging, conversational tone, 2-3 paragraphs (up to 1000 characters), include relevant hashtags
+- Instagram: Visual, emoji-rich, 2-3 sentences (up to 500 characters), include 5-10 relevant hashtags
 - Twitter: CRITICAL - Must be under 280 characters total, concise and punchy, include 2-3 short hashtags
-- LinkedIn: Professional, business-focused, 1-2 paragraphs, include 3-5 relevant hashtags
+- LinkedIn: Professional, business-focused, 2-3 paragraphs (up to 1500 characters), include 3-5 relevant hashtags
 - TikTok: Trendy, engaging, short and punchy, include 3-5 trending hashtags
 
 CRITICAL: Each post must be ready to copy-paste and publish immediately. Include relevant hashtags for each platform. Make content engaging and platform-specific.`
@@ -105,10 +105,10 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
       if (!socialPosts[platform]) {
         switch (platform) {
           case 'facebook':
-            socialPosts.facebook = `Check out this amazing content: ${title}\n\n${content.substring(0, 200)}...\n\n#Content #Inspiration #AI`
+            socialPosts.facebook = `Check out this amazing content: ${title}\n\n${content.substring(0, 800)}...\n\n#Content #Inspiration #AI #Digital #Innovation`
             break
           case 'instagram':
-            socialPosts.instagram = `✨ ${title} ✨\n\n${content.substring(0, 150)}...\n\n#AI #Content #Inspiration #Digital #Innovation`
+            socialPosts.instagram = `✨ ${title} ✨\n\n${content.substring(0, 400)}...\n\n#AI #Content #Inspiration #Digital #Innovation #Trending`
             break
           case 'twitter':
             const shortContent = content.substring(0, 150).replace(/\n/g, ' ').trim()
@@ -116,7 +116,7 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
             socialPosts.twitter = twitterPost.length > 280 ? `${title}\n\n${shortContent.substring(0, 200)}...\n\n#AI` : twitterPost
             break
           case 'linkedin':
-            socialPosts.linkedin = `Professional insight: ${title}\n\n${content.substring(0, 180)}...\n\n#Professional #AI #Content #Business`
+            socialPosts.linkedin = `Professional insight: ${title}\n\n${content.substring(0, 1200)}...\n\n#Professional #AI #Content #Business #Innovation #Leadership`
             break
           case 'tiktok':
             socialPosts.tiktok = `${title} 🚀\n\n${content.substring(0, 120)}...\n\n#AI #Trending #Content #Viral`
