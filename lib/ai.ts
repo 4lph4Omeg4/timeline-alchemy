@@ -12,8 +12,8 @@ export const getOpenAI = () => {
   })
 }
 
-// Non-dual foundation with business-specific adaptation
-const NON_DUAL_FOUNDATION = `You are a professional content writer specializing in creating engaging content with a non-dual perspective. Focus on unity, interconnectedness, and seeing beyond binary thinking. Your content should reveal the underlying oneness in all experiences while serving the specific needs of each business.`
+// Professional content foundation with subtle non-dual elements
+const CONTENT_FOUNDATION = `You are a professional content writer creating engaging, valuable content for businesses. Focus on delivering exactly what the user requests while maintaining a natural, authentic tone. When relevant and natural, incorporate themes of connection and unity, but never force these elements if they don't fit the content purpose.`
 
 // Business-specific prompt configurations
 const BUSINESS_PROMPTS: Record<BusinessType, {
@@ -24,60 +24,60 @@ const BUSINESS_PROMPTS: Record<BusinessType, {
   adaptation: string
 }> = {
   camperdealer: {
-    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on adventure, freedom, travel, family memories, and the camper lifestyle. Show how travel connects us to the unity of all experiences.`,
-    keywords: ['camper', 'RV', 'caravan', 'reizen', 'avontuur', 'vrijheid', 'familie', 'vakantie', 'outdoor', 'verbinding', 'eenheid'],
-    hashtags: ['#camper', '#RV', '#reizen', '#avontuur', '#vrijheid', '#familie', '#vakantie', '#verbinding'],
-    tone: 'adventurous and unifying',
-    adaptation: 'Show how camper travel reveals the interconnectedness of all places and experiences'
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on adventure, freedom, travel, family memories, and the camper lifestyle. When relevant, naturally incorporate themes of connection and shared experiences.`,
+    keywords: ['camper', 'RV', 'caravan', 'reizen', 'avontuur', 'vrijheid', 'familie', 'vakantie', 'outdoor'],
+    hashtags: ['#camper', '#RV', '#reizen', '#avontuur', '#vrijheid', '#familie', '#vakantie'],
+    tone: 'adventurous and authentic',
+    adaptation: 'Focus on the practical benefits and experiences of camper travel'
   },
   tankstation: {
-    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on convenience, 24/7 service, fuel efficiency, local community, and quick stops. Show how every stop connects travelers to the unity of human experience.`,
-    keywords: ['tankstation', 'benzine', 'diesel', '24/7', 'gemak', 'lokale service', 'onderweg', 'snack', 'verbinding', 'gemeenschap'],
-    hashtags: ['#tankstation', '#24/7', '#gemak', '#lokale service', '#onderweg', '#verbinding'],
-    tone: 'convenient and connecting',
-    adaptation: 'Show how every stop connects travelers to the unity of human experience'
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on convenience, 24/7 service, fuel efficiency, local community, and quick stops. When relevant, naturally incorporate themes of community and connection.`,
+    keywords: ['tankstation', 'benzine', 'diesel', '24/7', 'gemak', 'lokale service', 'onderweg', 'snack'],
+    hashtags: ['#tankstation', '#24/7', '#gemak', '#lokale service', '#onderweg'],
+    tone: 'convenient and reliable',
+    adaptation: 'Focus on practical service benefits and community value'
   },
   restaurant: {
-    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on food quality, atmosphere, local ingredients, customer experience, and culinary expertise. Show how sharing meals connects us to the unity of human experience.`,
-    keywords: ['restaurant', 'eten', 'culinair', 'lokaal', 'kwaliteit', 'atmosfeer', 'gastvrijheid', 'verbinding', 'gemeenschap'],
-    hashtags: ['#restaurant', '#eten', '#culinair', '#lokaal', '#kwaliteit', '#verbinding'],
-    tone: 'warm and unifying',
-    adaptation: 'Show how sharing meals connects us to the unity of human experience'
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on food quality, atmosphere, local ingredients, customer experience, and culinary expertise. When relevant, naturally incorporate themes of shared experiences and community.`,
+    keywords: ['restaurant', 'eten', 'culinair', 'lokaal', 'kwaliteit', 'atmosfeer', 'gastvrijheid'],
+    hashtags: ['#restaurant', '#eten', '#culinair', '#lokaal', '#kwaliteit'],
+    tone: 'warm and authentic',
+    adaptation: 'Focus on culinary excellence and customer experience'
   },
   retail: {
-    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on product quality, customer service, shopping experience, and value. Show how commerce connects us to the unity of human needs and desires.`,
-    keywords: ['winkel', 'producten', 'kwaliteit', 'klantenservice', 'shopping', 'waarde', 'verbinding', 'behoeften'],
-    hashtags: ['#winkel', '#producten', '#kwaliteit', '#shopping', '#verbinding'],
-    tone: 'helpful and connecting',
-    adaptation: 'Show how commerce connects us to the unity of human needs and desires'
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on product quality, customer service, shopping experience, and value. When relevant, naturally incorporate themes of meeting customer needs.`,
+    keywords: ['winkel', 'producten', 'kwaliteit', 'klantenservice', 'shopping', 'waarde'],
+    hashtags: ['#winkel', '#producten', '#kwaliteit', '#shopping'],
+    tone: 'helpful and value-focused',
+    adaptation: 'Focus on product value and customer satisfaction'
   },
   service: {
-    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on expertise, reliability, customer satisfaction, and professional service. Show how service connects us to the unity of mutual support.`,
-    keywords: ['service', 'expertise', 'betrouwbaar', 'professioneel', 'kwaliteit', 'klanttevredenheid', 'verbinding', 'ondersteuning'],
-    hashtags: ['#service', '#expertise', '#betrouwbaar', '#professioneel', '#verbinding'],
-    tone: 'professional and connecting',
-    adaptation: 'Show how service connects us to the unity of mutual support'
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on expertise, reliability, customer satisfaction, and professional service. When relevant, naturally incorporate themes of trust and support.`,
+    keywords: ['service', 'expertise', 'betrouwbaar', 'professioneel', 'kwaliteit', 'klanttevredenheid'],
+    hashtags: ['#service', '#expertise', '#betrouwbaar', '#professioneel'],
+    tone: 'professional and trustworthy',
+    adaptation: 'Focus on service quality and customer satisfaction'
   },
   hospitality: {
-    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on comfort, guest experience, amenities, and memorable stays. Show how hospitality connects us to the unity of human care.`,
-    keywords: ['hotel', 'accommodatie', 'gastvrijheid', 'comfort', 'ervaring', 'faciliteiten', 'verbinding', 'zorg'],
-    hashtags: ['#hotel', '#accommodatie', '#gastvrijheid', '#comfort', '#verbinding'],
-    tone: 'welcoming and caring',
-    adaptation: 'Show how hospitality connects us to the unity of human care'
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on comfort, guest experience, amenities, and memorable stays. When relevant, naturally incorporate themes of care and hospitality.`,
+    keywords: ['hotel', 'accommodatie', 'gastvrijheid', 'comfort', 'ervaring', 'faciliteiten'],
+    hashtags: ['#hotel', '#accommodatie', '#gastvrijheid', '#comfort'],
+    tone: 'welcoming and comfortable',
+    adaptation: 'Focus on guest comfort and memorable experiences'
   },
   automotive: {
-    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on reliability, performance, safety, and customer service. Show how mobility connects us to the unity of human movement and freedom.`,
-    keywords: ['auto', 'garage', 'onderhoud', 'betrouwbaar', 'veiligheid', 'prestaties', 'verbinding', 'vrijheid'],
-    hashtags: ['#auto', '#garage', '#onderhoud', '#betrouwbaar', '#verbinding'],
-    tone: 'reliable and liberating',
-    adaptation: 'Show how mobility connects us to the unity of human movement and freedom'
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on reliability, performance, safety, and customer service. When relevant, naturally incorporate themes of freedom and mobility.`,
+    keywords: ['auto', 'garage', 'onderhoud', 'betrouwbaar', 'veiligheid', 'prestaties'],
+    hashtags: ['#auto', '#garage', '#onderhoud', '#betrouwbaar'],
+    tone: 'reliable and expert',
+    adaptation: 'Focus on vehicle reliability and customer service'
   },
   general: {
-    systemPrompt: `${NON_DUAL_FOUNDATION} Focus on value, customer service, and quality. Show how business connects us to the unity of human exchange and mutual benefit.`,
-    keywords: ['kwaliteit', 'service', 'klanttevredenheid', 'waarde', 'verbinding', 'uitwisseling'],
-    hashtags: ['#kwaliteit', '#service', '#klanttevredenheid', '#verbinding'],
-    tone: 'professional and connecting',
-    adaptation: 'Show how business connects us to the unity of human exchange and mutual benefit'
+    systemPrompt: `${CONTENT_FOUNDATION} Focus on value, customer service, and quality. When relevant, naturally incorporate themes of mutual benefit and exchange.`,
+    keywords: ['kwaliteit', 'service', 'klanttevredenheid', 'waarde'],
+    hashtags: ['#kwaliteit', '#service', '#klanttevredenheid'],
+    tone: 'professional and helpful',
+    adaptation: 'Focus on business value and customer satisfaction'
   }
 }
 
@@ -123,7 +123,7 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     Write in a ${tone} tone. Create content that is ${length} in length. 
     ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
     ${businessConfig.adaptation}
-    Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
+    Most importantly: Deliver exactly what the user is asking for in their prompt. Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
     
     userPrompt = `Write a blog post about: ${prompt}`
     hashtags = businessConfig.hashtags
@@ -134,7 +134,7 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     Write in a ${tone} tone. Keep it ${length} and engaging.
     ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
     ${businessConfig.adaptation}
-    Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
+    Most importantly: Deliver exactly what the user is asking for in their prompt. Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
     
     userPrompt = `Create a social media post about: ${prompt}`
     hashtags = businessConfig.hashtags
