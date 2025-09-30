@@ -202,7 +202,7 @@ export default function ContentPackagePage() {
         blogPost: {
           title: postData.title,
           content: cleanContent,
-          excerpt: excerpt,
+          excerpt: '',
           tags: ['AI Generated', 'Content Package']
         },
         image: images && images.length > 0 ? {
