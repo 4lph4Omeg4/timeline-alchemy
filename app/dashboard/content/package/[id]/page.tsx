@@ -175,13 +175,26 @@ export default function ContentPackagePage() {
                .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
                .trim()
              
-             // Will be added after database update
-             const excerpt = ''
-             setActualExcerpt(excerpt)
-
-             // Will be added after database update
-             const posts = {}
-             setSocialPosts(posts)
+             // Generate social posts if they don't exist
+             try {
+               const socialResponse = await fetch('/api/generate-social-posts', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({
+                   title: postData.title,
+                   content: cleanContent,
+                   platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+                 })
+               })
+               
+               if (socialResponse.ok) {
+                 const socialData = await socialResponse.json()
+                 setSocialPosts(socialData.socialPosts)
+               }
+             } catch (error) {
+               console.error('Error generating social posts:', error)
+               setSocialPosts({})
+             }
 
       // For now, we'll create a mock generated content structure
       // In a real app, you might store the complete generated content in the database

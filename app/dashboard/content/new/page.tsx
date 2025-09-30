@@ -322,7 +322,7 @@ export default function ContentEditorPage() {
                              Remove Image
                            </Button>
                          </div>
-                         <div className="border rounded-lg p-4 bg-gray-50">
+                         <div className="border border-gray-600 rounded-lg p-4 bg-gray-800">
                            <img 
                              src={generatedImageUrl} 
                              alt="Generated content image" 
@@ -335,10 +335,10 @@ export default function ContentEditorPage() {
                                console.log('Image loaded successfully:', generatedImageUrl)
                              }}
                            />
-                           <p className="text-sm text-gray-600 mt-2">
+                           <p className="text-sm text-gray-300 mt-2">
                              Image URL: {generatedImageUrl.substring(0, 50)}...
                            </p>
-                           <p className="text-sm text-gray-600">
+                           <p className="text-sm text-gray-300">
                              Image will be saved with your post
                            </p>
                          </div>

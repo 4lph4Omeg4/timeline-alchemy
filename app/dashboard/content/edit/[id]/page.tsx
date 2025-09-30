@@ -74,7 +74,27 @@ export default function ContentEditPage() {
       setTitle(postData.title)
       setContent(postData.content)
       setExcerpt('') // Will be added after database update
-      setSocialPosts({}) // Will be added after database update
+      
+      // Generate social posts if they don't exist
+      try {
+        const socialResponse = await fetch('/api/generate-social-posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: postData.title,
+            content: postData.content,
+            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+          })
+        })
+        
+        if (socialResponse.ok) {
+          const socialData = await socialResponse.json()
+          setSocialPosts(socialData.socialPosts)
+        }
+      } catch (error) {
+        console.error('Error generating social posts:', error)
+        setSocialPosts({})
+      }
 
       // Fetch images for this post
       const { data: images, error: imagesError } = await supabase

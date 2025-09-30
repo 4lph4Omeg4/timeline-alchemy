@@ -183,6 +183,11 @@ IMPORTANT OUTPUT FORMAT:
       const contentLines = lines.slice(contentStartIndex)
       let blogContent = contentLines.join('\n\n').trim()
       
+      // Ensure proper paragraph spacing
+      blogContent = blogContent
+        .replace(/\n\n/g, '\n\n') // Ensure double line breaks between paragraphs
+        .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
+      
       // Clean up formatting and remove all labels while preserving paragraph structure
       blogContent = blogContent
         .replace(/\n{3,}/g, '\n\n') // Keep max 2 line breaks between paragraphs
