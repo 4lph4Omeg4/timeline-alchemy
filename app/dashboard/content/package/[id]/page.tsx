@@ -196,9 +196,8 @@ export default function ContentPackagePage() {
                setSocialPosts({})
              }
 
-      // For now, we'll create a mock generated content structure
-      // In a real app, you might store the complete generated content in the database
-      const mockGeneratedContent: GeneratedContent = {
+      // Set the actual generated content with real data
+      const actualGeneratedContent: GeneratedContent = {
         blogPost: {
           title: postData.title,
           content: cleanContent,
@@ -212,10 +211,10 @@ export default function ContentPackagePage() {
           url: '',
           prompt: ''
         },
-        socialPosts: posts as any
+        socialPosts: socialPosts as any
       }
 
-      setGeneratedContent(mockGeneratedContent)
+      setGeneratedContent(actualGeneratedContent)
 
     } catch (error) {
       console.error('Unexpected error:', error)
