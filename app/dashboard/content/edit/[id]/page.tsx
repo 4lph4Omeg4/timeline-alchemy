@@ -242,11 +242,11 @@ export default function ContentEditPage() {
           )}
 
           {/* Social Media Posts */}
-          {Object.keys(socialPosts).length > 0 && (
+          {(Object.keys(socialPosts).length > 0 || post?.social_posts) && (
             <div>
               <Label className="text-white">Social Media Posts</Label>
               <div className="mt-2 space-y-4">
-                {Object.entries(socialPosts).map(([platform, post]) => (
+                {Object.entries(socialPosts || post?.social_posts || {}).map(([platform, post]) => (
                   <div key={platform} className="p-4 bg-gray-800 border border-gray-700 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-blue-400 font-semibold capitalize">{platform}</span>
