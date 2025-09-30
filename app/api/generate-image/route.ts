@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate image using the AI service with improved prompt
-    const improvedPrompt = `${prompt}. Professional, high-quality image, modern, clean, inspiring, abstract concept, no text, no words, no letters, visual metaphor, artistic, minimalist design`
+    const improvedPrompt = `${prompt}. Professional, high-quality image, modern, clean, inspiring, abstract concept, no text, no words, no letters, visual metaphor, artistic, minimalist design, photorealistic, stunning composition`
     const imageUrl = await generateImage(improvedPrompt)
     
     return NextResponse.json({ imageUrl })

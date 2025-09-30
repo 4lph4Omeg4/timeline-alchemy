@@ -8,9 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MINLI_CAMPERDEALER_PROFILE, MINLI_TANKSTATION_PROFILE } from '@/lib/ai'
-import { AIGenerateRequest, BusinessProfile, BusinessType } from '@/types/index'
+import { AIGenerateRequest } from '@/types/index'
 import toast from 'react-hot-toast'
 
 export default function ContentEditorPage() {
@@ -22,23 +20,7 @@ export default function ContentEditorPage() {
   const [contentLoading, setContentLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [businessType, setBusinessType] = useState<BusinessType>('general')
-  const [customBusinessProfile, setCustomBusinessProfile] = useState<BusinessProfile | null>(null)
   const router = useRouter()
-
-  // Get business profile based on selection
-  const getBusinessProfile = (): BusinessProfile | undefined => {
-    if (customBusinessProfile) return customBusinessProfile
-    
-    switch (businessType) {
-      case 'camperdealer':
-        return MINLI_CAMPERDEALER_PROFILE
-      case 'tankstation':
-        return MINLI_TANKSTATION_PROFILE
-      default:
-        return undefined
-    }
-  }
 
   const handleGenerateContent = async () => {
     if (!prompt.trim()) {
@@ -53,7 +35,6 @@ export default function ContentEditorPage() {
         type: 'blog',
         tone: 'professional',
         length: 'medium',
-        businessProfile: getBusinessProfile(),
       }
 
       const response = await fetch('/api/generate-content', {
@@ -148,65 +129,25 @@ export default function ContentEditorPage() {
         userOrgId = orgMembers[0].org_id
       }
 
-      // Generate social media posts and excerpt when saving
-      let socialPosts = null
-      let finalExcerpt = excerpt
-      
-      if (content.trim()) {
-        try {
-          // Generate social media posts
-          const socialResponse = await fetch('/api/generate-social-posts', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              title,
-              content,
-              platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
-            })
-          })
-          
-          if (socialResponse.ok) {
-            const socialData = await socialResponse.json()
-            socialPosts = socialData.socialPosts
-          }
-          
-          // Generate excerpt if not provided
-          if (!finalExcerpt.trim()) {
-            finalExcerpt = content.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
-          }
-        } catch (error) {
-          console.log('Could not generate social posts, using fallback:', error)
-          // Use simple fallback
-          socialPosts = {
-            facebook: `Check out this content: ${title}`,
-            instagram: `✨ ${title} ✨`,
-            twitter: `${title}`,
-            linkedin: `Professional insight: ${title}`,
-            tiktok: `${title} 🚀`
-          }
-        }
-      }
-
-      // First save the blog post with excerpt and social posts
+      // First save the blog post (simplified - no excerpt/social_posts for now)
       const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .insert({
           org_id: userOrgId,
           title,
           content,
-          excerpt: finalExcerpt,
-          social_posts: socialPosts,
           state: 'draft',
         })
         .select()
         .single()
 
       if (postError) {
+        console.error('Post save error:', postError)
         toast.error('Failed to save post')
         return
       }
+
+      console.log('Post saved successfully:', postData.id)
 
       // If there's a generated image, save it too
       if (generatedImageUrl) {
@@ -259,25 +200,6 @@ export default function ContentEditorPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="businessType">Business Type</Label>
-                <Select value={businessType} onValueChange={(value: BusinessType) => setBusinessType(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select business type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General Business</SelectItem>
-                    <SelectItem value="camperdealer">Camper Dealer</SelectItem>
-                    <SelectItem value="tankstation">Gas Station</SelectItem>
-                    <SelectItem value="restaurant">Restaurant</SelectItem>
-                    <SelectItem value="retail">Retail</SelectItem>
-                    <SelectItem value="service">Service Business</SelectItem>
-                    <SelectItem value="hospitality">Hospitality</SelectItem>
-                    <SelectItem value="automotive">Automotive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="prompt">Content Prompt</Label>
                 <Textarea
                   id="prompt"
@@ -325,21 +247,6 @@ export default function ContentEditorPage() {
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
-              
-              {/* Excerpt */}
-              {excerpt && (
-                <div className="space-y-2">
-                  <Label htmlFor="excerpt">Excerpt</Label>
-                  <Textarea
-                    id="excerpt"
-                    placeholder="Post excerpt..."
-                    value={excerpt}
-                    onChange={(e) => setExcerpt(e.target.value)}
-                    rows={3}
-                    className="text-sm"
-                  />
-                </div>
-              )}
               
               <div className="space-y-2">
                 <Label htmlFor="content">Content</Label>
