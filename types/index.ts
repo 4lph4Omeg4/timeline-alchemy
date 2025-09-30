@@ -98,12 +98,33 @@ export interface UsageStats {
   socialAccountsCount: number
 }
 
+export type BusinessType = 
+  | 'camperdealer' 
+  | 'tankstation' 
+  | 'restaurant' 
+  | 'retail' 
+  | 'service' 
+  | 'hospitality' 
+  | 'automotive' 
+  | 'general'
+
+export interface BusinessProfile {
+  type: BusinessType
+  name: string
+  industry: string
+  targetAudience: string[]
+  keyServices: string[]
+  brandVoice: string
+  location?: string
+}
+
 export interface AIGenerateRequest {
   prompt: string
   type: 'blog' | 'social'
   tone?: 'professional' | 'casual' | 'friendly' | 'authoritative'
   length?: 'short' | 'medium' | 'long'
   platform?: 'twitter' | 'linkedin' | 'instagram' | 'facebook' | 'youtube'
+  businessProfile?: BusinessProfile
 }
 
 export interface AIGenerateResponse {

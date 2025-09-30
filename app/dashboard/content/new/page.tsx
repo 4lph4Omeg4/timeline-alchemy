@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { generateContent, generateImage } from '@/lib/ai'
-import { AIGenerateRequest } from '@/types/index'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { generateContent, generateImage, MINLI_CAMPERDEALER_PROFILE, MINLI_TANKSTATION_PROFILE } from '@/lib/ai'
+import { AIGenerateRequest, BusinessProfile, BusinessType } from '@/types/index'
 import toast from 'react-hot-toast'
 
 export default function ContentEditorPage() {
@@ -18,7 +19,23 @@ export default function ContentEditorPage() {
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [businessType, setBusinessType] = useState<BusinessType>('general')
+  const [customBusinessProfile, setCustomBusinessProfile] = useState<BusinessProfile | null>(null)
   const router = useRouter()
+
+  // Get business profile based on selection
+  const getBusinessProfile = (): BusinessProfile | undefined => {
+    if (customBusinessProfile) return customBusinessProfile
+    
+    switch (businessType) {
+      case 'camperdealer':
+        return MINLI_CAMPERDEALER_PROFILE
+      case 'tankstation':
+        return MINLI_TANKSTATION_PROFILE
+      default:
+        return undefined
+    }
+  }
 
   const handleGenerateContent = async () => {
     if (!prompt.trim()) {
@@ -33,6 +50,7 @@ export default function ContentEditorPage() {
         type: 'blog',
         tone: 'professional',
         length: 'medium',
+        businessProfile: getBusinessProfile(),
       }
 
       const response = await generateContent(request)
@@ -141,6 +159,25 @@ export default function ContentEditorPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="businessType">Business Type</Label>
+                <Select value={businessType} onValueChange={(value: BusinessType) => setBusinessType(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select business type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General Business</SelectItem>
+                    <SelectItem value="camperdealer">Camper Dealer</SelectItem>
+                    <SelectItem value="tankstation">Gas Station</SelectItem>
+                    <SelectItem value="restaurant">Restaurant</SelectItem>
+                    <SelectItem value="retail">Retail</SelectItem>
+                    <SelectItem value="service">Service Business</SelectItem>
+                    <SelectItem value="hospitality">Hospitality</SelectItem>
+                    <SelectItem value="automotive">Automotive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="prompt">Content Prompt</Label>
                 <Textarea

@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { AIGenerateRequest, AIGenerateResponse } from '@/types/index'
+import { AIGenerateRequest, AIGenerateResponse, BusinessProfile, BusinessType } from '@/types/index'
 
 // Server-side OpenAI instance (only use in API routes)
 export const getOpenAI = () => {
@@ -10,6 +10,63 @@ export const getOpenAI = () => {
   return new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   })
+}
+
+// Business-specific prompt configurations
+const BUSINESS_PROMPTS: Record<BusinessType, {
+  systemPrompt: string
+  keywords: string[]
+  hashtags: string[]
+  tone: string
+}> = {
+  camperdealer: {
+    systemPrompt: `You are a content writer specializing in camper and RV dealership marketing. Focus on adventure, freedom, travel, family memories, and the camper lifestyle. Emphasize quality, reliability, and customer service.`,
+    keywords: ['camper', 'RV', 'caravan', 'reizen', 'avontuur', 'vrijheid', 'familie', 'vakantie', 'outdoor'],
+    hashtags: ['#camper', '#RV', '#reizen', '#avontuur', '#vrijheid', '#familie', '#vakantie'],
+    tone: 'adventurous and trustworthy'
+  },
+  tankstation: {
+    systemPrompt: `You are a content writer for gas stations and convenience stores. Focus on convenience, 24/7 service, fuel efficiency, local community, and quick stops. Emphasize reliability and customer service.`,
+    keywords: ['tankstation', 'benzine', 'diesel', '24/7', 'gemak', 'lokale service', 'onderweg', 'snack'],
+    hashtags: ['#tankstation', '#24/7', '#gemak', '#lokale service', '#onderweg'],
+    tone: 'convenient and reliable'
+  },
+  restaurant: {
+    systemPrompt: `You are a content writer for restaurants and cafes. Focus on food quality, atmosphere, local ingredients, customer experience, and culinary expertise. Emphasize taste and hospitality.`,
+    keywords: ['restaurant', 'eten', 'culinair', 'lokaal', 'kwaliteit', 'atmosfeer', 'gastvrijheid'],
+    hashtags: ['#restaurant', '#eten', '#culinair', '#lokaal', '#kwaliteit'],
+    tone: 'warm and appetizing'
+  },
+  retail: {
+    systemPrompt: `You are a content writer for retail businesses. Focus on product quality, customer service, shopping experience, and value. Emphasize selection and customer satisfaction.`,
+    keywords: ['winkel', 'producten', 'kwaliteit', 'klantenservice', 'shopping', 'waarde'],
+    hashtags: ['#winkel', '#producten', '#kwaliteit', '#shopping'],
+    tone: 'helpful and value-focused'
+  },
+  service: {
+    systemPrompt: `You are a content writer for service businesses. Focus on expertise, reliability, customer satisfaction, and professional service. Emphasize trust and quality work.`,
+    keywords: ['service', 'expertise', 'betrouwbaar', 'professioneel', 'kwaliteit', 'klanttevredenheid'],
+    hashtags: ['#service', '#expertise', '#betrouwbaar', '#professioneel'],
+    tone: 'professional and trustworthy'
+  },
+  hospitality: {
+    systemPrompt: `You are a content writer for hospitality businesses. Focus on comfort, guest experience, amenities, and memorable stays. Emphasize hospitality and attention to detail.`,
+    keywords: ['hotel', 'accommodatie', 'gastvrijheid', 'comfort', 'ervaring', 'faciliteiten'],
+    hashtags: ['#hotel', '#accommodatie', '#gastvrijheid', '#comfort'],
+    tone: 'welcoming and comfortable'
+  },
+  automotive: {
+    systemPrompt: `You are a content writer for automotive businesses. Focus on reliability, performance, safety, and customer service. Emphasize expertise and trustworthiness.`,
+    keywords: ['auto', 'garage', 'onderhoud', 'betrouwbaar', 'veiligheid', 'prestaties'],
+    hashtags: ['#auto', '#garage', '#onderhoud', '#betrouwbaar'],
+    tone: 'reliable and expert'
+  },
+  general: {
+    systemPrompt: `You are a professional content writer creating engaging content for businesses. Focus on value, customer service, and quality.`,
+    keywords: ['kwaliteit', 'service', 'klanttevredenheid', 'waarde'],
+    hashtags: ['#kwaliteit', '#service', '#klanttevredenheid'],
+    tone: 'professional and helpful'
+  }
 }
 
 interface ComprehensiveContentRequest {
@@ -40,22 +97,33 @@ interface GeneratedContent {
 }
 
 export async function generateContent(request: AIGenerateRequest): Promise<AIGenerateResponse> {
-  const { prompt, type, tone = 'professional', length = 'medium', platform } = request
+  const { prompt, type, tone = 'professional', length = 'medium', platform, businessProfile } = request
 
   let systemPrompt = ''
   let userPrompt = ''
+  let hashtags: string[] = []
 
+  // Get business-specific configuration
+  const businessConfig = businessProfile ? BUSINESS_PROMPTS[businessProfile.type] : BUSINESS_PROMPTS.general
+  
   if (type === 'blog') {
-    systemPrompt = `You are a professional content writer specializing in creating engaging blog posts with a non-dual perspective. 
-    Write in a ${tone} tone. Create content that is ${length} in length. Focus on unity, interconnectedness, and seeing beyond binary thinking.`
+    systemPrompt = `${businessConfig.systemPrompt} 
+    Write in a ${tone} tone. Create content that is ${length} in length. 
+    ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
+    Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
     
     userPrompt = `Write a blog post about: ${prompt}`
+    hashtags = businessConfig.hashtags
   } else {
     const platformSpecific = platform ? ` for ${platform}` : ''
-    systemPrompt = `You are a social media expert creating engaging posts${platformSpecific}. 
-    Write in a ${tone} tone. Keep it ${length} and engaging.`
+    systemPrompt = `${businessConfig.systemPrompt} 
+    You are a social media expert creating engaging posts${platformSpecific}. 
+    Write in a ${tone} tone. Keep it ${length} and engaging.
+    ${businessProfile ? `Focus on ${businessProfile.name} and their ${businessProfile.industry} business.` : ''}
+    Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
     
     userPrompt = `Create a social media post about: ${prompt}`
+    hashtags = businessConfig.hashtags
   }
 
   try {
@@ -81,15 +149,16 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
       return {
         content: blogContent,
         title,
+        hashtags: hashtags.length > 0 ? hashtags : undefined,
         suggestions: generateSuggestions(content),
       }
     } else {
-      // For social posts, generate hashtags
-      const hashtags = generateHashtags(prompt, platform)
+      // For social posts, use business-specific hashtags or generate new ones
+      const finalHashtags = hashtags.length > 0 ? hashtags : generateHashtags(prompt, platform)
       
       return {
         content,
-        hashtags,
+        hashtags: finalHashtags,
         suggestions: generateSuggestions(content),
       }
     }
@@ -234,7 +303,49 @@ function parseBlogContent(content: string): { title: string; content: string; ex
     .replace(/^#+\s*.+$/gm, '')
     .trim()
 
-  return { title, content: blogContent, excerpt, tags }
+  return { title, content: blogContent, excerpt, tags   }
+}
+
+// Helper function to create business profiles
+export function createBusinessProfile(
+  type: BusinessType,
+  name: string,
+  industry: string,
+  targetAudience: string[],
+  keyServices: string[],
+  brandVoice: string,
+  location?: string
+): BusinessProfile {
+  return {
+    type,
+    name,
+    industry,
+    targetAudience,
+    keyServices,
+    brandVoice,
+    location
+  }
+}
+
+// Predefined business profiles for common business types
+export const MINLI_CAMPERDEALER_PROFILE: BusinessProfile = {
+  type: 'camperdealer',
+  name: 'Minli Caravan World',
+  industry: 'Camper & RV Dealership',
+  targetAudience: ['camper enthousiasten', 'families', 'avonturiers', 'reizigers'],
+  keyServices: ['camper verkoop', 'onderhoud', 'accessoires', 'advies'],
+  brandVoice: 'avontuurlijk en betrouwbaar',
+  location: 'Landgraaf'
+}
+
+export const MINLI_TANKSTATION_PROFILE: BusinessProfile = {
+  type: 'tankstation',
+  name: 'Minli Tankstations',
+  industry: 'Gas Station & Convenience',
+  targetAudience: ['forenzen', 'reizigers', 'lokale bewoners', 'chauffeurs'],
+  keyServices: ['brandstof', '24/7 service', 'snacks', 'pakketpunten', 'carwash'],
+  brandVoice: 'betrouwbaar en gemakkelijk',
+  location: 'Zuid-Limburg'
 }
 
 export async function generateImage(prompt: string): Promise<string> {
