@@ -27,7 +27,8 @@ CRITICAL OUTPUT REQUIREMENTS:
 - Focus on delivering value, not formatting
 - Always produce high-quality, engaging content
 - Let unity and connection emerge naturally from authentic business writing
-- Stay focused on the specific topic requested - don't add unrelated business concepts`
+- Stay focused on the specific topic requested - don't add unrelated business concepts
+- NEVER mention "klanttevredenheid" or random business terms unless specifically requested`
 
 // Business-specific prompt configurations
 const BUSINESS_PROMPTS: Record<BusinessType, {
