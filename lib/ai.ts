@@ -131,7 +131,10 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     - Use proper spacing between paragraphs
     - Include a compelling introduction and conclusion
     - Make content ready for immediate use on websites or social platforms
-    - Ensure proper line breaks and formatting`
+    - Ensure proper line breaks and formatting
+    - NO markdown formatting (no #, **, *, etc.)
+    - Use plain text with proper paragraph breaks
+    - Content should be copy-paste ready without any formatting issues`
     
     userPrompt = `Write a blog post about: ${prompt}`
     hashtags = businessConfig.hashtags
@@ -149,7 +152,10 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
     - Use proper line breaks for readability
     - Include relevant hashtags naturally
     - Make content ready for immediate posting
-    - Ensure proper formatting for the target platform`
+    - Ensure proper formatting for the target platform
+    - NO markdown formatting (no #, **, *, etc.)
+    - Use plain text with proper line breaks
+    - Content should be copy-paste ready`
     
     userPrompt = `Create a social media post about: ${prompt}`
     hashtags = businessConfig.hashtags
@@ -200,6 +206,14 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
         .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
         .replace(/^\s+|\s+$/g, '') // Trim whitespace
         .replace(/\n\s+/g, '\n') // Remove leading spaces from lines
+        .replace(/^#+\s*/gm, '') // Remove markdown headers
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+        .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
+        .replace(/`(.*?)`/g, '$1') // Remove code markdown
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
+        .replace(/^\d+\.\s*/gm, '') // Remove numbered lists
+        .replace(/^[-*]\s*/gm, '') // Remove bullet points
+        .trim()
       
       // Generate excerpt (first 150 characters of content)
       const excerpt = blogContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
@@ -216,6 +230,11 @@ export async function generateContent(request: AIGenerateRequest): Promise<AIGen
       const cleanedContent = content
         .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
         .replace(/^\s+|\s+$/g, '') // Trim whitespace
+        .replace(/^#+\s*/gm, '') // Remove markdown headers
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+        .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
+        .replace(/`(.*?)`/g, '$1') // Remove code markdown
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
         .trim()
       
       const finalHashtags = hashtags.length > 0 ? hashtags : generateHashtags(prompt, platform)
@@ -264,7 +283,7 @@ export async function generateComprehensiveContent(request: ComprehensiveContent
     const blogData = parseBlogContent(blogContent)
 
     // Generate image
-    const imagePrompt = `Professional, high-quality image that represents: ${prompt}. Modern, clean, inspiring, non-dual perspective, unity, interconnectedness`
+    const imagePrompt = `Professional, high-quality image that represents: ${prompt}. Modern, clean, inspiring, abstract concept, no text, no words, no letters, visual metaphor, artistic, minimalist design`
     const imageUrl = await generateImage(imagePrompt)
 
     // Generate social media posts for each platform
