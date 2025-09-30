@@ -15,6 +15,7 @@ export default function ContentEditorPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [excerpt, setExcerpt] = useState('')
+  const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
   const [prompt, setPrompt] = useState('')
   const [generatedImageUrl, setGeneratedImageUrl] = useState('')
   const [contentLoading, setContentLoading] = useState(false)
@@ -58,6 +59,29 @@ export default function ContentEditorPage() {
         setExcerpt(responseData.excerpt)
       }
       setContent(responseData.content)
+      
+      // Generate social media posts automatically
+      try {
+        const socialResponse = await fetch('/api/generate-social-posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: responseData.title || 'Untitled',
+            content: responseData.content,
+            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+          })
+        })
+
+        if (socialResponse.ok) {
+          const socialData = await socialResponse.json()
+          setSocialPosts(socialData.socialPosts)
+          console.log('Social posts generated:', socialData.socialPosts)
+        }
+      } catch (socialError) {
+        console.error('Error generating social posts:', socialError)
+      }
       
       toast.success('Content generated successfully!')
     } catch (error) {
@@ -129,13 +153,15 @@ export default function ContentEditorPage() {
         userOrgId = orgMembers[0].org_id
       }
 
-      // First save the blog post (simplified - no excerpt/social_posts for now)
+      // First save the blog post with excerpt and social posts
       const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .insert({
           org_id: userOrgId,
           title,
           content,
+          excerpt: excerpt || content.substring(0, 150).replace(/\n/g, ' ').trim() + '...',
+          social_posts: Object.keys(socialPosts).length > 0 ? socialPosts : null,
           state: 'draft',
         })
         .select()

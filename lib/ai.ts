@@ -143,8 +143,9 @@ Use relevant keywords: ${businessConfig.keywords.join(', ')}.`
 IMPORTANT OUTPUT FORMAT:
 - Start with a clear, engaging title (no "Title:" label, just the title)
 - Follow with the content in clean paragraphs
+- Write MINIMUM 3 paragraphs with proper spacing
 - Each paragraph should be 3-5 sentences
-- Use proper spacing between paragraphs
+- Leave ONE EMPTY LINE between each paragraph
 - End with a strong conclusion
 - Make it ready to copy and paste directly into any platform
 - NO formatting markers, NO labels, NO prefixes`
@@ -190,9 +191,9 @@ IMPORTANT OUTPUT FORMAT:
       const contentLines = lines.slice(contentStartIndex)
       let blogContent = contentLines.join('\n\n').trim()
       
-      // Clean up formatting and remove all labels
+      // Clean up formatting and remove all labels while preserving paragraph structure
       blogContent = blogContent
-        .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
+        .replace(/\n{4,}/g, '\n\n\n') // Keep max 3 line breaks (title + 2 empty lines)
         .replace(/^\s+|\s+$/g, '') // Trim whitespace
         .replace(/\n\s+/g, '\n') // Remove leading spaces from lines
         .replace(/^#+\s*/gm, '') // Remove markdown headers
