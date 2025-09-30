@@ -17,7 +17,9 @@ export default function ContentEditorPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [prompt, setPrompt] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [generatedImageUrl, setGeneratedImageUrl] = useState('')
+  const [contentLoading, setContentLoading] = useState(false)
+  const [imageLoading, setImageLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [businessType, setBusinessType] = useState<BusinessType>('general')
   const [customBusinessProfile, setCustomBusinessProfile] = useState<BusinessProfile | null>(null)
@@ -43,7 +45,7 @@ export default function ContentEditorPage() {
       return
     }
 
-    setLoading(true)
+    setContentLoading(true)
     try {
       const request: AIGenerateRequest = {
         prompt,
@@ -76,7 +78,7 @@ export default function ContentEditorPage() {
     } catch (error) {
       toast.error('Failed to generate content')
     } finally {
-      setLoading(false)
+      setContentLoading(false)
     }
   }
 
@@ -86,7 +88,7 @@ export default function ContentEditorPage() {
       return
     }
 
-    setLoading(true)
+    setImageLoading(true)
     try {
       const response = await fetch('/api/generate-image', {
         method: 'POST',
@@ -101,13 +103,12 @@ export default function ContentEditorPage() {
       }
 
       const responseData = await response.json()
+      setGeneratedImageUrl(responseData.imageUrl)
       toast.success('Image generated successfully!')
-      // In a real app, you'd save this image URL to the database
-      console.log('Generated image URL:', responseData.imageUrl)
     } catch (error) {
       toast.error('Failed to generate image')
     } finally {
-      setLoading(false)
+      setImageLoading(false)
     }
   }
 
@@ -142,7 +143,8 @@ export default function ContentEditorPage() {
         userOrgId = orgMembers[0].org_id
       }
 
-      const { error } = await (supabase as any)
+      // First save the blog post
+      const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .insert({
           org_id: userOrgId,
@@ -150,13 +152,32 @@ export default function ContentEditorPage() {
           content,
           state: 'draft',
         })
+        .select()
+        .single()
 
-      if (error) {
+      if (postError) {
         toast.error('Failed to save post')
-      } else {
-        toast.success('Post saved successfully!')
-        router.push('/dashboard/content/list')
+        return
       }
+
+      // If there's a generated image, save it too
+      if (generatedImageUrl) {
+        const { error: imageError } = await (supabase as any)
+          .from('images')
+          .insert({
+            org_id: userOrgId,
+            post_id: postData.id,
+            url: generatedImageUrl,
+          })
+
+        if (imageError) {
+          console.error('Failed to save image:', imageError)
+          // Don't fail the whole operation if image save fails
+        }
+      }
+
+      toast.success('Post saved successfully!')
+      router.push('/dashboard/content/list')
     } catch (error) {
       toast.error('An unexpected error occurred')
     } finally {
@@ -215,18 +236,18 @@ export default function ContentEditorPage() {
               </div>
               <Button 
                 onClick={handleGenerateContent} 
-                disabled={loading}
+                disabled={contentLoading || imageLoading}
                 className="w-full"
               >
-                {loading ? 'Generating...' : 'Generate Content'}
+                {contentLoading ? 'Generating Content...' : 'Generate Content'}
               </Button>
               <Button 
                 variant="outline"
                 onClick={handleGenerateImage} 
-                disabled={loading || !title.trim()}
+                disabled={imageLoading || contentLoading || !title.trim()}
                 className="w-full"
               >
-                {loading ? 'Generating...' : 'Generate Image'}
+                {imageLoading ? 'Generating Image...' : 'Generate Image'}
               </Button>
             </CardContent>
           </Card>
@@ -261,6 +282,32 @@ export default function ContentEditorPage() {
                   rows={20}
                 />
               </div>
+              
+              {/* Generated Image Display */}
+              {generatedImageUrl && (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label>Generated Image</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setGeneratedImageUrl('')}
+                    >
+                      Remove Image
+                    </Button>
+                  </div>
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <img 
+                      src={generatedImageUrl} 
+                      alt="Generated content image" 
+                      className="max-w-full h-auto rounded-lg"
+                    />
+                    <p className="text-sm text-gray-600 mt-2">
+                      Image will be saved with your post
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-between">
                 <Button 
                   variant="outline" 
