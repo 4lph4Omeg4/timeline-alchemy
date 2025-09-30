@@ -186,7 +186,7 @@ export default function ContentCreatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 p-6">
+    <div className="space-y-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Divine Header */}
         <div className="text-center space-y-4">
