@@ -150,6 +150,8 @@ export default function ContentPackagePage() {
         }
 
         // Create a new blog post for the social post
+        // Convert local datetime to UTC for database storage
+        const scheduledDate = new Date(scheduleDateTime)
         const { data: socialPostData, error: socialPostError } = await supabase
           .from('blog_posts')
           .insert({
@@ -157,7 +159,7 @@ export default function ContentPackagePage() {
             title: `${post.title} - ${platform.charAt(0).toUpperCase() + platform.slice(1)} Post`,
             content: postContent,
             state: 'scheduled',
-            scheduled_for: scheduleDateTime,
+            scheduled_for: scheduledDate.toISOString(),
             social_platform: platform,
             parent_post_id: post.id
           })
@@ -173,11 +175,13 @@ export default function ContentPackagePage() {
         toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} post scheduled successfully!`)
       } else {
         // Schedule the main blog post
+        // Convert local datetime to UTC for database storage
+        const scheduledDate = new Date(scheduleDateTime)
         const { error: updateError } = await supabase
           .from('blog_posts')
           .update({
             state: 'scheduled',
-            scheduled_for: scheduleDateTime
+            scheduled_for: scheduledDate.toISOString()
           })
           .eq('id', post.id)
 
@@ -188,7 +192,7 @@ export default function ContentPackagePage() {
         }
 
         // Update local state
-        setPost(prev => prev ? { ...prev, state: 'scheduled', scheduled_for: scheduleDateTime } : null)
+        setPost(prev => prev ? { ...prev, state: 'scheduled', scheduled_for: scheduledDate.toISOString() } : null)
         toast.success('Blog post scheduled successfully!')
       }
 
@@ -206,10 +210,16 @@ export default function ContentPackagePage() {
   const openScheduleModal = (platform: string | null = null) => {
     setSelectedPlatform(platform)
     setShowScheduleModal(true)
-    // Set default time to 1 hour from now
+    // Set default time to 1 hour from now in local timezone
     const now = new Date()
     now.setHours(now.getHours() + 1)
-    setScheduleDateTime(now.toISOString().slice(0, 16))
+    // Format for datetime-local input (YYYY-MM-DDTHH:MM) in local timezone
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    setScheduleDateTime(`${year}-${month}-${day}T${hours}:${minutes}`)
   }
 
   useEffect(() => {

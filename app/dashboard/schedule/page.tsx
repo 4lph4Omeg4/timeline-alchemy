@@ -29,10 +29,12 @@ export default function SchedulerPage() {
   }
 
   const getPostsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0]
+    // Use local date string instead of UTC
+    const dateStr = date.toLocaleDateString('en-CA') // YYYY-MM-DD format in local timezone
     return posts.filter(post => {
       if (!post.scheduled_for) return false
-      const scheduledDate = new Date(post.scheduled_for).toISOString().split('T')[0]
+      // Convert scheduled_for to local date string
+      const scheduledDate = new Date(post.scheduled_for).toLocaleDateString('en-CA')
       return scheduledDate === dateStr
     })
   }
@@ -98,11 +100,13 @@ export default function SchedulerPage() {
 
   const handleSchedulePost = async (postId: string, scheduledFor: string) => {
     try {
+      // Convert local datetime to UTC for database storage
+      const scheduledDate = new Date(scheduledFor)
       const { error } = await (supabase as any)
         .from('blog_posts')
         .update({
           state: 'scheduled',
-          scheduled_for: scheduledFor,
+          scheduled_for: scheduledDate.toISOString(),
         })
         .eq('id', postId)
 
