@@ -73,60 +73,78 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
+    <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center p-4">
+      {/* Cosmic Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/20 to-black"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-purple-500/15 to-purple-600/10 animate-pulse"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.05),transparent_70%)]"></div>
+      
+      {/* Floating Cosmic Orbs */}
+      <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-purple-500/20 to-purple-400/25 rounded-full blur-xl animate-bounce"></div>
+      <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-purple-400/15 to-pink-400/20 rounded-full blur-xl animate-bounce delay-1000"></div>
+      <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-r from-purple-500/15 to-purple-600/20 rounded-full blur-xl animate-bounce delay-2000"></div>
+
+      <Card className="w-full max-w-md bg-gradient-to-br from-purple-900/40 to-blue-900/40 backdrop-blur-md border-purple-500/30 shadow-2xl relative z-10">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Logo size="lg" showText={false} />
+            <Logo size="lg" showText={true} />
           </div>
-          <CardTitle className="text-2xl text-white">Welcome back</CardTitle>
-          <CardDescription className="text-gray-300">
-            Sign in to your Timeline Alchemy account
+          <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 font-bold">
+            Welcome back, Enlightened One
+          </CardTitle>
+          <CardDescription className="text-purple-200">
+            Enter the cosmic realm of Timeline Alchemy
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">Email</Label>
+        <CardContent className="space-y-6">
+          <form onSubmit={handleSignIn} className="space-y-6">
+            <div className="space-y-3">
+              <Label htmlFor="email" className="text-purple-200 font-semibold">Cosmic Email Address</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your cosmic email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-purple-800/30 border-purple-500/50 text-white placeholder-purple-300 focus:border-purple-400 focus:ring-purple-400/50"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-300">Password</Label>
+            <div className="space-y-3">
+              <Label htmlFor="password" className="text-purple-200 font-semibold">Mystical Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Enter your mystical password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-purple-800/30 border-purple-500/50 text-white placeholder-purple-300 focus:border-purple-400 focus:ring-purple-400/50"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-500 hover:via-pink-500 hover:to-purple-500 text-white font-bold shadow-lg hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105" 
+              disabled={loading}
+            >
+              {loading ? '✨ Entering Cosmic Realm...' : '🌟 Enter Cosmic Realm'}
             </Button>
           </form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-gray-800 px-2 text-gray-400">
-                  Or continue with
-                </span>
-              </div>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-purple-500/30" />
             </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-gradient-to-br from-purple-900/40 to-blue-900/40 px-4 py-1 text-purple-300 font-semibold rounded-full border border-purple-500/30">
+                Or channel cosmic energy with
+              </span>
+            </div>
+          </div>
 
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-blue-600/30 hover:to-purple-600/30 hover:border-purple-400 transition-all duration-300"
             onClick={handleGoogleSignIn}
             disabled={loading}
           >
@@ -148,16 +166,16 @@ export default function SignInPage() {
                 fill="#EA4335"
               />
             </svg>
-            Google
+            Google Cosmic Access
           </Button>
 
-          <div className="text-center text-sm text-gray-300">
-            Don't have an account?{' '}
+          <div className="text-center text-sm text-purple-200">
+            New to the cosmic realm?{' '}
             <button
               onClick={() => router.push('/auth/signup')}
-              className="text-yellow-400 hover:underline"
+              className="text-yellow-400 hover:text-yellow-300 hover:underline font-semibold transition-colors duration-300"
             >
-              Sign up
+              Begin your cosmic journey
             </button>
           </div>
         </CardContent>
