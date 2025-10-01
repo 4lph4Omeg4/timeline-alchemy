@@ -531,8 +531,8 @@ export default function SocialConnectionsPage() {
                 <Button
                   className={`w-full transition-all duration-200 ${
                     isConnected(platform.id) 
-                      ? 'bg-green-600 hover:bg-green-700 text-white' 
-                      : 'bg-yellow-400 hover:bg-yellow-500 text-black font-semibold'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50' 
+                      : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
                   }`}
                   variant={isConnected(platform.id) ? "default" : "default"}
                   onClick={() => isConnected(platform.id) 

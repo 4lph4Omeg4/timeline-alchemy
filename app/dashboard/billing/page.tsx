@@ -410,7 +410,7 @@ export default function BillingPage() {
                         </Button>
                       ) : (
                         <Button
-                          className="w-full"
+                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
                           onClick={() => handleChangePlan(planKey as PlanType)}
                           disabled={processing === planKey}
                         >
@@ -420,7 +420,7 @@ export default function BillingPage() {
                       )
                     ) : (
                       <Button
-                        className="w-full"
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
                         onClick={() => handleSubscribe(planKey as PlanType)}
                         disabled={processing === planKey}
                       >

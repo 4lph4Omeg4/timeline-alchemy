@@ -163,7 +163,7 @@ export default function SchedulerPage() {
           </Button>
           <Button
             variant={view === 'calendar' ? 'default' : 'outline'}
-            className={view === 'calendar' ? 'bg-yellow-400 text-black hover:bg-yellow-500' : 'border-gray-600 text-gray-300 hover:bg-gray-800'}
+            className={view === 'calendar' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50' : 'border-gray-600 text-gray-300 hover:bg-gray-800'}
             onClick={() => setView('calendar')}
           >
             Calendar View
