@@ -233,7 +233,7 @@ export default function HomePage() {
             <CardContent>
               <CardDescription className="text-gray-200 text-lg leading-relaxed">
                 Connect your social media realms and publish content directly to{' '}
-                <span className="text-pink-300 font-semibold">Twitter, LinkedIn, Instagram, Facebook, and YouTube</span> 
+                <span className="text-pink-300 font-semibold">Twitter, LinkedIn, Instagram, Facebook, and YouTube </span> 
                 with a single divine click.
               </CardDescription>
             </CardContent>
@@ -322,9 +322,9 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-purple-500/8 to-purple-600/5"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <div className="flex justify-between items-start mb-8">
             {/* Left side - Company Info */}
-            <div className="md:col-span-1">
+            <div className="w-1/3">
               <div className="flex items-center mb-4">
                 <Logo size="sm" showText={false} />
                 <span className="ml-2 text-white font-bold">Timeline Alchemy</span>
@@ -334,23 +334,26 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* SH4M4NI4K.NL Links */}
-            <div className="md:col-span-1">
-              <h3 className="text-white font-semibold mb-4">SH4M4NI4K.NL</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="https://sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Cosmic Unity</a></li>
-                <li><a href="https://timeline-alchemy.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Timeline Alchemy</a></li>
-              </ul>
-            </div>
+            {/* Right side - SH4M4NI4K.NL and Contact - REALLY FAR RIGHT */}
+            <div className="flex gap-16">
+              {/* SH4M4NI4K.NL Links */}
+              <div className="text-right">
+                <h3 className="text-white font-semibold mb-4">SH4M4NI4K.NL</h3>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="https://sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Cosmic Unity</a></li>
+                  <li><a href="https://timeline-alchemy.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Timeline Alchemy</a></li>
+                </ul>
+              </div>
 
-            {/* Contact */}
-            <div className="md:col-span-1">
-              <h3 className="text-white font-semibold mb-4">Contact</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition">timeline-alchemy@sh4m4ni4k.nl</a></li>
-                <li><span className="text-gray-400">Poststraat 47B, 6371VL</span></li>
-                <li><span className="text-gray-400">Landgraaf, Netherlands</span></li>
-              </ul>
+              {/* Contact */}
+              <div className="text-right">
+                <h3 className="text-white font-semibold mb-4">Contact</h3>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition">timeline-alchemy@sh4m4ni4k.nl</a></li>
+                  <li><span className="text-gray-400">Poststraat 47B, 6371VL</span></li>
+                  <li><span className="text-gray-400">Landgraaf, Netherlands</span></li>
+                </ul>
+              </div>
             </div>
           </div>
 
