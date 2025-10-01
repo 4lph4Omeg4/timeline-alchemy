@@ -75,8 +75,16 @@ export default function OrganizationsPage() {
         }
 
         if (allClientsData) {
-          // Store all clients for manual assignment
-          setAllClients(allClientsData)
+          // Filter out clients that are only in Admin Organization
+          const nonAdminClients = allClientsData.filter((client: any) => {
+            // Check if this client has any organization other than Admin Organization
+            const hasNonAdminOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) => 
+              org.name !== 'Admin Organization'
+            )
+            return hasNonAdminOrg
+          })
+          // Store filtered clients for manual assignment
+          setAllClients(nonAdminClients)
           
           // Filter clients that don't have their own organization
           const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
@@ -270,8 +278,16 @@ export default function OrganizationsPage() {
           }
 
           if (allClientsData) {
-            // Store all clients for manual assignment
-            setAllClients(allClientsData)
+            // Filter out clients that are only in Admin Organization
+            const nonAdminClients = allClientsData.filter((client: any) => {
+              // Check if this client has any organization other than Admin Organization
+              const hasNonAdminOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) => 
+                org.name !== 'Admin Organization'
+              )
+              return hasNonAdminOrg
+            })
+            // Store filtered clients for manual assignment
+            setAllClients(nonAdminClients)
             
             // Filter clients that don't have their own organization
             const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {

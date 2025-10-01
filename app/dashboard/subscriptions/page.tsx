@@ -23,7 +23,11 @@ export default function SubscriptionsPage() {
           .order('created_at', { ascending: false })
 
         if (subs) {
-          setSubscriptions(subs)
+          // Filter out Admin Organization subscriptions
+          const nonAdminSubs = subs.filter((sub: any) => 
+            sub.organizations?.name !== 'Admin Organization'
+          )
+          setSubscriptions(nonAdminSubs)
         }
       } catch (error) {
         console.error('Error fetching subscriptions:', error)
