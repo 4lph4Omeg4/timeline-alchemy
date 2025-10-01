@@ -49,11 +49,14 @@ export default function OrganizationsPage() {
           `)
           .order('created_at', { ascending: false })
 
-        // Fetch clients without organizations
+        // Fetch clients without their own organizations (they might be in admin org but not have their own org)
         const { data: clientsData, error: clientsError } = await (supabase as any)
           .from('clients')
-          .select('*')
-          .is('org_id', null)
+          .select(`
+            *,
+            organizations!inner(name)
+          `)
+          .eq('organizations.name', 'Admin Organization')
           .order('created_at', { ascending: false })
 
         if (orgsWithSubs) {
@@ -69,7 +72,15 @@ export default function OrganizationsPage() {
         }
 
         if (clientsData) {
-          setClientsWithoutOrg(clientsData)
+          // Filter clients that don't have their own organization (only in admin org)
+          const clientsWithoutOwnOrg = clientsData.filter((client: any) => {
+            // Check if this client has any organization other than Admin Organization
+            return !orgsWithSubs.some((org: any) => 
+              org.name !== 'Admin Organization' && 
+              org.clients.some((orgClient: any) => orgClient.id === client.id)
+            )
+          })
+          setClientsWithoutOrg(clientsWithoutOwnOrg)
         }
       } catch (error) {
         console.error('Error fetching organizations:', error)
@@ -149,8 +160,11 @@ export default function OrganizationsPage() {
 
           const { data: clientsData, error: clientsError } = await (supabase as any)
             .from('clients')
-            .select('*')
-            .is('org_id', null)
+            .select(`
+              *,
+              organizations!inner(name)
+            `)
+            .eq('organizations.name', 'Admin Organization')
             .order('created_at', { ascending: false })
 
           if (orgsWithSubs) {
@@ -165,7 +179,15 @@ export default function OrganizationsPage() {
           }
 
           if (clientsData) {
-            setClientsWithoutOrg(clientsData)
+            // Filter clients that don't have their own organization (only in admin org)
+            const clientsWithoutOwnOrg = clientsData.filter((client: any) => {
+              // Check if this client has any organization other than Admin Organization
+              return !orgsWithSubs.some((org: any) => 
+                org.name !== 'Admin Organization' && 
+                org.clients.some((orgClient: any) => orgClient.id === client.id)
+              )
+            })
+            setClientsWithoutOrg(clientsWithoutOwnOrg)
           }
         } catch (error) {
           console.error('Error refreshing data:', error)
@@ -196,13 +218,13 @@ export default function OrganizationsPage() {
         </p>
       </div>
 
-      {/* Clients Without Organizations */}
+      {/* Clients Without Their Own Organizations */}
       {clientsWithoutOrg.length > 0 && (
         <Card className="bg-gradient-to-r from-orange-900/30 to-red-900/30 border-orange-500/30">
           <CardHeader>
-            <CardTitle className="text-white">⚠️ Clients Without Organizations</CardTitle>
+            <CardTitle className="text-white">⚠️ Clients Without Their Own Organizations</CardTitle>
             <CardDescription className="text-orange-200">
-              {clientsWithoutOrg.length} clients need organizations to be created
+              {clientsWithoutOrg.length} clients are only in Admin Organization and need their own organization created
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -222,7 +244,7 @@ export default function OrganizationsPage() {
                     onClick={() => createOrganizationForClient(client)}
                     className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white"
                   >
-                    ✨ Create Organization
+                    ✨ Create Own Organization
                   </Button>
                 </div>
               ))}

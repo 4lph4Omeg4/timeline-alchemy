@@ -274,10 +274,10 @@ export default function SchedulerPage() {
                             </Button>
                             <Button
                               size="sm"
-                              className="bg-green-600 text-white hover:bg-green-700"
+                              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
                               onClick={() => handlePublishNow(post.id)}
                             >
-                              Publish Now
+                              ✨ Publish Now ✨
                             </Button>
                           </>
                         )}
