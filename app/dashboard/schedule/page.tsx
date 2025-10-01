@@ -8,6 +8,7 @@ import { BlogPost } from '@/types/index'
 import { formatDateTime } from '@/lib/utils'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { SocialIcon } from '@/components/ui/social-icons'
 
 export default function SchedulerPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
@@ -80,8 +81,12 @@ export default function SchedulerPage() {
         let orgIds: string[]
 
         if (isAdmin) {
-          // Admin can see all posts from all organizations
-          orgIds = orgMembers.map(member => member.org_id)
+          // Admin can see all posts from all organizations - get all org IDs
+          const { data: allOrgs } = await supabase
+            .from('organizations')
+            .select('id')
+          
+          orgIds = allOrgs?.map(org => org.id) || []
         } else {
           // Non-admin users only see posts from their primary organization (not Admin Organization)
           const nonAdminOrgs = orgMembers.filter(member => {
@@ -160,7 +165,12 @@ export default function SchedulerPage() {
             let orgIds: string[]
 
             if (isAdmin) {
-              orgIds = orgMembers.map(member => member.org_id)
+              // Admin can see all posts from all organizations
+              const { data: allOrgs } = await supabase
+                .from('organizations')
+                .select('id')
+              
+              orgIds = allOrgs?.map(org => org.id) || []
             } else {
               const orgIdsToCheck = orgMembers.map(member => member.org_id)
               const { data: orgsData } = await supabase
@@ -219,7 +229,12 @@ export default function SchedulerPage() {
             let orgIds: string[]
 
             if (isAdmin) {
-              orgIds = orgMembers.map(member => member.org_id)
+              // Admin can see all posts from all organizations
+              const { data: allOrgs } = await supabase
+                .from('organizations')
+                .select('id')
+              
+              orgIds = allOrgs?.map(org => org.id) || []
             } else {
               const orgIdsToCheck = orgMembers.map(member => member.org_id)
               const { data: orgsData } = await supabase
@@ -495,18 +510,18 @@ export default function SchedulerPage() {
                         </div>
                         <div className="space-y-1">
                           {dayPosts.slice(0, 2).map((post) => {
-                            // Determine platform icon based on title
-                            const getPlatformIcon = (title: string) => {
-                              if (title.includes('Facebook')) return '📘'
-                              if (title.includes('Instagram')) return '📷'
-                              if (title.includes('Twitter') || title.includes('X')) return '🐦'
-                              if (title.includes('LinkedIn')) return '💼'
-                              if (title.includes('TikTok')) return '🎵'
-                              if (title.includes('YouTube')) return '📺'
-                              return '📝' // Default for blog posts
+                            // Determine platform based on title
+                            const getPlatform = (title: string) => {
+                              if (title.includes('Facebook')) return 'facebook'
+                              if (title.includes('Instagram')) return 'instagram'
+                              if (title.includes('Twitter') || title.includes('X')) return 'twitter'
+                              if (title.includes('LinkedIn')) return 'linkedin'
+                              if (title.includes('TikTok')) return 'tiktok'
+                              if (title.includes('YouTube')) return 'youtube'
+                              return 'blog' // Default for blog posts
                             }
                             
-                            const platformIcon = getPlatformIcon(post.title)
+                            const platform = getPlatform(post.title)
                             
                             return (
                               <div
@@ -514,7 +529,11 @@ export default function SchedulerPage() {
                                 className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 rounded truncate flex items-center gap-1"
                                 title={post.title}
                               >
-                                <span>{platformIcon}</span>
+                                {platform === 'blog' ? (
+                                  <span className="text-xs">📝</span>
+                                ) : (
+                                  <SocialIcon platform={platform} size="sm" className="text-white" />
+                                )}
                                 <span className="truncate">{post.title}</span>
                               </div>
                             )
@@ -552,25 +571,29 @@ export default function SchedulerPage() {
                           {dayPosts.length} scheduled post{dayPosts.length !== 1 ? 's' : ''}
                         </p>
                         {dayPosts.map((post) => {
-                          // Determine platform icon based on title
-                          const getPlatformIcon = (title: string) => {
-                            if (title.includes('Facebook')) return '📘'
-                            if (title.includes('Instagram')) return '📷'
-                            if (title.includes('Twitter') || title.includes('X')) return '🐦'
-                            if (title.includes('LinkedIn')) return '💼'
-                            if (title.includes('TikTok')) return '🎵'
-                            if (title.includes('YouTube')) return '📺'
-                            return '📝' // Default for blog posts
+                          // Determine platform based on title
+                          const getPlatform = (title: string) => {
+                            if (title.includes('Facebook')) return 'facebook'
+                            if (title.includes('Instagram')) return 'instagram'
+                            if (title.includes('Twitter') || title.includes('X')) return 'twitter'
+                            if (title.includes('LinkedIn')) return 'linkedin'
+                            if (title.includes('TikTok')) return 'tiktok'
+                            if (title.includes('YouTube')) return 'youtube'
+                            return 'blog' // Default for blog posts
                           }
                           
-                          const platformIcon = getPlatformIcon(post.title)
+                          const platform = getPlatform(post.title)
                           
                           return (
                             <div key={post.id} className="bg-gray-800/50 p-3 rounded-lg border border-gray-600">
                               <div className="flex justify-between items-start">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-lg">{platformIcon}</span>
+                                    {platform === 'blog' ? (
+                                      <span className="text-lg">📝</span>
+                                    ) : (
+                                      <SocialIcon platform={platform} size="sm" className="text-white" />
+                                    )}
                                     <h5 className="font-semibold text-white text-sm">{post.title}</h5>
                                   </div>
                                   <p className="text-gray-300 text-xs mt-1 line-clamp-2">
