@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,19 +18,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Create server-side Supabase client with service role key
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     // Download the image from DALL-E URL
+    console.log('Downloading image from:', imageUrl)
     const imageResponse = await fetch(imageUrl)
     if (!imageResponse.ok) {
-      throw new Error('Failed to download image')
+      throw new Error(`Failed to download image: ${imageResponse.status}`)
     }
 
     const imageBlob = await imageResponse.blob()
     const arrayBuffer = await imageBlob.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
+    console.log('Image downloaded, size:', buffer.length)
 
     // Generate unique filename
     const timestamp = Date.now()
     const filename = `${orgId}/${postId}-${timestamp}.png`
+    console.log('Uploading to filename:', filename)
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -42,10 +51,14 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to upload image: ${uploadError.message}`)
     }
 
+    console.log('Upload successful:', uploadData)
+
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('blog-images')
       .getPublicUrl(filename)
+
+    console.log('Public URL:', publicUrl)
 
     // Save to images table
     const { error: dbError } = await supabase
@@ -60,6 +73,8 @@ export async function POST(request: NextRequest) {
       console.error('Database error:', dbError)
       throw new Error(`Failed to save image to database: ${dbError.message}`)
     }
+
+    console.log('Image saved successfully')
 
     return NextResponse.json({ 
       permanentUrl: publicUrl,
