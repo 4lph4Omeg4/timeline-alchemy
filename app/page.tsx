@@ -287,6 +287,8 @@ export default function HomePage() {
               <a href="/privacy-policy" className="hover:text-yellow-400 transition">Privacy</a>
               <span className="mx-2">|</span>
               <a href="/terms-of-service" className="hover:text-yellow-400 transition">Terms</a>
+              <span className="mx-2">|</span>
+              <a href="/cookie-policy" className="hover:text-yellow-400 transition">Cookies</a>
             </p>
           </div>
         </div>
