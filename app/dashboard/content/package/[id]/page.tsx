@@ -195,13 +195,13 @@ export default function ContentPackagePage() {
           }
         }
 
-        // Update local state
+        // Update local state for the main blog post
         setPost(prev => prev ? { ...prev, state: 'scheduled', scheduled_for: scheduledDate.toISOString() } : null)
         
         if (errorCount === 0) {
-          toast.success(`All platforms scheduled successfully! (${successCount} posts)`)
+          toast.success(`All platforms scheduled successfully! (${successCount + 1} posts including blog)`)
         } else {
-          toast.success(`Scheduled ${successCount} platforms successfully, ${errorCount} failed`)
+          toast.success(`Scheduled ${successCount + 1} platforms successfully (including blog), ${errorCount} failed`)
         }
       } else if (platform) {
         // Schedule individual social post

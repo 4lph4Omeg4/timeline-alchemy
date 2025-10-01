@@ -494,15 +494,31 @@ export default function SchedulerPage() {
                           {day}
                         </div>
                         <div className="space-y-1">
-                          {dayPosts.slice(0, 2).map((post) => (
-                            <div
-                              key={post.id}
-                              className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 rounded truncate"
-                              title={post.title}
-                            >
-                              {post.title}
-                            </div>
-                          ))}
+                          {dayPosts.slice(0, 2).map((post) => {
+                            // Determine platform icon based on title
+                            const getPlatformIcon = (title: string) => {
+                              if (title.includes('Facebook')) return '📘'
+                              if (title.includes('Instagram')) return '📷'
+                              if (title.includes('Twitter') || title.includes('X')) return '🐦'
+                              if (title.includes('LinkedIn')) return '💼'
+                              if (title.includes('TikTok')) return '🎵'
+                              if (title.includes('YouTube')) return '📺'
+                              return '📝' // Default for blog posts
+                            }
+                            
+                            const platformIcon = getPlatformIcon(post.title)
+                            
+                            return (
+                              <div
+                                key={post.id}
+                                className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 rounded truncate flex items-center gap-1"
+                                title={post.title}
+                              >
+                                <span>{platformIcon}</span>
+                                <span className="truncate">{post.title}</span>
+                              </div>
+                            )
+                          })}
                           {dayPosts.length > 2 && (
                             <div className="text-xs text-purple-300">
                               +{dayPosts.length - 2} more
@@ -535,35 +551,53 @@ export default function SchedulerPage() {
                         <p className="text-purple-200 font-medium">
                           {dayPosts.length} scheduled post{dayPosts.length !== 1 ? 's' : ''}
                         </p>
-                        {dayPosts.map((post) => (
-                          <div key={post.id} className="bg-gray-800/50 p-3 rounded-lg border border-gray-600">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <h5 className="font-semibold text-white text-sm">{post.title}</h5>
-                                <p className="text-gray-300 text-xs mt-1 line-clamp-2">
-                                  {post.content}
-                                </p>
-                                <div className="flex items-center space-x-2 mt-2">
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
-                                    post.state === 'published' ? 'bg-green-900 text-green-300' :
-                                    'bg-gray-700 text-gray-300'
-                                  }`}>
-                                    {post.state}
-                                  </span>
-                                  <span className="text-gray-400 text-xs">
-                                    {formatDateTime(post.scheduled_for || '')}
-                                  </span>
+                        {dayPosts.map((post) => {
+                          // Determine platform icon based on title
+                          const getPlatformIcon = (title: string) => {
+                            if (title.includes('Facebook')) return '📘'
+                            if (title.includes('Instagram')) return '📷'
+                            if (title.includes('Twitter') || title.includes('X')) return '🐦'
+                            if (title.includes('LinkedIn')) return '💼'
+                            if (title.includes('TikTok')) return '🎵'
+                            if (title.includes('YouTube')) return '📺'
+                            return '📝' // Default for blog posts
+                          }
+                          
+                          const platformIcon = getPlatformIcon(post.title)
+                          
+                          return (
+                            <div key={post.id} className="bg-gray-800/50 p-3 rounded-lg border border-gray-600">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-lg">{platformIcon}</span>
+                                    <h5 className="font-semibold text-white text-sm">{post.title}</h5>
+                                  </div>
+                                  <p className="text-gray-300 text-xs mt-1 line-clamp-2">
+                                    {post.content}
+                                  </p>
+                                  <div className="flex items-center space-x-2 mt-2">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+                                      post.state === 'published' ? 'bg-green-900 text-green-300' :
+                                      'bg-gray-700 text-gray-300'
+                                    }`}>
+                                      {post.state}
+                                    </span>
+                                    <span className="text-gray-400 text-xs">
+                                      {formatDateTime(post.scheduled_for || '')}
+                                    </span>
+                                  </div>
                                 </div>
+                                <Link href={`/dashboard/content/package/${post.id}`}>
+                                  <Button size="sm" variant="outline" className="ml-2 border-purple-500/50 text-purple-300 hover:bg-purple-600/30">
+                                    View
+                                  </Button>
+                                </Link>
                               </div>
-                              <Link href={`/dashboard/content/package/${post.id}`}>
-                                <Button size="sm" variant="outline" className="ml-2 border-purple-500/50 text-purple-300 hover:bg-purple-600/30">
-                                  View
-                                </Button>
-                              </Link>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     ) : (
                       <div className="text-center py-4">
