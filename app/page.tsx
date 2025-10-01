@@ -328,9 +328,9 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-purple-500/8 to-purple-600/5"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex items-start mb-8">
             {/* Left side - Company Info */}
-            <div className="w-1/3">
+            <div className="w-1/2">
               <div className="flex items-center mb-4">
                 <Logo size="sm" showText={false} />
                 <span className="ml-2 text-white font-bold">Timeline Alchemy</span>
@@ -340,8 +340,8 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right side - SH4M4NI4K.NL and Contact */}
-            <div className="flex gap-16">
+            {/* Right side - SH4M4NI4K.NL and Contact - PUSHED FAR RIGHT */}
+            <div className="flex gap-20 ml-auto">
               {/* SH4M4NI4K.NL Links */}
               <div>
                 <h3 className="text-white font-semibold mb-4">SH4M4NI4K.NL</h3>
