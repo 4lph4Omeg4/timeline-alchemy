@@ -52,7 +52,7 @@ export default function ContentEditorPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            title: prompt, // Use prompt as title for social posts
+            title: prompt,
             content: prompt,
             platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
           }),
@@ -63,36 +63,29 @@ export default function ContentEditorPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt }),
-        })
+        }),
       ])
 
-      // Process content response
-      if (contentResponse.ok) {
-        const contentData = await contentResponse.json()
-        if (contentData.title) setTitle(contentData.title)
-        if (contentData.excerpt) setExcerpt(contentData.excerpt)
+      const [contentData, socialData, imageData] = await Promise.all([
+        contentResponse.json(),
+        socialResponse.json(),
+        imageResponse.json(),
+      ])
+
+      if (contentData.content) {
         setContent(contentData.content)
+        setTitle(contentData.title || prompt)
       }
 
-      // Process social posts response
-      if (socialResponse.ok) {
-        const socialData = await socialResponse.json()
+      if (socialData.socialPosts) {
         setSocialPosts(socialData.socialPosts)
-        console.log('Social posts generated:', socialData.socialPosts)
       }
 
-      // Process image response
-      if (imageResponse.ok) {
-        const imageData = await imageResponse.json()
+      if (imageData.imageUrl) {
         setGeneratedImageUrl(imageData.imageUrl)
-        console.log('Image generated:', imageData.imageUrl)
-      } else {
-        const imageError = await imageResponse.text()
-        console.error('Image generation failed:', imageError)
-        toast.error('Image generation failed')
       }
-      
-      toast.success('Complete content package generated!')
+
+      toast.success('Divine content generated successfully!')
     } catch (error) {
       console.error('Error generating content:', error)
       toast.error('Failed to generate content')
@@ -444,6 +437,7 @@ export default function ContentEditorPage() {
               )}
             </CardContent>
           </Card>
+        </div>
       </div>
     </div>
   )
