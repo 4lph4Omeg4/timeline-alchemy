@@ -128,9 +128,6 @@ export default function HomePage() {
             <Button size="lg" onClick={handleSignUp} className="text-lg px-8 py-3">
               Start Free Trial
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-              Watch Demo
-            </Button>
           </div>
         </div>
 
@@ -259,22 +256,13 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Legal Links */}
-            <div>
-              <h3 className="text-white font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="/privacy-policy" className="text-gray-400 hover:text-yellow-400 transition">Privacy Policy</a></li>
-                <li><a href="/terms-of-service" className="text-gray-400 hover:text-yellow-400 transition">Terms of Service</a></li>
-                <li><a href="/cookie-policy" className="text-gray-400 hover:text-yellow-400 transition">Cookie Policy</a></li>
-              </ul>
-            </div>
-
             {/* Contact */}
             <div>
               <h3 className="text-white font-semibold mb-4">Contact</h3>
               <ul className="space-y-2 text-sm">
                 <li><a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition">timeline-alchemy@sh4m4ni4k.nl</a></li>
-                <li><span className="text-gray-400">Poststraat 47B, 6371VL, Landgraaf, Netherlands</span></li>
+                <li><span className="text-gray-400">Poststraat 47B, 6371VL</span></li>
+                <li><span className="text-gray-400">Landgraaf, Netherlands</span></li>
               </ul>
             </div>
           </div>
