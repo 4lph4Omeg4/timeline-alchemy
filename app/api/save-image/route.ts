@@ -5,7 +5,10 @@ export async function POST(request: NextRequest) {
   try {
     const { imageUrl, postId, orgId } = await request.json()
     
+    console.log('Save image request:', { imageUrl, postId, orgId })
+    
     if (!imageUrl || !postId || !orgId) {
+      console.error('Missing required fields:', { imageUrl, postId, orgId })
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -62,10 +65,13 @@ export async function POST(request: NextRequest) {
       permanentUrl: publicUrl,
       success: true 
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving image:', error)
     return NextResponse.json(
-      { error: 'Failed to save image permanently' },
+      { 
+        error: 'Failed to save image permanently',
+        details: error.message || String(error)
+      },
       { status: 500 }
     )
   }
