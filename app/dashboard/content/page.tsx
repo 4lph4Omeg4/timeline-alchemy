@@ -159,19 +159,27 @@ export default function ContentCreatorPage() {
       }
 
       if (generatedImageUrl) {
-        const { error: imageError } = await (supabase as any)
-          .from('images')
-          .insert({
-            org_id: userOrgId,
-            post_id: postData.id,
-            url: generatedImageUrl,
+        // Save image permanently to Supabase Storage
+        try {
+          const saveImageResponse = await fetch('/api/save-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageUrl: generatedImageUrl,
+              postId: postData.id,
+              orgId: userOrgId
+            })
           })
 
-        if (imageError) {
-          console.error('Failed to save image:', imageError)
+          if (saveImageResponse.ok) {
+            toast.success('Post, social posts, and image saved permanently!')
+          } else {
+            console.error('Failed to save image permanently')
+            toast.error('Post saved but image failed to save permanently')
+          }
+        } catch (error) {
+          console.error('Error saving image:', error)
           toast.error('Post saved but image failed to save')
-        } else {
-          toast.success('Post, social posts, and image saved successfully!')
         }
       } else {
         toast.success('Post and social posts saved successfully!')

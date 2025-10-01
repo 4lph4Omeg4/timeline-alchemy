@@ -1,76 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { imageUrl, postId, orgId, prompt } = await request.json()
-
+    const { imageUrl, postId, orgId } = await request.json()
+    
     if (!imageUrl || !postId || !orgId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
-    // Download the image from the temporary URL
+    // Download the image from DALL-E URL
     const imageResponse = await fetch(imageUrl)
     if (!imageResponse.ok) {
       throw new Error('Failed to download image')
     }
 
-    const imageBuffer = await imageResponse.arrayBuffer()
-    const imageData = Buffer.from(imageBuffer)
+    const imageBlob = await imageResponse.blob()
+    const arrayBuffer = await imageBlob.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
 
-    // Generate a unique filename
+    // Generate unique filename
     const timestamp = Date.now()
-    const filename = `generated-${postId}-${timestamp}.png`
+    const filename = `${orgId}/${postId}-${timestamp}.png`
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from('images')
-      .upload(filename, imageData, {
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('blog-images')
+      .upload(filename, buffer, {
         contentType: 'image/png',
         upsert: false
       })
 
     if (uploadError) {
-      console.error('Error uploading image:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+      console.error('Upload error:', uploadError)
+      throw new Error(`Failed to upload image: ${uploadError.message}`)
     }
 
-    // Get the public URL
-    const { data: urlData } = supabaseAdmin.storage
-      .from('images')
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('blog-images')
       .getPublicUrl(filename)
 
-    const permanentUrl = urlData.publicUrl
-
-    // Save image record to database
-    const { data: imageRecord, error: dbError } = await supabaseAdmin
+    // Save to images table
+    const { error: dbError } = await supabase
       .from('images')
       .insert({
         org_id: orgId,
         post_id: postId,
-        url: permanentUrl,
-        prompt: prompt || 'AI generated image'
-      } as any)
-      .select()
-      .single()
+        url: publicUrl
+      })
 
     if (dbError) {
-      console.error('Error saving image record:', dbError)
-      // Try to clean up the uploaded file
-      await supabaseAdmin.storage.from('images').remove([filename])
-      return NextResponse.json({ error: 'Failed to save image record' }, { status: 500 })
+      console.error('Database error:', dbError)
+      throw new Error(`Failed to save image to database: ${dbError.message}`)
     }
 
-    return NextResponse.json({
-      message: 'Image saved successfully',
-      image: imageRecord,
-      permanentUrl
+    return NextResponse.json({ 
+      permanentUrl: publicUrl,
+      success: true 
     })
-
   } catch (error) {
-    console.error('Save image API Error:', error)
+    console.error('Error saving image:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to save image permanently' },
       { status: 500 }
     )
   }
