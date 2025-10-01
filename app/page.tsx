@@ -135,7 +135,7 @@ export default function HomePage() {
         <div className="text-center mb-20">
           {/* Divine Title */}
           <div className="relative mb-8">
-            <h1 className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-6 leading-tight">
+            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-6 leading-tight">
               Create content with{' '}
               <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text text-transparent animate-pulse">
                 ✨ AI Magic ✨
@@ -243,7 +243,7 @@ export default function HomePage() {
         {/* Divine Pricing */}
         <div className="text-center mb-20">
           <div className="relative mb-12">
-            <h2 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 mb-4">
+            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 mb-4">
               Pricing Plans
             </h2>
             <p className="text-xl text-gray-200 font-light">
@@ -322,9 +322,9 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-purple-500/8 to-purple-600/5"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* Left side - Company Info */}
-            <div className="w-1/3 mb-8">
+            <div className="md:col-span-1">
               <div className="flex items-center mb-4">
                 <Logo size="sm" showText={false} />
                 <span className="ml-2 text-white font-bold">Timeline Alchemy</span>
@@ -334,26 +334,23 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right side - SH4M4NI4K.NL and Contact - REALLY FAR RIGHT */}
-            <div className="flex justify-end gap-32">
-              {/* SH4M4NI4K.NL Links */}
-              <div className="text-right">
-                <h3 className="text-white font-semibold mb-4">SH4M4NI4K.NL</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="https://sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Cosmic Unity</a></li>
-                  <li><a href="https://timeline-alchemy.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Timeline Alchemy</a></li>
-                </ul>
-              </div>
+            {/* SH4M4NI4K.NL Links */}
+            <div className="md:col-span-1">
+              <h3 className="text-white font-semibold mb-4">SH4M4NI4K.NL</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="https://sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Cosmic Unity</a></li>
+                <li><a href="https://timeline-alchemy.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Timeline Alchemy</a></li>
+              </ul>
+            </div>
 
-              {/* Contact */}
-              <div className="text-right">
-                <h3 className="text-white font-semibold mb-4">Contact</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition">timeline-alchemy@sh4m4ni4k.nl</a></li>
-                  <li><span className="text-gray-400">Poststraat 47B, 6371VL</span></li>
-                  <li><span className="text-gray-400">Landgraaf, Netherlands</span></li>
-                </ul>
-              </div>
+            {/* Contact */}
+            <div className="md:col-span-1">
+              <h3 className="text-white font-semibold mb-4">Contact</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition">timeline-alchemy@sh4m4ni4k.nl</a></li>
+                <li><span className="text-gray-400">Poststraat 47B, 6371VL</span></li>
+                <li><span className="text-gray-400">Landgraaf, Netherlands</span></li>
+              </ul>
             </div>
           </div>
 
