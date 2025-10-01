@@ -175,8 +175,19 @@ export default function ContentPackagePage() {
                .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
                .trim()
              
-             // Use existing social posts from database only - no generation
-             setSocialPosts(postData.social_posts || {})
+             // Load social posts from separate table
+             const { data: socialPostsData } = await supabase
+               .from('social_posts')
+               .select('platform, content')
+               .eq('post_id', postData.id)
+             
+             const socialPostsMap: Record<string, string> = {}
+             if (socialPostsData) {
+               socialPostsData.forEach(post => {
+                 socialPostsMap[post.platform] = post.content
+               })
+             }
+             setSocialPosts(socialPostsMap)
 
       // Set the actual generated content with real data
       const actualGeneratedContent: GeneratedContent = {
@@ -447,7 +458,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">Facebook</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{generatedContent.socialPosts.facebook}</p>
+              <p className="text-gray-300 select-all">{socialPosts.facebook}</p>
             </div>
           </div>
 
@@ -462,7 +473,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">Instagram</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{generatedContent.socialPosts.instagram}</p>
+              <p className="text-gray-300 select-all">{socialPosts.instagram}</p>
             </div>
           </div>
 
@@ -477,7 +488,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">Twitter/X</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{generatedContent.socialPosts.twitter}</p>
+              <p className="text-gray-300 select-all">{socialPosts.twitter}</p>
             </div>
           </div>
 
@@ -492,7 +503,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">LinkedIn</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{generatedContent.socialPosts.linkedin}</p>
+              <p className="text-gray-300 select-all">{socialPosts.linkedin}</p>
             </div>
           </div>
 
@@ -507,7 +518,7 @@ export default function ContentPackagePage() {
               <h4 className="font-semibold text-white">TikTok</h4>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{generatedContent.socialPosts.tiktok}</p>
+              <p className="text-gray-300 select-all">{socialPosts.tiktok}</p>
             </div>
           </div>
         </CardContent>

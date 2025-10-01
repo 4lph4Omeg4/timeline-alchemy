@@ -86,6 +86,10 @@ export default function ContentEditorPage() {
         const imageData = await imageResponse.json()
         setGeneratedImageUrl(imageData.imageUrl)
         console.log('Image generated:', imageData.imageUrl)
+      } else {
+        const imageError = await imageResponse.text()
+        console.error('Image generation failed:', imageError)
+        toast.error('Image generation failed')
       }
       
       toast.success('Complete content package generated!')
@@ -178,29 +182,51 @@ export default function ContentEditorPage() {
         return
       }
 
-      console.log('Post saved successfully:', postData.id)
+             console.log('Post saved successfully:', postData.id)
 
-      // If there's a generated image, save it too
-      if (generatedImageUrl) {
-        console.log('Saving image with URL:', generatedImageUrl)
-        const { error: imageError } = await (supabase as any)
-          .from('images')
-          .insert({
-            org_id: userOrgId,
-            post_id: postData.id,
-            url: generatedImageUrl,
-          })
+             // Save social posts to separate table
+             if (Object.keys(socialPosts).length > 0) {
+               try {
+                 for (const [platform, content] of Object.entries(socialPosts)) {
+                   const { error: socialError } = await supabase
+                     .from('social_posts')
+                     .insert({
+                       post_id: postData.id,
+                       platform,
+                       content
+                     })
+                   
+                   if (socialError) {
+                     console.error('Error saving social post:', socialError)
+                   }
+                 }
+                 console.log('Social posts saved to database:', socialPosts)
+               } catch (error) {
+                 console.error('Error saving social posts:', error)
+               }
+             }
 
-        if (imageError) {
-          console.error('Failed to save image:', imageError)
-          toast.error('Post saved but image failed to save')
-        } else {
-          console.log('Image saved successfully')
-          toast.success('Post and image saved successfully!')
-        }
-      } else {
-        toast.success('Post saved successfully!')
-      }
+             // If there's a generated image, save it too
+             if (generatedImageUrl) {
+               console.log('Saving image with URL:', generatedImageUrl)
+               const { error: imageError } = await (supabase as any)
+                 .from('images')
+                 .insert({
+                   org_id: userOrgId,
+                   post_id: postData.id,
+                   url: generatedImageUrl,
+                 })
+
+               if (imageError) {
+                 console.error('Failed to save image:', imageError)
+                 toast.error('Post saved but image failed to save')
+               } else {
+                 console.log('Image saved successfully')
+                 toast.success('Post, social posts, and image saved successfully!')
+               }
+             } else {
+               toast.success('Post and social posts saved successfully!')
+             }
 
       router.push('/dashboard/content/list')
     } catch (error) {

@@ -147,23 +147,41 @@ export default function AdminCreatePackagePage() {
             return
           }
 
-          // Copy ALL existing images
-          const { data: existingImages } = await supabase
-            .from('images')
-            .select('*')
-            .eq('post_id', selectedPost.id)
+                 // Copy ALL existing images
+                 const { data: existingImages } = await supabase
+                   .from('images')
+                   .select('*')
+                   .eq('post_id', selectedPost.id)
 
-          if (existingImages && existingImages.length > 0) {
-            for (const image of existingImages) {
-              await supabase
-                .from('images')
-                .insert({
-                  org_id: orgMember.org_id,
-                  post_id: packageData.id,
-                  url: image.url,
-                })
-            }
-          }
+                 if (existingImages && existingImages.length > 0) {
+                   for (const image of existingImages) {
+                     await supabase
+                       .from('images')
+                       .insert({
+                         org_id: orgMember.org_id,
+                         post_id: packageData.id,
+                         url: image.url,
+                       })
+                   }
+                 }
+
+                 // Copy ALL existing social posts
+                 const { data: existingSocialPosts } = await supabase
+                   .from('social_posts')
+                   .select('*')
+                   .eq('post_id', selectedPost.id)
+
+                 if (existingSocialPosts && existingSocialPosts.length > 0) {
+                   for (const socialPost of existingSocialPosts) {
+                     await supabase
+                       .from('social_posts')
+                       .insert({
+                         post_id: packageData.id,
+                         platform: socialPost.platform,
+                         content: socialPost.content,
+                       })
+                   }
+                 }
 
           toast.success('Package created with existing content!')
         }

@@ -75,8 +75,19 @@ export default function ContentEditPage() {
       setContent(postData.content)
       setExcerpt('') // Will be added after database update
       
-      // Use existing social posts from database only - no generation
-      setSocialPosts(postData.social_posts || {})
+      // Load social posts from separate table
+      const { data: socialPostsData } = await supabase
+        .from('social_posts')
+        .select('platform, content')
+        .eq('post_id', postData.id)
+      
+      const socialPostsMap: Record<string, string> = {}
+      if (socialPostsData) {
+        socialPostsData.forEach(post => {
+          socialPostsMap[post.platform] = post.content
+        })
+      }
+      setSocialPosts(socialPostsMap)
 
       // Fetch images for this post
       const { data: images, error: imagesError } = await supabase
@@ -112,6 +123,26 @@ export default function ContentEditPage() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', params.id)
+
+      // Update social posts
+      if (Object.keys(socialPosts).length > 0) {
+        // Delete existing social posts
+        await supabase
+          .from('social_posts')
+          .delete()
+          .eq('post_id', params.id)
+
+        // Insert updated social posts
+        for (const [platform, content] of Object.entries(socialPosts)) {
+          await supabase
+            .from('social_posts')
+            .insert({
+              post_id: params.id,
+              platform,
+              content
+            })
+        }
+      }
 
       if (error) {
         console.error('Error updating post:', error)
@@ -251,7 +282,17 @@ export default function ContentEditPage() {
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-blue-400 font-semibold capitalize">{platform}</span>
                     </div>
-                    <p className="text-gray-300 text-sm">{post}</p>
+                    <Textarea
+                      value={post}
+                      onChange={(e) => {
+                        setSocialPosts(prev => ({
+                          ...prev,
+                          [platform]: e.target.value
+                        }))
+                      }}
+                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                      rows={3}
+                    />
                   </div>
                 ))}
               </div>

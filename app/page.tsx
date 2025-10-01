@@ -7,6 +7,7 @@ import { User } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/Logo'
+import Head from 'next/head'
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
@@ -234,9 +235,60 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-black text-gray-200 py-8 mt-16 border-t border-gray-800">
-        <div className="container mx-auto px-4 text-center">
-          <p>&copy; 2025 Timeline Alchemy. All rights reserved.</p>
+      <footer className="bg-black text-gray-200 py-12 mt-16 border-t border-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            {/* Company Info */}
+            <div>
+              <div className="flex items-center mb-4">
+                <Logo size="sm" showText={false} />
+                <span className="ml-2 text-white font-bold">Timeline Alchemy</span>
+              </div>
+              <p className="text-gray-400 text-sm">
+                Transforming content creation with AI-powered magic for businesses and creators.
+              </p>
+            </div>
+
+            {/* Product Links */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Product</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#features" className="text-gray-400 hover:text-yellow-400 transition">Features</a></li>
+                <li><a href="#pricing" className="text-gray-400 hover:text-yellow-400 transition">Pricing</a></li>
+                <li><a href="/dashboard" className="text-gray-400 hover:text-yellow-400 transition">Dashboard</a></li>
+              </ul>
+            </div>
+
+            {/* Legal Links */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/privacy-policy" className="text-gray-400 hover:text-yellow-400 transition">Privacy Policy</a></li>
+                <li><a href="/terms-of-service" className="text-gray-400 hover:text-yellow-400 transition">Terms of Service</a></li>
+                <li><a href="/cookie-policy" className="text-gray-400 hover:text-yellow-400 transition">Cookie Policy</a></li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h3 className="text-white font-semibold mb-4">Contact</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="mailto:support@timeline-alchemy.nl" className="text-gray-400 hover:text-yellow-400 transition">support@timeline-alchemy.nl</a></li>
+                <li><span className="text-gray-400">The Netherlands</span></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-gray-800 pt-8 text-center">
+            <p className="text-sm text-gray-400">
+              &copy; {new Date().getFullYear()} Timeline Alchemy. All rights reserved. 
+              <span className="mx-2">|</span>
+              <a href="/privacy-policy" className="hover:text-yellow-400 transition">Privacy</a>
+              <span className="mx-2">|</span>
+              <a href="/terms-of-service" className="hover:text-yellow-400 transition">Terms</a>
+            </p>
+          </div>
         </div>
       </footer>
     </div>

@@ -132,15 +132,26 @@ Focus on the specific topic requested without adding unrelated business concepts
   const userPrompt = type === 'blog' 
     ? `Create a professional blog post about: ${prompt}
 
-IMPORTANT OUTPUT FORMAT:
-- Start with a clear, engaging title (no "Title:" label, just the title)
-- Follow with the content in clean paragraphs
-- Write MINIMUM 3 paragraphs with proper spacing
-- Each paragraph should be 3-5 sentences
-- Leave ONE EMPTY LINE between each paragraph
-- End with a strong conclusion
-- Make it ready to copy and paste directly into any platform
-- NO formatting markers, NO labels, NO prefixes`
+       IMPORTANT OUTPUT FORMAT:
+       - Start with a clear, engaging title (no "Title:" label, just the title)
+       - Follow with the content in clean paragraphs
+       - Write MINIMUM 3 paragraphs with proper spacing
+       - Each paragraph should be 3-5 sentences
+       - Leave EXACTLY ONE EMPTY LINE between each paragraph
+       - End with a strong conclusion
+       - Make it ready to copy and paste directly into any platform
+       - NO formatting markers, NO labels, NO prefixes
+       - DO NOT repeat any content - each paragraph should be unique
+       - DO NOT duplicate the first paragraph at the end
+       - CRITICAL: Use double line breaks (\n\n) between paragraphs
+       - Example format:
+         Title Here
+         
+         First paragraph content here.
+         
+         Second paragraph content here.
+         
+         Third paragraph content here.`
     : `Create a social media post about: ${prompt}
 
 IMPORTANT OUTPUT FORMAT:
@@ -164,6 +175,7 @@ IMPORTANT OUTPUT FORMAT:
     })
 
     const content = completion.choices[0]?.message?.content || ''
+    console.log('Raw AI content:', JSON.stringify(content)) // Debug logging
 
     if (type === 'blog') {
       // Improved content parsing for blog posts
@@ -179,30 +191,18 @@ IMPORTANT OUTPUT FORMAT:
         contentStartIndex = 1
       }
       
-      // Extract content (everything after title)
-      const contentLines = lines.slice(contentStartIndex)
-      let blogContent = contentLines.join('\n\n').trim()
+      // Use raw content as-is - NO PARSING AT ALL
+      let blogContent = content
       
-      // Ensure proper paragraph spacing
-      blogContent = blogContent
-        .replace(/\n\n/g, '\n\n') // Ensure double line breaks between paragraphs
-        .replace(/\n{3,}/g, '\n\n') // Remove excessive line breaks
+      // Only remove the title line if it exists
+      if (lines.length > 0) {
+        const titleLine = lines[0].trim()
+        if (titleLine) {
+          blogContent = content.replace(titleLine, '').trim()
+        }
+      }
       
-      // Clean up formatting and remove all labels while preserving paragraph structure
-      blogContent = blogContent
-        .replace(/\n{3,}/g, '\n\n') // Keep max 2 line breaks between paragraphs
-        .replace(/^\s+|\s+$/g, '') // Trim whitespace
-        .replace(/\n\s+/g, '\n') // Remove leading spaces from lines
-        .replace(/^#+\s*/gm, '') // Remove markdown headers
-        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
-        .replace(/\*(.*?)\*/g, '$1') // Remove italic markdown
-        .replace(/`(.*?)`/g, '$1') // Remove code markdown
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
-        .replace(/^\d+\.\s*/gm, '') // Remove numbered lists
-        .replace(/^[-*]\s*/gm, '') // Remove bullet points
-        .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
-        .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
-        .trim()
+      console.log('Final blog content:', JSON.stringify(blogContent)) // Debug logging
       
       // Generate excerpt (first 150 characters of content)
       const excerpt = blogContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'

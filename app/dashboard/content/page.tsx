@@ -1,393 +1,406 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Loader } from '@/components/Loader'
-import { supabase } from '@/lib/supabase'
-import { BlogPost } from '@/types/index'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import toast from 'react-hot-toast'
+import { Sparkles, Wand2, Image as ImageIcon, Share2, Save, Loader2 } from 'lucide-react'
 
-interface GeneratedContent {
-  blogPost: {
-    title: string
-    content: string
-    excerpt: string
-    tags: string[]
-  }
-  image: {
-    url: string
-    prompt: string
-  }
-  socialPosts: {
-    facebook: string
-    instagram: string
-    twitter: string
-    linkedin: string
-    tiktok: string
-  }
-}
-
-export default function ContentPage() {
-  const [idea, setIdea] = useState('')
-  const [tone, setTone] = useState<'professional' | 'casual' | 'friendly' | 'authoritative'>('professional')
-  const [length, setLength] = useState<'short' | 'medium' | 'long'>('medium')
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
+export default function ContentCreatorPage() {
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
+  const [prompt, setPrompt] = useState('')
+  const [generatedImageUrl, setGeneratedImageUrl] = useState('')
+  const [contentLoading, setContentLoading] = useState(false)
+  const [imageLoading, setImageLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const router = useRouter()
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToastMessage(message)
-    setTimeout(() => setToastMessage(''), 3000)
-  }
-
-  const handleGenerate = async () => {
-    if (!idea.trim()) {
-      showToast('Please enter an idea for your content', 'error')
+  const handleGenerateContent = async () => {
+    if (!prompt.trim()) {
+      toast.error('Please enter a prompt')
       return
     }
 
-    setIsGenerating(true)
+    setContentLoading(true)
+    setImageLoading(true)
+    
     try {
-      const response = await fetch('/api/generate-content', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: idea,
-          tone,
-          length,
-          platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+      // Generate everything in parallel
+      const [contentResponse, socialResponse, imageResponse] = await Promise.all([
+        fetch('/api/generate-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            type: 'blog',
+            tone: 'professional',
+            length: 'medium',
+          }),
         }),
-      })
+        
+        fetch('/api/generate-social-posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: prompt,
+            content: prompt,
+            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+          }),
+        }),
+        
+        fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        })
+      ])
 
-      if (!response.ok) {
-        throw new Error('Failed to generate content')
+      if (contentResponse.ok) {
+        const contentData = await contentResponse.json()
+        if (contentData.title) setTitle(contentData.title)
+        setContent(contentData.content)
       }
 
-      const content = await response.json()
-      setGeneratedContent(content)
-      showToast('Content generated successfully!')
+      if (socialResponse.ok) {
+        const socialData = await socialResponse.json()
+        setSocialPosts(socialData.socialPosts)
+      }
+
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json()
+        setGeneratedImageUrl(imageData.imageUrl)
+      } else {
+        const imageError = await imageResponse.text()
+        console.error('Image generation failed:', imageError)
+        toast.error('Image generation failed')
+      }
+      
+      toast.success('Complete content package generated!')
     } catch (error) {
       console.error('Error generating content:', error)
-      showToast('Failed to generate content. Please try again.', 'error')
+      toast.error('Failed to generate content')
     } finally {
-      setIsGenerating(false)
+      setContentLoading(false)
+      setImageLoading(false)
     }
   }
 
-  const handleSave = async () => {
-    if (!generatedContent) return
+  const handleSavePost = async () => {
+    if (!title.trim() || !content.trim()) {
+      toast.error('Please fill in all required fields')
+      return
+    }
 
-    setIsSaving(true)
+    setSaving(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        showToast('Please sign in to save content', 'error')
+        toast.error('Please sign in to save posts')
         return
       }
 
-      // Get user's organizations
       const { data: orgMembers } = await supabase
         .from('org_members')
-        .select('org_id')
+        .select('org_id, role')
         .eq('user_id', user.id)
 
       if (!orgMembers || orgMembers.length === 0) {
-        router.push('/create-organization')
+        toast.error('No organization found. Please create an organization first.')
         return
       }
 
-      // Use the first organization found
-      const orgId = orgMembers[0].org_id
+      let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+      if (!userOrgId) {
+        userOrgId = orgMembers[0].org_id
+      }
 
-      // Save blog post
-      const { data: blogPost, error: blogError } = await (supabase as any)
+      const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .insert({
-          org_id: orgId,
-          title: generatedContent.blogPost.title,
-          content: generatedContent.blogPost.content,
-          state: 'draft'
+          org_id: userOrgId,
+          title,
+          content,
+          state: 'draft',
         })
         .select()
         .single()
 
-      if (blogError) {
-        throw blogError
+      if (postError) {
+        console.error('Post save error:', postError)
+        toast.error('Failed to save post')
+        return
       }
 
-      // Save image
-      if (generatedContent.image.url) {
-        await (supabase as any)
-          .from('images')
-          .insert({
-            org_id: orgId,
-            post_id: (blogPost as any).id,
-            url: generatedContent.image.url
+      // Save social posts to separate table
+      if (Object.keys(socialPosts).length > 0) {
+        try {
+          for (const [platform, content] of Object.entries(socialPosts)) {
+            const { error: socialError } = await supabase
+              .from('social_posts')
+              .insert({
+                post_id: postData.id,
+                platform,
+                content
+              })
+            
+            if (socialError) {
+              console.error('Error saving social post:', socialError)
+            }
+          }
+        } catch (error) {
+          console.error('Error saving social posts:', error)
+        }
+      }
+
+      if (generatedImageUrl) {
+        // Save image permanently to Supabase Storage
+        try {
+          const saveImageResponse = await fetch('/api/save-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageUrl: generatedImageUrl,
+              postId: postData.id,
+              orgId: userOrgId
+            })
           })
+
+          if (saveImageResponse.ok) {
+            toast.success('Post, social posts, and image saved permanently!')
+          } else {
+            console.error('Failed to save image permanently')
+            toast.error('Post saved but image failed to save permanently')
+          }
+        } catch (error) {
+          console.error('Error saving image:', error)
+          toast.error('Post saved but image failed to save')
+        }
+      } else {
+        toast.success('Post and social posts saved successfully!')
       }
 
-      showToast('Content saved successfully!')
-      router.push(`/dashboard/content/package/${(blogPost as any).id}`)
+      router.push('/dashboard/content/list')
     } catch (error) {
-      console.error('Error saving content:', error)
-      showToast('Failed to save content. Please try again.', 'error')
+      toast.error('An unexpected error occurred')
     } finally {
-      setIsSaving(false)
+      setSaving(false)
     }
   }
 
   return (
-    <div className="space-y-6">
-      {/* Toast Message */}
-      {toastMessage && (
-        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-          {toastMessage}
+    <div className="space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Divine Header */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center gap-3">
+            <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-200 via-purple-200 to-pink-200 text-transparent bg-clip-text">
+              Divine Content Creator
+            </h1>
+            <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
+          </div>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Craft legendary content with the power of divine AI assistance
+          </p>
         </div>
-      )}
 
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">AI Content Creator</h1>
-        <p className="text-gray-300 mt-2">
-          Transform your ideas into complete content packages with AI assistance
-        </p>
-      </div>
-
-      {/* Input Form */}
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white">Content Idea</CardTitle>
-          <CardDescription className="text-gray-300">
-            Describe your content idea and let AI create a complete blog post, image, and social media posts
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* AI Generation Panel */}
           <div>
-            <Label htmlFor="idea" className="text-white">Your Idea</Label>
-            <Textarea
-              id="idea"
-              placeholder="e.g., The future of remote work, sustainable living tips, mindfulness in business..."
-              value={idea}
-              onChange={(e) => setIdea(e.target.value)}
-              className="mt-2 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-              rows={4}
-            />
+            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Wand2 className="w-5 h-5 text-purple-400" />
+                  <CardTitle className="text-white">AI Oracle</CardTitle>
+                </div>
+                <CardDescription className="text-gray-300">
+                  Whisper your vision, receive divine content
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="prompt" className="text-white">Your Vision</Label>
+                  <Textarea
+                    id="prompt"
+                    placeholder="Describe the essence of your content..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    className="bg-black/30 border-purple-500/50 text-white placeholder-gray-400 min-h-[200px]"
+                    rows={8}
+                  />
+                </div>
+                <Button 
+                  onClick={handleGenerateContent} 
+                  disabled={contentLoading || imageLoading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-6 text-lg shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
+                >
+                  {contentLoading || imageLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Creating Divine Package...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Generate Complete Package
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="tone" className="text-white">Tone</Label>
-              <Select value={tone} onValueChange={(value: any) => setTone(value)}>
-                <SelectTrigger className="mt-2 bg-gray-700 border-gray-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="professional">Professional</SelectItem>
-                  <SelectItem value="casual">Casual</SelectItem>
-                  <SelectItem value="friendly">Friendly</SelectItem>
-                  <SelectItem value="authoritative">Authoritative</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="length" className="text-white">Length</Label>
-              <Select value={length} onValueChange={(value: any) => setLength(value)}>
-                <SelectTrigger className="mt-2 bg-gray-700 border-gray-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="short">Short (500-800 words)</SelectItem>
-                  <SelectItem value="medium">Medium (800-1200 words)</SelectItem>
-                  <SelectItem value="long">Long (1200+ words)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Editor Panel */}
+          <div>
+            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-5 h-5 text-purple-400" />
+                    <CardTitle className="text-white">Sacred Manuscript</CardTitle>
+                  </div>
+                  {(title || content) && (
+                    <Button 
+                      onClick={handleSavePost} 
+                      disabled={saving || !title.trim() || !content.trim()}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Save
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+                <CardDescription className="text-gray-300">
+                  Divine content ready for the world
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {title && (
+                  <div className="space-y-2">
+                    <Label className="text-white text-lg">Title</Label>
+                    <div className="p-4 bg-black/30 border border-purple-500/30 rounded-lg">
+                      <h2 className="text-2xl font-bold text-white">{title}</h2>
+                    </div>
+                  </div>
+                )}
+                
+                {content && (
+                  <div className="space-y-2">
+                    <Label className="text-white text-lg">Content</Label>
+                    <div className="p-6 bg-black/30 border border-purple-500/30 rounded-lg max-h-[400px] overflow-y-auto">
+                      <div className="prose prose-invert max-w-none">
+                        <p className="text-gray-200 leading-relaxed text-lg whitespace-pre-wrap">
+                          {content}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {!title && !content && (
+                  <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                    <Wand2 className="w-16 h-16 text-purple-400/50" />
+                    <p className="text-gray-400 text-lg">
+                      Enter your vision and let the divine AI create your content
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
+        </div>
 
-          <Button 
-            onClick={handleGenerate} 
-            disabled={isGenerating || !idea.trim()}
-            className="w-full"
-          >
-            {isGenerating ? (
-              <>
-                <Loader className="mr-2 h-4 w-4" />
-                Generating Content...
-              </>
-            ) : (
-              'Generate Complete Content Package'
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Generated Content */}
-      {generatedContent && (
-        <div className="space-y-6">
-          {/* Blog Post */}
-          <Card className="bg-gray-800 border-gray-700">
+        {/* Social Media Posts */}
+        {Object.keys(socialPosts).length > 0 && (
+          <Card className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 border-blue-500/30 backdrop-blur-sm shadow-2xl">
             <CardHeader>
-              <CardTitle className="text-white">Generated Blog Post</CardTitle>
+              <div className="flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-blue-400" />
+                <CardTitle className="text-white">Social Prophecies</CardTitle>
+              </div>
               <CardDescription className="text-gray-300">
-                AI-generated blog post with non-dual perspective
+                Platform-optimized posts blessed by the algorithm gods
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {generatedContent.blogPost.title}
-                </h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {generatedContent.blogPost.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="bg-gray-700 text-gray-300">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-                <div className="prose prose-invert max-w-none">
-                  <div 
-                    className="text-gray-300 leading-relaxed whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: generatedContent.blogPost.content }}
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(socialPosts).map(([platform, post]) => (
+                  <div key={platform} className="bg-black/30 border border-blue-500/30 rounded-lg p-4 hover:border-blue-400/50 transition-all duration-300">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-blue-400 font-bold capitalize text-sm">{platform}</span>
+                    </div>
+                    <Textarea
+                      value={post}
+                      onChange={(e) => {
+                        setSocialPosts(prev => ({
+                          ...prev,
+                          [platform]: e.target.value
+                        }))
+                      }}
+                      className="bg-black/50 border-blue-500/30 text-white text-sm min-h-[120px]"
+                      rows={4}
+                    />
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
+        )}
 
-          {/* Generated Image */}
-          {generatedContent.image.url && (
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white">Generated Image</CardTitle>
-                <CardDescription className="text-gray-300">
-                  AI-generated image that complements your content
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <img 
-                    src={generatedContent.image.url} 
-                    alt={generatedContent.image.prompt}
-                    className="w-full max-w-md mx-auto rounded-lg shadow-lg"
-                  />
-                  <p className="text-sm text-gray-400 text-center">
-                    <strong>Prompt:</strong> {generatedContent.image.prompt}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Social Media Posts */}
-          <Card className="bg-gray-800 border-gray-700">
+        {/* Generated Image */}
+        {generatedImageUrl && (
+          <Card className="bg-gradient-to-br from-pink-900/50 to-purple-900/50 border-pink-500/30 backdrop-blur-sm shadow-2xl">
             <CardHeader>
-              <CardTitle className="text-white">Social Media Posts</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-pink-400" />
+                  <CardTitle className="text-white">Divine Imagery</CardTitle>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGeneratedImageUrl('')}
+                  className="border-pink-500/50 text-pink-300 hover:bg-pink-500/20"
+                >
+                  Remove
+                </Button>
+              </div>
               <CardDescription className="text-gray-300">
-                Platform-optimized posts ready for publishing
+                AI-crafted visual perfection
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Facebook */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">f</span>
-                  </div>
-                  <h4 className="font-semibold text-white">Facebook</h4>
-                </div>
-                <div className="bg-gray-700 p-4 rounded-lg">
-                  <p className="text-gray-300">{generatedContent.socialPosts.facebook}</p>
-                </div>
-              </div>
-
-              {/* Instagram */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">📷</span>
-                  </div>
-                  <h4 className="font-semibold text-white">Instagram</h4>
-                </div>
-                <div className="bg-gray-700 p-4 rounded-lg">
-                  <p className="text-gray-300">{generatedContent.socialPosts.instagram}</p>
-                </div>
-              </div>
-
-              {/* Twitter/X */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">𝕏</span>
-                  </div>
-                  <h4 className="font-semibold text-white">Twitter/X</h4>
-                </div>
-                <div className="bg-gray-700 p-4 rounded-lg">
-                  <p className="text-gray-300">{generatedContent.socialPosts.twitter}</p>
-                </div>
-              </div>
-
-              {/* LinkedIn */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-blue-700 rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">in</span>
-                  </div>
-                  <h4 className="font-semibold text-white">LinkedIn</h4>
-                </div>
-                <div className="bg-gray-700 p-4 rounded-lg">
-                  <p className="text-gray-300">{generatedContent.socialPosts.linkedin}</p>
-                </div>
-              </div>
-
-              {/* TikTok */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">🎵</span>
-                  </div>
-                  <h4 className="font-semibold text-white">TikTok</h4>
-                </div>
-                <div className="bg-gray-700 p-4 rounded-lg">
-                  <p className="text-gray-300">{generatedContent.socialPosts.tiktok}</p>
-                </div>
+            <CardContent>
+              <div className="flex justify-center">
+                <img 
+                  src={generatedImageUrl} 
+                  alt="Generated content image" 
+                  className="max-w-full h-auto rounded-lg shadow-2xl border-2 border-pink-500/30"
+                  onError={(e) => {
+                    console.error('Image failed to load:', generatedImageUrl)
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
               </div>
             </CardContent>
           </Card>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button onClick={handleSave} disabled={isSaving} className="flex-1">
-              {isSaving ? (
-                <>
-                  <Loader className="mr-2 h-4 w-4" />
-                  Saving...
-                </>
-              ) : (
-                'Save Content Package'
-              )}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setGeneratedContent(null)}
-              className="flex-1"
-            >
-              Generate New Content
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

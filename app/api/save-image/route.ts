@@ -1,76 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function POST(request: NextRequest) {
   try {
-    const { imageUrl, postId, orgId, prompt } = await request.json()
-
+    const { imageUrl, postId, orgId } = await request.json()
+    
+    console.log('Save image request:', { imageUrl, postId, orgId })
+    
     if (!imageUrl || !postId || !orgId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      console.error('Missing required fields:', { imageUrl, postId, orgId })
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
-    // Download the image from the temporary URL
+    // Create server-side Supabase client with service role key
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Download the image from DALL-E URL
+    console.log('Downloading image from:', imageUrl)
     const imageResponse = await fetch(imageUrl)
     if (!imageResponse.ok) {
-      throw new Error('Failed to download image')
+      throw new Error(`Failed to download image: ${imageResponse.status}`)
     }
 
-    const imageBuffer = await imageResponse.arrayBuffer()
-    const imageData = Buffer.from(imageBuffer)
+    const imageBlob = await imageResponse.blob()
+    const arrayBuffer = await imageBlob.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    console.log('Image downloaded, size:', buffer.length)
 
-    // Generate a unique filename
+    // Generate unique filename
     const timestamp = Date.now()
-    const filename = `generated-${postId}-${timestamp}.png`
+    const filename = `${orgId}/${postId}-${timestamp}.png`
+    console.log('Uploading to filename:', filename)
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from('images')
-      .upload(filename, imageData, {
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('blog-images')
+      .upload(filename, buffer, {
         contentType: 'image/png',
         upsert: false
       })
 
     if (uploadError) {
-      console.error('Error uploading image:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+      console.error('Upload error:', uploadError)
+      throw new Error(`Failed to upload image: ${uploadError.message}`)
     }
 
-    // Get the public URL
-    const { data: urlData } = supabaseAdmin.storage
-      .from('images')
+    console.log('Upload successful:', uploadData)
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('blog-images')
       .getPublicUrl(filename)
 
-    const permanentUrl = urlData.publicUrl
+    console.log('Public URL:', publicUrl)
 
-    // Save image record to database
-    const { data: imageRecord, error: dbError } = await supabaseAdmin
+    // Save to images table
+    const { error: dbError } = await supabase
       .from('images')
       .insert({
         org_id: orgId,
         post_id: postId,
-        url: permanentUrl,
-        prompt: prompt || 'AI generated image'
-      } as any)
-      .select()
-      .single()
+        url: publicUrl
+      })
 
     if (dbError) {
-      console.error('Error saving image record:', dbError)
-      // Try to clean up the uploaded file
-      await supabaseAdmin.storage.from('images').remove([filename])
-      return NextResponse.json({ error: 'Failed to save image record' }, { status: 500 })
+      console.error('Database error:', dbError)
+      throw new Error(`Failed to save image to database: ${dbError.message}`)
     }
 
-    return NextResponse.json({
-      message: 'Image saved successfully',
-      image: imageRecord,
-      permanentUrl
-    })
+    console.log('Image saved successfully')
 
-  } catch (error) {
-    console.error('Save image API Error:', error)
+    return NextResponse.json({ 
+      permanentUrl: publicUrl,
+      success: true 
+    })
+  } catch (error: any) {
+    console.error('Error saving image:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Failed to save image permanently',
+        details: error.message || String(error)
+      },
       { status: 500 }
     )
   }
