@@ -62,6 +62,9 @@ export default function SchedulerPage() {
         
         if (!user) return
 
+        // Check if user is admin
+        const isAdmin = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
+
         // Get user's organization
         const { data: orgMembers, error: orgError } = await supabase
           .from('org_members')
@@ -74,8 +77,38 @@ export default function SchedulerPage() {
           return
         }
 
-        // Get all organization IDs the user belongs to
-        const orgIds = orgMembers.map(member => member.org_id)
+        let orgIds: string[]
+
+        if (isAdmin) {
+          // Admin can see all posts from all organizations
+          orgIds = orgMembers.map(member => member.org_id)
+        } else {
+          // Non-admin users only see posts from their primary organization (not Admin Organization)
+          const nonAdminOrgs = orgMembers.filter(member => {
+            // Get organization name to filter out Admin Organization
+            return member.org_id // We'll filter this further below
+          })
+          
+          // Get organization names to filter out Admin Organization
+          const orgIdsToCheck = nonAdminOrgs.map(member => member.org_id)
+          const { data: orgsData } = await supabase
+            .from('organizations')
+            .select('id, name')
+            .in('id', orgIdsToCheck)
+          
+          // Filter out Admin Organization
+          const nonAdminOrgIds = orgsData
+            ?.filter(org => org.name !== 'Admin Organization')
+            .map(org => org.id) || []
+          
+          orgIds = nonAdminOrgIds
+        }
+
+        if (orgIds.length === 0) {
+          setPosts([])
+          setLoading(false)
+          return
+        }
 
         const { data, error } = await supabase
           .from('blog_posts')
@@ -113,18 +146,36 @@ export default function SchedulerPage() {
       if (error) {
         console.error('Error scheduling post:', error)
       } else {
-        // Refresh posts - get user's orgs first
+        // Refresh posts with same logic as initial fetch
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
+          const isAdmin = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
+          
           const { data: orgMembers } = await supabase
             .from('org_members')
             .select('org_id, role')
             .eq('user_id', user.id)
           
           if (orgMembers && orgMembers.length > 0) {
-            // Get all organization IDs the user belongs to
-            const orgIds = orgMembers.map(member => member.org_id)
-            
+            let orgIds: string[]
+
+            if (isAdmin) {
+              orgIds = orgMembers.map(member => member.org_id)
+            } else {
+              const orgIdsToCheck = orgMembers.map(member => member.org_id)
+              const { data: orgsData } = await supabase
+                .from('organizations')
+                .select('id, name')
+                .in('id', orgIdsToCheck)
+              
+              const nonAdminOrgIds = orgsData
+                ?.filter(org => org.name !== 'Admin Organization')
+                .map(org => org.id) || []
+              
+              orgIds = nonAdminOrgIds
+            }
+
+            if (orgIds.length > 0) {
             const { data } = await supabase
               .from('blog_posts')
               .select('*')
@@ -132,6 +183,7 @@ export default function SchedulerPage() {
               .order('scheduled_for', { ascending: true })
             
             setPosts(data || [])
+            }
           }
         }
       }
@@ -153,18 +205,36 @@ export default function SchedulerPage() {
       if (error) {
         console.error('Error publishing post:', error)
       } else {
-        // Refresh posts - get user's orgs first
+        // Refresh posts with same logic as initial fetch
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
+          const isAdmin = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
+          
           const { data: orgMembers } = await supabase
             .from('org_members')
             .select('org_id, role')
             .eq('user_id', user.id)
           
           if (orgMembers && orgMembers.length > 0) {
-            // Get all organization IDs the user belongs to
-            const orgIds = orgMembers.map(member => member.org_id)
-            
+            let orgIds: string[]
+
+            if (isAdmin) {
+              orgIds = orgMembers.map(member => member.org_id)
+            } else {
+              const orgIdsToCheck = orgMembers.map(member => member.org_id)
+              const { data: orgsData } = await supabase
+                .from('organizations')
+                .select('id, name')
+                .in('id', orgIdsToCheck)
+              
+              const nonAdminOrgIds = orgsData
+                ?.filter(org => org.name !== 'Admin Organization')
+                .map(org => org.id) || []
+              
+              orgIds = nonAdminOrgIds
+            }
+
+            if (orgIds.length > 0) {
             const { data } = await supabase
               .from('blog_posts')
               .select('*')
@@ -172,6 +242,7 @@ export default function SchedulerPage() {
               .order('scheduled_for', { ascending: true })
             
             setPosts(data || [])
+            }
           }
         }
       }
