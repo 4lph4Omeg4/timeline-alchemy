@@ -345,7 +345,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         
         <div className="relative z-10 flex flex-col items-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-400"></div>
-          <p className="mt-4 text-purple-200 text-lg font-semibold">✨ Entering Cosmic Realm... ✨</p>
+          <p className="mt-4 text-purple-200 text-lg font-semibold">✨ Entering Dimension... ✨</p>
         </div>
       </div>
     )
@@ -391,7 +391,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   onClick={handleSignOut}
                   className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300"
                 >
-                  Exit Cosmic Realm
+                  Exit Dimension
                 </Button>
               </div>
             </div>
@@ -407,55 +407,55 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="space-y-2">
                   <Link href="/dashboard" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">✨</span>
-                    <span className="font-semibold">Cosmic Dashboard</span>
+                    <span className="font-semibold">Dashboard</span>
                   </Link>
                   <Link href="/dashboard/content" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📝</span>
-                    <span className="font-semibold">Divine Content</span>
+                    <span className="font-semibold">Content</span>
                   </Link>
                   <Link href="/dashboard/content/list" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📦</span>
-                    <span className="font-semibold">Cosmic Packages</span>
+                    <span className="font-semibold">Packages</span>
                   </Link>
                   <Link href="/dashboard/leaderboard" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🏆</span>
-                    <span className="font-semibold">Cosmic Leaderboard</span>
+                    <span className="font-semibold">Leaderboard</span>
                   </Link>
                   <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📅</span>
-                    <span className="font-semibold">Celestial Schedule</span>
+                    <span className="font-semibold">Schedule</span>
                   </Link>
                   <Link href="/dashboard/socials" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🔗</span>
-                    <span className="font-semibold">Cosmic Socials</span>
+                    <span className="font-semibold">Socials</span>
                   </Link>
                   <Link href="/dashboard/billing" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💳</span>
-                    <span className="font-semibold">Cosmic Billing</span>
+                    <span className="font-semibold">Billing</span>
                   </Link>
                   {isAdmin && (
                     <>
                       <div className="border-t border-purple-500/30 my-4"></div>
-                      <div className="text-xs text-purple-300 font-bold uppercase tracking-wider mb-2 px-3">✨ Cosmic Admin Realm ✨</div>
+                      <div className="text-xs text-purple-300 font-bold uppercase tracking-wider mb-2 px-3">✨ Admin Realm ✨</div>
                       <Link href="/dashboard/organizations" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🏢</span>
-                        <span className="font-semibold">Cosmic Organizations</span>
+                        <span className="font-semibold">Organizations</span>
                       </Link>
                       <Link href="/dashboard/subscriptions" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📋</span>
-                        <span className="font-semibold">Cosmic Subscriptions</span>
+                        <span className="font-semibold">Subscriptions</span>
                       </Link>
                       <Link href="/dashboard/admin/clients" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">👥</span>
-                        <span className="font-semibold">Manage Cosmic Clients</span>
+                        <span className="font-semibold">Manage Clients</span>
                       </Link>
                       <Link href="/dashboard/admin/packages" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📦</span>
-                        <span className="font-semibold">Admin Cosmic Packages</span>
+                        <span className="font-semibold">Admin Packages</span>
                       </Link>
                       <Link href="/dashboard/analytics" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📈</span>
-                        <span className="font-semibold">Cosmic Analytics</span>
+                        <span className="font-semibold">Analytics</span>
                       </Link>
                     </>
                   )}
@@ -466,7 +466,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               {organizations.length > 0 && (
                 <div className="border-t border-purple-500/30 pt-6">
                   <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-4">
-                    {isAdmin ? '✨ Active Cosmic Organizations ✨' : '🌟 My Cosmic Organization 🌟'}
+                    {isAdmin ? '✨ Active Organizations ✨' : '🌟 My Organization 🌟'}
                   </h3>
                   <div className="space-y-2">
                     {organizations.map((org) => (
@@ -518,16 +518,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           setEditingOrg(null)
           setNewOrgName('')
         }}
-        title="✨ Edit Cosmic Organization Name ✨"
+        title="✨ Edit Organization Name ✨"
       >
         <div className="space-y-4">
           <div>
-            <Label htmlFor="orgName" className="text-purple-200 font-semibold">Cosmic Organization Name</Label>
+            <Label htmlFor="orgName" className="text-purple-200 font-semibold">Organization Name</Label>
             <Input
               id="orgName"
               value={newOrgName}
               onChange={(e) => setNewOrgName(e.target.value)}
-              placeholder="Enter cosmic organization name"
+              placeholder="Enter organization name"
               className="mt-1 bg-purple-800/30 border-purple-500/50 text-white placeholder-purple-300 focus:border-purple-400 focus:ring-purple-400/50"
               autoFocus
             />
@@ -549,7 +549,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               disabled={!newOrgName.trim() || newOrgName.trim() === editingOrg?.name}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold disabled:bg-gray-600 disabled:text-gray-400 transition-all duration-300"
             >
-              ✨ Save Cosmic Changes ✨
+              ✨ Save Changes ✨
             </Button>
           </div>
         </div>
