@@ -136,7 +136,7 @@ export default function HomePage() {
           {/* Divine Title */}
           <div className="relative mb-8">
             <h1 className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-6 leading-tight">
-              Create Divine Content with{' '}
+              Create content with{' '}
               <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text text-transparent animate-pulse">
                 ✨ AI Magic ✨
               </span>
@@ -166,16 +166,16 @@ export default function HomePage() {
           {/* Divine Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="bg-gradient-to-br from-purple-800/30 to-pink-800/30 backdrop-blur-md rounded-2xl p-6 border border-purple-500/30 shadow-xl">
-              <div className="text-3xl font-bold text-yellow-300 mb-2">10,000+</div>
-              <div className="text-purple-200">Divine Content Pieces Created</div>
+              <div className="text-3xl font-bold text-yellow-300 mb-2">1000+</div>
+              <div className="text-purple-200">content packages created</div>
             </div>
             <div className="bg-gradient-to-br from-blue-800/30 to-purple-800/30 backdrop-blur-md rounded-2xl p-6 border border-blue-500/30 shadow-xl">
-              <div className="text-3xl font-bold text-yellow-300 mb-2">500+</div>
-              <div className="text-blue-200">Enlightened Creators</div>
+              <div className="text-3xl font-bold text-yellow-300 mb-2">1+</div>
+              <div className="text-blue-200">At least one enlightened creator</div>
             </div>
             <div className="bg-gradient-to-br from-pink-800/30 to-yellow-800/30 backdrop-blur-md rounded-2xl p-6 border border-pink-500/30 shadow-xl">
               <div className="text-3xl font-bold text-yellow-300 mb-2">99.9%</div>
-              <div className="text-pink-200">Divine Satisfaction Rate</div>
+              <div className="text-pink-200">divine satisfaction rate</div>
             </div>
           </div>
         </div>
@@ -244,7 +244,7 @@ export default function HomePage() {
         <div className="text-center mb-20">
           <div className="relative mb-12">
             <h2 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 mb-4">
-              Divine Pricing Plans
+              Pricing Plans
             </h2>
             <p className="text-xl text-gray-200 font-light">
               Choose your path to content creation enlightenment
@@ -275,12 +275,6 @@ export default function HomePage() {
 
             {/* Pro Plan - Featured */}
             <Card className="bg-gradient-to-br from-purple-800/60 to-pink-800/60 backdrop-blur-md border-purple-400/50 shadow-2xl hover:shadow-purple-500/50 transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 group relative">
-              {/* Popular Badge */}
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                  ⭐ MOST DIVINE ⭐
-                </div>
-              </div>
               <CardHeader className="pb-6 pt-8">
                 <CardTitle className="text-white text-2xl font-bold group-hover:text-purple-200 transition-colors duration-300">
                   👑 Divine Pro
