@@ -6,15 +6,29 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
 import { Organization } from '@/types/index'
+import toast from 'react-hot-toast'
+
+interface Client {
+  id: string
+  name: string
+  contact_info: any
+  org_id: string | null
+  created_at: string
+}
+
+interface OrganizationWithClients extends Organization {
+  clients: Client[]
+}
 
 export default function OrganizationsPage() {
-  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [organizations, setOrganizations] = useState<OrganizationWithClients[]>([])
+  const [clientsWithoutOrg, setClientsWithoutOrg] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchOrganizations = async () => {
       try {
-        // Fetch organizations with their subscriptions to get the correct plan
+        // Fetch organizations with their subscriptions and clients
         const { data: orgsWithSubs, error } = await (supabase as any)
           .from('organizations')
           .select(`
@@ -24,19 +38,38 @@ export default function OrganizationsPage() {
               plan,
               status,
               created_at
+            ),
+            clients(
+              id,
+              name,
+              contact_info,
+              org_id,
+              created_at
             )
           `)
           .order('created_at', { ascending: false })
 
+        // Fetch clients without organizations
+        const { data: clientsData, error: clientsError } = await (supabase as any)
+          .from('clients')
+          .select('*')
+          .is('org_id', null)
+          .order('created_at', { ascending: false })
+
         if (orgsWithSubs) {
-          // Update organizations with subscription plan if available
+          // Update organizations with subscription plan and clients if available
           const orgsWithCorrectPlans = orgsWithSubs.map((org: any) => ({
             ...org,
             plan: org.subscriptions && org.subscriptions.length > 0 
               ? org.subscriptions[0].plan 
-              : org.plan
+              : org.plan,
+            clients: org.clients || []
           }))
           setOrganizations(orgsWithCorrectPlans)
+        }
+
+        if (clientsData) {
+          setClientsWithoutOrg(clientsData)
         }
       } catch (error) {
         console.error('Error fetching organizations:', error)
@@ -47,6 +80,104 @@ export default function OrganizationsPage() {
 
     fetchOrganizations()
   }, [])
+
+  const createOrganizationForClient = async (client: Client) => {
+    try {
+      // Create new organization
+      const { data: newOrg, error: orgError } = await (supabase as any)
+        .from('organizations')
+        .insert({
+          name: `${client.name}'s Organization`,
+          plan: 'basic'
+        })
+        .select()
+        .single()
+
+      if (orgError) {
+        console.error('Error creating organization:', orgError)
+        toast.error('Failed to create organization')
+        return
+      }
+
+      // Update client with new organization
+      const { error: clientError } = await (supabase as any)
+        .from('clients')
+        .update({ org_id: newOrg.id })
+        .eq('id', client.id)
+
+      if (clientError) {
+        console.error('Error updating client:', clientError)
+        toast.error('Failed to assign client to organization')
+        return
+      }
+
+      // Create subscription for the new organization
+      await (supabase as any)
+        .from('subscriptions')
+        .insert({
+          org_id: newOrg.id,
+          stripe_customer_id: 'temp-customer-' + newOrg.id,
+          stripe_subscription_id: 'temp-sub-' + newOrg.id,
+          plan: 'basic',
+          status: 'active'
+        })
+
+      toast.success(`Organization created for ${client.name}`)
+      
+      // Refresh the data
+      const fetchOrganizations = async () => {
+        try {
+          const { data: orgsWithSubs, error } = await (supabase as any)
+            .from('organizations')
+            .select(`
+              *,
+              subscriptions(
+                id,
+                plan,
+                status,
+                created_at
+              ),
+              clients(
+                id,
+                name,
+                contact_info,
+                org_id,
+                created_at
+              )
+            `)
+            .order('created_at', { ascending: false })
+
+          const { data: clientsData, error: clientsError } = await (supabase as any)
+            .from('clients')
+            .select('*')
+            .is('org_id', null)
+            .order('created_at', { ascending: false })
+
+          if (orgsWithSubs) {
+            const orgsWithCorrectPlans = orgsWithSubs.map((org: any) => ({
+              ...org,
+              plan: org.subscriptions && org.subscriptions.length > 0 
+                ? org.subscriptions[0].plan 
+                : org.plan,
+              clients: org.clients || []
+            }))
+            setOrganizations(orgsWithCorrectPlans)
+          }
+
+          if (clientsData) {
+            setClientsWithoutOrg(clientsData)
+          }
+        } catch (error) {
+          console.error('Error refreshing data:', error)
+        }
+      }
+
+      fetchOrganizations()
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      toast.error('An unexpected error occurred')
+    }
+  }
 
   if (loading) {
     return (
@@ -64,6 +195,41 @@ export default function OrganizationsPage() {
           Manage all organizations in the system
         </p>
       </div>
+
+      {/* Clients Without Organizations */}
+      {clientsWithoutOrg.length > 0 && (
+        <Card className="bg-gradient-to-r from-orange-900/30 to-red-900/30 border-orange-500/30">
+          <CardHeader>
+            <CardTitle className="text-white">⚠️ Clients Without Organizations</CardTitle>
+            <CardDescription className="text-orange-200">
+              {clientsWithoutOrg.length} clients need organizations to be created
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {clientsWithoutOrg.map((client) => (
+                <div key={client.id} className="flex items-center justify-between p-4 bg-orange-800/20 border border-orange-500/30 rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-white">{client.name}</h4>
+                    <p className="text-orange-200 text-sm">
+                      Email: {client.contact_info?.email || 'No email provided'}
+                    </p>
+                    <p className="text-orange-300 text-xs">
+                      Created: {new Date(client.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => createOrganizationForClient(client)}
+                    className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white"
+                  >
+                    ✨ Create Organization
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
@@ -101,7 +267,32 @@ export default function OrganizationsPage() {
                         <span className="text-gray-300">
                           ID: {org.id.slice(0, 8)}...
                         </span>
+                        <Badge className="bg-green-600 text-white">
+                          {org.clients.length} client{org.clients.length !== 1 ? 's' : ''}
+                        </Badge>
                       </div>
+                      
+                      {/* Show clients linked to this organization */}
+                      {org.clients.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="text-white font-medium mb-2">👥 Linked Clients:</h4>
+                          <div className="space-y-2">
+                            {org.clients.map((client) => (
+                              <div key={client.id} className="flex items-center justify-between p-3 bg-gray-700/50 border border-gray-600 rounded-lg">
+                                <div className="flex-1">
+                                  <p className="text-white font-medium">{client.name}</p>
+                                  <p className="text-gray-300 text-sm">
+                                    {client.contact_info?.email || 'No email provided'}
+                                  </p>
+                                </div>
+                                <Badge className="bg-green-600 text-white text-xs">
+                                  Active
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
