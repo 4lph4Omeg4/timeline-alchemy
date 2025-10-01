@@ -203,10 +203,10 @@ export default function ContentCreatorPage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* AI Generation Panel */}
-          <div className="lg:col-span-1">
-            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl">
+          <div>
+            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Wand2 className="w-5 h-5 text-purple-400" />
@@ -224,8 +224,8 @@ export default function ContentCreatorPage() {
                     placeholder="Describe the essence of your content..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    className="bg-black/30 border-purple-500/50 text-white placeholder-gray-400 min-h-[150px]"
-                    rows={6}
+                    className="bg-black/30 border-purple-500/50 text-white placeholder-gray-400 min-h-[200px]"
+                    rows={8}
                   />
                 </div>
                 <Button 
@@ -250,8 +250,8 @@ export default function ContentCreatorPage() {
           </div>
 
           {/* Editor Panel */}
-          <div className="lg:col-span-2">
-            <Card className="bg-gradient-to-br from-slate-900/90 to-purple-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl">
+          <div>
+            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ export default function ContentCreatorPage() {
                 {content && (
                   <div className="space-y-2">
                     <Label className="text-white text-lg">Content</Label>
-                    <div className="p-6 bg-black/30 border border-purple-500/30 rounded-lg max-h-[500px] overflow-y-auto">
+                    <div className="p-6 bg-black/30 border border-purple-500/30 rounded-lg max-h-[400px] overflow-y-auto">
                       <div className="prose prose-invert max-w-none">
                         <p className="text-gray-200 leading-relaxed text-lg whitespace-pre-wrap">
                           {content}
