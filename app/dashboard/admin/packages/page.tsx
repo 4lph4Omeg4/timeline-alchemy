@@ -204,8 +204,8 @@ export default function AdminPackagesPage() {
               </CardHeader>
               <CardContent className="flex-grow flex flex-col justify-between">
                 <div className="space-y-4">
-                  <p className="text-gray-300 text-sm line-clamp-6">
-                    {pkg.content.substring(0, 400)}...
+                  <p className="text-gray-300 text-sm line-clamp-8">
+                    {pkg.content.substring(0, 800)}...
                   </p>
                 </div>
                 
