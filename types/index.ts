@@ -40,6 +40,10 @@ export interface BlogPost {
   created_by_admin?: boolean
   average_rating?: number
   rating_count?: number
+  organizations?: {
+    id: string
+    name: string
+  }
 }
 
 export interface SocialConnection {
