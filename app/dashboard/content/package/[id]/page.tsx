@@ -141,12 +141,82 @@ export default function ContentPackagePage() {
         userOrgId = orgMembers[0].org_id
       }
 
-      if (platform) {
+      if (platform === 'all') {
+        // Schedule all platforms
+        const scheduledDate = new Date(scheduleDateTime)
+        const platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+        let successCount = 0
+        let errorCount = 0
+
+        // First schedule the main blog post
+        const { error: blogError } = await supabase
+          .from('blog_posts')
+          .update({
+            state: 'scheduled',
+            scheduled_for: scheduledDate.toISOString()
+          })
+          .eq('id', post.id)
+
+        if (blogError) {
+          console.error('Error scheduling blog post:', blogError)
+          toast.error('Failed to schedule blog post')
+          return
+        }
+
+        // Then schedule all social platforms
+        for (const platformName of platforms) {
+          const postContent = socialPosts[platformName]
+          if (!postContent) {
+            console.warn(`No ${platformName} post available, skipping`)
+            continue
+          }
+
+          // Include image URL in social post content if available
+          let enhancedContent = postContent
+          if (generatedContent?.image?.url) {
+            enhancedContent = `${postContent}\n\n🖼️ Image: ${generatedContent.image.url}`
+          }
+
+          const { error: socialPostError } = await supabase
+            .from('blog_posts')
+            .insert({
+              org_id: userOrgId,
+              title: `${post.title} - ${platformName.charAt(0).toUpperCase() + platformName.slice(1)} Post`,
+              content: enhancedContent,
+              state: 'scheduled',
+              scheduled_for: scheduledDate.toISOString(),
+              social_platform: platformName,
+              parent_post_id: post.id
+            })
+
+          if (socialPostError) {
+            console.error(`Error scheduling ${platformName} post:`, socialPostError)
+            errorCount++
+          } else {
+            successCount++
+          }
+        }
+
+        // Update local state
+        setPost(prev => prev ? { ...prev, state: 'scheduled', scheduled_for: scheduledDate.toISOString() } : null)
+        
+        if (errorCount === 0) {
+          toast.success(`All platforms scheduled successfully! (${successCount} posts)`)
+        } else {
+          toast.success(`Scheduled ${successCount} platforms successfully, ${errorCount} failed`)
+        }
+      } else if (platform) {
         // Schedule individual social post
         const postContent = socialPosts[platform]
         if (!postContent) {
           toast.error(`No ${platform} post available`)
           return
+        }
+
+        // Include image URL in social post content if available
+        let enhancedContent = postContent
+        if (generatedContent?.image?.url) {
+          enhancedContent = `${postContent}\n\n🖼️ Image: ${generatedContent.image.url}`
         }
 
         // Create a new blog post for the social post
@@ -157,7 +227,7 @@ export default function ContentPackagePage() {
           .insert({
             org_id: userOrgId,
             title: `${post.title} - ${platform.charAt(0).toUpperCase() + platform.slice(1)} Post`,
-            content: postContent,
+            content: enhancedContent,
             state: 'scheduled',
             scheduled_for: scheduledDate.toISOString(),
             social_platform: platform,
@@ -529,6 +599,12 @@ export default function ContentPackagePage() {
               >
                 📅 Schedule Blog Post
               </Button>
+              <Button
+                onClick={() => openScheduleModal('all')}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold shadow-lg hover:shadow-blue-500/50"
+              >
+                🚀 Schedule All Platforms
+              </Button>
               {post.state === 'scheduled' && (
                 <Button
                   variant="outline"
@@ -790,7 +866,7 @@ export default function ContentPackagePage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-purple-500/30 rounded-lg p-6 w-full max-w-md">
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              📅 Schedule {selectedPlatform ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} Post` : 'Blog Post'}
+              📅 Schedule {selectedPlatform === 'all' ? 'All Platforms' : selectedPlatform ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} Post` : 'Blog Post'}
             </h3>
             
             <div className="space-y-4">
@@ -807,12 +883,29 @@ export default function ContentPackagePage() {
                 />
               </div>
               
-              {selectedPlatform && (
+              {selectedPlatform && selectedPlatform !== 'all' && (
                 <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
                   <p className="text-sm text-gray-400 mb-2">Preview:</p>
                   <p className="text-gray-300 text-sm line-clamp-3">
                     {socialPosts[selectedPlatform]}
                   </p>
+                </div>
+              )}
+              
+              {selectedPlatform === 'all' && (
+                <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
+                  <p className="text-sm text-gray-400 mb-2">Will schedule:</p>
+                  <ul className="text-gray-300 text-sm space-y-1">
+                    <li>• Blog Post: "{post?.title}"</li>
+                    <li>• Facebook Post</li>
+                    <li>• Instagram Post</li>
+                    <li>• Twitter/X Post</li>
+                    <li>• LinkedIn Post</li>
+                    <li>• TikTok Post</li>
+                    {generatedContent?.image?.url && (
+                      <li>• Generated Image (included with all posts)</li>
+                    )}
+                  </ul>
                 </div>
               )}
               
