@@ -165,36 +165,33 @@ export default function ContentPackagePage() {
           return
         }
 
-        // Then schedule all social platforms
-        for (const platformName of platforms) {
-          const postContent = socialPosts[platformName]
-          if (!postContent) {
-            console.warn(`No ${platformName} post available, skipping`)
-            continue
-          }
+        // Update the original post with social platform scheduling info
+        const socialPlatformsScheduled = platforms.filter(platform => socialPosts[platform])
+        const socialSchedulingInfo = {
+          scheduled_social_platforms: socialPlatformsScheduled,
+          scheduled_social_content: socialPlatformsScheduled.reduce((acc, platform) => {
+            let content = socialPosts[platform]
+            if (generatedContent?.image?.url) {
+              content = `${content}\n\n🖼️ Image: ${generatedContent.image.url}`
+            }
+            acc[platform] = content
+            return acc
+          }, {} as Record<string, string>)
+        }
 
-          // Include image URL in social post content if available
-          let enhancedContent = postContent
-          if (generatedContent?.image?.url) {
-            enhancedContent = `${postContent}\n\n🖼️ Image: ${generatedContent.image.url}`
-          }
+        const { error: updateError } = await supabase
+          .from('blog_posts')
+          .update({
+            social_posts: socialSchedulingInfo.scheduled_social_content,
+            scheduled_social_platforms: socialPlatformsScheduled
+          })
+          .eq('id', post.id)
 
-          const { error: socialPostError } = await supabase
-            .from('blog_posts')
-            .insert({
-              org_id: userOrgId,
-              title: `${post.title} - ${platformName.charAt(0).toUpperCase() + platformName.slice(1)} Post`,
-              content: enhancedContent,
-              state: 'scheduled',
-              scheduled_for: scheduledDate.toISOString()
-            })
-
-          if (socialPostError) {
-            console.error(`Error scheduling ${platformName} post:`, socialPostError)
-            errorCount++
-          } else {
-            successCount++
-          }
+        if (updateError) {
+          console.error('Error updating post with social platform info:', updateError)
+          errorCount = platforms.length
+        } else {
+          successCount = socialPlatformsScheduled.length
         }
 
         // Update local state for the main blog post
@@ -219,29 +216,39 @@ export default function ContentPackagePage() {
           enhancedContent = `${postContent}\n\n🖼️ Image: ${generatedContent.image.url}`
         }
 
-        // Create a new blog post for the social post
-        // Convert local datetime to UTC for database storage
+        // Update the original post with individual social platform scheduling
         const scheduledDate = new Date(scheduleDateTime)
-        const { data: socialPostData, error: socialPostError } = await supabase
+        
+        // Get current social posts and add the new one
+        const currentSocialPosts = post.social_posts || {}
+        const updatedSocialPosts = {
+          ...currentSocialPosts,
+          [platform]: enhancedContent
+        }
+        
+        const { error: updateError } = await supabase
           .from('blog_posts')
-          .insert({
-            org_id: userOrgId,
-            title: `${post.title} - ${platform.charAt(0).toUpperCase() + platform.slice(1)} Post`,
-            content: enhancedContent,
+          .update({
+            social_posts: updatedSocialPosts,
             state: 'scheduled',
-            scheduled_for: scheduledDate.toISOString(),
-            social_platform: platform,
-            parent_post_id: post.id
+            scheduled_for: scheduledDate.toISOString()
           })
-          .select()
-          .single()
+          .eq('id', post.id)
 
-        if (socialPostError) {
-          console.error('Error scheduling social post:', socialPostError)
+        if (updateError) {
+          console.error('Error scheduling social post:', updateError)
           toast.error('Failed to schedule social post')
           return
         }
 
+        // Update local state
+        setPost(prev => prev ? { 
+          ...prev, 
+          state: 'scheduled', 
+          scheduled_for: scheduledDate.toISOString(),
+          social_posts: updatedSocialPosts
+        } : null)
+        
         toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} post scheduled successfully!`)
       } else {
         // Schedule the main blog post
@@ -658,11 +665,11 @@ export default function ContentPackagePage() {
              {(Object.keys(socialPosts).length > 0 || (generatedContent && generatedContent.socialPosts)) && (
                <Card className="bg-gray-900 border-gray-800">
                  <CardHeader>
-                   <div>
-                     <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
-                     <CardDescription className="text-gray-300">
-                       Platform-optimized posts ready for publishing
-                     </CardDescription>
+                     <div>
+                       <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
+                       <CardDescription className="text-gray-300">
+                         Platform-optimized posts ready for publishing
+                       </CardDescription>
                    </div>
                  </CardHeader>
                  <CardContent className="space-y-6">
@@ -670,10 +677,10 @@ export default function ContentPackagePage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">f</span>
-                </div>
-                <h4 className="font-semibold text-white">Facebook</h4>
+              <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">f</span>
+              </div>
+              <h4 className="font-semibold text-white">Facebook</h4>
               </div>
               <Button
                 size="sm"
@@ -694,10 +701,10 @@ export default function ContentPackagePage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">📷</span>
-                </div>
-                <h4 className="font-semibold text-white">Instagram</h4>
+              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">📷</span>
+              </div>
+              <h4 className="font-semibold text-white">Instagram</h4>
               </div>
               <Button
                 size="sm"
@@ -718,10 +725,10 @@ export default function ContentPackagePage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">𝕏</span>
-                </div>
-                <h4 className="font-semibold text-white">Twitter/X</h4>
+              <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">𝕏</span>
+              </div>
+              <h4 className="font-semibold text-white">Twitter/X</h4>
               </div>
               <Button
                 size="sm"
@@ -742,10 +749,10 @@ export default function ContentPackagePage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-blue-700 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">in</span>
-                </div>
-                <h4 className="font-semibold text-white">LinkedIn</h4>
+              <div className="w-6 h-6 bg-blue-700 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">in</span>
+              </div>
+              <h4 className="font-semibold text-white">LinkedIn</h4>
               </div>
               <Button
                 size="sm"
@@ -768,17 +775,17 @@ export default function ContentPackagePage() {
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center">
                   <span className="text-white text-xs font-bold">💬</span>
-                </div>
-                <h4 className="font-semibold text-white">Discord</h4>
               </div>
-              <Button
+                <h4 className="font-semibold text-white">Discord</h4>
+            </div>
+            <Button
                 size="sm"
                 onClick={() => openScheduleModal('discord')}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
               >
                 📅 Schedule
-              </Button>
-            </div>
+            </Button>
+          </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.discord}</p>
             </div>
@@ -793,13 +800,13 @@ export default function ContentPackagePage() {
                 </div>
                 <h4 className="font-semibold text-white">Reddit</h4>
               </div>
-              <Button
+            <Button
                 size="sm"
                 onClick={() => openScheduleModal('reddit')}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
               >
                 📅 Schedule
-              </Button>
+            </Button>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.reddit}</p>

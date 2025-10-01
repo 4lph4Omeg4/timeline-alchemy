@@ -65,6 +65,20 @@ const socialPlatforms = [
     color: 'bg-red-600',
     brandColor: '#FF0000',
   },
+  {
+    id: 'discord',
+    name: 'Discord',
+    description: 'Connect your Discord account to publish messages',
+    color: 'bg-indigo-600',
+    brandColor: '#5865F2',
+  },
+  {
+    id: 'reddit',
+    name: 'Reddit',
+    description: 'Connect your Reddit account to publish posts',
+    color: 'bg-orange-600',
+    brandColor: '#FF4500',
+  },
 ]
 
 export default function SocialConnectionsPage() {
@@ -371,6 +385,69 @@ export default function SocialConnectionsPage() {
         toast.success(`Redirecting to ${platform} OAuth...`)
         
         // Redirect to YouTube OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'discord') {
+        const userOrgId = await getUserOrgId(user.id)
+
+        if (!userOrgId) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
+        // Generate state parameter for security
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const stateData = {
+          state: stateParam,
+          org_id: userOrgId,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('Discord OAuth state data:', stateData)
+        
+        // Discord OAuth URL
+        const authUrl = new URL('https://discord.com/api/oauth2/authorize')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '')
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/discord/callback`)
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('scope', 'identify guilds')
+        authUrl.searchParams.set('state', state)
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to Discord OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'reddit') {
+        const userOrgId = await getUserOrgId(user.id)
+
+        if (!userOrgId) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
+        // Generate state parameter for security
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const stateData = {
+          state: stateParam,
+          org_id: userOrgId,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('Reddit OAuth state data:', stateData)
+        
+        // Reddit OAuth URL
+        const authUrl = new URL('https://www.reddit.com/api/v1/authorize')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_REDDIT_CLIENT_ID || '')
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('state', state)
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/reddit/callback`)
+        authUrl.searchParams.set('duration', 'permanent')
+        authUrl.searchParams.set('scope', 'identity submit')
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to Reddit OAuth
         window.location.href = authUrl.toString()
       } else {
         // For other platforms, show coming soon message
