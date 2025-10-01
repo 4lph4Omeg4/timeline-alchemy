@@ -609,13 +609,14 @@ export default function SchedulerPage() {
                               {group.posts.map((post) => {
                                 // Determine platform based on title
                                 const getPlatform = (title: string) => {
-                                  if (title.includes('Facebook')) return 'facebook'
-                                  if (title.includes('Instagram')) return 'instagram'
-                                  if (title.includes('Twitter') || title.includes('X')) return 'twitter'
-                                  if (title.includes('LinkedIn')) return 'linkedin'
-                                  if (title.includes('Discord')) return 'discord'
-                              if (title.includes('Reddit')) return 'reddit'
-                                  if (title.includes('YouTube')) return 'youtube'
+                                  const lowerTitle = title.toLowerCase()
+                                  if (lowerTitle.includes('facebook')) return 'facebook'
+                                  if (lowerTitle.includes('instagram')) return 'instagram'
+                                  if (lowerTitle.includes('twitter') || lowerTitle.includes('x')) return 'twitter'
+                                  if (lowerTitle.includes('linkedin')) return 'linkedin'
+                                  if (lowerTitle.includes('discord')) return 'discord'
+                                  if (lowerTitle.includes('reddit')) return 'reddit'
+                                  if (lowerTitle.includes('youtube')) return 'youtube'
                                   return 'blog' // Default for blog posts
                                 }
                                 
