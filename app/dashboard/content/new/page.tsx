@@ -227,6 +227,7 @@ export default function ContentEditorPage() {
              } else {
                toast.success('Post and social posts saved successfully!')
              }
+           }
 
       router.push('/dashboard/content/list')
     } catch (error) {
