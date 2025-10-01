@@ -59,15 +59,17 @@ export default function OrganizationsPage() {
           .order('created_at', { ascending: false })
 
         if (orgsWithSubs) {
-          // Update organizations with subscription plan and clients if available
-          const orgsWithCorrectPlans = orgsWithSubs.map((org: any) => ({
-            ...org,
-            plan: org.subscriptions && org.subscriptions.length > 0 
-              ? org.subscriptions[0].plan 
-              : org.plan,
-            clients: org.clients || []
-          }))
-          setOrganizations(orgsWithCorrectPlans)
+          // Filter out Admin Organization and update organizations with subscription plan and clients
+          const nonAdminOrgs = orgsWithSubs
+            .filter((org: any) => org.name !== 'Admin Organization')
+            .map((org: any) => ({
+              ...org,
+              plan: org.subscriptions && org.subscriptions.length > 0 
+                ? org.subscriptions[0].plan 
+                : org.plan,
+              clients: org.clients || []
+            }))
+          setOrganizations(nonAdminOrgs)
         }
 
         if (allClientsData) {
@@ -166,14 +168,17 @@ export default function OrganizationsPage() {
             .order('created_at', { ascending: false })
 
           if (orgsWithSubs) {
-            const orgsWithCorrectPlans = orgsWithSubs.map((org: any) => ({
-              ...org,
-              plan: org.subscriptions && org.subscriptions.length > 0 
-                ? org.subscriptions[0].plan 
-                : org.plan,
-              clients: org.clients || []
-            }))
-            setOrganizations(orgsWithCorrectPlans)
+            // Filter out Admin Organization and update organizations with subscription plan and clients
+            const nonAdminOrgs = orgsWithSubs
+              .filter((org: any) => org.name !== 'Admin Organization')
+              .map((org: any) => ({
+                ...org,
+                plan: org.subscriptions && org.subscriptions.length > 0 
+                  ? org.subscriptions[0].plan 
+                  : org.plan,
+                clients: org.clients || []
+              }))
+            setOrganizations(nonAdminOrgs)
           }
 
           if (allClientsData) {
@@ -210,9 +215,9 @@ export default function OrganizationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Organizations</h1>
+        <h1 className="text-3xl font-bold text-white">Client Organizations</h1>
         <p className="text-gray-300 mt-2">
-          Manage all organizations in the system
+          Manage client organizations and assign clients to organizations
         </p>
       </div>
 
@@ -253,15 +258,16 @@ export default function OrganizationsPage() {
 
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">All Organizations</CardTitle>
+          <CardTitle className="text-white">Client Organizations</CardTitle>
           <CardDescription className="text-gray-200">
-            {organizations.length} organizations found
+            {organizations.length} client organizations found (excluding Admin Organization)
           </CardDescription>
         </CardHeader>
         <CardContent>
           {organizations.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-300">No organizations found</p>
+              <p className="text-gray-300">No client organizations found</p>
+              <p className="text-gray-400 text-sm mt-2">All clients are currently without their own organization</p>
             </div>
           ) : (
             <div className="space-y-4">
