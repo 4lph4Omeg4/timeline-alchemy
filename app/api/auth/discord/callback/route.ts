@@ -49,6 +49,8 @@ export async function GET(request: NextRequest) {
         platform: 'discord',
         access_token: accessToken,
         refresh_token: refreshToken,
+        account_id: user.id,
+        account_name: user.username || 'Discord Account',
       })
 
     if (insertError) {

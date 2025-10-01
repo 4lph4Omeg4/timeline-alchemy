@@ -49,6 +49,8 @@ export async function GET(request: NextRequest) {
         platform: 'reddit',
         access_token: accessToken,
         refresh_token: refreshToken,
+        account_id: user.id,
+        account_name: user.name || 'Reddit Account',
       })
 
     if (insertError) {
