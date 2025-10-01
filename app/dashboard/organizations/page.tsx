@@ -49,14 +49,13 @@ export default function OrganizationsPage() {
           `)
           .order('created_at', { ascending: false })
 
-        // Fetch clients without their own organizations (they might be in admin org but not have their own org)
-        const { data: clientsData, error: clientsError } = await (supabase as any)
+        // Fetch ALL clients to check which ones don't have their own organization
+        const { data: allClientsData, error: clientsError } = await (supabase as any)
           .from('clients')
           .select(`
             *,
-            organizations!inner(name)
+            organizations(name)
           `)
-          .eq('organizations.name', 'Admin Organization')
           .order('created_at', { ascending: false })
 
         if (orgsWithSubs) {
@@ -71,14 +70,14 @@ export default function OrganizationsPage() {
           setOrganizations(orgsWithCorrectPlans)
         }
 
-        if (clientsData) {
-          // Filter clients that don't have their own organization (only in admin org)
-          const clientsWithoutOwnOrg = clientsData.filter((client: any) => {
+        if (allClientsData) {
+          // Filter clients that don't have their own organization
+          const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
             // Check if this client has any organization other than Admin Organization
-            return !orgsWithSubs.some((org: any) => 
-              org.name !== 'Admin Organization' && 
-              org.clients.some((orgClient: any) => orgClient.id === client.id)
+            const hasOwnOrg = client.organizations && client.organizations.some((org: any) => 
+              org.name !== 'Admin Organization'
             )
+            return !hasOwnOrg
           })
           setClientsWithoutOrg(clientsWithoutOwnOrg)
         }
@@ -158,13 +157,12 @@ export default function OrganizationsPage() {
             `)
             .order('created_at', { ascending: false })
 
-          const { data: clientsData, error: clientsError } = await (supabase as any)
+          const { data: allClientsData, error: clientsError } = await (supabase as any)
             .from('clients')
             .select(`
               *,
-              organizations!inner(name)
+              organizations(name)
             `)
-            .eq('organizations.name', 'Admin Organization')
             .order('created_at', { ascending: false })
 
           if (orgsWithSubs) {
@@ -178,14 +176,14 @@ export default function OrganizationsPage() {
             setOrganizations(orgsWithCorrectPlans)
           }
 
-          if (clientsData) {
-            // Filter clients that don't have their own organization (only in admin org)
-            const clientsWithoutOwnOrg = clientsData.filter((client: any) => {
+          if (allClientsData) {
+            // Filter clients that don't have their own organization
+            const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
               // Check if this client has any organization other than Admin Organization
-              return !orgsWithSubs.some((org: any) => 
-                org.name !== 'Admin Organization' && 
-                org.clients.some((orgClient: any) => orgClient.id === client.id)
+              const hasOwnOrg = client.organizations && client.organizations.some((org: any) => 
+                org.name !== 'Admin Organization'
               )
+              return !hasOwnOrg
             })
             setClientsWithoutOrg(clientsWithoutOwnOrg)
           }
