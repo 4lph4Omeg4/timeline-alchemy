@@ -96,10 +96,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Divine Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/30 to-black"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-purple-500/15 to-purple-600/10 animate-pulse"></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.05),transparent_70%)]"></div>
+      {/* Divine Background Effects - MUCH DARKER */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/10 to-black"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/3 via-purple-500/5 to-purple-600/3 animate-pulse"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.02),transparent_80%)]"></div>
       
       {/* Floating Orbs */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-purple-500/25 to-purple-400/30 rounded-full blur-xl animate-bounce"></div>
@@ -328,9 +328,9 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-purple-500/8 to-purple-600/5"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex items-start mb-8">
+          <div className="mb-8">
             {/* Left side - Company Info */}
-            <div className="w-1/2">
+            <div className="w-1/3 mb-8">
               <div className="flex items-center mb-4">
                 <Logo size="sm" showText={false} />
                 <span className="ml-2 text-white font-bold">Timeline Alchemy</span>
@@ -340,10 +340,10 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Right side - SH4M4NI4K.NL and Contact - PUSHED FAR RIGHT */}
-            <div className="flex gap-20 ml-auto">
+            {/* Right side - SH4M4NI4K.NL and Contact - REALLY FAR RIGHT */}
+            <div className="flex justify-end gap-32">
               {/* SH4M4NI4K.NL Links */}
-              <div>
+              <div className="text-right">
                 <h3 className="text-white font-semibold mb-4">SH4M4NI4K.NL</h3>
                 <ul className="space-y-2 text-sm">
                   <li><a href="https://sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Cosmic Unity</a></li>
@@ -352,7 +352,7 @@ export default function HomePage() {
               </div>
 
               {/* Contact */}
-              <div>
+              <div className="text-right">
                 <h3 className="text-white font-semibold mb-4">Contact</h3>
                 <ul className="space-y-2 text-sm">
                   <li><a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition">timeline-alchemy@sh4m4ni4k.nl</a></li>
