@@ -582,21 +582,11 @@ export default function ContentPackagePage() {
              {(Object.keys(socialPosts).length > 0 || (generatedContent && generatedContent.socialPosts)) && (
                <Card className="bg-gray-900 border-gray-800">
                  <CardHeader>
-                   <div className="flex justify-between items-start">
-                     <div>
-                       <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
-                       <CardDescription className="text-gray-300">
-                         Platform-optimized posts ready for publishing
-                       </CardDescription>
-                     </div>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={handleRegenerateSocialPosts}
-                       disabled={regeneratingSocial}
-                     >
-                       {regeneratingSocial ? 'Regenerating...' : '🔄 Regenerate Posts'}
-                     </Button>
+                   <div>
+                     <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
+                     <CardDescription className="text-gray-300">
+                       Platform-optimized posts ready for publishing
+                     </CardDescription>
                    </div>
                  </CardHeader>
                  <CardContent className="space-y-6">
@@ -721,139 +711,7 @@ export default function ContentPackagePage() {
       </Card>
              )}
 
-      {/* Publishing Options */}
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white">🚀 Publishing Options</CardTitle>
-          <CardDescription className="text-gray-300">
-            Publish this content to your social media platforms
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (socialPosts.twitter) {
-                  window.open(`https://twitter.com/compose/tweet?text=${encodeURIComponent(socialPosts.twitter)}`, '_blank')
-                } else {
-                  toast.error('No Twitter post available')
-                }
-              }}
-            >
-              🐦 Publish to Twitter
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (socialPosts.linkedin) {
-                  window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(socialPosts.linkedin)}`, '_blank')
-                } else {
-                  toast.error('No LinkedIn post available')
-                }
-              }}
-            >
-              💼 Publish to LinkedIn
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (socialPosts.facebook) {
-                  window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(socialPosts.facebook)}`, '_blank')
-                } else {
-                  toast.error('No Facebook post available')
-                }
-              }}
-            >
-              📘 Publish to Facebook
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (socialPosts.instagram) {
-                  navigator.clipboard.writeText(socialPosts.instagram)
-                  toast.success('Instagram post copied to clipboard!')
-                } else {
-                  toast.error('No Instagram post available')
-                }
-              }}
-            >
-              📷 Copy Instagram Post
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (socialPosts.tiktok) {
-                  navigator.clipboard.writeText(socialPosts.tiktok)
-                  toast.success('TikTok post copied to clipboard!')
-                } else {
-                  toast.error('No TikTok post available')
-                }
-              }}
-            >
-              🎵 Copy TikTok Post
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const blogUrl = window.location.href
-                const shareText = `${generatedContent.blogPost.title}\n\n${blogUrl}`
-                navigator.clipboard.writeText(shareText)
-                toast.success('Blog link copied to clipboard!')
-              }}
-            >
-              🔗 Copy Blog Link
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Copy to Clipboard Actions */}
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white">📋 Quick Actions</CardTitle>
-          <CardDescription className="text-gray-300">
-            Copy content for easy sharing
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                navigator.clipboard.writeText(generatedContent.blogPost.content)
-                toast.success('Blog content copied to clipboard!')
-              }}
-            >
-              Copy Blog Content
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const allSocialPosts = Object.entries(generatedContent.socialPosts)
-                  .map(([platform, content]) => `${platform.toUpperCase()}:\n${content}`)
-                  .join('\n\n')
-                navigator.clipboard.writeText(allSocialPosts)
-                toast.success('All social posts copied to clipboard!')
-              }}
-            >
-              Copy All Social Posts
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const fullPackage = `BLOG POST:\n${generatedContent.blogPost.content}\n\nSOCIAL MEDIA POSTS:\n${Object.entries(generatedContent.socialPosts)
-                  .map(([platform, content]) => `${platform.toUpperCase()}:\n${content}`)
-                  .join('\n\n')}`
-                navigator.clipboard.writeText(fullPackage)
-                toast.success('Complete package copied to clipboard!')
-              }}
-            >
-              Copy Full Package
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Rating Section */}
       <Card className="bg-gray-900 border-gray-800">

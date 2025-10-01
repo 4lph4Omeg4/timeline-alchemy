@@ -462,43 +462,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
               </nav>
 
-              {/* Cosmic Organization Info */}
-              {organizations.length > 0 && (
-                <div className="border-t border-purple-500/30 pt-6">
-                  <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-4">
-                    {isAdmin ? '✨ Active Organizations ✨' : '🌟 My Organization 🌟'}
-                  </h3>
-                  <div className="space-y-2">
-                    {organizations.map((org) => (
-                      <div
-                        key={org.id}
-                        className="p-3 rounded-lg bg-gradient-to-r from-purple-800/30 to-blue-800/30 hover:from-purple-800/40 hover:to-blue-800/40 transition-all duration-300 border border-purple-500/20 hover:border-purple-400/30"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-white">{org.name}</div>
-                            <div className="text-sm text-purple-300 capitalize">{org.plan}</div>
-                            {isAdmin && (
-                              <div className="text-xs text-green-400 font-semibold">✨ Active ✨</div>
-                            )}
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleEditOrgName(org)
-                            }}
-                            className="ml-2 border-purple-500/50 text-purple-300 hover:bg-purple-600/30 hover:text-white hover:border-purple-400 transition-all duration-300"
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </aside>
 
