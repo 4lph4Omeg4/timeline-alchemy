@@ -164,7 +164,7 @@ export default function ContentEditorPage() {
         userOrgId = orgMembers[0].org_id
       }
 
-      // First save the blog post (without excerpt/social_posts until database is updated)
+      // First save the blog post
       const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .insert({
@@ -182,51 +182,51 @@ export default function ContentEditorPage() {
         return
       }
 
-             console.log('Post saved successfully:', postData.id)
+      console.log('Post saved successfully:', postData.id)
 
-             // Save social posts to separate table
-             if (Object.keys(socialPosts).length > 0) {
-               try {
-                 for (const [platform, content] of Object.entries(socialPosts)) {
-                   const { error: socialError } = await supabase
-                     .from('social_posts')
-                     .insert({
-                       post_id: postData.id,
-                       platform,
-                       content
-                     })
-                   
-                   if (socialError) {
-                     console.error('Error saving social post:', socialError)
-                   }
-                 }
-                 console.log('Social posts saved to database:', socialPosts)
-               } catch (error) {
-                 console.error('Error saving social posts:', error)
-               }
-             }
+      // Save social posts to separate table
+      if (Object.keys(socialPosts).length > 0) {
+        try {
+          for (const [platform, content] of Object.entries(socialPosts)) {
+            const { error: socialError } = await supabase
+              .from('social_posts')
+              .insert({
+                post_id: postData.id,
+                platform,
+                content
+              })
+            
+            if (socialError) {
+              console.error('Error saving social post:', socialError)
+            }
+          }
+          console.log('Social posts saved to database:', socialPosts)
+        } catch (error) {
+          console.error('Error saving social posts:', error)
+        }
+      }
 
-             // If there's a generated image, save it too
-             if (generatedImageUrl) {
-               console.log('Saving image with URL:', generatedImageUrl)
-               const { error: imageError } = await (supabase as any)
-                 .from('images')
-                 .insert({
-                   org_id: userOrgId,
-                   post_id: postData.id,
-                   url: generatedImageUrl,
-                 })
+      // If there's a generated image, save it too
+      if (generatedImageUrl) {
+        console.log('Saving image with URL:', generatedImageUrl)
+        const { error: imageError } = await (supabase as any)
+          .from('images')
+          .insert({
+            org_id: userOrgId,
+            post_id: postData.id,
+            url: generatedImageUrl,
+          })
 
-               if (imageError) {
-                 console.error('Failed to save image:', imageError)
-                 toast.error('Post saved but image failed to save')
-               } else {
-                 console.log('Image saved successfully')
-                 toast.success('Post, social posts, and image saved successfully!')
-               }
-             } else {
-               toast.success('Post and social posts saved successfully!')
-             }
+        if (imageError) {
+          console.error('Failed to save image:', imageError)
+          toast.error('Post saved but image failed to save')
+        } else {
+          console.log('Image saved successfully')
+          toast.success('Post, social posts, and image saved successfully!')
+        }
+      } else {
+        toast.success('Post and social posts saved successfully!')
+      }
 
       router.push('/dashboard/content/list')
     } catch (error) {
