@@ -7,11 +7,51 @@ import { Button } from '@/components/ui/button'
 import { BlogPost } from '@/types/index'
 import { formatDateTime } from '@/lib/utils'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 export default function SchedulerPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'calendar' | 'list'>('list')
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  // Calendar helper functions
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+    
+    return { daysInMonth, startingDayOfWeek, firstDay, lastDay }
+  }
+
+  const getPostsForDate = (date: Date) => {
+    const dateStr = date.toISOString().split('T')[0]
+    return posts.filter(post => {
+      if (!post.scheduled_for) return false
+      const scheduledDate = new Date(post.scheduled_for).toISOString().split('T')[0]
+      return scheduledDate === dateStr
+    })
+  }
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev)
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1)
+      } else {
+        newDate.setMonth(prev.getMonth() + 1)
+      }
+      return newDate
+    })
+  }
+
+  const formatMonthYear = (date: Date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  }
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -297,17 +337,172 @@ export default function SchedulerPage() {
       ) : (
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader>
-            <CardTitle className="text-white">Calendar View</CardTitle>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-white">📅 Calendar View</CardTitle>
             <CardDescription className="text-gray-200">
               Visual calendar of your scheduled content
             </CardDescription>
+              </div>
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateMonth('prev')}
+                  className="border-purple-500/50 text-purple-300 hover:bg-purple-600/30"
+                >
+                  ←
+                </Button>
+                <h3 className="text-lg font-semibold text-white min-w-[200px] text-center">
+                  {formatMonthYear(currentDate)}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateMonth('next')}
+                  className="border-purple-500/50 text-purple-300 hover:bg-purple-600/30"
+                >
+                  →
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <p className="text-gray-300 mb-4">Calendar view coming soon!</p>
-              <p className="text-sm text-gray-400">
-                This will show a visual calendar with scheduled posts
-              </p>
+            <div className="space-y-4">
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* Day Headers */}
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="p-3 text-center text-sm font-semibold text-gray-400 border-b border-gray-700">
+                    {day}
+                  </div>
+                ))}
+                
+                {/* Calendar Days */}
+                {(() => {
+                  const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentDate)
+                  const today = new Date()
+                  const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear()
+                  
+                  const days = []
+                  
+                  // Empty cells for days before the first day of the month
+                  for (let i = 0; i < startingDayOfWeek; i++) {
+                    days.push(
+                      <div key={`empty-${i}`} className="h-24 border border-gray-700 bg-gray-800/50"></div>
+                    )
+                  }
+                  
+                  // Days of the month
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+                    const dayPosts = getPostsForDate(date)
+                    const isToday = isCurrentMonth && day === today.getDate()
+                    const isSelected = selectedDate && 
+                      date.getDate() === selectedDate.getDate() && 
+                      date.getMonth() === selectedDate.getMonth() && 
+                      date.getFullYear() === selectedDate.getFullYear()
+                    
+                    days.push(
+                      <div
+                        key={day}
+                        className={`h-24 border border-gray-700 p-1 cursor-pointer transition-all duration-200 hover:bg-purple-600/20 ${
+                          isToday ? 'bg-gradient-to-br from-purple-600/30 to-pink-600/30 border-purple-500' : ''
+                        } ${
+                          isSelected ? 'bg-gradient-to-br from-purple-600/50 to-pink-600/50 border-purple-400' : ''
+                        }`}
+                        onClick={() => setSelectedDate(date)}
+                      >
+                        <div className={`text-sm font-medium mb-1 ${
+                          isToday ? 'text-yellow-400' : 'text-white'
+                        }`}>
+                          {day}
+                        </div>
+                        <div className="space-y-1">
+                          {dayPosts.slice(0, 2).map((post) => (
+                            <div
+                              key={post.id}
+                              className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 rounded truncate"
+                              title={post.title}
+                            >
+                              {post.title}
+                            </div>
+                          ))}
+                          {dayPosts.length > 2 && (
+                            <div className="text-xs text-purple-300">
+                              +{dayPosts.length - 2} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }
+                  
+                  return days
+                })()}
+              </div>
+              
+              {/* Selected Date Details */}
+              {selectedDate && (
+                <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-lg">
+                  <h4 className="text-lg font-semibold text-white mb-3">
+                    📅 {selectedDate.toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </h4>
+                  {(() => {
+                    const dayPosts = getPostsForDate(selectedDate)
+                    return dayPosts.length > 0 ? (
+                      <div className="space-y-3">
+                        <p className="text-purple-200 font-medium">
+                          {dayPosts.length} scheduled post{dayPosts.length !== 1 ? 's' : ''}
+                        </p>
+                        {dayPosts.map((post) => (
+                          <div key={post.id} className="bg-gray-800/50 p-3 rounded-lg border border-gray-600">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h5 className="font-semibold text-white text-sm">{post.title}</h5>
+                                <p className="text-gray-300 text-xs mt-1 line-clamp-2">
+                                  {post.content}
+                                </p>
+                                <div className="flex items-center space-x-2 mt-2">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+                                    post.state === 'published' ? 'bg-green-900 text-green-300' :
+                                    'bg-gray-700 text-gray-300'
+                                  }`}>
+                                    {post.state}
+                                  </span>
+                                  <span className="text-gray-400 text-xs">
+                                    {formatDateTime(post.scheduled_for || '')}
+                                  </span>
+                                </div>
+                              </div>
+                              <Link href={`/dashboard/content/package/${post.id}`}>
+                                <Button size="sm" variant="outline" className="ml-2 border-purple-500/50 text-purple-300 hover:bg-purple-600/30">
+                                  View
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-gray-400 mb-3">No posts scheduled for this date</p>
+                        <Link href="/dashboard/content/new">
+                          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50">
+                            ✨ Create New Post ✨
+                          </Button>
+                        </Link>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
