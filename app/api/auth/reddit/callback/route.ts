@@ -18,34 +18,34 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Parse state to get user info
+    let stateData
+    try {
+      stateData = JSON.parse(atob(state || ''))
+    } catch (e) {
+      console.error('Invalid state parameter:', e)
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=invalid_state`)
+    }
+
     const redditOAuth = new RedditOAuth()
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/reddit/callback`
     
     const { accessToken, refreshToken, user } = await redditOAuth.exchangeCodeForToken(code, callbackUrl)
 
-    // Get the current user from Supabase
-    const { data: { user: supabaseUser } } = await supabase.auth.getUser()
-    
-    if (!supabaseUser) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=not_authenticated`)
+    // Use the user ID from state instead of trying to get current user
+    const userId = stateData.user_id
+    const orgId = stateData.org_id
+
+    if (!userId || !orgId) {
+      console.error('Missing user_id or org_id in state')
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=missing_user_info`)
     }
 
-    // Get user's organization
-    const { data: orgMembers } = await supabase
-      .from('org_members')
-      .select('org_id')
-      .eq('user_id', supabaseUser.id)
-      .single()
-
-    if (!orgMembers) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_organization`)
-    }
-
-    // Store the Reddit connection
+    // Store the Reddit connection using the org_id from state
     const { error: insertError } = await supabase
       .from('social_connections')
       .upsert({
-        org_id: orgMembers.org_id,
+        org_id: orgId,
         platform: 'reddit',
         access_token: accessToken,
         refresh_token: refreshToken,
