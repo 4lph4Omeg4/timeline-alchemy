@@ -23,6 +23,7 @@ interface OrganizationWithClients extends Organization {
 export default function OrganizationsPage() {
   const [organizations, setOrganizations] = useState<OrganizationWithClients[]>([])
   const [clientsWithoutOrg, setClientsWithoutOrg] = useState<Client[]>([])
+  const [allClients, setAllClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -73,6 +74,9 @@ export default function OrganizationsPage() {
         }
 
         if (allClientsData) {
+          // Store all clients for manual assignment
+          setAllClients(allClientsData)
+          
           // Filter clients that don't have their own organization
           const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
             // Check if this client has any organization other than Admin Organization
@@ -204,6 +208,92 @@ export default function OrganizationsPage() {
     }
   }
 
+  const assignClientToOrganization = async (clientId: string, organizationId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('clients')
+        .update({ org_id: organizationId })
+        .eq('id', clientId)
+
+      if (error) {
+        console.error('Error assigning client to organization:', error)
+        toast.error('Failed to assign client to organization')
+        return
+      }
+
+      toast.success('Client assigned to organization successfully')
+      
+      // Refresh the data
+      const fetchOrganizations = async () => {
+        try {
+          const { data: orgsWithSubs, error } = await (supabase as any)
+            .from('organizations')
+            .select(`
+              *,
+              subscriptions(
+                id,
+                plan,
+                status,
+                created_at
+              ),
+              clients(
+                id,
+                name,
+                contact_info,
+                org_id,
+                created_at
+              )
+            `)
+            .order('created_at', { ascending: false })
+
+          const { data: allClientsData, error: clientsError } = await (supabase as any)
+            .from('clients')
+            .select(`
+              *,
+              organizations(name)
+            `)
+            .order('created_at', { ascending: false })
+
+          if (orgsWithSubs) {
+            // Filter out Admin Organization and update organizations with subscription plan and clients
+            const nonAdminOrgs = orgsWithSubs
+              .filter((org: any) => org.name !== 'Admin Organization')
+              .map((org: any) => ({
+                ...org,
+                plan: org.subscriptions && org.subscriptions.length > 0 
+                  ? org.subscriptions[0].plan 
+                  : org.plan,
+                clients: org.clients || []
+              }))
+            setOrganizations(nonAdminOrgs)
+          }
+
+          if (allClientsData) {
+            // Store all clients for manual assignment
+            setAllClients(allClientsData)
+            
+            // Filter clients that don't have their own organization
+            const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
+              // Check if this client has any organization other than Admin Organization
+              const hasOwnOrg = client.organizations && client.organizations.some((org: any) => 
+                org.name !== 'Admin Organization'
+              )
+              return !hasOwnOrg
+            })
+            setClientsWithoutOrg(clientsWithoutOwnOrg)
+          }
+        } catch (error) {
+          console.error('Error refreshing data:', error)
+        }
+      }
+
+      fetchOrganizations()
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      toast.error('An unexpected error occurred')
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -221,36 +311,59 @@ export default function OrganizationsPage() {
         </p>
       </div>
 
-      {/* Clients Without Their Own Organizations */}
-      {clientsWithoutOrg.length > 0 && (
-        <Card className="bg-gradient-to-r from-orange-900/30 to-red-900/30 border-orange-500/30">
+      {/* All Available Clients for Manual Assignment */}
+      {allClients.length > 0 && (
+        <Card className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-500/30">
           <CardHeader>
-            <CardTitle className="text-white">⚠️ Clients Without Their Own Organizations</CardTitle>
-            <CardDescription className="text-orange-200">
-              {clientsWithoutOrg.length} clients are only in Admin Organization and need their own organization created
+            <CardTitle className="text-white">👥 All Available Clients</CardTitle>
+            <CardDescription className="text-blue-200">
+              {allClients.length} clients available for manual assignment to organizations
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {clientsWithoutOrg.map((client) => (
-                <div key={client.id} className="flex items-center justify-between p-4 bg-orange-800/20 border border-orange-500/30 rounded-lg">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-white">{client.name}</h4>
-                    <p className="text-orange-200 text-sm">
-                      Email: {client.contact_info?.email || 'No email provided'}
-                    </p>
-                    <p className="text-orange-300 text-xs">
-                      Created: {new Date(client.created_at).toLocaleDateString()}
-                    </p>
+              {allClients.map((client) => {
+                const currentOrg = client.organizations?.find((org: any) => org.name !== 'Admin Organization')
+                return (
+                  <div key={client.id} className="flex items-center justify-between p-4 bg-blue-800/20 border border-blue-500/30 rounded-lg">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-white">{client.name}</h4>
+                      <p className="text-blue-200 text-sm">
+                        Email: {client.contact_info?.email || 'No email provided'}
+                      </p>
+                      <p className="text-blue-300 text-xs">
+                        Current Org: {currentOrg?.name || 'Admin Organization only'}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <select 
+                        className="bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-lg text-sm"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            assignClientToOrganization(client.id, e.target.value)
+                          }
+                        }}
+                        defaultValue=""
+                      >
+                        <option value="">Assign to...</option>
+                        {organizations.map((org) => (
+                          <option key={org.id} value={org.id}>
+                            {org.name}
+                          </option>
+                        ))}
+                      </select>
+                      {!currentOrg && (
+                        <Button 
+                          onClick={() => createOrganizationForClient(client)}
+                          className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white text-sm"
+                        >
+                          ✨ Create New Org
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <Button 
-                    onClick={() => createOrganizationForClient(client)}
-                    className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white"
-                  >
-                    ✨ Create Own Organization
-                  </Button>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </CardContent>
         </Card>
