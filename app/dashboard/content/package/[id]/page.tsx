@@ -538,7 +538,11 @@ export default function ContentPackagePage() {
             <Button
               variant="outline"
               onClick={() => {
-                window.open(`https://twitter.com/compose/tweet?text=${encodeURIComponent(generatedContent.socialPosts.twitter)}`, '_blank')
+                if (socialPosts.twitter) {
+                  window.open(`https://twitter.com/compose/tweet?text=${encodeURIComponent(socialPosts.twitter)}`, '_blank')
+                } else {
+                  toast.error('No Twitter post available')
+                }
               }}
             >
               🐦 Publish to Twitter
@@ -546,7 +550,11 @@ export default function ContentPackagePage() {
             <Button
               variant="outline"
               onClick={() => {
-                window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(generatedContent.socialPosts.linkedin)}`, '_blank')
+                if (socialPosts.linkedin) {
+                  window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(socialPosts.linkedin)}`, '_blank')
+                } else {
+                  toast.error('No LinkedIn post available')
+                }
               }}
             >
               💼 Publish to LinkedIn
@@ -554,7 +562,11 @@ export default function ContentPackagePage() {
             <Button
               variant="outline"
               onClick={() => {
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(generatedContent.socialPosts.facebook)}`, '_blank')
+                if (socialPosts.facebook) {
+                  window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(socialPosts.facebook)}`, '_blank')
+                } else {
+                  toast.error('No Facebook post available')
+                }
               }}
             >
               📘 Publish to Facebook
@@ -562,7 +574,8 @@ export default function ContentPackagePage() {
             <Button
               variant="outline"
               onClick={() => {
-                navigator.clipboard.writeText(generatedContent.socialPosts.instagram)
+                if (socialPosts.instagram) {
+                  navigator.clipboard.writeText(socialPosts.instagram)
                 toast.success('Instagram post copied to clipboard!')
               }}
             >
@@ -571,8 +584,12 @@ export default function ContentPackagePage() {
             <Button
               variant="outline"
               onClick={() => {
-                navigator.clipboard.writeText(generatedContent.socialPosts.tiktok)
-                toast.success('TikTok post copied to clipboard!')
+                if (socialPosts.tiktok) {
+                  navigator.clipboard.writeText(socialPosts.tiktok)
+                  toast.success('TikTok post copied to clipboard!')
+                } else {
+                  toast.error('No TikTok post available')
+                }
               }}
             >
               🎵 Copy TikTok Post
