@@ -24,9 +24,15 @@ export async function GET(request: NextRequest) {
     const { accessToken, refreshToken, user } = await discordOAuth.exchangeCodeForToken(code, callbackUrl)
 
     // Get the current user from Supabase
-    const { data: { user: supabaseUser } } = await supabase.auth.getUser()
+    const { data: { user: supabaseUser }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError) {
+      console.error('Supabase auth error:', userError)
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=auth_error`)
+    }
     
     if (!supabaseUser) {
+      console.error('No Supabase user found')
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=not_authenticated`)
     }
 
