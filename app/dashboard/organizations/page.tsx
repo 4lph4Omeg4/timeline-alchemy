@@ -81,7 +81,7 @@ export default function OrganizationsPage() {
           // Filter clients that don't have their own organization
           const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
             // Check if this client has any organization other than Admin Organization
-            const hasOwnOrg = client.organizations && client.organizations.some((org: any) => 
+            const hasOwnOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) => 
               org.name !== 'Admin Organization'
             )
             return !hasOwnOrg
@@ -276,7 +276,7 @@ export default function OrganizationsPage() {
             // Filter clients that don't have their own organization
             const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
               // Check if this client has any organization other than Admin Organization
-              const hasOwnOrg = client.organizations && client.organizations.some((org: any) => 
+              const hasOwnOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) => 
                 org.name !== 'Admin Organization'
               )
               return !hasOwnOrg
@@ -324,7 +324,9 @@ export default function OrganizationsPage() {
           <CardContent>
             <div className="space-y-3">
               {allClients.map((client) => {
-                const currentOrg = client.organizations?.find((org: any) => org.name !== 'Admin Organization')
+                const currentOrg = client.organizations && Array.isArray(client.organizations) 
+                  ? client.organizations.find((org: any) => org.name !== 'Admin Organization')
+                  : null
                 return (
                   <div key={client.id} className="flex items-center justify-between p-4 bg-blue-800/20 border border-blue-500/30 rounded-lg">
                     <div className="flex-1">
