@@ -335,7 +335,7 @@ export default function HomePage() {
             </div>
 
             {/* Right side - SH4M4NI4K.NL and Contact - REALLY FAR RIGHT */}
-            <div className="flex gap-16">
+            <div className="flex gap-24">
               {/* SH4M4NI4K.NL Links */}
               <div className="text-right">
                 <h3 className="text-white font-semibold mb-4">SH4M4NI4K.NL</h3>
