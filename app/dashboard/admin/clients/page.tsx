@@ -119,17 +119,16 @@ export default function AdminClientsPage() {
 
       // Handle organization assignment
       if (selectedOrgId) {
-        // Add client to existing organization
-        const { error: orgMemberError } = await supabase
-          .from('org_members')
-          .insert({
-            org_id: selectedOrgId,
-            user_id: clientData.id, // Using client ID as user_id for org_members
-            role: 'client'
+        // Update client to be assigned to the selected organization
+        const { error: updateError } = await supabase
+          .from('clients')
+          .update({
+            org_id: selectedOrgId
           })
+          .eq('id', clientData.id)
 
-        if (orgMemberError) {
-          console.error('Error adding client to organization:', orgMemberError)
+        if (updateError) {
+          console.error('Error assigning client to organization:', updateError)
           toast.success('Client created but failed to assign to organization')
         } else {
           toast.success('Client created and assigned to organization successfully!')
@@ -149,17 +148,16 @@ export default function AdminClientsPage() {
           console.error('Error creating organization:', newOrgError)
           toast.success('Client created but failed to create organization')
         } else {
-          // Add client to the new organization
-          const { error: orgMemberError } = await supabase
-            .from('org_members')
-            .insert({
-              org_id: newOrgData.id,
-              user_id: clientData.id,
-              role: 'client'
+          // Update client to be assigned to the new organization
+          const { error: updateError } = await supabase
+            .from('clients')
+            .update({
+              org_id: newOrgData.id
             })
+            .eq('id', clientData.id)
 
-          if (orgMemberError) {
-            console.error('Error adding client to new organization:', orgMemberError)
+          if (updateError) {
+            console.error('Error assigning client to new organization:', updateError)
             toast.success('Client and organization created but failed to assign client')
           } else {
             toast.success('Client created and assigned to new organization successfully!')
