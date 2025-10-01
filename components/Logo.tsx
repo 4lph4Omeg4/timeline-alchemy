@@ -21,122 +21,141 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', showText = tru
     xl: 'text-2xl'
   };
 
-  const radiusSize = {
-    sm: 40,
-    md: 60,
-    lg: 80,
-    xl: 120
-  };
-
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      {/* Logo with radiating lines */}
+      {/* Mystical Logo with Cosmic Purple Theme */}
       <div className={`relative ${sizeClasses[size]}`}>
-        {/* Radiating sunburst lines */}
         <svg
-          viewBox={`-${radiusSize[size]} -${radiusSize[size]} ${radiusSize[size] * 2} ${radiusSize[size] * 2}`}
-          className="absolute inset-0 w-full h-full"
-          style={{ transform: 'scale(1.8)' }}
-        >
-          {/* Generate radiating lines */}
-          {[...Array(24)].map((_, i) => {
-            const angle = (i * 15) * Math.PI / 180;
-            const x1 = Math.cos(angle) * (radiusSize[size] * 0.4);
-            const y1 = Math.sin(angle) * (radiusSize[size] * 0.4);
-            const x2 = Math.cos(angle) * (radiusSize[size] * 0.7);
-            const y2 = Math.sin(angle) * (radiusSize[size] * 0.7);
-            
-            return (
-              <line
-                key={i}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="#D4AF37"
-                strokeWidth="1.5"
-                opacity="0.8"
-              />
-            );
-          })}
-        </svg>
-
-        {/* Main hourglass */}
-        <svg
-          viewBox="0 0 100 120"
-          className="w-full h-full relative z-10"
+          viewBox="0 0 100 100"
+          className="w-full h-full"
           style={{
-            filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.6))'
+            filter: 'drop-shadow(0 0 12px rgba(147, 51, 234, 0.6))'
           }}
         >
-          {/* Hourglass outline */}
-          <path
-            d="M20 10 L80 10 L80 20 Q80 35 65 40 L50 50 L65 60 Q80 65 80 80 L80 110 L20 110 L20 80 Q20 65 35 60 L50 50 L35 40 Q20 35 20 20 L20 10 Z"
-            fill="none"
-            stroke="#D4AF37"
-            strokeWidth="2"
-          />
-          
-          {/* Top and bottom caps */}
-          <rect x="18" y="8" width="64" height="4" fill="#D4AF37" rx="2"/>
-          <rect x="18" y="108" width="64" height="4" fill="#D4AF37" rx="2"/>
-          
-          {/* South America-shaped sand in top bulb */}
-          <path
-            d="M45 25 Q50 20 55 25 Q60 30 58 35 L56 38 Q52 40 48 38 L42 35 Q40 30 42 28 Q43 26 45 25 Z"
-            fill="#DEB887"
-            opacity="0.9"
-          />
-          
-          {/* Additional sand texture in top */}
-          <circle cx="35" cy="22" r="1.5" fill="#D4AF37" opacity="0.7"/>
-          <circle cx="65" cy="28" r="1" fill="#D4AF37" opacity="0.6"/>
-          <circle cx="40" cy="32" r="0.8" fill="#DEB887" opacity="0.8"/>
-          <circle cx="60" cy="35" r="1.2" fill="#DEB887" opacity="0.7"/>
+          {/* Cosmic Background Circle */}
+          <defs>
+            <radialGradient id="cosmicGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#9333ea" stopOpacity="0.3"/>
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.2"/>
+              <stop offset="100%" stopColor="#6b21a8" stopOpacity="0.1"/>
+            </radialGradient>
+            
+            {/* Starfield Pattern */}
+            <pattern id="starfield" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="0.5" fill="#9333ea" opacity="0.6"/>
+              <circle cx="8" cy="6" r="0.3" fill="#a855f7" opacity="0.4"/>
+              <circle cx="15" cy="3" r="0.4" fill="#c084fc" opacity="0.5"/>
+              <circle cx="6" cy="12" r="0.2" fill="#9333ea" opacity="0.3"/>
+              <circle cx="18" cy="15" r="0.6" fill="#7c3aed" opacity="0.4"/>
+              <circle cx="12" cy="18" r="0.3" fill="#a855f7" opacity="0.5"/>
+            </pattern>
+          </defs>
 
-          {/* Falling sand through neck */}
-          <path
-            d="M48 42 Q50 45 52 48 Q50 52 48 55"
-            stroke="#DEB887"
-            strokeWidth="0.8"
-            fill="none"
-            opacity="0.6"
-          />
-          
-          {/* Sand accumulation in bottom */}
-          <path
-            d="M25 95 Q35 85 50 88 Q65 85 75 95 L75 105 L25 105 Z"
-            fill="#DEB887"
+          {/* Outer Cosmic Circle */}
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="url(#cosmicGradient)"
+            stroke="#9333ea"
+            strokeWidth="1"
             opacity="0.8"
           />
-          
-          {/* Four-pointed stars in top bulb */}
-          <g fill="#D4AF37" opacity="0.8">
-            <path d="M30 18 L31 20 L33 19 L31 21 L30 23 L29 21 L27 19 L29 20 Z"/>
-            <path d="M70 25 L71 27 L73 26 L71 28 L70 30 L69 28 L67 26 L69 27 Z"/>
-            <path d="M50 15 L51.5 17 L54 16 L51.5 18.5 L50 21 L48.5 18.5 L46 16 L48.5 17 Z"/>
-          </g>
-          
-          {/* Four-pointed stars in bottom bulb */}
-          <g fill="#D4AF37" opacity="0.8">
-            <path d="M35 75 L36 77 L38 76 L36 78 L35 80 L34 78 L32 76 L34 77 Z"/>
-            <path d="M65 82 L66 84 L68 83 L66 85 L65 87 L64 85 L62 83 L64 84 Z"/>
-            <path d="M50 70 L51.5 72 L54 71 L51.5 73.5 L50 76 L48.5 73.5 L46 71 L48.5 72 Z"/>
+
+          {/* Starfield Background */}
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="url(#starfield)"
+            opacity="0.6"
+          />
+
+          {/* Hourglass Shape */}
+          <g fill="url(#starfield)" stroke="#9333ea" strokeWidth="1.5">
+            {/* Top Bulb */}
+            <path
+              d="M35 25 Q35 15 50 15 Q65 15 65 25 Q65 30 60 32 L50 35 L40 32 Q35 30 35 25 Z"
+              opacity="0.9"
+            />
+            
+            {/* Neck */}
+            <rect x="47" y="35" width="6" height="8" opacity="0.8"/>
+            
+            {/* Bottom Bulb */}
+            <path
+              d="M35 75 Q35 85 50 85 Q65 85 65 75 Q65 70 60 68 L50 65 L40 68 Q35 70 35 75 Z"
+              opacity="0.9"
+            />
+            
+            {/* Top Cap */}
+            <rect x="33" y="13" width="34" height="4" rx="2" opacity="0.8"/>
+            
+            {/* Bottom Cap */}
+            <rect x="33" y="83" width="34" height="4" rx="2" opacity="0.8"/>
           </g>
 
-          {/* Additional mystical dots */}
-          <circle cx="25" cy="25" r="0.8" fill="#D4AF37" opacity="0.6"/>
-          <circle cx="75" cy="32" r="0.6" fill="#D4AF37" opacity="0.5"/>
-          <circle cx="30" cy="85" r="0.7" fill="#D4AF37" opacity="0.6"/>
-          <circle cx="70" cy="90" r="0.9" fill="#D4AF37" opacity="0.5"/>
+          {/* Four-Pointed Stars on Circle */}
+          <g fill="#9333ea" opacity="0.9">
+            {/* Top Star */}
+            <path d="M50 8 L51 12 L55 12 L52 15 L53 19 L50 16 L47 19 L48 15 L45 12 L49 12 Z"/>
+            
+            {/* Bottom Star */}
+            <path d="M50 92 L51 88 L55 88 L52 85 L53 81 L50 84 L47 81 L48 85 L45 88 L49 88 Z"/>
+            
+            {/* Left Star */}
+            <path d="M8 50 L12 49 L12 45 L15 48 L19 47 L16 50 L19 53 L15 52 L12 55 L12 51 Z"/>
+            
+            {/* Right Star */}
+            <path d="M92 50 L88 49 L88 45 L85 48 L81 47 L84 50 L81 53 L85 52 L88 55 L88 51 Z"/>
+          </g>
+
+          {/* Additional Cosmic Stars */}
+          <g fill="#a855f7" opacity="0.7">
+            <circle cx="25" cy="25" r="1" opacity="0.6"/>
+            <circle cx="75" cy="25" r="0.8" opacity="0.5"/>
+            <circle cx="25" cy="75" r="0.6" opacity="0.7"/>
+            <circle cx="75" cy="75" r="1.2" opacity="0.4"/>
+            <circle cx="50" cy="20" r="0.5" opacity="0.8"/>
+            <circle cx="50" cy="80" r="0.7" opacity="0.6"/>
+            <circle cx="20" cy="50" r="0.9" opacity="0.5"/>
+            <circle cx="80" cy="50" r="0.4" opacity="0.9"/>
+          </g>
+
+          {/* Mystical Glow Effect */}
+          <circle
+            cx="50"
+            cy="50"
+            r="48"
+            fill="none"
+            stroke="#9333ea"
+            strokeWidth="0.5"
+            opacity="0.3"
+          />
         </svg>
       </div>
 
-      {/* Text */}
+      {/* Mystical Text */}
       {showText && (
-        <div className={`mt-2 text-center font-serif font-bold ${textSizeClasses[size]} text-gray-900 dark:text-gray-100 leading-tight`}>
-          <div className="text-yellow-700 dark:text-yellow-300">TIMELINE</div>
-          <div className="text-yellow-700 dark:text-yellow-300 -mt-1">ALCHEMY</div>
+        <div className={`mt-2 text-center font-serif font-bold ${textSizeClasses[size]} leading-tight`}>
+          <div 
+            className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-purple-300 to-purple-500"
+            style={{
+              textShadow: '0 0 8px rgba(147, 51, 234, 0.5)',
+              filter: 'drop-shadow(0 0 4px rgba(147, 51, 234, 0.3))'
+            }}
+          >
+            TIMELINE
+          </div>
+          <div 
+            className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-purple-300 to-purple-500 -mt-1"
+            style={{
+              textShadow: '0 0 8px rgba(147, 51, 234, 0.5)',
+              filter: 'drop-shadow(0 0 4px rgba(147, 51, 234, 0.3))'
+            }}
+          >
+            ALCHEMY
+          </div>
         </div>
       )}
     </div>
