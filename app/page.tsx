@@ -95,11 +95,11 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Divine Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/15 via-purple-500/20 to-purple-600/15 animate-pulse"></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.08),transparent_60%)]"></div>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/30 to-black"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-purple-500/15 to-purple-600/10 animate-pulse"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.05),transparent_70%)]"></div>
       
       {/* Floating Orbs */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-purple-500/25 to-purple-400/30 rounded-full blur-xl animate-bounce"></div>
@@ -107,7 +107,7 @@ export default function HomePage() {
       <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-r from-purple-500/20 to-purple-600/25 rounded-full blur-xl animate-bounce delay-2000"></div>
 
       {/* Header */}
-      <header className="bg-gradient-to-r from-black/95 via-purple-900/95 to-black/95 backdrop-blur-md shadow-2xl border-b border-purple-500/30 relative z-10">
+      <header className="bg-black/98 backdrop-blur-md shadow-2xl border-b border-purple-500/20 relative z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <Logo size="md" showText={false} />
@@ -322,11 +322,10 @@ export default function HomePage() {
       </main>
 
       {/* Divine Footer */}
-      <footer className="bg-gradient-to-r from-black via-purple-900 to-black text-gray-200 py-16 mt-20 border-t border-purple-500/30 relative overflow-hidden">
+      <footer className="bg-black text-gray-200 py-16 mt-20 border-t border-purple-500/20 relative overflow-hidden">
         {/* Divine Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/8 via-purple-500/12 to-purple-600/8"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.06),transparent_60%)]"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/20 to-black"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-purple-500/8 to-purple-600/5"></div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
