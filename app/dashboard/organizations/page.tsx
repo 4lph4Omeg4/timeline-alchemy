@@ -14,6 +14,7 @@ interface Client {
   contact_info: any
   org_id: string | null
   created_at: string
+  organizations?: Array<{ name: string }>
 }
 
 interface OrganizationWithClients extends Organization {
