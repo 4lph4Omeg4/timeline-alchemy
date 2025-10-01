@@ -49,9 +49,6 @@ export async function GET(request: NextRequest) {
         platform: 'discord',
         access_token: accessToken,
         refresh_token: refreshToken,
-        platform_user_id: user.id,
-        platform_username: user.username,
-        platform_data: user,
       })
 
     if (insertError) {

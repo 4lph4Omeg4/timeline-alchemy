@@ -3,13 +3,12 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
-    // Test if we can insert a Discord connection (without connected_at)
+    // Test if we can insert a Discord connection (only existing columns)
     const testData = {
       org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Your org ID from the logs
       platform: 'discord',
       access_token: 'test_token',
-      platform_user_id: 'test_user_id',
-      platform_username: 'test_username',
+      refresh_token: 'test_refresh_token',
     }
 
     console.log('Testing Discord insert with data:', testData)
