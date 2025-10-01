@@ -102,12 +102,12 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
       
       {/* Floating Orbs */}
-      <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-blue-400/30 to-purple-400/30 rounded-full blur-xl animate-bounce"></div>
-      <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-pink-400/30 to-yellow-400/30 rounded-full blur-xl animate-bounce delay-1000"></div>
-      <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-r from-green-400/30 to-blue-400/30 rounded-full blur-xl animate-bounce delay-2000"></div>
+      <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-purple-500/25 to-purple-400/30 rounded-full blur-xl animate-bounce"></div>
+      <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-purple-400/20 to-pink-400/25 rounded-full blur-xl animate-bounce delay-1000"></div>
+      <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-r from-purple-500/20 to-purple-600/25 rounded-full blur-xl animate-bounce delay-2000"></div>
 
       {/* Header */}
-      <header className="bg-gradient-to-r from-slate-800/90 via-purple-800/90 to-slate-800/90 backdrop-blur-md shadow-2xl border-b border-purple-500/30 relative z-10">
+      <header className="bg-gradient-to-r from-black/95 via-purple-900/95 to-black/95 backdrop-blur-md shadow-2xl border-b border-purple-500/30 relative z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <Logo size="md" showText={false} />
@@ -322,10 +322,11 @@ export default function HomePage() {
       </main>
 
       {/* Divine Footer */}
-      <footer className="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 text-gray-200 py-16 mt-20 border-t border-purple-500/30 relative overflow-hidden">
+      <footer className="bg-gradient-to-r from-black via-purple-900 to-black text-gray-200 py-16 mt-20 border-t border-purple-500/30 relative overflow-hidden">
         {/* Divine Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/8 via-purple-500/12 to-purple-600/8"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.06),transparent_60%)]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50"></div>
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
