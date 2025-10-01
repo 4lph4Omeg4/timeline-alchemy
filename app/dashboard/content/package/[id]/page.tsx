@@ -184,9 +184,7 @@ export default function ContentPackagePage() {
               title: `${post.title} - ${platformName.charAt(0).toUpperCase() + platformName.slice(1)} Post`,
               content: enhancedContent,
               state: 'scheduled',
-              scheduled_for: scheduledDate.toISOString(),
-              social_platform: platformName,
-              parent_post_id: post.id
+              scheduled_for: scheduledDate.toISOString()
             })
 
           if (socialPostError) {
