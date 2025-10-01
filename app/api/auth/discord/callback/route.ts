@@ -52,7 +52,6 @@ export async function GET(request: NextRequest) {
         platform_user_id: user.id,
         platform_username: user.username,
         platform_data: user,
-        connected_at: new Date().toISOString(),
       })
 
     if (insertError) {

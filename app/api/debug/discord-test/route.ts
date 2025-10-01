@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
       access_token: 'test_token',
       platform_user_id: 'test_user_id',
       platform_username: 'test_username',
-      connected_at: new Date().toISOString(),
     }
 
     const { data, error } = await supabase
