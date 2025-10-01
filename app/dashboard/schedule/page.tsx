@@ -40,6 +40,28 @@ export default function SchedulerPage() {
     })
   }
 
+  const getGroupedPostsForDate = (date: Date) => {
+    const dayPosts = getPostsForDate(date)
+    
+    // Group posts by organization
+    const grouped = dayPosts.reduce((acc, post) => {
+      const orgName = post.organizations?.name || 'Unknown Organization'
+      const orgId = post.org_id
+      
+      if (!acc[orgId]) {
+        acc[orgId] = {
+          organization: orgName,
+          posts: []
+        }
+      }
+      
+      acc[orgId].posts.push(post)
+      return acc
+    }, {} as Record<string, { organization: string; posts: any[] }>)
+    
+    return Object.values(grouped)
+  }
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
       const newDate = new Date(prev)
@@ -117,7 +139,13 @@ export default function SchedulerPage() {
 
         const { data, error } = await supabase
           .from('blog_posts')
-          .select('*')
+          .select(`
+            *,
+            organizations (
+              id,
+              name
+            )
+          `)
           .in('org_id', orgIds)
           .order('scheduled_for', { ascending: true })
 
@@ -188,7 +216,13 @@ export default function SchedulerPage() {
             if (orgIds.length > 0) {
             const { data } = await supabase
               .from('blog_posts')
-              .select('*')
+              .select(`
+                *,
+                organizations (
+                  id,
+                  name
+                )
+              `)
               .in('org_id', orgIds)
               .order('scheduled_for', { ascending: true })
             
@@ -252,7 +286,13 @@ export default function SchedulerPage() {
             if (orgIds.length > 0) {
             const { data } = await supabase
               .from('blog_posts')
-              .select('*')
+              .select(`
+                *,
+                organizations (
+                  id,
+                  name
+                )
+              `)
               .in('org_id', orgIds)
               .order('scheduled_for', { ascending: true })
             
@@ -486,7 +526,8 @@ export default function SchedulerPage() {
                   // Days of the month
                   for (let day = 1; day <= daysInMonth; day++) {
                     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-                    const dayPosts = getPostsForDate(date)
+                    const groupedPosts = getGroupedPostsForDate(date)
+                    const totalPosts = groupedPosts.reduce((sum, group) => sum + group.posts.length, 0)
                     const isToday = isCurrentMonth && day === today.getDate()
                     const isSelected = selectedDate && 
                       date.getDate() === selectedDate.getDate() && 
@@ -509,38 +550,21 @@ export default function SchedulerPage() {
                           {day}
                         </div>
                         <div className="space-y-1">
-                          {dayPosts.slice(0, 2).map((post) => {
-                            // Determine platform based on title
-                            const getPlatform = (title: string) => {
-                              if (title.includes('Facebook')) return 'facebook'
-                              if (title.includes('Instagram')) return 'instagram'
-                              if (title.includes('Twitter') || title.includes('X')) return 'twitter'
-                              if (title.includes('LinkedIn')) return 'linkedin'
-                              if (title.includes('TikTok')) return 'tiktok'
-                              if (title.includes('YouTube')) return 'youtube'
-                              return 'blog' // Default for blog posts
-                            }
-                            
-                            const platform = getPlatform(post.title)
-                            
-                            return (
-                              <div
-                                key={post.id}
-                                className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 rounded truncate flex items-center gap-1"
-                                title={post.title}
-                              >
-                                {platform === 'blog' ? (
-                                  <span className="text-xs">📝</span>
-                                ) : (
-                                  <SocialIcon platform={platform} size="sm" className="text-white" />
-                                )}
-                                <span className="truncate">{post.title}</span>
+                          {groupedPosts.slice(0, 2).map((group, groupIndex) => (
+                            <div
+                              key={groupIndex}
+                              className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 py-1 rounded truncate"
+                              title={`${group.organization}: ${group.posts.length} posts`}
+                            >
+                              <div className="font-semibold truncate">{group.organization}</div>
+                              <div className="text-purple-200 text-xs">
+                                {group.posts.length} post{group.posts.length !== 1 ? 's' : ''}
                               </div>
-                            )
-                          })}
-                          {dayPosts.length > 2 && (
+                            </div>
+                          ))}
+                          {groupedPosts.length > 2 && (
                             <div className="text-xs text-purple-300">
-                              +{dayPosts.length - 2} more
+                              +{groupedPosts.length - 2} more clients
                             </div>
                           )}
                         </div>
@@ -564,63 +588,79 @@ export default function SchedulerPage() {
                     })}
                   </h4>
                   {(() => {
-                    const dayPosts = getPostsForDate(selectedDate)
-                    return dayPosts.length > 0 ? (
-                      <div className="space-y-3">
+                    const groupedPosts = getGroupedPostsForDate(selectedDate)
+                    const totalPosts = groupedPosts.reduce((sum, group) => sum + group.posts.length, 0)
+                    
+                    return groupedPosts.length > 0 ? (
+                      <div className="space-y-4">
                         <p className="text-purple-200 font-medium">
-                          {dayPosts.length} scheduled post{dayPosts.length !== 1 ? 's' : ''}
+                          {totalPosts} scheduled post{totalPosts !== 1 ? 's' : ''} from {groupedPosts.length} client{groupedPosts.length !== 1 ? 's' : ''}
                         </p>
-                        {dayPosts.map((post) => {
-                          // Determine platform based on title
-                          const getPlatform = (title: string) => {
-                            if (title.includes('Facebook')) return 'facebook'
-                            if (title.includes('Instagram')) return 'instagram'
-                            if (title.includes('Twitter') || title.includes('X')) return 'twitter'
-                            if (title.includes('LinkedIn')) return 'linkedin'
-                            if (title.includes('TikTok')) return 'tiktok'
-                            if (title.includes('YouTube')) return 'youtube'
-                            return 'blog' // Default for blog posts
-                          }
-                          
-                          const platform = getPlatform(post.title)
-                          
-                          return (
-                            <div key={post.id} className="bg-gray-800/50 p-3 rounded-lg border border-gray-600">
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    {platform === 'blog' ? (
-                                      <span className="text-lg">📝</span>
-                                    ) : (
-                                      <SocialIcon platform={platform} size="sm" className="text-white" />
-                                    )}
-                                    <h5 className="font-semibold text-white text-sm">{post.title}</h5>
-                                  </div>
-                                  <p className="text-gray-300 text-xs mt-1 line-clamp-2">
-                                    {post.content}
-                                  </p>
-                                  <div className="flex items-center space-x-2 mt-2">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                      post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
-                                      post.state === 'published' ? 'bg-green-900 text-green-300' :
-                                      'bg-gray-700 text-gray-300'
-                                    }`}>
-                                      {post.state}
-                                    </span>
-                                    <span className="text-gray-400 text-xs">
-                                      {formatDateTime(post.scheduled_for || '')}
-                                    </span>
-                                  </div>
-                                </div>
-                                <Link href={`/dashboard/content/package/${post.id}`}>
-                                  <Button size="sm" variant="outline" className="ml-2 border-purple-500/50 text-purple-300 hover:bg-purple-600/30">
-                                    View
-                                  </Button>
-                                </Link>
-                              </div>
+                        {groupedPosts.map((group, groupIndex) => (
+                          <div key={groupIndex} className="bg-gray-800/50 p-4 rounded-lg border border-gray-600">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-lg">🏢</span>
+                              <h4 className="font-semibold text-white text-lg">{group.organization}</h4>
+                              <span className="px-2 py-1 bg-purple-600/30 text-purple-200 text-xs rounded-full">
+                                {group.posts.length} post{group.posts.length !== 1 ? 's' : ''}
+                              </span>
                             </div>
-                          )
-                        })}
+                            <div className="space-y-2">
+                              {group.posts.map((post) => {
+                                // Determine platform based on title
+                                const getPlatform = (title: string) => {
+                                  if (title.includes('Facebook')) return 'facebook'
+                                  if (title.includes('Instagram')) return 'instagram'
+                                  if (title.includes('Twitter') || title.includes('X')) return 'twitter'
+                                  if (title.includes('LinkedIn')) return 'linkedin'
+                                  if (title.includes('Discord')) return 'discord'
+                              if (title.includes('Reddit')) return 'reddit'
+                                  if (title.includes('YouTube')) return 'youtube'
+                                  return 'blog' // Default for blog posts
+                                }
+                                
+                                const platform = getPlatform(post.title)
+                                
+                                return (
+                                  <div key={post.id} className="bg-gray-700/50 p-3 rounded-lg border border-gray-500">
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          {platform === 'blog' ? (
+                                            <span className="text-sm">📝</span>
+                                          ) : (
+                                            <SocialIcon platform={platform} size="sm" className="text-white" />
+                                          )}
+                                          <h5 className="font-semibold text-white text-sm">{post.title}</h5>
+                                        </div>
+                                        <p className="text-gray-300 text-xs mt-1 line-clamp-2">
+                                          {post.content}
+                                        </p>
+                                        <div className="flex items-center space-x-2 mt-2">
+                                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                            post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+                                            post.state === 'published' ? 'bg-green-900 text-green-300' :
+                                            'bg-gray-700 text-gray-300'
+                                          }`}>
+                                            {post.state}
+                                          </span>
+                                          <span className="text-gray-400 text-xs">
+                                            {formatDateTime(post.scheduled_for || '')}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <Link href={`/dashboard/content/package/${post.id}`}>
+                                        <Button size="sm" variant="outline" className="ml-2 border-purple-500/50 text-purple-300 hover:bg-purple-600/30">
+                                          View
+                                        </Button>
+                                      </Link>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       <div className="text-center py-4">

@@ -24,7 +24,7 @@ const generateSocialMediaPosts = async (title: string, content: string) => {
       body: JSON.stringify({
         title,
         content,
-        platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+        platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
       })
     })
 
@@ -42,7 +42,8 @@ const generateSocialMediaPosts = async (title: string, content: string) => {
     instagram: `✨ ${title} ✨\n\n${content.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
     twitter: `${title}\n\n${content.substring(0, 100)}...\n\n#AI #Content`,
     linkedin: `Professional insight: ${title}\n\n${content.substring(0, 180)}...\n\n#Professional #AI #Content`,
-    tiktok: `${title} 🚀\n\n${content.substring(0, 120)}...\n\n#AI #Trending #Content`
+    discord: `${title} 🎮\n\n${content.substring(0, 120)}...\n\n#AI #Community #Tech`,
+    reddit: `${title} 🤖\n\n${content.substring(0, 120)}...\n\n#AI #Discussion #Tech`
   }
 }
 
@@ -62,7 +63,8 @@ interface GeneratedContent {
     instagram: string
     twitter: string
     linkedin: string
-    tiktok: string
+    discord: string
+    reddit: string
   }
 }
 
@@ -144,7 +146,7 @@ export default function ContentPackagePage() {
       if (platform === 'all') {
         // Schedule all platforms
         const scheduledDate = new Date(scheduleDateTime)
-        const platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+        const platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
         let successCount = 0
         let errorCount = 0
 
@@ -760,25 +762,47 @@ export default function ContentPackagePage() {
 
           <Separator className="bg-gray-700" />
 
-          {/* TikTok */}
+          {/* Discord */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🎵</span>
+                <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">💬</span>
                 </div>
-                <h4 className="font-semibold text-white">TikTok</h4>
+                <h4 className="font-semibold text-white">Discord</h4>
               </div>
               <Button
                 size="sm"
-                onClick={() => openScheduleModal('tiktok')}
+                onClick={() => openScheduleModal('discord')}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
               >
                 📅 Schedule
               </Button>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.tiktok}</p>
+              <p className="text-gray-300 select-all">{socialPosts.discord}</p>
+            </div>
+          </div>
+
+          {/* Reddit */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-orange-600 rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">🤖</span>
+                </div>
+                <h4 className="font-semibold text-white">Reddit</h4>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => openScheduleModal('reddit')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule
+              </Button>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <p className="text-gray-300 select-all">{socialPosts.reddit}</p>
             </div>
           </div>
         </CardContent>
@@ -899,7 +923,8 @@ export default function ContentPackagePage() {
                     <li>• Instagram Post</li>
                     <li>• Twitter/X Post</li>
                     <li>• LinkedIn Post</li>
-                    <li>• TikTok Post</li>
+                    <li>• Discord Post</li>
+                    <li>• Reddit Post</li>
                     {generatedContent?.image?.url && (
                       <li>• Generated Image (included with all posts)</li>
                     )}
