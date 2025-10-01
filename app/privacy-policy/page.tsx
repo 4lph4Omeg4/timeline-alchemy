@@ -96,7 +96,7 @@ export default function PrivacyPolicyPage() {
               <li>Withdraw consent at any time</li>
             </ul>
             <p className="mt-4">
-              To exercise these rights, please contact us at <a href="mailto:support@timeline-alchemy.nl" className="text-yellow-400 hover:underline">support@timeline-alchemy.nl</a>
+              To exercise these rights, please contact us at <a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-yellow-400 hover:underline">timeline-alchemy@sh4m4ni4k.nl</a>
             </p>
           </section>
 
@@ -134,8 +134,8 @@ export default function PrivacyPolicyPage() {
               If you have any questions about this Privacy Policy, please contact us:
             </p>
             <ul className="list-none space-y-2 mt-4">
-              <li><strong>Email:</strong> <a href="mailto:support@timeline-alchemy.nl" className="text-yellow-400 hover:underline">support@timeline-alchemy.nl</a></li>
-              <li><strong>Address:</strong> Timeline Alchemy, The Netherlands</li>
+              <li><strong>Email:</strong> <a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-yellow-400 hover:underline">timeline-alchemy@sh4m4ni4k.nl</a></li>
+              <li><strong>Address:</strong> Poststraat 47B, 6371VL, Landgraaf, Netherlands</li>
             </ul>
           </section>
         </div>

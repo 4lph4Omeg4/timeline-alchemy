@@ -273,8 +273,8 @@ export default function HomePage() {
             <div>
               <h3 className="text-white font-semibold mb-4">Contact</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="mailto:support@timeline-alchemy.nl" className="text-gray-400 hover:text-yellow-400 transition">support@timeline-alchemy.nl</a></li>
-                <li><span className="text-gray-400">The Netherlands</span></li>
+                <li><a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition">timeline-alchemy@sh4m4ni4k.nl</a></li>
+                <li><span className="text-gray-400">Poststraat 47B, 6371VL, Landgraaf, Netherlands</span></li>
               </ul>
             </div>
           </div>
