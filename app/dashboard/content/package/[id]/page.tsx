@@ -576,7 +576,10 @@ export default function ContentPackagePage() {
               onClick={() => {
                 if (socialPosts.instagram) {
                   navigator.clipboard.writeText(socialPosts.instagram)
-                toast.success('Instagram post copied to clipboard!')
+                  toast.success('Instagram post copied to clipboard!')
+                } else {
+                  toast.error('No Instagram post available')
+                }
               }}
             >
               📷 Copy Instagram Post
