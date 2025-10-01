@@ -246,13 +246,12 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Product Links */}
+            {/* SH4M4NI4K.NL Links */}
             <div>
-              <h3 className="text-white font-semibold mb-4">Product</h3>
+              <h3 className="text-white font-semibold mb-4">SH4M4NI4K.NL</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#features" className="text-gray-400 hover:text-yellow-400 transition">Features</a></li>
-                <li><a href="#pricing" className="text-gray-400 hover:text-yellow-400 transition">Pricing</a></li>
-                <li><a href="/dashboard" className="text-gray-400 hover:text-yellow-400 transition">Dashboard</a></li>
+                <li><a href="https://sh4m4ni4k.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Cosmic Unity</a></li>
+                <li><a href="https://timeline-alchemy.nl" className="text-gray-400 hover:text-yellow-400 transition" target="_blank" rel="noopener noreferrer">Timeline Alchemy</a></li>
               </ul>
             </div>
 
