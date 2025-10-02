@@ -182,8 +182,7 @@ export default function ContentPackagePage() {
         const { error: updateError } = await supabase
           .from('blog_posts')
           .update({
-            social_posts: socialSchedulingInfo.scheduled_social_content,
-            scheduled_social_platforms: socialPlatformsScheduled
+            social_posts: socialSchedulingInfo.scheduled_social_content
           })
           .eq('id', post.id)
 
