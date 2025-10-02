@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update post status
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('blog_posts')
       .update({
         published_at: new Date().toISOString(),

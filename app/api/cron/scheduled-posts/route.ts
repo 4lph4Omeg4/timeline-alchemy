@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         })
 
         // Update post status to failed
-        await supabase
+        await (supabase as any)
           .from('blog_posts')
           .update({
             state: 'published',
