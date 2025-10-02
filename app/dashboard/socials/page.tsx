@@ -29,8 +29,8 @@ const socialPlatforms = [
     id: 'twitter',
     name: 'Twitter',
     description: 'Connect your Twitter account to publish tweets automatically',
-    color: 'bg-blue-500',
-    brandColor: '#1DA1F2',
+    color: 'bg-black',
+    brandColor: '#000000',
   },
   {
     id: 'linkedin',

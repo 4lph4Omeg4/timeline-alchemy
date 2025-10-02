@@ -54,7 +54,7 @@ export default function ContentEditorPage() {
           body: JSON.stringify({
             title: prompt,
             content: prompt,
-            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'wordpress']
+            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'telegram']
           }),
         }),
         
@@ -176,6 +176,43 @@ export default function ContentEditorPage() {
       }
 
       console.log('Post saved successfully:', postData.id)
+
+      // Check if user is admin and create admin package
+      const isAdmin = orgMembers.some(member => member.role === 'admin' || member.role === 'owner')
+      
+      if (isAdmin) {
+        try {
+          // Find Admin Organization
+          const { data: adminOrg } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('name', 'Admin Organization')
+            .single()
+
+          if (adminOrg) {
+            // Create admin package with the same content
+            const { error: adminPackageError } = await supabase
+              .from('blog_posts')
+              .insert({
+                org_id: adminOrg.id,
+                title: title,
+                content: content,
+                state: 'published',
+                created_by_admin: true,
+                social_posts: socialPosts
+              })
+
+            if (adminPackageError) {
+              console.error('Error creating admin package:', adminPackageError)
+            } else {
+              console.log('✅ Admin package created successfully!')
+              toast.success('Post saved and admin package created!')
+            }
+          }
+        } catch (error) {
+          console.error('Error creating admin package:', error)
+        }
+      }
 
       // Save social posts to separate table
       if (Object.keys(socialPosts).length > 0) {

@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate image using the AI service with improved prompt
-    const improvedPrompt = `${prompt}. Professional, high-quality image, modern, clean, inspiring, abstract concept, no text, no words, no letters, visual metaphor, artistic, minimalist design, photorealistic, stunning composition`
+    // Generate image using the AI service with cosmische, fantastische prompt
+    const improvedPrompt = `${prompt}. Cosmic, ethereal, mystical, warm golden light, magical atmosphere, fantasy elements, celestial vibes, otherworldly beauty, dreamlike quality, glowing effects, cosmic dust, stardust particles, aurora-like colors, mystical energy, enchanting, transcendent, divine light, heavenly glow, fantastical, surreal, mesmerizing, captivating, professional photography, high resolution, cinematic lighting, warm color palette, golden hour, magical realism, spiritual energy, cosmic wonder, ethereal glow, mystical aura, enchanting atmosphere, otherworldly, celestial beauty, divine inspiration, magical realism, warm and inviting, cosmically beautiful, fantastically stunning`
     const imageUrl = await generateImage(improvedPrompt)
     
     return NextResponse.json({ imageUrl })

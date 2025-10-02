@@ -242,7 +242,7 @@ IMPORTANT OUTPUT FORMAT:
 }
 
 export async function generateComprehensiveContent(request: ComprehensiveContentRequest): Promise<GeneratedContent> {
-  const { prompt, tone = 'professional', length = 'medium', platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'wordpress'] } = request
+  const { prompt, tone = 'professional', length = 'medium', platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'telegram'] } = request
 
   try {
     const openai = getOpenAI()
@@ -273,7 +273,7 @@ export async function generateComprehensiveContent(request: ComprehensiveContent
     const blogData = parseBlogContent(blogContent)
 
     // Generate image
-    const imagePrompt = `Professional, high-quality image that represents: ${prompt}. Modern, clean, inspiring, abstract concept, no text, no words, no letters, visual metaphor, artistic, minimalist design`
+    const imagePrompt = `Cosmic, ethereal, mystical, warm golden light, magical atmosphere, fantasy elements, celestial vibes, otherworldly beauty, dreamlike quality, glowing effects, cosmic dust, stardust particles, aurora-like colors, mystical energy, enchanting, transcendent, divine light, heavenly glow, fantastical, surreal, mesmerizing, captivating, professional photography, high resolution, cinematic lighting, warm color palette, golden hour, magical realism, spiritual energy, cosmic wonder, ethereal glow, mystical aura, enchanting atmosphere, otherworldly, celestial beauty, divine inspiration, magical realism, warm and inviting, cosmically beautiful, fantastically stunning image that represents: ${prompt}. No text, no words, no letters, visual metaphor, artistic, cosmically inspired design`
     const imageUrl = await generateImage(imagePrompt)
 
     // Generate social media posts for each platform
@@ -311,7 +311,7 @@ async function generateSocialPosts(prompt: string, tone: string, platforms: stri
             - LinkedIn: Professional, thought-provoking, 1-2 sentences
             - Discord: Community-focused, casual, engaging for gaming/tech communities
             - Reddit: Discussion-provoking, authentic, community-specific language
-            - WordPress: Blog-style content, detailed and informative, 2-3 paragraphs with proper structure`
+            - Telegram: Channel-friendly, informative, engaging for community updates, 2-3 sentences with emojis`
           },
           {
             role: 'user',
@@ -428,7 +428,7 @@ export async function generateImage(prompt: string): Promise<string> {
     const openai = getOpenAI()
     const response = await openai.images.generate({
       model: 'dall-e-3',
-      prompt: `Professional, high-quality image: ${prompt}`,
+      prompt: `Cosmic, ethereal, mystical, warm golden light, magical atmosphere, fantasy elements, celestial vibes, otherworldly beauty, dreamlike quality, glowing effects, cosmic dust, stardust particles, aurora-like colors, mystical energy, enchanting, transcendent, divine light, heavenly glow, fantastical, surreal, mesmerizing, captivating, professional photography, high resolution, cinematic lighting, warm color palette, golden hour, magical realism, spiritual energy, cosmic wonder, ethereal glow, mystical aura, enchanting atmosphere, otherworldly, celestial beauty, divine inspiration, magical realism, warm and inviting, cosmically beautiful, fantastically stunning: ${prompt}`,
       n: 1,
       size: '1024x1024',
       quality: 'standard',
