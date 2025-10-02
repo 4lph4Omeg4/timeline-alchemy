@@ -49,7 +49,7 @@ export interface BlogPost {
 export interface SocialConnection {
   id: string
   org_id: string
-  platform: 'twitter' | 'linkedin' | 'instagram' | 'facebook' | 'youtube' | 'discord' | 'reddit'
+  platform: 'twitter' | 'linkedin' | 'instagram' | 'facebook' | 'youtube' | 'discord' | 'reddit' | 'telegram'
   access_token: string
   refresh_token?: string
   expires_at?: string

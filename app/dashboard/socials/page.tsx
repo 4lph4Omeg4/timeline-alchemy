@@ -79,6 +79,13 @@ const socialPlatforms = [
     color: 'bg-orange-600',
     brandColor: '#FF4500',
   },
+  {
+    id: 'telegram',
+    name: 'Telegram',
+    description: 'Connect your Telegram bot to publish messages',
+    color: 'bg-blue-500',
+    brandColor: '#0088CC',
+  },
 ]
 
 export default function SocialConnectionsPage() {
@@ -449,6 +456,13 @@ export default function SocialConnectionsPage() {
         
         // Redirect to Reddit OAuth
         window.location.href = authUrl.toString()
+      } else if (platform === 'telegram') {
+        // Telegram uses bot tokens, not OAuth
+        // For now, show instructions for bot setup
+        toast.success('Telegram bot setup instructions coming soon!')
+        
+        // TODO: Implement Telegram bot token input
+        // This would open a modal to input bot token
       } else {
         // For other platforms, show coming soon message
         toast.success(`${platform} integration coming soon!`)

@@ -556,6 +556,131 @@ export class RedditOAuth {
   }
 }
 
+// Telegram Bot API helper functions
+export class TelegramOAuth {
+  private botToken: string
+
+  constructor() {
+    this.botToken = process.env.TELEGRAM_BOT_TOKEN!
+  }
+
+  // Get bot information
+  async getBotInfo() {
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${this.botToken}/getMe`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to get bot info')
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Telegram bot info error:', error)
+      throw new Error('Failed to get Telegram bot info')
+    }
+  }
+
+  // Get user's channels (requires user to start bot first)
+  async getUserChannels(userId: string) {
+    try {
+      // Note: Telegram doesn't have a direct API to get user's channels
+      // Users need to add the bot to their channels manually
+      // This is a placeholder for future implementation
+      return {
+        success: true,
+        message: 'User needs to add bot to channels manually',
+        channels: []
+      }
+    } catch (error) {
+      console.error('Telegram channels error:', error)
+      throw new Error('Failed to get Telegram channels')
+    }
+  }
+
+  // Send message to Telegram channel
+  async sendMessage(chatId: string, content: string, imageUrl?: string) {
+    try {
+      let messageData: any = {
+        chat_id: chatId,
+        text: content,
+        parse_mode: 'HTML'
+      }
+
+      // If there's an image, send as photo with caption
+      if (imageUrl) {
+        messageData = {
+          chat_id: chatId,
+          photo: imageUrl,
+          caption: content,
+          parse_mode: 'HTML'
+        }
+      }
+
+      const response = await fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(messageData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`Telegram API error: ${errorData.description}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Telegram send message error:', error)
+      throw new Error('Failed to send Telegram message')
+    }
+  }
+
+  // Send photo to Telegram channel
+  async sendPhoto(chatId: string, photoUrl: string, caption?: string) {
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${this.botToken}/sendPhoto`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          photo: photoUrl,
+          caption: caption || '',
+          parse_mode: 'HTML'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`Telegram API error: ${errorData.description}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Telegram send photo error:', error)
+      throw new Error('Failed to send Telegram photo')
+    }
+  }
+
+  // Get webhook info (for future webhook implementation)
+  async getWebhookInfo() {
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${this.botToken}/getWebhookInfo`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to get webhook info')
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Telegram webhook info error:', error)
+      throw new Error('Failed to get Telegram webhook info')
+    }
+  }
+}
+
 // YouTube posting functionality
 export class YouTubeOAuth {
   // Post video to YouTube
