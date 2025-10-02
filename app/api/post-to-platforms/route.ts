@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabase
       .from('blog_posts')
       .update({
-        posted_at: new Date().toISOString(),
-        post_status: errors.length === 0 ? 'posted' : 'partial'
+        published_at: new Date().toISOString(),
+        state: errors.length === 0 ? 'published' : 'scheduled'
       })
       .eq('id', postId)
 

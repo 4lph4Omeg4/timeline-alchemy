@@ -20,9 +20,8 @@ export async function GET(request: NextRequest) {
         content,
         social_posts,
         scheduled_for,
-        posted_at,
-        post_status,
-        error_message,
+        published_at,
+        state,
         created_at,
         organizations:org_id (
           id,
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     // Filter by status if provided
     if (status) {
-      query = query.eq('post_status', status)
+      query = query.eq('state', status)
     }
 
     const { data: posts, error } = await query
@@ -54,15 +53,15 @@ export async function GET(request: NextRequest) {
     // Get status summary
     const { data: statusSummary } = await supabase
       .from('blog_posts')
-      .select('post_status')
+      .select('state')
       .eq('org_id', orgId || '')
 
     const summary = {
       total: statusSummary?.length || 0,
-      scheduled: statusSummary?.filter(p => p.post_status === 'scheduled').length || 0,
-      posted: statusSummary?.filter(p => p.post_status === 'posted').length || 0,
-      failed: statusSummary?.filter(p => p.post_status === 'failed').length || 0,
-      partial: statusSummary?.filter(p => p.post_status === 'partial').length || 0
+      scheduled: statusSummary?.filter(p => p.state === 'scheduled').length || 0,
+      posted: statusSummary?.filter(p => p.state === 'published').length || 0,
+      failed: 0, // No failed state in current schema
+      partial: 0 // No partial state in current schema
     }
 
     return NextResponse.json({
@@ -100,15 +99,11 @@ export async function POST(request: NextRequest) {
     const supabase = supabaseAdmin
     
     const updateData: any = {
-      post_status: status
+      state: status
     }
 
-    if (status === 'posted') {
-      updateData.posted_at = new Date().toISOString()
-    }
-
-    if (errorMessage) {
-      updateData.error_message = errorMessage
+    if (status === 'published') {
+      updateData.published_at = new Date().toISOString()
     }
 
     const { error } = await supabase

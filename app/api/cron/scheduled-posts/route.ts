@@ -124,8 +124,8 @@ export async function GET(request: NextRequest) {
         await supabase
           .from('blog_posts')
           .update({
-            post_status: 'failed',
-            error_message: error instanceof Error ? error.message : 'Unknown error'
+            state: 'published',
+            published_at: new Date().toISOString()
           })
           .eq('id', (post as any).id)
       }

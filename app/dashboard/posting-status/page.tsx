@@ -13,9 +13,8 @@ interface Post {
   content: string
   social_posts: any
   scheduled_for: string | null
-  posted_at: string | null
-  post_status: 'scheduled' | 'posted' | 'failed' | 'partial'
-  error_message: string | null
+  published_at: string | null
+  state: 'draft' | 'scheduled' | 'published'
   created_at: string
   organizations: {
     id: string
@@ -143,12 +142,10 @@ export default function PostingStatusDashboard() {
     switch (status) {
       case 'scheduled':
         return <Badge variant="outline" className="text-blue-400 border-blue-400">Scheduled</Badge>
-      case 'posted':
-        return <Badge variant="outline" className="text-green-400 border-green-400">Posted</Badge>
-      case 'failed':
-        return <Badge variant="outline" className="text-red-400 border-red-400">Failed</Badge>
-      case 'partial':
-        return <Badge variant="outline" className="text-yellow-400 border-yellow-400">Partial</Badge>
+      case 'published':
+        return <Badge variant="outline" className="text-green-400 border-green-400">Published</Badge>
+      case 'draft':
+        return <Badge variant="outline" className="text-gray-400 border-gray-400">Draft</Badge>
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
@@ -253,14 +250,14 @@ export default function PostingStatusDashboard() {
                     {post.scheduled_for && (
                       <span>⏰ Scheduled: {new Date(post.scheduled_for).toLocaleString()}</span>
                     )}
-                    {post.posted_at && (
-                      <span>✅ Posted: {new Date(post.posted_at).toLocaleString()}</span>
+                    {post.published_at && (
+                      <span>✅ Posted: {new Date(post.published_at).toLocaleString()}</span>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {getStatusBadge(post.post_status)}
-                  {post.post_status === 'scheduled' && (
+                  {getStatusBadge(post.state)}
+                  {post.state === 'scheduled' && (
                     <Button
                       onClick={() => handleManualPost(post.id)}
                       disabled={posting === post.id}
