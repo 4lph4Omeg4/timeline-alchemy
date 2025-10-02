@@ -12,10 +12,14 @@ import { Loader } from '@/components/Loader'
 
 export default function AdminClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
+  const [organizations, setOrganizations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [newClientName, setNewClientName] = useState('')
   const [newClientEmail, setNewClientEmail] = useState('')
+  const [selectedOrgId, setSelectedOrgId] = useState('')
+  const [newOrgName, setNewOrgName] = useState('')
+  const [showNewOrgField, setShowNewOrgField] = useState(false)
 
   const fetchClients = async () => {
     setLoading(true)
@@ -42,6 +46,19 @@ export default function AdminClientsPage() {
         toast.error('Failed to fetch clients')
       } else {
         setClients(clientsData || [])
+      }
+
+      // Fetch organizations for assignment
+      const { data: orgsData, error: orgsError } = await supabase
+        .from('organizations')
+        .select('id, name')
+        .neq('name', 'Admin Organization')
+        .order('name')
+
+      if (orgsError) {
+        console.error('Error fetching organizations:', orgsError)
+      } else {
+        setOrganizations(orgsData || [])
       }
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -81,13 +98,13 @@ export default function AdminClientsPage() {
         return
       }
 
-      const orgId = adminOrg.id
+      const adminOrgId = adminOrg.id
 
-      // Create the client
+      // Create the client in admin organization first
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
         .insert({
-          org_id: orgId,
+          org_id: adminOrgId,
           name: newClientName,
           contact_info: newClientEmail ? { email: newClientEmail } : null,
         })
@@ -100,9 +117,61 @@ export default function AdminClientsPage() {
         return
       }
 
-      toast.success('Client created successfully!')
+      // Handle organization assignment
+      if (selectedOrgId) {
+        // Update client to be assigned to the selected organization
+        const { error: updateError } = await supabase
+          .from('clients')
+          .update({
+            org_id: selectedOrgId
+          })
+          .eq('id', clientData.id)
+
+        if (updateError) {
+          console.error('Error assigning client to organization:', updateError)
+          toast.success('Client created but failed to assign to organization')
+        } else {
+          toast.success('Client created and assigned to organization successfully!')
+        }
+      } else if (newOrgName.trim()) {
+        // Create new organization and assign client
+        const { data: newOrgData, error: newOrgError } = await supabase
+          .from('organizations')
+          .insert({
+            name: newOrgName.trim(),
+            plan: 'basic'
+          })
+          .select()
+          .single()
+
+        if (newOrgError) {
+          console.error('Error creating organization:', newOrgError)
+          toast.success('Client created but failed to create organization')
+        } else {
+          // Update client to be assigned to the new organization
+          const { error: updateError } = await supabase
+            .from('clients')
+            .update({
+              org_id: newOrgData.id
+            })
+            .eq('id', clientData.id)
+
+          if (updateError) {
+            console.error('Error assigning client to new organization:', updateError)
+            toast.success('Client and organization created but failed to assign client')
+          } else {
+            toast.success('Client created and assigned to new organization successfully!')
+          }
+        }
+      } else {
+        toast.success('Client created successfully!')
+      }
+
       setNewClientName('')
       setNewClientEmail('')
+      setSelectedOrgId('')
+      setNewOrgName('')
+      setShowNewOrgField(false)
       fetchClients() // Refresh the list
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -184,6 +253,66 @@ export default function AdminClientsPage() {
               className="mt-2 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
               placeholder="Enter client email"
             />
+          </div>
+          <div>
+            <Label htmlFor="client-org" className="text-white">Assign to Organization (Optional)</Label>
+            <select
+              id="client-org"
+              value={selectedOrgId}
+              onChange={(e) => {
+                setSelectedOrgId(e.target.value)
+                if (e.target.value) {
+                  setShowNewOrgField(false)
+                  setNewOrgName('')
+                }
+              }}
+              className="mt-2 w-full bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded-md focus:border-purple-400 focus:ring-purple-400/50"
+            >
+              <option value="">No organization assignment</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+            
+            {/* Create New Organization Option */}
+            <div className="mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowNewOrgField(!showNewOrgField)
+                  if (!showNewOrgField) {
+                    setSelectedOrgId('')
+                  }
+                }}
+                className="border-purple-500/50 text-purple-300 hover:bg-purple-600/30"
+              >
+                {showNewOrgField ? 'Cancel New Organization' : '+ Create New Organization'}
+              </Button>
+            </div>
+
+            {showNewOrgField && (
+              <div className="mt-3 p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg">
+                <Label htmlFor="new-org-name" className="text-purple-200 text-sm">New Organization Name</Label>
+                <Input
+                  id="new-org-name"
+                  value={newOrgName}
+                  onChange={(e) => setNewOrgName(e.target.value)}
+                  className="mt-2 bg-gray-700 border-purple-500/50 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-purple-400/50"
+                  placeholder="Enter organization name"
+                />
+                <p className="text-purple-300 text-xs mt-1">
+                  This will create a new organization and assign the client to it.
+                </p>
+              </div>
+            )}
+
+            <p className="text-gray-400 text-sm mt-1">
+              Clients are always created in the Admin Organization. This assigns them to an additional organization.
+            </p>
           </div>
           <Button 
             onClick={handleCreateClient}

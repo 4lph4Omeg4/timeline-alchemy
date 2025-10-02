@@ -40,18 +40,25 @@ export interface BlogPost {
   created_by_admin?: boolean
   average_rating?: number
   rating_count?: number
+  organizations?: {
+    id: string
+    name: string
+  }
 }
 
 export interface SocialConnection {
   id: string
   org_id: string
-  platform: 'twitter' | 'linkedin' | 'instagram' | 'facebook' | 'youtube'
-  access_token: string
+  platform: 'twitter' | 'linkedin' | 'instagram' | 'facebook' | 'youtube' | 'discord' | 'reddit' | 'telegram' | 'wordpress'
+  access_token?: string
   refresh_token?: string
   expires_at?: string
   account_id?: string
   account_name?: string
   account_username?: string
+  site_url?: string
+  username?: string
+  password?: string
   created_at: string
   updated_at: string
 }

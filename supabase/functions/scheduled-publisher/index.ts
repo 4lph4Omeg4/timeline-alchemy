@@ -13,122 +13,184 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🕐 Starting scheduled post check...')
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
     )
-
-    // Get all scheduled posts that are ready to be published
+    
+    // Get all posts that are scheduled for now or earlier
     const now = new Date().toISOString()
     
     const { data: scheduledPosts, error: postsError } = await supabaseClient
       .from('blog_posts')
       .select(`
         *,
-        organizations (
-          social_connections (*)
+        organizations:org_id (
+          id,
+          name
         )
       `)
-      .eq('state', 'scheduled')
+      .not('scheduled_for', 'is', null)
       .lte('scheduled_for', now)
+      .neq('post_status', 'posted')
+      .neq('post_status', 'failed')
 
     if (postsError) {
-      throw postsError
-    }
-
-    if (!scheduledPosts || scheduledPosts.length === 0) {
+      console.error('❌ Error fetching scheduled posts:', postsError)
       return new Response(
-        JSON.stringify({ message: 'No posts to publish' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Failed to fetch scheduled posts' 
+        }),
         { 
+          status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
     }
 
-    const results = []
+    if (!scheduledPosts || scheduledPosts.length === 0) {
+      console.log('✅ No posts scheduled for posting right now')
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'No posts scheduled for posting',
+          count: 0
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
 
+    console.log(`📝 Found ${scheduledPosts.length} posts ready for posting`)
+
+    const results = []
+    const errors = []
+
+    // Process each scheduled post
     for (const post of scheduledPosts) {
       try {
-        // Update post status to published
-        const { error: updateError } = await supabaseClient
-          .from('blog_posts')
-          .update({
-            state: 'published',
-            published_at: now,
-          })
-          .eq('id', post.id)
+        console.log(`🚀 Processing post: ${post.title} (ID: ${post.id})`)
+        
+        // Determine which platforms to post to
+        const platforms = []
+        
+        // Check if post has social_posts data
+        if (post.social_posts) {
+          const socialPosts = post.social_posts
+          
+          // Add platforms that have content
+          if (socialPosts.twitter || socialPosts.Twitter) platforms.push('twitter')
+          if (socialPosts.linkedin || socialPosts.LinkedIn) platforms.push('linkedin')
+          if (socialPosts.facebook || socialPosts.Facebook) platforms.push('facebook')
+          if (socialPosts.instagram || socialPosts.Instagram) platforms.push('instagram')
+          if (socialPosts.youtube || socialPosts.YouTube) platforms.push('youtube')
+          if (socialPosts.discord || socialPosts.Discord) platforms.push('discord')
+          if (socialPosts.reddit || socialPosts.Reddit) platforms.push('reddit')
+          if (socialPosts.telegram || socialPosts.Telegram) platforms.push('telegram')
+        }
 
-        if (updateError) {
-          console.error(`Error updating post ${post.id}:`, updateError)
+        if (platforms.length === 0) {
+          console.log(`⚠️ No platforms found for post: ${post.title}`)
+          errors.push({
+            postId: post.id,
+            error: 'No platforms found for posting'
+          })
           continue
         }
 
-        // Publish to social platforms
-        const socialConnections = post.organizations?.social_connections || []
-        
-        for (const connection of socialConnections) {
-          try {
-            await publishToSocialPlatform(connection, post)
-            results.push({
-              postId: post.id,
-              platform: connection.platform,
-              status: 'success'
-            })
-          } catch (error) {
-            console.error(`Error publishing to ${connection.platform}:`, error)
-            results.push({
-              postId: post.id,
-              platform: connection.platform,
-              status: 'error',
-              error: error.message
-            })
-          }
-        }
-        
-        // Also try to publish to Instagram if Facebook is connected
-        const facebookConnection = socialConnections.find(conn => conn.platform === 'facebook')
-        if (facebookConnection) {
-          try {
-            await publishToInstagram(facebookConnection.access_token, post)
-            results.push({
-              postId: post.id,
-              platform: 'instagram',
-              status: 'success'
-            })
-          } catch (error) {
-            console.error(`Error publishing to Instagram via Facebook:`, error)
-            results.push({
-              postId: post.id,
-              platform: 'instagram',
-              status: 'error',
-              error: error.message
-            })
-          }
-        }
-      } catch (error) {
-        console.error(`Error processing post ${post.id}:`, error)
-        results.push({
-          postId: post.id,
-          status: 'error',
-          error: error.message
+        console.log(`📱 Posting to platforms: ${platforms.join(', ')}`)
+
+        // Call the posting engine
+        const postingResponse = await fetch(`${Deno.env.get('NEXT_PUBLIC_SITE_URL')}/api/post-to-platforms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            postId: post.id,
+            platforms: platforms
+          })
         })
+
+        if (!postingResponse.ok) {
+          const error = await postingResponse.json()
+          throw new Error(`Posting failed: ${error.error || error.message}`)
+        }
+
+        const postingResult = await postingResponse.json()
+        
+        if (postingResult.success) {
+          console.log(`✅ Successfully posted: ${post.title}`)
+          results.push({
+            postId: post.id,
+            title: post.title,
+            platforms: platforms,
+            results: postingResult.results,
+            errors: postingResult.errors
+          })
+        } else {
+          throw new Error(postingResult.error || 'Unknown posting error')
+        }
+
+      } catch (error) {
+        console.error(`❌ Error processing post ${post.id}:`, error)
+        errors.push({
+          postId: post.id,
+          title: post.title,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        })
+
+        // Update post status to failed
+        await supabaseClient
+          .from('blog_posts')
+          .update({
+            post_status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error'
+          })
+          .eq('id', post.id)
       }
     }
 
+    console.log(`🎉 Scheduled posting complete!`)
+    console.log(`✅ Successful: ${results.length}`)
+    console.log(`❌ Failed: ${errors.length}`)
+
     return new Response(
-      JSON.stringify({ 
-        message: 'Publishing completed',
-        results 
+      JSON.stringify({
+        success: true,
+        message: `Processed ${scheduledPosts.length} scheduled posts`,
+        results,
+        errors,
+        summary: {
+          total: scheduledPosts.length,
+          successful: results.length,
+          failed: errors.length
+        }
       }),
       { 
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
 
   } catch (error) {
-    console.error('Error in scheduled publisher:', error)
+    console.error('💥 Cron job error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: 'Cron job failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -136,381 +198,3 @@ serve(async (req) => {
     )
   }
 })
-
-async function publishToSocialPlatform(connection: any, post: any) {
-  const { platform, access_token } = connection
-  
-  // This is a simplified implementation
-  // In a real app, you'd integrate with each platform's API
-  
-  switch (platform) {
-    case 'twitter':
-      await publishToTwitter(access_token, post)
-      break
-    case 'linkedin':
-      await publishToLinkedIn(access_token, post)
-      break
-    case 'instagram':
-      await publishToInstagram(access_token, post)
-      break
-    case 'facebook':
-      await publishToFacebook(access_token, post)
-      break
-    case 'youtube':
-      await publishToYouTube(access_token, connection.refresh_token, post)
-      break
-    default:
-      throw new Error(`Unsupported platform: ${platform}`)
-  }
-}
-
-async function publishToTwitter(accessToken: string, post: any) {
-  try {
-    // Twitter API v2 implementation
-  console.log(`Publishing to Twitter: ${post.title}`)
-    
-    // Prepare tweet content (Twitter has a 280 character limit)
-    const hashtags = '#tmline_alchemy #sh4m4ni4k'
-    const hashtagLength = hashtags.length + 1 // +1 for space
-    
-    let tweetText = post.title
-    
-    // Add content if there's space (reserve space for hashtags)
-    const maxContentLength = 280 - hashtagLength - tweetText.length - 2 // -2 for \n\n
-    if (post.content && post.content.length <= maxContentLength) {
-      tweetText += `\n\n${post.content}`
-    } else if (post.content) {
-      // Truncate content if too long
-      tweetText += `\n\n${post.content.substring(0, maxContentLength - 3)}...`
-    }
-    
-    // Add hashtags
-    tweetText += `\n\n${hashtags}`
-    
-    // Create tweet
-    const tweetResponse = await fetch('https://api.twitter.com/2/tweets', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: tweetText
-      }),
-    })
-    
-    if (!tweetResponse.ok) {
-      const errorData = await tweetResponse.text()
-      console.error('Twitter API error:', errorData)
-      throw new Error(`Twitter API error: ${tweetResponse.status}`)
-    }
-    
-    const tweetData = await tweetResponse.json()
-    console.log('Tweet published successfully:', tweetData.data.id)
-    
-    return {
-      success: true,
-      tweetId: tweetData.data.id,
-      url: `https://twitter.com/user/status/${tweetData.data.id}`
-    }
-    
-  } catch (error) {
-    console.error('Error publishing to Twitter:', error)
-    throw error
-  }
-}
-
-async function publishToLinkedIn(accessToken: string, post: any) {
-  try {
-    // LinkedIn API implementation
-  console.log(`Publishing to LinkedIn: ${post.title}`)
-    
-    // Prepare LinkedIn post content (LinkedIn has ~3000 character limit)
-    const hashtags = '#TimelineAlchemy #sh4m4ni4k'
-    const hashtagLength = hashtags.length + 1 // +1 for space
-    
-    let linkedInText = post.title
-    
-    // Add content if there's space (reserve space for hashtags)
-    const maxContentLength = 3000 - hashtagLength - linkedInText.length - 2 // -2 for \n\n
-    if (post.content && post.content.length <= maxContentLength) {
-      linkedInText += `\n\n${post.content}`
-    } else if (post.content) {
-      // Truncate content if too long
-      linkedInText += `\n\n${post.content.substring(0, maxContentLength - 3)}...`
-    }
-    
-    // Add hashtags
-    linkedInText += `\n\n${hashtags}`
-    
-    const linkedinText = {
-      text: linkedInText
-    }
-    
-    // Create LinkedIn post
-    const postResponse = await fetch('https://api.linkedin.com/v2/ugcPosts', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'X-Restli-Protocol-Version': '2.0.0',
-      },
-      body: JSON.stringify({
-        author: 'urn:li:person:' + await getLinkedInUserId(accessToken),
-        lifecycleState: 'PUBLISHED',
-        specificContent: {
-          'com.linkedin.ugc.ShareContent': {
-            shareCommentary: linkedinText,
-            shareMediaCategory: 'NONE'
-          }
-        },
-        visibility: {
-          'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
-        }
-      }),
-    })
-    
-    if (!postResponse.ok) {
-      const errorData = await postResponse.text()
-      console.error('LinkedIn API error:', errorData)
-      throw new Error(`LinkedIn API error: ${postResponse.status}`)
-    }
-    
-    const postData = await postResponse.json()
-    console.log('LinkedIn post published successfully:', postData.id)
-    
-    return {
-      success: true,
-      postId: postData.id,
-      url: `https://linkedin.com/feed/update/${postData.id}`
-    }
-    
-  } catch (error) {
-    console.error('Error publishing to LinkedIn:', error)
-    throw error
-  }
-}
-
-async function getLinkedInUserId(accessToken: string): Promise<string> {
-  const userResponse = await fetch('https://api.linkedin.com/v2/people/~', {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-    },
-  })
-  
-  if (!userResponse.ok) {
-    throw new Error('Failed to get LinkedIn user ID')
-  }
-  
-  const userData = await userResponse.json()
-  return userData.id
-}
-
-async function publishToInstagram(accessToken: string, post: any) {
-  try {
-  console.log(`Publishing to Instagram: ${post.title}`)
-    
-    // Instagram posts through Facebook Pages API
-    // First get the Facebook Pages access token
-    const pagesResponse = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`)
-    
-    if (!pagesResponse.ok) {
-      throw new Error('Failed to get Facebook pages')
-    }
-    
-    const pagesData = await pagesResponse.json()
-    const pages = pagesData.data
-    
-    if (!pages || pages.length === 0) {
-      throw new Error('No Facebook pages found')
-    }
-    
-    // Find pages with Instagram Business accounts connected
-    const instagramPages = []
-    for (const page of pages) {
-      try {
-        const instagramResponse = await fetch(`https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${page.access_token}`)
-        if (instagramResponse.ok) {
-          const instagramData = await instagramResponse.json()
-          if (instagramData.instagram_business_account) {
-            instagramPages.push({
-              ...page,
-              instagram_account_id: instagramData.instagram_business_account.id
-            })
-          }
-        }
-      } catch (error) {
-        console.log(`Page ${page.id} has no Instagram Business account`)
-      }
-    }
-    
-    if (instagramPages.length === 0) {
-      throw new Error('No Instagram Business accounts found connected to Facebook Pages')
-    }
-    
-    // Use the first Instagram-enabled page
-    const instagramPage = instagramPages[0]
-    const hashtags = '#TimelineAlchemy #sh4m4ni4k'
-    const instagramContent = `${post.title}\n\n${post.content || ''}\n\n${hashtags}`
-    
-    // Create Instagram media container
-    const mediaResponse = await fetch(`https://graph.facebook.com/v18.0/${instagramPage.instagram_account_id}/media`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        image_url: 'https://via.placeholder.com/1080x1080/000000/FFFFFF?text=Timeline+Alchemy', // Placeholder image
-        caption: instagramContent,
-        access_token: instagramPage.access_token,
-      }),
-    })
-
-    if (!mediaResponse.ok) {
-      const errorData = await mediaResponse.text()
-      console.error('Instagram media creation failed:', errorData)
-      throw new Error(`Instagram media creation failed: ${mediaResponse.status}`)
-    }
-
-    const mediaData = await mediaResponse.json()
-    const mediaId = mediaData.id
-
-    // Publish the media
-    const publishResponse = await fetch(`https://graph.facebook.com/v18.0/${instagramPage.instagram_account_id}/media_publish`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        creation_id: mediaId,
-        access_token: instagramPage.access_token,
-      }),
-    })
-
-    if (!publishResponse.ok) {
-      const errorData = await publishResponse.text()
-      console.error('Instagram publish failed:', errorData)
-      throw new Error(`Instagram publish failed: ${publishResponse.status}`)
-    }
-
-    const publishData = await publishResponse.json()
-    console.log('Instagram post published successfully:', publishData.id)
-    
-    return {
-      success: true,
-      postId: publishData.id,
-      url: `https://www.instagram.com/p/${publishData.id}/`,
-      content: instagramContent
-    }
-    
-  } catch (error) {
-    console.error('Instagram publishing error:', error)
-    throw error
-  }
-}
-
-async function publishToYouTube(accessToken: string, refreshToken: string, post: any) {
-  try {
-    console.log(`Publishing to YouTube: ${post.title}`)
-    
-    const hashtags = '#TimelineAlchemy #sh4m4ni4k'
-    const description = `${post.content || ''}\n\n${hashtags}`
-    
-    // For now, we'll create a placeholder video post
-    // In a real implementation, you would upload a video file
-    const videoData = {
-      snippet: {
-        title: post.title,
-        description: description,
-        tags: ['TimelineAlchemy', 'sh4m4ni4k'],
-        categoryId: '22', // People & Blogs category
-      },
-      status: {
-        privacyStatus: 'public',
-      },
-    }
-
-    // This is a placeholder - actual video upload would require file handling
-    console.log('YouTube video post data:', videoData)
-    
-    return {
-      success: true,
-      postId: 'placeholder-video-id',
-      url: 'https://www.youtube.com/watch?v=placeholder',
-      content: description
-    }
-    
-  } catch (error) {
-    console.error('YouTube publishing error:', error)
-    throw error
-  }
-}
-
-async function publishToFacebook(accessToken: string, post: any) {
-  try {
-  console.log(`Publishing to Facebook: ${post.title}`)
-    
-    // Facebook Graph API implementation for posting content
-    const hashtags = '#TimelineAlchemy #sh4m4ni4k'
-    const facebookContent = `${post.title}\n\n${post.content || ''}\n\n${hashtags}`
-    
-    // Get user's pages (Facebook Pages API)
-    const pagesResponse = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`)
-    
-    if (!pagesResponse.ok) {
-      const errorData = await pagesResponse.text()
-      console.error('Failed to get Facebook pages:', errorData)
-      throw new Error(`Failed to get Facebook pages: ${pagesResponse.status}`)
-    }
-    
-    const pagesData = await pagesResponse.json()
-    const pages = pagesData.data
-    
-    if (!pages || pages.length === 0) {
-      throw new Error('No Facebook pages found for this user')
-    }
-    
-    // Use the first page (you can modify this to select a specific page)
-    const page = pages[0]
-    const pageAccessToken = page.access_token
-    const pageId = page.id
-    
-    // Post to Facebook Page
-    const postResponse = await fetch(`https://graph.facebook.com/v18.0/${pageId}/feed`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        message: facebookContent,
-        access_token: pageAccessToken,
-      }),
-    })
-
-    if (!postResponse.ok) {
-      const errorData = await postResponse.text()
-      console.error('Facebook post failed:', errorData)
-      throw new Error(`Facebook post failed: ${postResponse.status}`)
-    }
-
-    const postData = await postResponse.json()
-    console.log('Facebook post published successfully:', postData.id)
-    
-    return {
-      success: true,
-      postId: postData.id,
-      url: `https://www.facebook.com/${pageId}/posts/${postData.id}`,
-      content: facebookContent
-    }
-    
-  } catch (error) {
-    console.error('Facebook publishing error:', error)
-    throw error
-  }
-}
-
-async function publishToYouTube(accessToken: string, post: any) {
-  // YouTube API implementation would go here
-  console.log(`Publishing to YouTube: ${post.title}`)
-  await new Promise(resolve => setTimeout(resolve, 1000))
-}

@@ -178,8 +178,8 @@ export default function TermsOfServicePage() {
               If you have any questions about these Terms of Service, please contact us:
             </p>
             <ul className="list-none space-y-2 mt-4">
-              <li><strong>Email:</strong> <a href="mailto:support@timeline-alchemy.nl" className="text-yellow-400 hover:underline">support@timeline-alchemy.nl</a></li>
-              <li><strong>Address:</strong> Timeline Alchemy, The Netherlands</li>
+              <li><strong>Email:</strong> <a href="mailto:timeline-alchemy@sh4m4ni4k.nl" className="text-yellow-400 hover:underline">timeline-alchemy@sh4m4ni4k.nl</a></li>
+              <li><strong>Address:</strong> Poststraat 47B, 6371VL, Landgraaf, Netherlands</li>
             </ul>
           </section>
 

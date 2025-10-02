@@ -65,11 +65,45 @@ const socialPlatforms = [
     color: 'bg-red-600',
     brandColor: '#FF0000',
   },
+  {
+    id: 'discord',
+    name: 'Discord',
+    description: 'Connect your Discord account to publish messages',
+    color: 'bg-indigo-600',
+    brandColor: '#5865F2',
+  },
+  {
+    id: 'reddit',
+    name: 'Reddit',
+    description: 'Connect your Reddit account to publish posts',
+    color: 'bg-orange-600',
+    brandColor: '#FF4500',
+  },
+  {
+    id: 'telegram',
+    name: 'Telegram',
+    description: 'Connect your Telegram bot to publish messages',
+    color: 'bg-blue-500',
+    brandColor: '#0088CC',
+  },
+  {
+    id: 'wordpress',
+    name: 'WordPress',
+    description: 'Connect your WordPress site to publish blog posts',
+    color: 'bg-gray-800',
+    brandColor: '#21759B',
+  },
 ]
 
 export default function SocialConnectionsPage() {
   const [connections, setConnections] = useState<SocialConnection[]>([])
   const [loading, setLoading] = useState(true)
+  const [showWordPressModal, setShowWordPressModal] = useState(false)
+  const [wordPressCredentials, setWordPressCredentials] = useState({
+    siteUrl: '',
+    username: '',
+    password: ''
+  })
   const router = useRouter()
 
   // Helper function to get user's personal organization ID
@@ -372,6 +406,77 @@ export default function SocialConnectionsPage() {
         
         // Redirect to YouTube OAuth
         window.location.href = authUrl.toString()
+      } else if (platform === 'discord') {
+        const userOrgId = await getUserOrgId(user.id)
+
+        if (!userOrgId) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
+        // Generate state parameter for security
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const stateData = {
+          state: stateParam,
+          org_id: userOrgId,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('Discord OAuth state data:', stateData)
+        
+        // Discord OAuth URL
+        const authUrl = new URL('https://discord.com/api/oauth2/authorize')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '')
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/discord/callback`)
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('scope', 'identify guilds')
+        authUrl.searchParams.set('state', state)
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to Discord OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'reddit') {
+        const userOrgId = await getUserOrgId(user.id)
+
+        if (!userOrgId) {
+          toast.error('No organization found. Please create an organization first.')
+          return
+        }
+
+        // Generate state parameter for security
+        const stateParam = Math.random().toString(36).substring(2, 15)
+        const stateData = {
+          state: stateParam,
+          org_id: userOrgId,
+          user_id: user.id
+        }
+        const state = btoa(JSON.stringify(stateData))
+        
+        console.log('Reddit OAuth state data:', stateData)
+        
+        // Reddit OAuth URL
+        const authUrl = new URL('https://www.reddit.com/api/v1/authorize')
+        authUrl.searchParams.set('client_id', process.env.NEXT_PUBLIC_REDDIT_CLIENT_ID || '')
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('state', state)
+        authUrl.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/api/auth/reddit/callback`)
+        authUrl.searchParams.set('duration', 'permanent')
+        authUrl.searchParams.set('scope', 'identity submit')
+        
+        toast.success(`Redirecting to ${platform} OAuth...`)
+        
+        // Redirect to Reddit OAuth
+        window.location.href = authUrl.toString()
+      } else if (platform === 'telegram') {
+        // Telegram uses bot tokens, not OAuth
+        // Redirect to Telegram channels management page
+        toast.success('Redirecting to Telegram channels...')
+        router.push('/dashboard/telegram-channels')
+      } else if (platform === 'wordpress') {
+        // WordPress uses manual credentials
+        setShowWordPressModal(true)
       } else {
         // For other platforms, show coming soon message
         toast.success(`${platform} integration coming soon!`)
@@ -379,6 +484,76 @@ export default function SocialConnectionsPage() {
     } catch (error) {
       console.error('OAuth error:', error)
       toast.error(`Failed to connect to ${platform}`)
+    }
+  }
+
+  const handleWordPressConnect = async () => {
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        toast.error('Please sign in to connect WordPress')
+        return
+      }
+
+      const userOrgId = await getUserOrgId(user.id)
+      if (!userOrgId) {
+        toast.error('No organization found. Please create an organization first.')
+        return
+      }
+
+      // Validate credentials
+      if (!wordPressCredentials.siteUrl || !wordPressCredentials.username || !wordPressCredentials.password) {
+        toast.error('Please fill in all WordPress credentials')
+        return
+      }
+
+      // Test WordPress connection via our API to avoid CORS issues
+      const testResponse = await fetch('/api/test-wordpress-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          siteUrl: wordPressCredentials.siteUrl,
+          username: wordPressCredentials.username,
+          password: wordPressCredentials.password
+        })
+      })
+
+      const testResult = await testResponse.json()
+      if (!testResult.success) {
+        toast.error(`WordPress connection failed: ${testResult.error}`)
+        return
+      }
+
+      // Save WordPress connection
+      const { error } = await supabase
+        .from('social_connections')
+        .insert({
+          org_id: userOrgId,
+          platform: 'wordpress',
+          site_url: wordPressCredentials.siteUrl,
+          username: wordPressCredentials.username,
+          password: wordPressCredentials.password,
+          account_id: `wp_${wordPressCredentials.username}`,
+          account_name: wordPressCredentials.username
+        })
+
+      if (error) {
+        console.error('WordPress connection error:', error)
+        toast.error('Failed to save WordPress connection')
+        return
+      }
+
+      toast.success('WordPress connected successfully!')
+      setShowWordPressModal(false)
+      setWordPressCredentials({ siteUrl: '', username: '', password: '' })
+      fetchConnections()
+    } catch (error) {
+      console.error('WordPress connection error:', error)
+      toast.error('Failed to connect WordPress')
     }
   }
 
@@ -404,6 +579,10 @@ export default function SocialConnectionsPage() {
     if (platform === 'instagram') {
       // Instagram is connected if Facebook is connected (since Instagram posts through Facebook Pages)
       return connections.some(conn => conn.platform === 'facebook')
+    }
+    if (platform === 'telegram') {
+      // Telegram is always connected if user has Telegram channels
+      return true // We'll check for channels in the UI
     }
     return connections.some(conn => conn.platform === platform)
   }
@@ -502,6 +681,36 @@ export default function SocialConnectionsPage() {
                   </div>
                 )
               })()}
+
+              {/* Show Telegram as always connected */}
+              <div className="flex items-center justify-between p-6 border border-blue-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-lg">
+                    <SocialIcon platform="telegram" size="lg" className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white text-lg">Telegram</h3>
+                    <div className="text-sm text-gray-300 space-y-1">
+                      <p className="text-blue-400 font-medium">
+                        Bot Channels Management
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Always available for channel management
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    className="border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
+                    onClick={() => router.push('/dashboard/telegram-channels')}
+                  >
+                    Manage Channels
+                  </Button>
+                  <span className="text-blue-400 text-sm font-medium">✓ Active</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -531,22 +740,101 @@ export default function SocialConnectionsPage() {
                 <Button
                   className={`w-full transition-all duration-200 ${
                     isConnected(platform.id) 
-                      ? 'bg-green-600 hover:bg-green-700 text-white' 
-                      : 'bg-yellow-400 hover:bg-yellow-500 text-black font-semibold'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50' 
+                      : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
                   }`}
                   variant={isConnected(platform.id) ? "default" : "default"}
-                  onClick={() => isConnected(platform.id) 
-                    ? handleDisconnect(connections.find(conn => conn.platform === platform.id)?.id || '') 
-                    : handleConnect(platform.id)
-                  }
+                  onClick={() => {
+                    if (platform.id === 'telegram') {
+                      router.push('/dashboard/telegram-channels')
+                    } else if (isConnected(platform.id)) {
+                      handleDisconnect(connections.find(conn => conn.platform === platform.id)?.id || '')
+                    } else {
+                      handleConnect(platform.id)
+                    }
+                  }}
                 >
-                  {isConnected(platform.id) ? '✓ Connected - Click to Disconnect' : 'Connect Account'}
+                  {platform.id === 'telegram' 
+                    ? '✓ Connected - Manage Channels' 
+                    : isConnected(platform.id) 
+                      ? '✓ Connected - Click to Disconnect' 
+                      : 'Connect Account'
+                  }
                 </Button>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* WordPress Connection Modal */}
+      {showWordPressModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="bg-gray-900 border-gray-800 w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-white">Connect WordPress Site</CardTitle>
+              <CardDescription className="text-gray-200">
+                Enter your WordPress site credentials to enable automatic blog posting
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-white text-sm font-medium mb-2 block">Site URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://yoursite.com"
+                    value={wordPressCredentials.siteUrl}
+                    onChange={(e) => setWordPressCredentials(prev => ({ ...prev, siteUrl: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-white text-sm font-medium mb-2 block">Username</label>
+                  <input
+                    type="text"
+                    placeholder="your_username"
+                    value={wordPressCredentials.username}
+                    onChange={(e) => setWordPressCredentials(prev => ({ ...prev, username: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-white text-sm font-medium mb-2 block">Password</label>
+                  <input
+                    type="password"
+                    placeholder="your_password_or_app_password"
+                    value={wordPressCredentials.password}
+                    onChange={(e) => setWordPressCredentials(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3">
+                  <div className="text-blue-200 text-sm">
+                    <strong>💡 Tip:</strong> For better security, use an Application Password instead of your regular password. 
+                    Go to WordPress Admin → Users → Your Profile → Application Passwords.
+                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={handleWordPressConnect}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold"
+                  >
+                    Connect WordPress
+                  </Button>
+                  <Button
+                    onClick={() => setShowWordPressModal(false)}
+                    variant="outline"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Help Section */}
       <Card className="bg-gray-900 border-gray-800">

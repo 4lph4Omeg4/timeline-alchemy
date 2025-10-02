@@ -24,7 +24,7 @@ const generateSocialMediaPosts = async (title: string, content: string) => {
       body: JSON.stringify({
         title,
         content,
-        platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+        platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
       })
     })
 
@@ -42,7 +42,8 @@ const generateSocialMediaPosts = async (title: string, content: string) => {
     instagram: `✨ ${title} ✨\n\n${content.substring(0, 150)}...\n\n#AI #Content #Inspiration`,
     twitter: `${title}\n\n${content.substring(0, 100)}...\n\n#AI #Content`,
     linkedin: `Professional insight: ${title}\n\n${content.substring(0, 180)}...\n\n#Professional #AI #Content`,
-    tiktok: `${title} 🚀\n\n${content.substring(0, 120)}...\n\n#AI #Trending #Content`
+    discord: `${title} 🎮\n\n${content.substring(0, 120)}...\n\n#AI #Community #Tech`,
+    reddit: `${title} 🤖\n\n${content.substring(0, 120)}...\n\n#AI #Discussion #Tech`
   }
 }
 
@@ -62,7 +63,8 @@ interface GeneratedContent {
     instagram: string
     twitter: string
     linkedin: string
-    tiktok: string
+    discord: string
+    reddit: string
   }
 }
 
@@ -78,6 +80,10 @@ export default function ContentPackagePage() {
   const [regeneratingSocial, setRegeneratingSocial] = useState(false)
   const [actualExcerpt, setActualExcerpt] = useState('')
   const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
+  const [scheduleDateTime, setScheduleDateTime] = useState('')
+  const [scheduling, setScheduling] = useState(false)
 
   const handleRegenerateSocialPosts = async () => {
     if (!post) return
@@ -107,6 +113,198 @@ export default function ContentPackagePage() {
     } finally {
       setRegeneratingSocial(false)
     }
+  }
+
+  const handleSchedulePost = async (platform: string | null = null) => {
+    if (!post) return
+    
+    setScheduling(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast.error('Please sign in to schedule posts')
+        return
+      }
+
+      // Get user's organization
+      const { data: orgMembers } = await supabase
+        .from('org_members')
+        .select('org_id, role')
+        .eq('user_id', user.id)
+
+      if (!orgMembers || orgMembers.length === 0) {
+        toast.error('No organization found. Please create an organization first.')
+        return
+      }
+
+      // Find the user's personal organization (owner role only)
+      let userOrgId = orgMembers.find(member => member.role === 'owner')?.org_id
+      if (!userOrgId) {
+        toast.error('No personal organization found. Please create an organization first.')
+        return
+      }
+
+      if (platform === 'all') {
+        // Schedule all platforms
+        const scheduledDate = new Date(scheduleDateTime)
+        const platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
+        let successCount = 0
+        let errorCount = 0
+
+        // Prepare social platform scheduling info first
+        const socialPlatformsScheduled = platforms.filter(platform => socialPosts[platform])
+        const socialSchedulingInfo = {
+          scheduled_social_platforms: socialPlatformsScheduled,
+          scheduled_social_content: socialPlatformsScheduled.reduce((acc, platform) => {
+            let content = socialPosts[platform]
+            if (generatedContent?.image?.url) {
+              content = `${content}\n\n🖼️ Image: ${generatedContent.image.url}`
+            }
+            acc[platform] = content
+            return acc
+          }, {} as Record<string, string>)
+        }
+
+        // Create a new blog post in Timeline-Alchemy's organization
+        const { data: newPost, error: blogError } = await supabase
+          .from('blog_posts')
+          .insert({
+            org_id: userOrgId,
+            title: post.title,
+            content: post.content,
+            state: 'scheduled',
+            scheduled_for: scheduledDate.toISOString(),
+            social_posts: socialSchedulingInfo.scheduled_social_content,
+            created_by_admin: false
+          })
+          .select()
+          .single()
+
+        if (blogError) {
+          console.error('Error creating scheduled post:', blogError)
+          errorCount = platforms.length
+        } else {
+          successCount = socialPlatformsScheduled.length
+        }
+
+        // Update local state to show the new scheduled post
+        setPost(prev => prev ? { 
+          ...prev, 
+          id: newPost.id,
+          org_id: userOrgId,
+          state: 'scheduled', 
+          scheduled_for: scheduledDate.toISOString(),
+          social_posts: socialSchedulingInfo.scheduled_social_content
+        } : null)
+        
+        if (errorCount === 0) {
+          toast.success(`All platforms scheduled successfully! (${successCount + 1} posts including blog)`)
+        } else {
+          toast.success(`Scheduled ${successCount + 1} platforms successfully (including blog), ${errorCount} failed`)
+        }
+      } else if (platform) {
+        // Schedule individual social post
+        const postContent = socialPosts[platform]
+        if (!postContent) {
+          toast.error(`No ${platform} post available`)
+          return
+        }
+
+        // Include image URL in social post content if available
+        let enhancedContent = postContent
+        if (generatedContent?.image?.url) {
+          enhancedContent = `${postContent}\n\n🖼️ Image: ${generatedContent.image.url}`
+        }
+
+        // Update the original post with individual social platform scheduling
+        const scheduledDate = new Date(scheduleDateTime)
+        
+        // Get current social posts and add the new one
+        const currentSocialPosts = post.social_posts || {}
+        const updatedSocialPosts = {
+          ...currentSocialPosts,
+          [platform]: enhancedContent
+        }
+        
+        // Create a new blog post in Timeline-Alchemy's organization for individual platform
+        const { data: newPost, error: updateError } = await supabase
+          .from('blog_posts')
+          .insert({
+            org_id: userOrgId,
+            title: post.title,
+            content: post.content,
+            state: 'scheduled',
+            scheduled_for: scheduledDate.toISOString(),
+            social_posts: updatedSocialPosts,
+            created_by_admin: false
+          })
+          .select()
+          .single()
+
+        if (updateError) {
+          console.error('Error scheduling social post:', updateError)
+          toast.error('Failed to schedule social post')
+          return
+        }
+
+        // Update local state to show the new scheduled post
+        setPost(prev => prev ? { 
+          ...prev, 
+          id: newPost.id,
+          org_id: userOrgId,
+          state: 'scheduled', 
+          scheduled_for: scheduledDate.toISOString(),
+          social_posts: updatedSocialPosts
+        } : null)
+        
+        toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} post scheduled successfully!`)
+      } else {
+        // Schedule the main blog post
+        // Convert local datetime to UTC for database storage
+        const scheduledDate = new Date(scheduleDateTime)
+        const { error: updateError } = await supabase
+          .from('blog_posts')
+          .update({
+            state: 'scheduled',
+            scheduled_for: scheduledDate.toISOString()
+          })
+          .eq('id', post.id)
+
+        if (updateError) {
+          console.error('Error scheduling blog post:', updateError)
+          toast.error('Failed to schedule blog post')
+          return
+        }
+
+        // Update local state
+        setPost(prev => prev ? { ...prev, state: 'scheduled', scheduled_for: scheduledDate.toISOString() } : null)
+        toast.success('Blog post scheduled successfully!')
+      }
+
+      setShowScheduleModal(false)
+      setSelectedPlatform(null)
+      setScheduleDateTime('')
+    } catch (error) {
+      console.error('Error scheduling post:', error)
+      toast.error('An unexpected error occurred')
+    } finally {
+      setScheduling(false)
+    }
+  }
+
+  const openScheduleModal = (platform: string | null = null) => {
+    setSelectedPlatform(platform)
+    setShowScheduleModal(true)
+    // Set default time to 1 hour from now in local timezone
+    const now = new Date()
+    now.setHours(now.getHours() + 1)
+    // Format for datetime-local input (YYYY-MM-DDTHH:MM) in local timezone
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    setScheduleDateTime(`${year}-${month}-${day}T${hours}:${minutes}`)
   }
 
   useEffect(() => {
@@ -400,6 +598,50 @@ export default function ContentPackagePage() {
               {generatedContent.blogPost.content}
             </div>
           </div>
+          
+          {/* Blog Post Scheduling Options */}
+          <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg">
+            <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              📅 Schedule Blog Post
+            </h4>
+            <p className="text-gray-300 text-sm mb-4">
+              Schedule this blog post to be published at a specific date and time
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={() => openScheduleModal(null)}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule Blog Post
+              </Button>
+              <Button
+                onClick={() => openScheduleModal('all')}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold shadow-lg hover:shadow-blue-500/50"
+              >
+                🚀 Schedule All Platforms
+              </Button>
+              {post.state === 'scheduled' && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to publish this post now?')) {
+                      handleSchedulePost(null)
+                    }
+                  }}
+                  className="border-green-500/50 text-green-300 hover:bg-green-600/30"
+                >
+                  ✨ Publish Now ✨
+                </Button>
+              )}
+            </div>
+            {post.state === 'scheduled' && post.scheduled_for && (
+              <div className="mt-3 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+                <p className="text-yellow-300 text-sm">
+                  <strong>Scheduled for:</strong> {new Date(post.scheduled_for).toLocaleString()}
+                </p>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -431,31 +673,30 @@ export default function ContentPackagePage() {
              {(Object.keys(socialPosts).length > 0 || (generatedContent && generatedContent.socialPosts)) && (
                <Card className="bg-gray-900 border-gray-800">
                  <CardHeader>
-                   <div className="flex justify-between items-start">
                      <div>
                        <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
                        <CardDescription className="text-gray-300">
                          Platform-optimized posts ready for publishing
                        </CardDescription>
-                     </div>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={handleRegenerateSocialPosts}
-                       disabled={regeneratingSocial}
-                     >
-                       {regeneratingSocial ? 'Regenerating...' : '🔄 Regenerate Posts'}
-                     </Button>
                    </div>
                  </CardHeader>
                  <CardContent className="space-y-6">
           {/* Facebook */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
                 <span className="text-white text-xs font-bold">f</span>
               </div>
               <h4 className="font-semibold text-white">Facebook</h4>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => openScheduleModal('facebook')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule
+              </Button>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.facebook}</p>
@@ -466,11 +707,20 @@ export default function ContentPackagePage() {
 
           {/* Instagram */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
                 <span className="text-white text-xs font-bold">📷</span>
               </div>
               <h4 className="font-semibold text-white">Instagram</h4>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => openScheduleModal('instagram')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule
+              </Button>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.instagram}</p>
@@ -481,11 +731,20 @@ export default function ContentPackagePage() {
 
           {/* Twitter/X */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
                 <span className="text-white text-xs font-bold">𝕏</span>
               </div>
               <h4 className="font-semibold text-white">Twitter/X</h4>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => openScheduleModal('twitter')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule
+              </Button>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.twitter}</p>
@@ -496,11 +755,20 @@ export default function ContentPackagePage() {
 
           {/* LinkedIn */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-blue-700 rounded flex items-center justify-center">
                 <span className="text-white text-xs font-bold">in</span>
               </div>
               <h4 className="font-semibold text-white">LinkedIn</h4>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => openScheduleModal('linkedin')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule
+              </Button>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.linkedin}</p>
@@ -509,135 +777,54 @@ export default function ContentPackagePage() {
 
           <Separator className="bg-gray-700" />
 
-          {/* TikTok */}
+          {/* Discord */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">🎵</span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">💬</span>
               </div>
-              <h4 className="font-semibold text-white">TikTok</h4>
+                <h4 className="font-semibold text-white">Discord</h4>
+            </div>
+            <Button
+                size="sm"
+                onClick={() => openScheduleModal('discord')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule
+            </Button>
+          </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <p className="text-gray-300 select-all">{socialPosts.discord}</p>
+            </div>
+          </div>
+
+          {/* Reddit */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-orange-600 rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">🤖</span>
+                </div>
+                <h4 className="font-semibold text-white">Reddit</h4>
+              </div>
+            <Button
+                size="sm"
+                onClick={() => openScheduleModal('reddit')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule
+            </Button>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.tiktok}</p>
+              <p className="text-gray-300 select-all">{socialPosts.reddit}</p>
             </div>
           </div>
         </CardContent>
       </Card>
              )}
 
-      {/* Publishing Options */}
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white">🚀 Publishing Options</CardTitle>
-          <CardDescription className="text-gray-300">
-            Publish this content to your social media platforms
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                window.open(`https://twitter.com/compose/tweet?text=${encodeURIComponent(generatedContent.socialPosts.twitter)}`, '_blank')
-              }}
-            >
-              🐦 Publish to Twitter
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(generatedContent.socialPosts.linkedin)}`, '_blank')
-              }}
-            >
-              💼 Publish to LinkedIn
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(generatedContent.socialPosts.facebook)}`, '_blank')
-              }}
-            >
-              📘 Publish to Facebook
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                navigator.clipboard.writeText(generatedContent.socialPosts.instagram)
-                toast.success('Instagram post copied to clipboard!')
-              }}
-            >
-              📷 Copy Instagram Post
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                navigator.clipboard.writeText(generatedContent.socialPosts.tiktok)
-                toast.success('TikTok post copied to clipboard!')
-              }}
-            >
-              🎵 Copy TikTok Post
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const blogUrl = window.location.href
-                const shareText = `${generatedContent.blogPost.title}\n\n${blogUrl}`
-                navigator.clipboard.writeText(shareText)
-                toast.success('Blog link copied to clipboard!')
-              }}
-            >
-              🔗 Copy Blog Link
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Copy to Clipboard Actions */}
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white">📋 Quick Actions</CardTitle>
-          <CardDescription className="text-gray-300">
-            Copy content for easy sharing
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                navigator.clipboard.writeText(generatedContent.blogPost.content)
-                toast.success('Blog content copied to clipboard!')
-              }}
-            >
-              Copy Blog Content
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const allSocialPosts = Object.entries(generatedContent.socialPosts)
-                  .map(([platform, content]) => `${platform.toUpperCase()}:\n${content}`)
-                  .join('\n\n')
-                navigator.clipboard.writeText(allSocialPosts)
-                toast.success('All social posts copied to clipboard!')
-              }}
-            >
-              Copy All Social Posts
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const fullPackage = `BLOG POST:\n${generatedContent.blogPost.content}\n\nSOCIAL MEDIA POSTS:\n${Object.entries(generatedContent.socialPosts)
-                  .map(([platform, content]) => `${platform.toUpperCase()}:\n${content}`)
-                  .join('\n\n')}`
-                navigator.clipboard.writeText(fullPackage)
-                toast.success('Complete package copied to clipboard!')
-              }}
-            >
-              Copy Full Package
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Rating Section */}
       <Card className="bg-gray-900 border-gray-800">
@@ -710,6 +897,80 @@ export default function ContentPackagePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Scheduling Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-purple-500/30 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+              📅 Schedule {selectedPlatform === 'all' ? 'All Platforms' : selectedPlatform ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} Post` : 'Blog Post'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduleDateTime}
+                  onChange={(e) => setScheduleDateTime(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-lg focus:border-purple-400 focus:ring-purple-400/50"
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+              </div>
+              
+              {selectedPlatform && selectedPlatform !== 'all' && (
+                <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
+                  <p className="text-sm text-gray-400 mb-2">Preview:</p>
+                  <p className="text-gray-300 text-sm line-clamp-3">
+                    {socialPosts[selectedPlatform]}
+                  </p>
+                </div>
+              )}
+              
+              {selectedPlatform === 'all' && (
+                <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
+                  <p className="text-sm text-gray-400 mb-2">Will schedule:</p>
+                  <ul className="text-gray-300 text-sm space-y-1">
+                    <li>• Blog Post: "{post?.title}"</li>
+                    <li>• Facebook Post</li>
+                    <li>• Instagram Post</li>
+                    <li>• Twitter/X Post</li>
+                    <li>• LinkedIn Post</li>
+                    <li>• Discord Post</li>
+                    <li>• Reddit Post</li>
+                    {generatedContent?.image?.url && (
+                      <li>• Generated Image (included with all posts)</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowScheduleModal(false)
+                    setSelectedPlatform(null)
+                    setScheduleDateTime('')
+                  }}
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => handleSchedulePost(selectedPlatform)}
+                  disabled={scheduling || !scheduleDateTime}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50 disabled:opacity-50"
+                >
+                  {scheduling ? 'Scheduling...' : 'Schedule Post'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

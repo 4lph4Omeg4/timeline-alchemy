@@ -212,9 +212,10 @@ export default function LeaderboardPage() {
                     <p className="text-gray-400 text-sm">
                       {package_.rating_count || 0} {package_.rating_count === 1 ? 'rating' : 'ratings'}
                     </p>
-                    <p className="text-gray-300 text-sm line-clamp-2">
-                      {package_.content.substring(0, 100)}...
+                    <p className="text-gray-300 text-sm line-clamp-6">
+                      {package_.content.substring(0, 1500)}...
                     </p>
+                    <div className="mt-4"></div>
                     <Link href={`/dashboard/content/package/${package_.id}`}>
                       <Button size="sm" className="w-full">
                         View Package

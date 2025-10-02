@@ -159,39 +159,6 @@ export default function ContentEditPage() {
     }
   }
 
-  const handlePublishPost = async () => {
-    if (!title.trim() || !content.trim()) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    setSaving(true)
-    try {
-      const { error } = await supabase
-        .from('blog_posts')
-        .update({
-          title,
-          content,
-          state: 'published',
-          published_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', params.id)
-
-      if (error) {
-        console.error('Error publishing post:', error)
-        toast.error('Failed to publish post')
-      } else {
-        toast.success('Post published successfully!')
-        router.push('/dashboard/content/list')
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error)
-      toast.error('An unexpected error occurred')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -328,15 +295,13 @@ export default function ContentEditPage() {
               {saving ? 'Saving...' : 'Save as Draft'}
             </Button>
             
-            {post.state === 'draft' && (
-              <Button
-                onClick={handlePublishPost}
-                disabled={saving}
-                className="flex-1"
-              >
-                {saving ? 'Publishing...' : 'Save & Publish'}
-              </Button>
-            )}
+            <Button
+              onClick={() => router.push(`/dashboard/content/package/${params.id}`)}
+              variant="outline"
+              className="flex-1"
+            >
+              View Package
+            </Button>
           </div>
 
           {/* Post Info */}

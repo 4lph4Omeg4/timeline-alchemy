@@ -22,7 +22,7 @@ Title: ${title}
 
 Content: ${content}
 
-Create posts for ALL platforms: Facebook, Instagram, Twitter, LinkedIn, TikTok
+Create posts for ALL platforms: Facebook, Instagram, Twitter, LinkedIn, Discord, Reddit, WordPress
 
 IMPORTANT OUTPUT FORMAT:
 Facebook:
@@ -37,7 +37,13 @@ Twitter:
 LinkedIn:
 [Post content here]
 
-TikTok:
+Discord:
+[Post content here]
+
+Reddit:
+[Post content here]
+
+WordPress:
 [Post content here]
 
 Requirements:
@@ -45,7 +51,9 @@ Requirements:
 - Instagram: Visual, emoji-rich, 2-3 sentences (up to 500 characters), include 5-10 relevant hashtags
 - Twitter: CRITICAL - Must be under 280 characters total, concise and punchy, include 2-3 short hashtags
 - LinkedIn: Professional, business-focused, 2-3 paragraphs (up to 1500 characters), include 3-5 relevant hashtags
-- TikTok: Trendy, engaging, short and punchy, include 3-5 trending hashtags
+- Discord: Community-focused, casual, engaging for gaming/tech communities
+- Reddit: Discussion-provoking, authentic, community-specific language
+- WordPress: Blog-style content, detailed and informative, 2-3 paragraphs with proper structure and formatting
 
 CRITICAL: Each post must be ready to copy-paste and publish immediately. Include relevant hashtags for each platform. Make content engaging and platform-specific.`
         }
@@ -84,10 +92,18 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
         currentPlatform = 'linkedin'
         const content = trimmedLine.substring(10).trim()
         if (content) socialPosts.linkedin = content
-      } else if (trimmedLine.toLowerCase().startsWith('tiktok:')) {
-        currentPlatform = 'tiktok'
+      } else if (trimmedLine.toLowerCase().startsWith('discord:')) {
+        currentPlatform = 'discord'
+        const content = trimmedLine.substring(8).trim()
+        if (content) socialPosts.discord = content
+      } else if (trimmedLine.toLowerCase().startsWith('reddit:')) {
+        currentPlatform = 'reddit'
         const content = trimmedLine.substring(7).trim()
-        if (content) socialPosts.tiktok = content
+        if (content) socialPosts.reddit = content
+      } else if (trimmedLine.toLowerCase().startsWith('wordpress:')) {
+        currentPlatform = 'wordpress'
+        const content = trimmedLine.substring(10).trim()
+        if (content) socialPosts.wordpress = content
       } else if (currentPlatform && trimmedLine && !trimmedLine.includes(':')) {
         // Add content to current platform
         if (!socialPosts[currentPlatform]) {
@@ -99,7 +115,7 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
     }
 
     // Ensure all platforms have content - fill missing ones
-    const requiredPlatforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok']
+    const requiredPlatforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
     
     for (const platform of requiredPlatforms) {
       if (!socialPosts[platform]) {
@@ -118,8 +134,11 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
           case 'linkedin':
             socialPosts.linkedin = `Professional insight: ${title}\n\n${content.substring(0, 1200)}...\n\n#Professional #AI #Content #Business #Innovation #Leadership`
             break
-          case 'tiktok':
-            socialPosts.tiktok = `${title} 🚀\n\n${content.substring(0, 120)}...\n\n#AI #Trending #Content #Viral`
+          case 'discord':
+            socialPosts.discord = `${title} 🎮\n\n${content.substring(0, 120)}...\n\n#AI #Community #Tech`
+            break
+          case 'reddit':
+            socialPosts.reddit = `${title} 🤖\n\n${content.substring(0, 120)}...\n\n#AI #Discussion #Tech`
             break
         }
       }

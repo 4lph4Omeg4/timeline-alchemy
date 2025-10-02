@@ -115,7 +115,8 @@ interface GeneratedContent {
     instagram: string
     twitter: string
     linkedin: string
-    tiktok: string
+    discord: string
+    reddit: string
   }
 }
 
@@ -241,7 +242,7 @@ IMPORTANT OUTPUT FORMAT:
 }
 
 export async function generateComprehensiveContent(request: ComprehensiveContentRequest): Promise<GeneratedContent> {
-  const { prompt, tone = 'professional', length = 'medium', platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok'] } = request
+  const { prompt, tone = 'professional', length = 'medium', platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'wordpress'] } = request
 
   try {
     const openai = getOpenAI()
@@ -308,7 +309,9 @@ async function generateSocialPosts(prompt: string, tone: string, platforms: stri
             - Instagram: Visual, hashtag-friendly, 1-2 sentences with emojis
             - Twitter: Concise, engaging, under 280 characters
             - LinkedIn: Professional, thought-provoking, 1-2 sentences
-            - TikTok: Trendy, engaging, short and punchy`
+            - Discord: Community-focused, casual, engaging for gaming/tech communities
+            - Reddit: Discussion-provoking, authentic, community-specific language
+            - WordPress: Blog-style content, detailed and informative, 2-3 paragraphs with proper structure`
           },
           {
             role: 'user',
