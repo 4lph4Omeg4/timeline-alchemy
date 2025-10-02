@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const { data: connections, error: connectionsError } = await supabase
       .from('social_connections')
       .select('*')
-      .eq('org_id', post.org_id)
+      .eq('org_id', (post as any).org_id)
 
     if (connectionsError) {
       return NextResponse.json({ 
