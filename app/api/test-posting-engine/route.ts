@@ -28,13 +28,13 @@ export async function GET(request: NextRequest) {
     }
 
     const testPost = posts[0]
-    console.log(`📝 Testing with post: ${testPost.title}`)
+    console.log(`📝 Testing with post: ${(testPost as any).title}`)
 
     // Get social connections for the organization
     const { data: connections, error: connectionsError } = await supabase
       .from('social_connections')
       .select('*')
-      .eq('org_id', testPost.org_id)
+      .eq('org_id', (testPost as any).org_id)
 
     if (connectionsError) {
       return NextResponse.json({ 
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
 
     // Determine available platforms
     const availablePlatforms = []
-    if (testPost.social_posts) {
-      const socialPosts = testPost.social_posts
+    if ((testPost as any).social_posts) {
+      const socialPosts = (testPost as any).social_posts
       if (socialPosts.twitter || socialPosts.Twitter) availablePlatforms.push('twitter')
       if (socialPosts.linkedin || socialPosts.LinkedIn) availablePlatforms.push('linkedin')
       if (socialPosts.facebook || socialPosts.Facebook) availablePlatforms.push('facebook')
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     const missingConnections = []
 
     for (const platform of availablePlatforms) {
-      const connection = connections?.find(conn => conn.platform === platform)
+      const connection = connections?.find((conn: any) => conn.platform === platform)
       if (connection) {
         connectedPlatforms.push(platform)
       } else {
@@ -81,12 +81,12 @@ export async function GET(request: NextRequest) {
       success: true,
       message: 'Posting engine test completed',
       testPost: {
-        id: testPost.id,
-        title: testPost.title,
-        org_id: testPost.org_id,
-        organization: testPost.organizations?.name
+        id: (testPost as any).id,
+        title: (testPost as any).title,
+        org_id: (testPost as any).org_id,
+        organization: (testPost as any).organizations?.name
       },
-      socialConnections: connections?.map(conn => ({
+      socialConnections: connections?.map((conn: any) => ({
         platform: conn.platform,
         account_name: conn.account_name,
         has_access_token: !!conn.access_token
