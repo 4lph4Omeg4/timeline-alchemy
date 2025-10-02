@@ -560,8 +560,8 @@ export class RedditOAuth {
 export class TelegramOAuth {
   private botToken: string
 
-  constructor() {
-    this.botToken = process.env.TELEGRAM_BOT_TOKEN!
+  constructor(botToken?: string) {
+    this.botToken = botToken || process.env.TELEGRAM_BOT_TOKEN!
   }
 
   // Get bot information
