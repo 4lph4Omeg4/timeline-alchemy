@@ -458,11 +458,9 @@ export default function SocialConnectionsPage() {
         window.location.href = authUrl.toString()
       } else if (platform === 'telegram') {
         // Telegram uses bot tokens, not OAuth
-        // For now, show instructions for bot setup
-        toast.success('Telegram bot setup instructions coming soon!')
-        
-        // TODO: Implement Telegram bot token input
-        // This would open a modal to input bot token
+        // Redirect to Telegram channels management page
+        toast.success('Redirecting to Telegram channels...')
+        router.push('/dashboard/telegram-channels')
       } else {
         // For other platforms, show coming soon message
         toast.success(`${platform} integration coming soon!`)
@@ -495,6 +493,10 @@ export default function SocialConnectionsPage() {
     if (platform === 'instagram') {
       // Instagram is connected if Facebook is connected (since Instagram posts through Facebook Pages)
       return connections.some(conn => conn.platform === 'facebook')
+    }
+    if (platform === 'telegram') {
+      // Telegram is always connected if user has Telegram channels
+      return true // We'll check for channels in the UI
     }
     return connections.some(conn => conn.platform === platform)
   }
@@ -593,6 +595,36 @@ export default function SocialConnectionsPage() {
                   </div>
                 )
               })()}
+
+              {/* Show Telegram as always connected */}
+              <div className="flex items-center justify-between p-6 border border-blue-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-lg">
+                    <SocialIcon platform="telegram" size="lg" className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white text-lg">Telegram</h3>
+                    <div className="text-sm text-gray-300 space-y-1">
+                      <p className="text-blue-400 font-medium">
+                        Bot Channels Management
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Always available for channel management
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    className="border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
+                    onClick={() => router.push('/dashboard/telegram-channels')}
+                  >
+                    Manage Channels
+                  </Button>
+                  <span className="text-blue-400 text-sm font-medium">✓ Active</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -626,12 +658,22 @@ export default function SocialConnectionsPage() {
                       : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
                   }`}
                   variant={isConnected(platform.id) ? "default" : "default"}
-                  onClick={() => isConnected(platform.id) 
-                    ? handleDisconnect(connections.find(conn => conn.platform === platform.id)?.id || '') 
-                    : handleConnect(platform.id)
-                  }
+                  onClick={() => {
+                    if (platform.id === 'telegram') {
+                      router.push('/dashboard/telegram-channels')
+                    } else if (isConnected(platform.id)) {
+                      handleDisconnect(connections.find(conn => conn.platform === platform.id)?.id || '')
+                    } else {
+                      handleConnect(platform.id)
+                    }
+                  }}
                 >
-                  {isConnected(platform.id) ? '✓ Connected - Click to Disconnect' : 'Connect Account'}
+                  {platform.id === 'telegram' 
+                    ? '✓ Connected - Manage Channels' 
+                    : isConnected(platform.id) 
+                      ? '✓ Connected - Click to Disconnect' 
+                      : 'Connect Account'
+                  }
                 </Button>
               </div>
             ))}
