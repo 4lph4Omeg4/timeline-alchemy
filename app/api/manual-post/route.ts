@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     console.log(`🚀 Manual post trigger for post: ${postId}`)
     console.log(`📱 Platforms: ${platforms ? platforms.join(', ') : 'all available'}`)
 
-    const supabase = createClient()
+    const supabase = supabaseAdmin
     
     // Get the post data
     const { data: post, error: postError } = await supabase
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const supabase = createClient()
+    const supabase = supabaseAdmin
     
     // Get the post data
     const { data: post, error: postError } = await supabase

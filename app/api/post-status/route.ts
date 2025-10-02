@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = supabaseAdmin
     
     // Get URL parameters
     const { searchParams } = new URL(request.url)
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const supabase = createClient()
+    const supabase = supabaseAdmin
     
     const updateData: any = {
       post_status: status

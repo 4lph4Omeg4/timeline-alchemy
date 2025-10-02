@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('🧪 Testing Posting Engine...')
     
-    const supabase = createClient()
+    const supabase = supabaseAdmin
     
     // Get a test post
     const { data: posts, error: postsError } = await supabase

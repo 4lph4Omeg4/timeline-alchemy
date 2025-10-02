@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import { TwitterOAuth, LinkedInOAuth, FacebookOAuth, InstagramOAuth, YouTubeOAuth, DiscordOAuth, RedditOAuth, TelegramOAuth } from '@/lib/social-auth'
 
 export async function POST(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const supabase = createClient()
+    const supabase = supabaseAdmin
     
     // Get the post data
     const { data: post, error: postError } = await supabase
@@ -368,7 +368,7 @@ async function postToTelegram(post: any, connection: any) {
   }
 
   // Get Telegram channels for this organization
-  const supabase = createClient()
+  const supabase = supabaseAdmin
   const { data: channels } = await supabase
     .from('telegram_channels')
     .select('*')

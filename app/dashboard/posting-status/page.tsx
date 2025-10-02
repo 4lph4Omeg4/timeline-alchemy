@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +38,7 @@ export default function PostingStatusDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [posting, setPosting] = useState<string | null>(null)
 
-  const supabase = createClient()
+  const supabaseClient = supabase
 
   useEffect(() => {
     fetchPosts()
@@ -49,14 +49,14 @@ export default function PostingStatusDashboard() {
       setLoading(true)
       setError(null)
 
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await supabaseClient.auth.getUser()
       if (!user) {
         setError('Not authenticated')
         return
       }
 
       // Get user's organization
-      const { data: userOrg } = await supabase
+      const { data: userOrg } = await supabaseClient
         .from('organizations')
         .select('id')
         .eq('user_id', user.id)
