@@ -37,15 +37,15 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    console.log(`📝 Post found: ${post.title}`)
+    console.log(`📝 Post found: ${(post as any).title}`)
 
     // Determine platforms to post to
     let targetPlatforms = platforms || []
     
     if (targetPlatforms.length === 0) {
       // Auto-detect platforms from social_posts
-      if (post.social_posts) {
-        const socialPosts = post.social_posts
+      if ((post as any).social_posts) {
+        const socialPosts = (post as any).social_posts
         
         if (socialPosts.twitter || socialPosts.Twitter) targetPlatforms.push('twitter')
         if (socialPosts.linkedin || socialPosts.LinkedIn) targetPlatforms.push('linkedin')
@@ -86,15 +86,15 @@ export async function POST(request: NextRequest) {
 
     const postingResult = await postingResponse.json()
     
-    console.log(`✅ Manual posting complete for: ${post.title}`)
+    console.log(`✅ Manual posting complete for: ${(post as any).title}`)
     console.log(`📊 Results: ${postingResult.results?.length || 0} successful, ${postingResult.errors?.length || 0} failed`)
 
     return NextResponse.json({
       success: true,
-      message: `Manual posting completed for: ${post.title}`,
+      message: `Manual posting completed for: ${(post as any).title}`,
       post: {
-        id: post.id,
-        title: post.title,
+        id: (post as any).id,
+        title: (post as any).title,
         platforms: targetPlatforms
       },
       results: postingResult.results,
@@ -153,8 +153,8 @@ export async function GET(request: NextRequest) {
     // Get available platforms for this post
     const availablePlatforms = []
     
-    if (post.social_posts) {
-      const socialPosts = post.social_posts
+    if ((post as any).social_posts) {
+      const socialPosts = (post as any).social_posts
       
       if (socialPosts.twitter || socialPosts.Twitter) availablePlatforms.push('twitter')
       if (socialPosts.linkedin || socialPosts.LinkedIn) availablePlatforms.push('linkedin')
@@ -169,14 +169,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       post: {
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        social_posts: post.social_posts,
-        scheduled_for: post.scheduled_for,
-        posted_at: post.posted_at,
-        post_status: post.post_status,
-        error_message: post.error_message
+        id: (post as any).id,
+        title: (post as any).title,
+        content: (post as any).content,
+        social_posts: (post as any).social_posts,
+        scheduled_for: (post as any).scheduled_for,
+        published_at: (post as any).published_at,
+        state: (post as any).state
       },
       availablePlatforms,
       canPost: availablePlatforms.length > 0
