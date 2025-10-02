@@ -112,6 +112,7 @@ export default function TelegramChannelsPage() {
       const { data, error } = await supabase
         .from('telegram_channels')
         .insert({
+          id: crypto.randomUUID(), // Generate UUID explicitly
           org_id: userOrgId,
           channel_id: newChannel.channel_id,
           channel_name: newChannel.channel_name,
