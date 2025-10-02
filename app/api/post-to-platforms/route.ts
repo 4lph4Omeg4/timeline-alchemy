@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
               username: (connection as any).username,
               password: (connection as any).password
             }
-            result = await postToWordPress(post.content, post.title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
+            result = await postToWordPress((post as any).content, (post as any).title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
             break
           default:
             errors.push({
