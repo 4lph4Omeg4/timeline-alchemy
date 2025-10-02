@@ -86,11 +86,24 @@ const socialPlatforms = [
     color: 'bg-blue-500',
     brandColor: '#0088CC',
   },
+  {
+    id: 'wordpress',
+    name: 'WordPress',
+    description: 'Connect your WordPress site to publish blog posts',
+    color: 'bg-gray-800',
+    brandColor: '#21759B',
+  },
 ]
 
 export default function SocialConnectionsPage() {
   const [connections, setConnections] = useState<SocialConnection[]>([])
   const [loading, setLoading] = useState(true)
+  const [showWordPressModal, setShowWordPressModal] = useState(false)
+  const [wordPressCredentials, setWordPressCredentials] = useState({
+    siteUrl: '',
+    username: '',
+    password: ''
+  })
   const router = useRouter()
 
   // Helper function to get user's personal organization ID
@@ -461,6 +474,9 @@ export default function SocialConnectionsPage() {
         // Redirect to Telegram channels management page
         toast.success('Redirecting to Telegram channels...')
         router.push('/dashboard/telegram-channels')
+      } else if (platform === 'wordpress') {
+        // WordPress uses manual credentials
+        setShowWordPressModal(true)
       } else {
         // For other platforms, show coming soon message
         toast.success(`${platform} integration coming soon!`)
@@ -468,6 +484,76 @@ export default function SocialConnectionsPage() {
     } catch (error) {
       console.error('OAuth error:', error)
       toast.error(`Failed to connect to ${platform}`)
+    }
+  }
+
+  const handleWordPressConnect = async () => {
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        toast.error('Please sign in to connect WordPress')
+        return
+      }
+
+      const userOrgId = await getUserOrgId(user.id)
+      if (!userOrgId) {
+        toast.error('No organization found. Please create an organization first.')
+        return
+      }
+
+      // Validate credentials
+      if (!wordPressCredentials.siteUrl || !wordPressCredentials.username || !wordPressCredentials.password) {
+        toast.error('Please fill in all WordPress credentials')
+        return
+      }
+
+      // Test WordPress connection via our API to avoid CORS issues
+      const testResponse = await fetch('/api/test-wordpress-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          siteUrl: wordPressCredentials.siteUrl,
+          username: wordPressCredentials.username,
+          password: wordPressCredentials.password
+        })
+      })
+
+      const testResult = await testResponse.json()
+      if (!testResult.success) {
+        toast.error(`WordPress connection failed: ${testResult.error}`)
+        return
+      }
+
+      // Save WordPress connection
+      const { error } = await supabase
+        .from('social_connections')
+        .insert({
+          org_id: userOrgId,
+          platform: 'wordpress',
+          site_url: wordPressCredentials.siteUrl,
+          username: wordPressCredentials.username,
+          password: wordPressCredentials.password,
+          account_id: `wp_${wordPressCredentials.username}`,
+          account_name: wordPressCredentials.username
+        })
+
+      if (error) {
+        console.error('WordPress connection error:', error)
+        toast.error('Failed to save WordPress connection')
+        return
+      }
+
+      toast.success('WordPress connected successfully!')
+      setShowWordPressModal(false)
+      setWordPressCredentials({ siteUrl: '', username: '', password: '' })
+      fetchConnections()
+    } catch (error) {
+      console.error('WordPress connection error:', error)
+      toast.error('Failed to connect WordPress')
     }
   }
 
@@ -680,6 +766,75 @@ export default function SocialConnectionsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* WordPress Connection Modal */}
+      {showWordPressModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="bg-gray-900 border-gray-800 w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-white">Connect WordPress Site</CardTitle>
+              <CardDescription className="text-gray-200">
+                Enter your WordPress site credentials to enable automatic blog posting
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-white text-sm font-medium mb-2 block">Site URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://yoursite.com"
+                    value={wordPressCredentials.siteUrl}
+                    onChange={(e) => setWordPressCredentials(prev => ({ ...prev, siteUrl: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-white text-sm font-medium mb-2 block">Username</label>
+                  <input
+                    type="text"
+                    placeholder="your_username"
+                    value={wordPressCredentials.username}
+                    onChange={(e) => setWordPressCredentials(prev => ({ ...prev, username: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-white text-sm font-medium mb-2 block">Password</label>
+                  <input
+                    type="password"
+                    placeholder="your_password_or_app_password"
+                    value={wordPressCredentials.password}
+                    onChange={(e) => setWordPressCredentials(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3">
+                  <div className="text-blue-200 text-sm">
+                    <strong>💡 Tip:</strong> For better security, use an Application Password instead of your regular password. 
+                    Go to WordPress Admin → Users → Your Profile → Application Passwords.
+                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={handleWordPressConnect}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold"
+                  >
+                    Connect WordPress
+                  </Button>
+                  <Button
+                    onClick={() => setShowWordPressModal(false)}
+                    variant="outline"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Help Section */}
       <Card className="bg-gray-900 border-gray-800">

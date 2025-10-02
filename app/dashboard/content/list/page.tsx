@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StarRating } from '@/components/ui/star-rating'
 import { BlogPost } from '@/types/index'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatDateTime } from '@/lib/utils'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -276,6 +276,11 @@ export default function ContentListPage() {
                         Admin Package
                       </Badge>
                     )}
+                    {post.state === 'scheduled' && !post.created_by_admin && (
+                      <Badge className="bg-orange-600 text-white text-xs">
+                        📅 Scheduled Task
+                      </Badge>
+                    )}
                   </div>
                   {post.published_at && (
                     <span className="block">
@@ -284,7 +289,7 @@ export default function ContentListPage() {
                   )}
                   {post.scheduled_for && (
                     <span className="block text-blue-400">
-                      Scheduled for {formatDate(post.scheduled_for)}
+                      Scheduled for {formatDateTime(post.scheduled_for)}
                     </span>
                   )}
                   {/* Rating Display */}
@@ -302,9 +307,29 @@ export default function ContentListPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-gray-300 text-sm line-clamp-3">
-                    {post.content.substring(0, 150)}...
-                  </p>
+                  {/* Warning for scheduled tasks */}
+                  {post.state === 'scheduled' && !post.created_by_admin && (
+                    <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-orange-400 text-lg">⚠️</span>
+                        <div className="text-orange-200 text-sm">
+                          <strong>Scheduled Task:</strong> This is a scheduled post created from an admin package. 
+                          <br />
+                          <span className="text-orange-300">
+                            Scheduled for: <strong>{formatDateTime(post.scheduled_for)}</strong>
+                          </span>
+                          <br />
+                          <span className="text-orange-300">Do not delete - it will be automatically posted!</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {(post.state !== 'scheduled' || post.created_by_admin) && (
+                    <p className="text-gray-300 text-sm line-clamp-6">
+                      {post.content.substring(0, 900)}...
+                    </p>
+                  )}
                   
                   <div className="flex flex-wrap gap-2">
                     {post.state === 'draft' && (
@@ -380,13 +405,25 @@ export default function ContentListPage() {
                       </>
                     )}
                     
-                    {!post.created_by_admin && (
+                    {!post.created_by_admin && post.state !== 'scheduled' && (
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => handleDeletePost(post.id)}
                       >
                         Delete
+                      </Button>
+                    )}
+                    
+                    {!post.created_by_admin && post.state === 'scheduled' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled
+                        className="text-gray-500 border-gray-600"
+                        title="Cannot delete scheduled tasks - they will be automatically posted"
+                      >
+                        🔒 Protected
                       </Button>
                     )}
                   </div>

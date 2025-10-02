@@ -2,6 +2,62 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { TwitterOAuth, LinkedInOAuth, InstagramOAuth, YouTubeOAuth, DiscordOAuth, RedditOAuth, TelegramOAuth } from '@/lib/social-auth'
 
+// WordPress posting function
+async function postToWordPress(content: string, title: string, siteUrl: string, username: string, password: string) {
+  try {
+    // Clean up the site URL (remove trailing slash)
+    const cleanSiteUrl = siteUrl.replace(/\/$/, '')
+    
+    // Check if it's a WordPress.com site
+    const isWordPressCom = cleanSiteUrl.includes('.wordpress.com')
+    
+    let apiUrl: string
+    if (isWordPressCom) {
+      // WordPress.com might have different posting endpoints
+      apiUrl = `${cleanSiteUrl}/wp-json/wp/v2/posts`
+    } else {
+      // Self-hosted WordPress
+      apiUrl = `${cleanSiteUrl}/wp-json/wp/v2/posts`
+    }
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64')
+      },
+      body: JSON.stringify({
+        title: title,
+        content: content,
+        status: 'publish',
+        format: 'standard'
+      })
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      if (isWordPressCom) {
+        throw new Error(`WordPress.com API error: ${errorData.message || response.statusText}. Note: WordPress.com has limited REST API access.`)
+      } else {
+        throw new Error(`WordPress API error: ${errorData.message || response.statusText}`)
+      }
+    }
+
+    const result = await response.json()
+    return {
+      success: true,
+      postId: result.id,
+      url: result.link,
+      message: `Posted to WordPress: ${result.link}`
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown WordPress error'
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { postId, platforms } = await request.json()
@@ -88,6 +144,15 @@ export async function POST(request: NextRequest) {
             break
           case 'telegram':
             result = await postToTelegram(post, connection)
+            break
+          case 'wordpress':
+            // WordPress requires special handling - get credentials from connection
+            const wpCredentials = {
+              siteUrl: connection.site_url,
+              username: connection.username,
+              password: connection.password
+            }
+            result = await postToWordPress(post.content, post.title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
             break
           default:
             errors.push({

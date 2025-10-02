@@ -29,12 +29,13 @@ export default function TelegramChannelsPage() {
   })
   const router = useRouter()
 
-  // Helper function to get user's organization ID
+  // Helper function to get user's organization ID (owner role only)
   const getUserOrgId = async (userId: string) => {
     const { data: orgMembers } = await supabase
       .from('org_members')
       .select('org_id, role')
       .eq('user_id', userId)
+      .eq('role', 'owner')
       .single()
 
     return orgMembers?.org_id

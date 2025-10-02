@@ -54,7 +54,7 @@ export default function ContentEditorPage() {
           body: JSON.stringify({
             title: prompt,
             content: prompt,
-            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
+            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'wordpress']
           }),
         }),
         

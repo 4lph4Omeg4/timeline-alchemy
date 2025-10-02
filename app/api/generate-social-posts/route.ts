@@ -22,7 +22,7 @@ Title: ${title}
 
 Content: ${content}
 
-Create posts for ALL platforms: Facebook, Instagram, Twitter, LinkedIn, Discord, Reddit
+Create posts for ALL platforms: Facebook, Instagram, Twitter, LinkedIn, Discord, Reddit, WordPress
 
 IMPORTANT OUTPUT FORMAT:
 Facebook:
@@ -37,7 +37,13 @@ Twitter:
 LinkedIn:
 [Post content here]
 
-TikTok:
+Discord:
+[Post content here]
+
+Reddit:
+[Post content here]
+
+WordPress:
 [Post content here]
 
 Requirements:
@@ -47,6 +53,7 @@ Requirements:
 - LinkedIn: Professional, business-focused, 2-3 paragraphs (up to 1500 characters), include 3-5 relevant hashtags
 - Discord: Community-focused, casual, engaging for gaming/tech communities
 - Reddit: Discussion-provoking, authentic, community-specific language
+- WordPress: Blog-style content, detailed and informative, 2-3 paragraphs with proper structure and formatting
 
 CRITICAL: Each post must be ready to copy-paste and publish immediately. Include relevant hashtags for each platform. Make content engaging and platform-specific.`
         }
@@ -93,6 +100,10 @@ CRITICAL: Each post must be ready to copy-paste and publish immediately. Include
         currentPlatform = 'reddit'
         const content = trimmedLine.substring(7).trim()
         if (content) socialPosts.reddit = content
+      } else if (trimmedLine.toLowerCase().startsWith('wordpress:')) {
+        currentPlatform = 'wordpress'
+        const content = trimmedLine.substring(10).trim()
+        if (content) socialPosts.wordpress = content
       } else if (currentPlatform && trimmedLine && !trimmedLine.includes(':')) {
         // Add content to current platform
         if (!socialPosts[currentPlatform]) {

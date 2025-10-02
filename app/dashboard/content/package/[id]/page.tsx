@@ -137,10 +137,11 @@ export default function ContentPackagePage() {
         return
       }
 
-      // Find the user's personal organization (not Admin Organization)
-      let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+      // Find the user's personal organization (owner role only)
+      let userOrgId = orgMembers.find(member => member.role === 'owner')?.org_id
       if (!userOrgId) {
-        userOrgId = orgMembers[0].org_id
+        toast.error('No personal organization found. Please create an organization first.')
+        return
       }
 
       if (platform === 'all') {
@@ -150,22 +151,7 @@ export default function ContentPackagePage() {
         let successCount = 0
         let errorCount = 0
 
-        // First schedule the main blog post
-        const { error: blogError } = await supabase
-          .from('blog_posts')
-          .update({
-            state: 'scheduled',
-            scheduled_for: scheduledDate.toISOString()
-          })
-          .eq('id', post.id)
-
-        if (blogError) {
-          console.error('Error scheduling blog post:', blogError)
-          toast.error('Failed to schedule blog post')
-          return
-        }
-
-        // Update the original post with social platform scheduling info
+        // Prepare social platform scheduling info first
         const socialPlatformsScheduled = platforms.filter(platform => socialPosts[platform])
         const socialSchedulingInfo = {
           scheduled_social_platforms: socialPlatformsScheduled,
@@ -179,22 +165,37 @@ export default function ContentPackagePage() {
           }, {} as Record<string, string>)
         }
 
-        const { error: updateError } = await supabase
+        // Create a new blog post in Timeline-Alchemy's organization
+        const { data: newPost, error: blogError } = await supabase
           .from('blog_posts')
-          .update({
-            social_posts: socialSchedulingInfo.scheduled_social_content
+          .insert({
+            org_id: userOrgId,
+            title: post.title,
+            content: post.content,
+            state: 'scheduled',
+            scheduled_for: scheduledDate.toISOString(),
+            social_posts: socialSchedulingInfo.scheduled_social_content,
+            created_by_admin: false
           })
-          .eq('id', post.id)
+          .select()
+          .single()
 
-        if (updateError) {
-          console.error('Error updating post with social platform info:', updateError)
+        if (blogError) {
+          console.error('Error creating scheduled post:', blogError)
           errorCount = platforms.length
         } else {
           successCount = socialPlatformsScheduled.length
         }
 
-        // Update local state for the main blog post
-        setPost(prev => prev ? { ...prev, state: 'scheduled', scheduled_for: scheduledDate.toISOString() } : null)
+        // Update local state to show the new scheduled post
+        setPost(prev => prev ? { 
+          ...prev, 
+          id: newPost.id,
+          org_id: userOrgId,
+          state: 'scheduled', 
+          scheduled_for: scheduledDate.toISOString(),
+          social_posts: socialSchedulingInfo.scheduled_social_content
+        } : null)
         
         if (errorCount === 0) {
           toast.success(`All platforms scheduled successfully! (${successCount + 1} posts including blog)`)
@@ -225,14 +226,20 @@ export default function ContentPackagePage() {
           [platform]: enhancedContent
         }
         
-        const { error: updateError } = await supabase
+        // Create a new blog post in Timeline-Alchemy's organization for individual platform
+        const { data: newPost, error: updateError } = await supabase
           .from('blog_posts')
-          .update({
-            social_posts: updatedSocialPosts,
+          .insert({
+            org_id: userOrgId,
+            title: post.title,
+            content: post.content,
             state: 'scheduled',
-            scheduled_for: scheduledDate.toISOString()
+            scheduled_for: scheduledDate.toISOString(),
+            social_posts: updatedSocialPosts,
+            created_by_admin: false
           })
-          .eq('id', post.id)
+          .select()
+          .single()
 
         if (updateError) {
           console.error('Error scheduling social post:', updateError)
@@ -240,9 +247,11 @@ export default function ContentPackagePage() {
           return
         }
 
-        // Update local state
+        // Update local state to show the new scheduled post
         setPost(prev => prev ? { 
           ...prev, 
+          id: newPost.id,
+          org_id: userOrgId,
           state: 'scheduled', 
           scheduled_for: scheduledDate.toISOString(),
           social_posts: updatedSocialPosts

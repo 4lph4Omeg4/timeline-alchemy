@@ -54,11 +54,12 @@ export default function PostingStatusDashboard() {
         return
       }
 
-      // Get user's organization
+      // Get user's organization (owner role only)
       const { data: userOrg } = await supabaseClient
-        .from('organizations')
-        .select('id')
+        .from('org_members')
+        .select('org_id')
         .eq('user_id', user.id)
+        .eq('role', 'owner')
         .single()
 
       if (!userOrg) {
@@ -67,7 +68,7 @@ export default function PostingStatusDashboard() {
       }
 
       // Fetch posts
-      const response = await fetch(`/api/post-status?orgId=${userOrg.id}`)
+      const response = await fetch(`/api/post-status?orgId=${userOrg.org_id}`)
       const result = await response.json()
 
       if (!result.success) {
