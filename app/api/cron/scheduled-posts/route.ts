@@ -1,34 +1,16 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
+export async function GET(request: NextRequest) {
   try {
     console.log('🕐 Starting scheduled post check...')
     
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    )
+    const supabase = createClient()
     
     // Get all posts that are scheduled for now or earlier
     const now = new Date().toISOString()
     
-    const { data: scheduledPosts, error: postsError } = await supabaseClient
+    const { data: scheduledPosts, error: postsError } = await supabase
       .from('blog_posts')
       .select(`
         *,
@@ -44,31 +26,19 @@ serve(async (req) => {
 
     if (postsError) {
       console.error('❌ Error fetching scheduled posts:', postsError)
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Failed to fetch scheduled posts' 
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to fetch scheduled posts' 
+      })
     }
 
     if (!scheduledPosts || scheduledPosts.length === 0) {
       console.log('✅ No posts scheduled for posting right now')
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'No posts scheduled for posting',
-          count: 0
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No posts scheduled for posting',
+        count: 0
+      })
     }
 
     console.log(`📝 Found ${scheduledPosts.length} posts ready for posting`)
@@ -111,7 +81,7 @@ serve(async (req) => {
         console.log(`📱 Posting to platforms: ${platforms.join(', ')}`)
 
         // Call the posting engine
-        const postingResponse = await fetch(`${Deno.env.get('NEXT_PUBLIC_SITE_URL')}/api/post-to-platforms`, {
+        const postingResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/post-to-platforms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -151,7 +121,7 @@ serve(async (req) => {
         })
 
         // Update post status to failed
-        await supabaseClient
+        await supabase
           .from('blog_posts')
           .update({
             post_status: 'failed',
@@ -165,36 +135,29 @@ serve(async (req) => {
     console.log(`✅ Successful: ${results.length}`)
     console.log(`❌ Failed: ${errors.length}`)
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Processed ${scheduledPosts.length} scheduled posts`,
-        results,
-        errors,
-        summary: {
-          total: scheduledPosts.length,
-          successful: results.length,
-          failed: errors.length
-        }
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    return NextResponse.json({
+      success: true,
+      message: `Processed ${scheduledPosts.length} scheduled posts`,
+      results,
+      errors,
+      summary: {
+        total: scheduledPosts.length,
+        successful: results.length,
+        failed: errors.length
       }
-    )
+    })
 
   } catch (error) {
     console.error('💥 Cron job error:', error)
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'Cron job failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Cron job failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    })
   }
-})
+}
+
+// This endpoint can be called manually for testing
+export async function POST(request: NextRequest) {
+  return GET(request)
+}

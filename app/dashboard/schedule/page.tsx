@@ -306,6 +306,37 @@ export default function SchedulerPage() {
     }
   }
 
+  const handleManualPost = async (postId: string) => {
+    try {
+      toast.loading('Posting to platforms...', { id: 'manual-post' })
+      
+      const response = await fetch('/api/manual-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          postId: postId
+        })
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        toast.error(result.error || 'Failed to post', { id: 'manual-post' })
+        return
+      }
+
+      toast.success(`Posted to ${result.summary.successful} platforms successfully!`, { id: 'manual-post' })
+      
+      // Refresh posts
+      fetchPosts()
+      
+    } catch (error) {
+      toast.error('An error occurred while posting', { id: 'manual-post' })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -448,6 +479,13 @@ export default function SchedulerPage() {
                               onClick={() => handlePublishNow(post.id)}
                             >
                               ✨ Publish Now ✨
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold shadow-lg hover:shadow-green-500/50 transition-all duration-300"
+                              onClick={() => handleManualPost(post.id)}
+                            >
+                              🚀 Post to Platforms 🚀
                             </Button>
                           </>
                         )}
