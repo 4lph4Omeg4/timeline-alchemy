@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Process each platform
     for (const platform of platforms) {
       try {
-        const connection = connections.find(conn => conn.platform === platform)
+        const connection = connections?.find((conn: any) => conn.platform === platform)
         
         if (!connection) {
           errors.push({
