@@ -209,9 +209,16 @@ async function postToTwitter(post: any, connection: any) {
   const twitter = new TwitterOAuth()
   
   // Get social posts for Twitter
-  const socialPosts = post.social_posts?.twitter || post.social_posts?.Twitter
+  let socialPosts = post.social_posts?.twitter || post.social_posts?.Twitter
   if (!socialPosts) {
     throw new Error('No Twitter content found')
+  }
+
+  // Remove image URL from Twitter posts to make them text-only
+  const cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
+
+  const tweetData: any = {
+    text: cleanText
   }
 
   const response = await fetch('https://api.twitter.com/2/tweets', {
@@ -220,9 +227,7 @@ async function postToTwitter(post: any, connection: any) {
       'Authorization': `Bearer ${connection.access_token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      text: socialPosts
-    })
+    body: JSON.stringify(tweetData)
   })
 
   if (!response.ok) {
@@ -236,32 +241,110 @@ async function postToTwitter(post: any, connection: any) {
 async function postToLinkedIn(post: any, connection: any) {
   const linkedin = new LinkedInOAuth()
   
-  const socialPosts = post.social_posts?.linkedin || post.social_posts?.LinkedIn
+  let socialPosts = post.social_posts?.linkedin || post.social_posts?.LinkedIn
   if (!socialPosts) {
     throw new Error('No LinkedIn content found')
   }
 
-  const response = await fetch('https://api.linkedin.com/v2/shares', {
+  // Extract image URL from the post content
+  const imageUrlMatch = socialPosts.match(/🖼️ Image: (https:\/\/[^\s]+)/)
+  let imageUrl = null
+  let cleanText = socialPosts
+
+  if (imageUrlMatch) {
+    imageUrl = imageUrlMatch[1]
+    cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
+  }
+
+  let postData: any = {
+    author: `urn:li:person:${connection.account_id.replace('linkedin_', '')}`,
+    lifecycleState: 'PUBLISHED',
+    specificContent: {
+      'com.linkedin.ugc.ShareContent': {
+        shareCommentary: {
+          text: cleanText
+        },
+        shareMediaCategory: imageUrl ? 'IMAGE' : 'NONE'
+      }
+    },
+    visibility: {
+      'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+    }
+  }
+
+  // If there's an image, upload it first
+  if (imageUrl) {
+    try {
+      // Download the image
+      const imageResponse = await fetch(imageUrl)
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to download image: ${imageResponse.statusText}`)
+      }
+      
+      const imageBuffer = await imageResponse.arrayBuffer()
+      
+      // Upload image to LinkedIn
+      const uploadResponse = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${connection.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          registerUploadRequest: {
+            recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+            owner: `urn:li:person:${connection.account_id.replace('linkedin_', '')}`,
+            serviceRelationships: [{
+              relationshipType: 'OWNER',
+              identifier: 'urn:li:userGeneratedContent'
+            }]
+          }
+        })
+      })
+
+      if (!uploadResponse.ok) {
+        const error = await uploadResponse.json()
+        throw new Error(`LinkedIn image upload failed: ${error.message || 'Unknown error'}`)
+      }
+
+      const uploadData = await uploadResponse.json()
+      
+      // Upload the actual image
+      const imageUploadResponse = await fetch(uploadData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl, {
+        method: 'POST',
+        body: imageBuffer
+      })
+
+      if (!imageUploadResponse.ok) {
+        throw new Error(`LinkedIn image upload failed: ${imageUploadResponse.statusText}`)
+      }
+
+      // Add image to post
+      postData.specificContent['com.linkedin.ugc.ShareContent'].media = [{
+        status: 'READY',
+        description: {
+          text: 'Timeline Alchemy Content'
+        },
+        media: uploadData.value.asset,
+        title: {
+          text: 'Timeline Alchemy Post'
+        }
+      }]
+    } catch (error) {
+      console.error('LinkedIn image upload error:', error)
+      // Continue without image if upload fails
+    }
+  }
+
+  // LinkedIn's new API structure (2024+)
+  const response = await fetch('https://api.linkedin.com/v2/ugcPosts', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${connection.access_token}`,
       'Content-Type': 'application/json',
+      'X-Restli-Protocol-Version': '2.0.0'
     },
-    body: JSON.stringify({
-      author: `urn:li:person:${connection.account_id}`,
-      lifecycleState: 'PUBLISHED',
-      specificContent: {
-        'com.linkedin.ugc.ShareContent': {
-          shareCommentary: {
-            text: socialPosts
-          },
-          shareMediaCategory: 'NONE'
-        }
-      },
-      visibility: {
-        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
-      }
-    })
+    body: JSON.stringify(postData)
   })
 
   if (!response.ok) {

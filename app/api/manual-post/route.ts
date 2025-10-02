@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     console.log(`🎯 Target platforms: ${targetPlatforms.join(', ')}`)
 
     // Call the posting engine
-    const postingResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/post-to-platforms`, {
+    const postingResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/post-to-platforms`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
       `)
       .not('scheduled_for', 'is', null)
       .lte('scheduled_for', now)
-      .neq('post_status', 'posted')
-      .neq('post_status', 'failed')
+      .eq('state', 'scheduled')
+      .order('scheduled_for', { ascending: true })
 
     if (postsError) {
       console.error('❌ Error fetching scheduled posts:', postsError)
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
         console.log(`📱 Posting to platforms: ${platforms.join(', ')}`)
 
         // Call the posting engine
-        const postingResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/post-to-platforms`, {
+        const postingResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/post-to-platforms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -101,6 +101,16 @@ export async function GET(request: NextRequest) {
         
         if (postingResult.success) {
           console.log(`✅ Successfully posted: ${(post as any).title}`)
+          
+          // Update post status to published
+          await (supabase as any)
+            .from('blog_posts')
+            .update({
+              state: 'published',
+              published_at: new Date().toISOString()
+            })
+            .eq('id', (post as any).id)
+          
           results.push({
             postId: (post as any).id,
             title: (post as any).title,
@@ -124,8 +134,8 @@ export async function GET(request: NextRequest) {
         await (supabase as any)
           .from('blog_posts')
           .update({
-            state: 'published',
-            published_at: new Date().toISOString()
+            state: 'scheduled',
+            published_at: null
           })
           .eq('id', (post as any).id)
       }
