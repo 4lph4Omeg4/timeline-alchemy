@@ -148,9 +148,9 @@ export async function POST(request: NextRequest) {
           case 'wordpress':
             // WordPress requires special handling - get credentials from connection
             const wpCredentials = {
-              siteUrl: connection.site_url,
-              username: connection.username,
-              password: connection.password
+              siteUrl: (connection as any).site_url,
+              username: (connection as any).username,
+              password: (connection as any).password
             }
             result = await postToWordPress(post.content, post.title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
             break
