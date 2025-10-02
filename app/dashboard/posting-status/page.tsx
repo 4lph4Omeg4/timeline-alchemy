@@ -283,10 +283,10 @@ export default function PostingStatusDashboard() {
               </div>
 
               {/* Error Message */}
-              {post.error_message && (
+              {(post as any).error_message && (
                 <div className="bg-red-900/30 border border-red-500 rounded-lg p-3 mb-4">
                   <div className="text-red-200 text-sm">
-                    <strong>Error:</strong> {post.error_message}
+                    <strong>Error:</strong> {(post as any).error_message}
                   </div>
                 </div>
               )}
