@@ -329,8 +329,8 @@ export default function SchedulerPage() {
 
       toast.success(`Posted to ${result.summary.successful} platforms successfully!`, { id: 'manual-post' })
       
-      // Refresh posts
-      fetchPosts()
+      // Refresh posts by reloading the page
+      window.location.reload()
       
     } catch (error) {
       toast.error('An error occurred while posting', { id: 'manual-post' })
