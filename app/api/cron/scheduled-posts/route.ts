@@ -49,14 +49,14 @@ export async function GET(request: NextRequest) {
     // Process each scheduled post
     for (const post of scheduledPosts) {
       try {
-        console.log(`🚀 Processing post: ${post.title} (ID: ${post.id})`)
+        console.log(`🚀 Processing post: ${(post as any).title} (ID: ${(post as any).id})`)
         
         // Determine which platforms to post to
         const platforms = []
         
         // Check if post has social_posts data
-        if (post.social_posts) {
-          const socialPosts = post.social_posts
+        if ((post as any).social_posts) {
+          const socialPosts = (post as any).social_posts
           
           // Add platforms that have content
           if (socialPosts.twitter || socialPosts.Twitter) platforms.push('twitter')
@@ -70,9 +70,9 @@ export async function GET(request: NextRequest) {
         }
 
         if (platforms.length === 0) {
-          console.log(`⚠️ No platforms found for post: ${post.title}`)
+          console.log(`⚠️ No platforms found for post: ${(post as any).title}`)
           errors.push({
-            postId: post.id,
+            postId: (post as any).id,
             error: 'No platforms found for posting'
           })
           continue
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            postId: post.id,
+            postId: (post as any).id,
             platforms: platforms
           })
         })
@@ -100,10 +100,10 @@ export async function GET(request: NextRequest) {
         const postingResult = await postingResponse.json()
         
         if (postingResult.success) {
-          console.log(`✅ Successfully posted: ${post.title}`)
+          console.log(`✅ Successfully posted: ${(post as any).title}`)
           results.push({
-            postId: post.id,
-            title: post.title,
+            postId: (post as any).id,
+            title: (post as any).title,
             platforms: platforms,
             results: postingResult.results,
             errors: postingResult.errors
@@ -113,10 +113,10 @@ export async function GET(request: NextRequest) {
         }
 
       } catch (error) {
-        console.error(`❌ Error processing post ${post.id}:`, error)
+        console.error(`❌ Error processing post ${(post as any).id}:`, error)
         errors.push({
-          postId: post.id,
-          title: post.title,
+          postId: (post as any).id,
+          title: (post as any).title,
           error: error instanceof Error ? error.message : 'Unknown error'
         })
 
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
             post_status: 'failed',
             error_message: error instanceof Error ? error.message : 'Unknown error'
           })
-          .eq('id', post.id)
+          .eq('id', (post as any).id)
       }
     }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { TwitterOAuth, LinkedInOAuth, FacebookOAuth, InstagramOAuth, YouTubeOAuth, DiscordOAuth, RedditOAuth, TelegramOAuth } from '@/lib/social-auth'
+import { TwitterOAuth, LinkedInOAuth, InstagramOAuth, YouTubeOAuth, DiscordOAuth, RedditOAuth, TelegramOAuth } from '@/lib/social-auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,9 +73,6 @@ export async function POST(request: NextRequest) {
             break
           case 'linkedin':
             result = await postToLinkedIn(post, connection)
-            break
-          case 'facebook':
-            result = await postToFacebook(post, connection)
             break
           case 'instagram':
             result = await postToInstagram(post, connection)
@@ -205,33 +202,6 @@ async function postToLinkedIn(post: any, connection: any) {
   if (!response.ok) {
     const error = await response.json()
     throw new Error(`LinkedIn API error: ${error.message}`)
-  }
-
-  return await response.json()
-}
-
-async function postToFacebook(post: any, connection: any) {
-  const facebook = new FacebookOAuth()
-  
-  const socialPosts = post.social_posts?.facebook || post.social_posts?.Facebook
-  if (!socialPosts) {
-    throw new Error('No Facebook content found')
-  }
-
-  const response = await fetch(`https://graph.facebook.com/v18.0/${connection.account_id}/feed`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${connection.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      message: socialPosts
-    })
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(`Facebook API error: ${error.error?.message || error.message}`)
   }
 
   return await response.json()
