@@ -316,7 +316,7 @@ export default function ContentListPage() {
                           <strong>Scheduled Task:</strong> This is a scheduled post created from an admin package. 
                           <br />
                           <span className="text-orange-300">
-                            Scheduled for: <strong>{formatDateTime(post.scheduled_for)}</strong>
+                            Scheduled for: <strong>{formatDateTime(post.scheduled_for || '')}</strong>
                           </span>
                           <br />
                           <span className="text-orange-300">Do not delete - it will be automatically posted!</span>
