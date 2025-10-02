@@ -353,13 +353,13 @@ async function postToTelegram(post: any, connection: any) {
   // Post to all Telegram channels
   for (const channel of channels) {
     try {
-      const response = await fetch(`https://api.telegram.org/bot${channel.bot_token}/sendMessage`, {
+      const response = await fetch(`https://api.telegram.org/bot${(channel as any).bot_token}/sendMessage`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          chat_id: channel.channel_id,
+          chat_id: (channel as any).channel_id,
           text: socialPosts,
           parse_mode: 'HTML'
         })
@@ -372,7 +372,7 @@ async function postToTelegram(post: any, connection: any) {
 
       results.push(await response.json())
     } catch (error) {
-      console.error(`Telegram posting error for channel ${channel.channel_name}:`, error)
+      console.error(`Telegram posting error for channel ${(channel as any).channel_name}:`, error)
     }
   }
 
