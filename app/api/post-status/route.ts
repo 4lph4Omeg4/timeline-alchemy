@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
 
     const summary = {
       total: statusSummary?.length || 0,
-      scheduled: statusSummary?.filter(p => p.state === 'scheduled').length || 0,
-      posted: statusSummary?.filter(p => p.state === 'published').length || 0,
+      scheduled: statusSummary?.filter((p: any) => p.state === 'scheduled').length || 0,
+      posted: statusSummary?.filter((p: any) => p.state === 'published').length || 0,
       failed: 0, // No failed state in current schema
       partial: 0 // No partial state in current schema
     }
