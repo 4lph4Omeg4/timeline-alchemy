@@ -18,21 +18,39 @@ export default function TokenStatusPage() {
     fetchUserOrg()
   }, [])
 
+  // Helper function to get user's personal organization ID (same as socials page)
+  const getUserOrgId = async (userId: string) => {
+    const { data: orgMembers } = await supabase
+      .from('org_members')
+      .select('org_id, role')
+      .eq('user_id', userId)
+
+    if (!orgMembers || orgMembers.length === 0) {
+      return null
+    }
+
+    // Find the user's personal organization (not Admin Organization)
+    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+    if (!userOrgId) {
+      userOrgId = orgMembers[0].org_id
+    }
+    return userOrgId
+  }
+
   const fetchUserOrg = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: memberships } = await supabase
-        .from('org_members')
-        .select('org_id')
-        .eq('user_id', user.id)
-        .eq('role', 'owner')
-
-      if (memberships && memberships.length > 0) {
-        setUserOrgId(memberships[0].org_id)
-        fetchTokenStatus(memberships[0].org_id)
+      // Get user's personal organization ID (same logic as socials page)
+      const userOrgId = await getUserOrgId(user.id)
+      if (!userOrgId) {
+        console.error('No organization found for user')
+        return
       }
+
+      setUserOrgId(userOrgId)
+      fetchTokenStatus(userOrgId)
     } catch (error) {
       console.error('Error fetching user org:', error)
     }
@@ -45,6 +63,25 @@ export default function TokenStatusPage() {
       setTokenStatuses(statuses)
     } catch (error) {
       console.error('Error fetching token status:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchTokenStatusForAllOrgs = async (orgIds: string[]) => {
+    setLoading(true)
+    try {
+      const allStatuses: TokenStatus[] = []
+      
+      // Check token status for all organizations
+      for (const orgId of orgIds) {
+        const statuses = await TokenManager.checkTokenStatus(orgId)
+        allStatuses.push(...statuses)
+      }
+      
+      setTokenStatuses(allStatuses)
+    } catch (error) {
+      console.error('Error fetching token status for all orgs:', error)
     } finally {
       setLoading(false)
     }
@@ -122,7 +159,7 @@ export default function TokenStatusPage() {
           </p>
         </div>
         <Button 
-          onClick={() => userOrgId && fetchTokenStatus(userOrgId)}
+          onClick={() => fetchUserOrg()}
           disabled={loading}
           className="bg-purple-600 hover:bg-purple-700"
         >
