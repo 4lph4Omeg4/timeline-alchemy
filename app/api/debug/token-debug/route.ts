@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     console.log('📋 User memberships:', memberships)
 
     // Find the user's personal organization (same logic as socials page)
-    let userOrgId = memberships?.find(member => member.role !== 'client')?.org_id
+    let userOrgId = memberships?.find((member: any) => member.role !== 'client')?.org_id
     if (!userOrgId) {
       userOrgId = memberships?.[0]?.org_id
     }
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
         orgName: m.organizations?.name || 'Unknown'
       })) || [],
       selectedOrgId: userOrgId,
-      selectedOrgName: memberships?.find(m => m.org_id === userOrgId)?.organizations?.name || 'Unknown',
+      selectedOrgName: memberships?.find((m: any) => m.org_id === userOrgId)?.organizations?.name || 'Unknown',
       connectionsCount: connections?.length || 0,
       connections: connections?.map((c: any) => ({
         id: c.id,
