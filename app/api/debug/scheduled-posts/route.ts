@@ -37,15 +37,15 @@ export async function GET(request: NextRequest) {
     const now = new Date().toISOString()
     
     // Categorize posts
-    const overdue = scheduledPosts?.filter(post => 
+    const overdue = scheduledPosts?.filter((post: any) => 
       post.scheduled_for < now && post.state === 'scheduled'
     ) || []
     
-    const upcoming = scheduledPosts?.filter(post => 
+    const upcoming = scheduledPosts?.filter((post: any) => 
       post.scheduled_for >= now && post.state === 'scheduled'
     ) || []
     
-    const published = scheduledPosts?.filter(post => 
+    const published = scheduledPosts?.filter((post: any) => 
       post.state === 'published'
     ) || []
 
