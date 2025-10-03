@@ -72,8 +72,8 @@ export async function GET(request: NextRequest) {
           acc[orgName] = (acc[orgName] || 0) + 1
           return acc
         }, {} as Record<string, number>) || {},
-        adminPosts: posts?.filter(p => p.created_by_admin).length || 0,
-        userPosts: posts?.filter(p => !p.created_by_admin).length || 0
+        adminPosts: posts?.filter((p: any) => p.created_by_admin).length || 0,
+        userPosts: posts?.filter((p: any) => !p.created_by_admin).length || 0
       }
     })
 
