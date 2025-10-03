@@ -81,8 +81,8 @@ export default function TokenStatusPage() {
               // Check token expiry based on platform
               switch (connection.platform) {
                 case 'twitter':
-                  const twitterAge = now.getTime() - new Date(connection.created_at).getTime()
-                  needsRefresh = twitterAge > 90 * 60 * 1000 // 90 minutes
+                  // Twitter OAuth 1.0a tokens are long-lived and don't expire in the same way
+                  needsRefresh = false
                   break
                 case 'linkedin':
                   const linkedinAge = now.getTime() - new Date(connection.created_at).getTime()
