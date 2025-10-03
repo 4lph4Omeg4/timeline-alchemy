@@ -3,6 +3,15 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
+    // Skip test during build process
+    if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Skipped during build',
+        timestamp: new Date().toISOString()
+      })
+    }
+
     // Test if we can insert a Discord connection (with ALL required columns)
     const testData = {
       org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Your org ID from the logs
