@@ -56,65 +56,104 @@ export default function TokenStatusPage() {
     }
   }
 
-  const fetchTokenStatus = async (orgId: string) => {
-    setLoading(true)
-    try {
-      console.log('🔍 Fetching token status for org:', orgId)
-      
-      // First, let's debug what connections exist
-      const { data: connections, error } = await supabase
-        .from('social_connections')
-        .select('*')
-        .eq('org_id', orgId)
-      
-      console.log('🔗 Raw connections found:', connections)
-      console.log('❌ Raw connections error:', error)
-      
-      const statuses = await TokenManager.checkTokenStatus(orgId)
-      console.log('📊 Token statuses:', statuses)
-      
-      setTokenStatuses(statuses)
-    } catch (error) {
-      console.error('Error fetching token status:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+        const fetchTokenStatus = async (orgId: string) => {
+          setLoading(true)
+          try {
+            console.log('🔍 Fetching token status for org:', orgId)
+            
+            // First, let's debug what connections exist
+            const { data: connections, error } = await supabase
+              .from('social_connections')
+              .select('*')
+              .eq('org_id', orgId)
+            
+            console.log('🔗 Raw connections found:', connections)
+            console.log('❌ Raw connections error:', error)
+            
+            // Create statuses manually since TokenManager might have issues
+            const statuses: TokenStatus[] = []
+            for (const connection of connections || []) {
+              const now = new Date()
+              let isExpired = false
+              let needsRefresh = false
+              let expiresAt: Date | undefined
 
-  const fetchTokenStatusForAllOrgs = async (orgIds: string[]) => {
-    setLoading(true)
-    try {
-      const allStatuses: TokenStatus[] = []
-      
-      // Check token status for all organizations
-      for (const orgId of orgIds) {
-        const statuses = await TokenManager.checkTokenStatus(orgId)
-        allStatuses.push(...statuses)
-      }
-      
-      setTokenStatuses(allStatuses)
-    } catch (error) {
-      console.error('Error fetching token status for all orgs:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+              // Check token expiry based on platform
+              switch (connection.platform) {
+                case 'twitter':
+                  const twitterAge = now.getTime() - new Date(connection.created_at).getTime()
+                  needsRefresh = twitterAge > 90 * 60 * 1000 // 90 minutes
+                  break
+                case 'linkedin':
+                  const linkedinAge = now.getTime() - new Date(connection.created_at).getTime()
+                  needsRefresh = linkedinAge > 50 * 24 * 60 * 60 * 1000 // 50 days
+                  break
+                case 'facebook':
+                case 'instagram':
+                case 'youtube':
+                case 'discord':
+                case 'reddit':
+                  needsRefresh = false
+                  break
+                case 'telegram':
+                case 'wordpress':
+                  needsRefresh = false
+                  break
+                default:
+                  console.warn(`Unknown platform for token status check: ${connection.platform}`)
+                  break
+              }
+
+              statuses.push({
+                platform: connection.platform,
+                accountId: connection.account_id,
+                accountName: connection.account_name,
+                isExpired: isExpired,
+                expiresAt: expiresAt,
+                lastChecked: now,
+                needsRefresh: needsRefresh,
+              })
+            }
+            
+            console.log('📊 Token statuses:', statuses)
+            setTokenStatuses(statuses)
+          } catch (error) {
+            console.error('Error fetching token status:', error)
+          } finally {
+            setLoading(false)
+          }
+        }
+
 
   const handleRefreshToken = async (platform: string, accountId: string) => {
     if (!userOrgId) return
 
     setRefreshing(`${platform}-${accountId}`)
     try {
-      const result = await TokenManager.refreshToken(userOrgId, platform, accountId)
-      
+      // Call the refresh API endpoint
+      const response = await fetch('/api/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orgId: userOrgId,
+          platform: platform,
+          accountId: accountId
+        })
+      })
+
+      const result = await response.json()
       if (result.success) {
-        // Refresh the status list
-        await fetchTokenStatus(userOrgId)
+        console.log(`Successfully refreshed token for ${platform} ${accountId}`)
+        // Re-fetch all statuses to update the UI
+        fetchTokenStatus(userOrgId)
       } else {
+        console.error(`Failed to refresh token for ${platform} ${accountId}: ${result.error}`)
         alert(`Failed to refresh ${platform} token: ${result.error}`)
       }
     } catch (error) {
-      console.error('Error refreshing token:', error)
+      console.error(`Error refreshing token for ${platform} ${accountId}:`, error)
       alert(`Error refreshing ${platform} token`)
     } finally {
       setRefreshing(null)
