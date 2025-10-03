@@ -59,7 +59,20 @@ export default function TokenStatusPage() {
   const fetchTokenStatus = async (orgId: string) => {
     setLoading(true)
     try {
+      console.log('🔍 Fetching token status for org:', orgId)
+      
+      // First, let's debug what connections exist
+      const { data: connections, error } = await supabase
+        .from('social_connections')
+        .select('*')
+        .eq('org_id', orgId)
+      
+      console.log('🔗 Raw connections found:', connections)
+      console.log('❌ Raw connections error:', error)
+      
       const statuses = await TokenManager.checkTokenStatus(orgId)
+      console.log('📊 Token statuses:', statuses)
+      
       setTokenStatuses(statuses)
     } catch (error) {
       console.error('Error fetching token status:', error)
