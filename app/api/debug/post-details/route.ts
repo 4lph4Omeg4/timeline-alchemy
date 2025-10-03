@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         socialPostsCount: socialPostsParsed ? Object.keys(socialPostsParsed).length : 0,
         connectionsCount: connections?.length || 0,
         platformsWithContent: socialPostsParsed ? Object.keys(socialPostsParsed) : [],
-        platformsWithConnections: connections?.map(c => c.platform) || []
+        platformsWithConnections: connections?.map((c: any) => c.platform) || []
       }
     })
 
