@@ -3,11 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
-    // Skip test during build process
-    if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+    // Skip test during build process or in production
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL || process.env.NEXT_PHASE === 'phase-production-build') {
       return NextResponse.json({ 
         success: true, 
-        message: 'Skipped during build',
+        message: 'Skipped during build/production',
         timestamp: new Date().toISOString()
       })
     }

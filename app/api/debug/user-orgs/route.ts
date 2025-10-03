@@ -3,6 +3,15 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
+    // Skip during build process
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Skipped during build',
+        timestamp: new Date().toISOString()
+      })
+    }
+
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     
