@@ -61,7 +61,7 @@ export default function TokenStatusPage() {
           try {
             console.log('🔍 Fetching token status for org:', orgId)
             
-            // First, let's debug what connections exist
+            // Fetch social connections
             const { data: connections, error } = await supabase
               .from('social_connections')
               .select('*')
@@ -70,8 +70,19 @@ export default function TokenStatusPage() {
             console.log('🔗 Raw connections found:', connections)
             console.log('❌ Raw connections error:', error)
             
+            // Fetch Telegram channels
+            const { data: telegramChannels, error: telegramError } = await supabase
+              .from('telegram_channels')
+              .select('*')
+              .eq('org_id', orgId)
+            
+            console.log('📱 Telegram channels found:', telegramChannels)
+            console.log('❌ Telegram channels error:', telegramError)
+            
             // Create statuses manually since TokenManager might have issues
             const statuses: TokenStatus[] = []
+            
+            // Process social connections
             for (const connection of connections || []) {
               const now = new Date()
               let isExpired = false
@@ -95,7 +106,6 @@ export default function TokenStatusPage() {
                 case 'reddit':
                   needsRefresh = false
                   break
-                case 'telegram':
                 case 'wordpress':
                   needsRefresh = false
                   break
@@ -115,6 +125,20 @@ export default function TokenStatusPage() {
               })
             }
             
+            // Process Telegram channels
+            for (const channel of telegramChannels || []) {
+              const now = new Date()
+              statuses.push({
+                platform: 'telegram',
+                accountId: channel.channel_id,
+                accountName: channel.channel_name,
+                isExpired: false,
+                expiresAt: undefined,
+                lastChecked: now,
+                needsRefresh: false, // Telegram bot tokens don't expire
+              })
+            }
+            
             console.log('📊 Token statuses:', statuses)
             setTokenStatuses(statuses)
           } catch (error) {
@@ -130,6 +154,13 @@ export default function TokenStatusPage() {
 
     setRefreshing(`${platform}-${accountId}`)
     try {
+      // For Telegram, we don't need to refresh tokens (they don't expire)
+      if (platform === 'telegram') {
+        alert('Telegram bot tokens don\'t expire and don\'t need refreshing. If posting fails, please check bot permissions.')
+        setRefreshing(null)
+        return
+      }
+
       // Call the refresh API endpoint
       const response = await fetch('/api/refresh-token', {
         method: 'POST',
