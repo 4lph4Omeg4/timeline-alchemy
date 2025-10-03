@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
     const debugResults = {
       siteUrl: cleanSiteUrl,
       isWordPressCom,
-      apiEndpoints: {},
-      tests: {}
+      apiEndpoints: {} as Record<string, any>,
+      tests: {} as Record<string, any>
     }
 
     // Test 1: Check if site is accessible
@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
     console.log('🎯 WordPress Debug - Diagnostics complete')
     console.log('Results:', JSON.stringify(debugResults, null, 2))
 
-    return NextResponse.json({
+    const response = {
       success: true,
       debugResults,
       summary: {
@@ -253,7 +253,9 @@ export async function POST(request: NextRequest) {
         canPost: debugResults.tests.postingTest?.success || false,
         isWordPressCom: isWordPressCom
       }
-    })
+    }
+
+    return NextResponse.json(response)
     
   } catch (error) {
     console.error('WordPress debug error:', error)
