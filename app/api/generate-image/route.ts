@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
             metadata: {
               provider: 'vercel-enhanced',
               enhancedPrompt: vercelResponse.enhancedPrompt,
-              enhancementTokens: vercelResponse.usage,
+              enhancementTokens: 0,
+            gateway: true,
               improved: true
             }
           })

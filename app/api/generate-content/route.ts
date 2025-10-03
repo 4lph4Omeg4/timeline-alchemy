@@ -24,18 +24,34 @@ export async function POST(request: NextRequest) {
         const vercelResponse = await generateVercelContent(body.prompt, body.type as 'blog' | 'social', body.tone || 'professional')
         
         if (vercelResponse.success) {
-          return NextResponse.json({
-            content: vercelResponse.content || '',
-            title: vercelResponse.title || '',
-            excerpt: vercelResponse.excerpt || '',
-            hashtags: vercelResponse.hashtags,
-            suggestions: vercelResponse.suggestions,
-            metadata: {
-              provider: 'vercel-ai-gateway',
-              usage: vercelResponse.usage,
-              enhanced: true
-            }
-          })
+          // Check if it's blog content (has content property) or social content
+          if ('content' in vercelResponse) {
+            return NextResponse.json({
+              content: vercelResponse.content || '',
+              title: vercelResponse.title || '',
+              excerpt: vercelResponse.excerpt || '',
+              hashtags: vercelResponse.hashtags,
+              suggestions: vercelResponse.suggestions,
+              metadata: {
+                provider: 'vercel-ai-gateway',
+                enhanced: true
+              }
+            })
+          } else if ('socialPosts' in vercelResponse) {
+            // For social content, we'll return it in the social format
+            return NextResponse.json({
+              content: `Social media content generated for multiple platforms`,
+              title: `${body.prompt} - Social Media Content`,
+              excerpt: 'Multi-platform social media content',
+              hashtags: [],
+              suggestions: ['Customize for each specific platform', 'Add visual content', 'Schedule optimal posting times'],
+              metadata: {
+                provider: 'vercel-ai-gateway',
+                socialPosts: vercelResponse.socialPosts,
+                enhanced: true
+              }
+            })
+          }
         }
       } catch (vercelError) {
         console.warn('⚠️ Vercel Gateway failed, falling back to direct OpenAI:', vercelError)

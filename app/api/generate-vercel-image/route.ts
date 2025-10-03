@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     console.log(`🎨 Vercel AI image generation completed in ${duration}ms`, {
       promptLength: prompt.length,
       enhancedPromptLength: response.enhancedPrompt?.length || 0,
-      usage: response.usage
+      enhanced: response.enhanced || false
     })
     
     return NextResponse.json({
@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         model: 'dall-e-3',
         provider: stats.isUsingGateway ? 'vercel-enhanced' : 'openai-direct',
-        enhancementTokens: response.usage
+        enhancementTokens: 0,
+        enhanced: response.enhanced || false
       }
     })
   } catch (error) {

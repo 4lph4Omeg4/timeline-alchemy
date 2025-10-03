@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     console.log(`🚀 Vercel AI generation completed in ${duration}ms`, {
       type,
       promptLength: prompt.length,
-      usage: response.usage
+      enhanced: response.enhanced || false
     })
     
     return NextResponse.json({
