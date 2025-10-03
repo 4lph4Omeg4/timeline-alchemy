@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       analysis: {
         totalOrganizations: memberships?.length || 0,
         totalPosts: posts?.length || 0,
-        postsByOrg: posts?.reduce((acc, post) => {
+        postsByOrg: posts?.reduce((acc: any, post: any) => {
           const orgName = post.organizations?.name || 'Unknown'
           acc[orgName] = (acc[orgName] || 0) + 1
           return acc
