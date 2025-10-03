@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get posts from each organization
-    const orgIds = memberships?.map(m => m.org_id) || []
+    const orgIds = memberships?.map((m: any) => m.org_id) || []
     const { data: posts, error: postsError } = await (supabaseAdmin as any)
       .from('blog_posts')
       .select(`
