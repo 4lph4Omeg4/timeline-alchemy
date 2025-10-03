@@ -99,6 +99,9 @@ export default function SocialConnectionsPage() {
     username: '',
     password: ''
   })
+  const [showWordPressDebug, setShowWordPressDebug] = useState(false)
+  const [wordPressDebugResults, setWordPressDebugResults] = useState<any>(null)
+  const [wordPressTesting, setWordPressTesting] = useState(false)
   const router = useRouter()
 
   // Helper function to get user's personal organization ID
@@ -314,6 +317,44 @@ export default function SocialConnectionsPage() {
       }
     } catch (error) {
       toast.error('An unexpected error occurred')
+    }
+  }
+
+  const handleWordPressDebug = async () => {
+    if (!wordPressCredentials.siteUrl || !wordPressCredentials.username || !wordPressCredentials.password) {
+      toast.error('Please fill in all WordPress credentials first')
+      return
+    }
+
+    setWordPressTesting(true)
+    try {
+      const debugResponse = await fetch('/api/debug-wordpress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          siteUrl: wordPressCredentials.siteUrl,
+          username: wordPressCredentials.username,
+          password: wordPressCredentials.password,
+          testAction: 'test_post'
+        })
+      })
+
+      const debugResult = await debugResponse.json()
+      setWordPressDebugResults(debugResult)
+      setShowWordPressDebug(true)
+
+      if (debugResult.success) {
+        toast.success('WordPress diagnostics completed! Check the debug panel.')
+      } else {
+        toast.error(`Debug failed: ${debugResult.error}`)
+      }
+    } catch (error) {
+      console.error('WordPress debug error:', error)
+      toast.error('WordPress debug failed')
+    } finally {
+      setWordPressTesting(false)
     }
   }
 
@@ -641,6 +682,14 @@ export default function SocialConnectionsPage() {
                     Connect WordPress
                   </Button>
                   <Button
+                    onClick={handleWordPressDebug}
+                    disabled={wordPressTesting}
+                    variant="outline"
+                    className="border-blue-600 text-blue-400 hover:bg-blue-900/30"
+                  >
+                    {wordPressTesting ? 'Testing...' : 'Debug'}
+                  </Button>
+                  <Button
                     onClick={() => setShowWordPressModal(false)}
                     variant="outline"
                     className="border-gray-600 text-gray-300 hover:bg-gray-800"
@@ -648,6 +697,151 @@ export default function SocialConnectionsPage() {
                     Cancel
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* WordPress Debug Modal */}
+      {showWordPressDebug && wordPressDebugResults && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="bg-gray-900 border-gray-800 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <CardTitle className="text-white">WordPress Integration Diagnostics</CardTitle>
+              <CardDescription className="text-gray-200">
+                Detailed analysis of your WordPress connection
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {wordPressDebugResults.success ? (
+                <div className="space-y-6">
+                  {/* Summary */}
+                  <div className="bg-gray-800 rounded-lg p-4">
+                    <h3 className="text-white font-semibold mb-3">Summary</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Site Accessible:</span>
+                        <span className={wordPressDebugResults.summary?.siteAccessible ? "text-green-400" : "text-red-400"}>
+                          {wordPressDebugResults.summary?.siteAccessible ? "✅ Yes" : "❌ No"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Authentication:</span>
+                        <span className={wordPressDebugResults.summary?.hasAuthentication ? "text-green-400" : "text-red-400"}>
+                          {wordPressDebugResults.summary?.hasAuthentication ? "✅ Yes" : "❌ No"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Can Post:</span>
+                        <span className={wordPressDebugResults.summary?.canPost ? "text-green-400" : "text-red-400"}>
+                          {wordPressDebugResults.summary?.canPost ? "✅ Yes" : "❌ No"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">WordPress.com:</span>
+                        <span className={wordPressDebugResults.summary?.isWordPressCom ? "text-blue-400" : "text-gray-300"}>
+                          {wordPressDebugResults.summary?.isWordPressCom ? "✅ Yes" : "❌ No"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* API Endpoints */}
+                  <div>
+                    <h3 className="text-white font-semibold mb-3">API Endpoints Test</h3>
+                    <div className="space-y-2">
+                      {Object.entries(wordPressDebugResults.debugResults.apiEndpoints || {}).map(([endpoint, result]: [string, any]) => (
+                        <div key={endpoint} className="bg-gray-800 rounded-lg p-3 text-sm">
+                          <div className="flex justify-between items-start">
+                            <span className="text-gray-300 font-mono">{endpoint}</span>
+                            <span className={result?.ok ? "text-green-400" : "text-red-400"}>
+                              {result?.ok ? `✅ ${result.status}` : `❌ ${result.error || 'Failed'}`}
+                            </span>
+                          </div>
+                          {result?.url && (
+                            <div className="text-gray-400 mt-1">
+                              <small>{result.url}</small>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tests */}
+                  <div>
+                    <h3 className="text-white font-semibold mb-3">Connection Tests</h3>
+                    <div className="space-y-2">
+                      {Object.entries(wordPressDebugResults.debugResults.tests || {}).map(([testName, result]: [string, any]) => (
+                        <div key={testName} className="bg-gray-800 rounded-lg p-3 text-sm">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-gray-300 capitalize">{testName.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            <span className={result?.success !== false ? "text-green-400" : "text-red-400"}>
+                              {result?.success !== false ? "✅ Success" : "❌ Failed"}
+                            </span>
+                          </div>
+                          {result?.error && (
+                            <div className="text-red-300 mt-1">
+                              <small>Error: {result.error}</small>
+                            </div>
+                          )}
+                          {result?.message && (
+                            <div className="text-green-300 mt-1">
+                              <small>{result.message}</small>
+                            </div>
+                          )}
+                          {result?.user && (
+                            <div className="text-blue-300 mt-1">
+                              <small>User: {result.user.name} (ID: {result.user.id})</small>
+                            </div>
+                          )}
+                          {result?.postId && (
+                            <div className="text-green-300 mt-1">
+                              <small>Test post created: ID {result.postId}</small>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recommendations */}
+                  <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4">
+                    <h4 className="text-blue-200 font-semibold mb-2">Recommendations</h4>
+                    <ul className="text-blue-200 text-sm space-y-1">
+                      {!wordPressDebugResults.summary?.siteAccessible && (
+                        <li>• Check if your WordPress site URL is correct and accessible</li>
+                      )}
+                      {!wordPressDebugResults.summary?.hasAuthentication && (
+                        <li>• Verify your username and password are correct</li>
+                      )}
+                      {wordPressDebugResults.summary?.isWordPressCom && !wordPressDebugResults.summary?.canPost && (
+                        <li>• WordPress.com has limited REST API access for posting. Consider using a self-hosted WordPress.</li>
+                      )}
+                      {!wordPressDebugResults.summary?.canPost && !wordPressDebugResults.summary?.isWordPressCom && (
+                        <li>• Make sure your WordPress REST API is enabled and you have posting permissions</li>
+                      )}
+                      {wordPressDebugResults.summary?.canPost && (
+                        <li>• ✅ Your WordPress site is ready for integration!</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4">
+                  <h3 className="text-red-200 font-semibold mb-2">Debug Failed</h3>
+                  <p className="text-red-300 text-sm">{wordPressDebugResults.error}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={() => setShowWordPressDebug(false)}
+                  className="bg-gray-700 hover:bg-gray-600 text-white"
+                >
+                  Close
+                </Button>
               </div>
             </CardContent>
           </Card>
