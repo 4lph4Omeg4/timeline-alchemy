@@ -203,12 +203,6 @@ export default function AdminPackagesPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-grow flex flex-col justify-between">
-                <div className="space-y-4">
-                  <p className="text-gray-300 text-sm line-clamp-8">
-                    {pkg.content.substring(0, 800)}...
-                  </p>
-                </div>
-                
                 <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
                   <Link href={`/dashboard/content/package/${pkg.id}`}>
                     <Button className="w-full">

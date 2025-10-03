@@ -166,7 +166,7 @@ export default function SignInPage() {
                 fill="#EA4335"
               />
             </svg>
-            Google Cosmic Access
+            Google Sign-In
           </Button>
 
           <div className="text-center text-sm text-purple-200">

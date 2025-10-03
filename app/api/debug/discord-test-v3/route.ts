@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
+    // Skip test during build process or in production
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL || process.env.NEXT_PHASE === 'phase-production-build') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Skipped during build/production',
+        timestamp: new Date().toISOString()
+      })
+    }
+
     // Test if we can insert a Discord connection (with ALL required columns)
     const testData = {
       org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Your org ID from the logs
@@ -15,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     console.log('Testing Discord insert with data:', testData)
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabaseAdmin as any)
       .from('social_connections')
       .insert(testData)
 

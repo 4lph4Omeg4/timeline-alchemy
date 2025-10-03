@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { TwitterOAuth, LinkedInOAuth, InstagramOAuth, YouTubeOAuth, DiscordOAuth, RedditOAuth, TelegramOAuth } from '@/lib/social-auth'
+import { TokenManager } from '@/lib/token-manager'
+import { withRetry, RetryManager } from '@/lib/retry-manager'
 
 // WordPress posting function
 async function postToWordPress(content: string, title: string, siteUrl: string, username: string, password: string) {
@@ -148,11 +150,11 @@ export async function POST(request: NextRequest) {
           case 'wordpress':
             // WordPress requires special handling - get credentials from connection
             const wpCredentials = {
-              siteUrl: connection.site_url,
-              username: connection.username,
-              password: connection.password
+              siteUrl: (connection as any).site_url,
+              username: (connection as any).username,
+              password: (connection as any).password
             }
-            result = await postToWordPress(post.content, post.title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
+            result = await postToWordPress((post as any).content, (post as any).title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
             break
           default:
             errors.push({
@@ -209,67 +211,190 @@ async function postToTwitter(post: any, connection: any) {
   const twitter = new TwitterOAuth()
   
   // Get social posts for Twitter
-  const socialPosts = post.social_posts?.twitter || post.social_posts?.Twitter
+  let socialPosts = post.social_posts?.twitter || post.social_posts?.Twitter
   if (!socialPosts) {
     throw new Error('No Twitter content found')
   }
 
-  const response = await fetch('https://api.twitter.com/2/tweets', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${connection.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      text: socialPosts
-    })
-  })
+  // Remove image URL from Twitter posts to make them text-only
+  const cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(`Twitter API error: ${error.detail || error.message}`)
+  // Use retry logic for Twitter posting
+  const result = await withRetry(async () => {
+    // Get fresh token with automatic refresh
+    const freshToken = await TokenManager.getFreshToken(
+      connection.org_id, 
+      'twitter', 
+      connection.account_id
+    )
+
+    if (!freshToken) {
+      throw new Error('Unable to get fresh Twitter token')
+    }
+
+    const tweetData: any = {
+      text: cleanText
+    }
+
+    const response = await fetch('https://api.twitter.com/2/tweets', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${freshToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(tweetData)
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(`Twitter API error: ${error.detail || error.message}`)
+    }
+
+    return await response.json()
+  }, 'twitter')
+
+  if (!result.success) {
+    throw new Error(`Twitter posting failed after ${result.attempts} attempts: ${result.error}`)
   }
 
-  return await response.json()
+  return result.data
 }
 
 async function postToLinkedIn(post: any, connection: any) {
   const linkedin = new LinkedInOAuth()
   
-  const socialPosts = post.social_posts?.linkedin || post.social_posts?.LinkedIn
+  let socialPosts = post.social_posts?.linkedin || post.social_posts?.LinkedIn
   if (!socialPosts) {
     throw new Error('No LinkedIn content found')
   }
 
-  const response = await fetch('https://api.linkedin.com/v2/shares', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${connection.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      author: `urn:li:person:${connection.account_id}`,
+  // Extract image URL from the post content
+  const imageUrlMatch = socialPosts.match(/🖼️ Image: (https:\/\/[^\s]+)/)
+  let imageUrl = null
+  let cleanText = socialPosts
+
+  if (imageUrlMatch) {
+    imageUrl = imageUrlMatch[1]
+    cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
+  }
+
+  // Use retry logic for LinkedIn posting
+  const result = await withRetry(async () => {
+    // Get fresh token with automatic refresh
+    const freshToken = await TokenManager.getFreshToken(
+      connection.org_id, 
+      'linkedin', 
+      connection.account_id
+    )
+
+    if (!freshToken) {
+      throw new Error('Unable to get fresh LinkedIn token')
+    }
+
+    let postData: any = {
+      author: `urn:li:person:${connection.account_id.replace('linkedin_', '')}`,
       lifecycleState: 'PUBLISHED',
       specificContent: {
         'com.linkedin.ugc.ShareContent': {
           shareCommentary: {
-            text: socialPosts
+            text: cleanText
           },
-          shareMediaCategory: 'NONE'
+          shareMediaCategory: imageUrl ? 'IMAGE' : 'NONE'
         }
       },
       visibility: {
         'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
       }
-    })
-  })
+    }
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(`LinkedIn API error: ${error.message}`)
+    // If there's an image, upload it first
+    if (imageUrl) {
+      try {
+        // Download the image
+        const imageResponse = await fetch(imageUrl)
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to download image: ${imageResponse.statusText}`)
+        }
+        
+        const imageBuffer = await imageResponse.arrayBuffer()
+        
+        // Upload image to LinkedIn
+        const uploadResponse = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${freshToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            registerUploadRequest: {
+              recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+              owner: `urn:li:person:${connection.account_id.replace('linkedin_', '')}`,
+              serviceRelationships: [{
+                relationshipType: 'OWNER',
+                identifier: 'urn:li:userGeneratedContent'
+              }]
+            }
+          })
+        })
+
+        if (!uploadResponse.ok) {
+          const error = await uploadResponse.json()
+          throw new Error(`LinkedIn image upload failed: ${error.message || 'Unknown error'}`)
+        }
+
+        const uploadData = await uploadResponse.json()
+        
+        // Upload the actual image
+        const imageUploadResponse = await fetch(uploadData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl, {
+          method: 'POST',
+          body: imageBuffer
+        })
+
+        if (!imageUploadResponse.ok) {
+          throw new Error(`LinkedIn image upload failed: ${imageUploadResponse.statusText}`)
+        }
+
+        // Add image to post
+        postData.specificContent['com.linkedin.ugc.ShareContent'].media = [{
+          status: 'READY',
+          description: {
+            text: 'Timeline Alchemy Content'
+          },
+          media: uploadData.value.asset,
+          title: {
+            text: 'Timeline Alchemy Post'
+          }
+        }]
+      } catch (error) {
+        console.error('LinkedIn image upload error:', error)
+        // Continue without image if upload fails
+      }
+    }
+
+    // LinkedIn's new API structure (2024+)
+    const response = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${freshToken}`,
+        'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0'
+      },
+      body: JSON.stringify(postData)
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(`LinkedIn API error: ${error.message}`)
+    }
+
+    return await response.json()
+  }, 'linkedin')
+
+  if (!result.success) {
+    throw new Error(`LinkedIn posting failed after ${result.attempts} attempts: ${result.error}`)
   }
 
-  return await response.json()
+  return result.data
 }
 
 async function postToInstagram(post: any, connection: any) {
@@ -339,13 +464,24 @@ async function postToDiscord(post: any, connection: any) {
     throw new Error('No Discord content found')
   }
 
+  // Get fresh token with automatic refresh
+  const freshToken = await TokenManager.getFreshToken(
+    connection.org_id, 
+    'discord', 
+    connection.account_id
+  )
+
+  if (!freshToken) {
+    throw new Error('Unable to get fresh Discord token')
+  }
+
   // Discord requires channel ID, we'll need to get this from the connection
   const channelId = connection.account_id // Assuming this is the channel ID
   
   const response = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bot ${connection.access_token}`,
+      'Authorization': `Bot ${freshToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -369,13 +505,24 @@ async function postToReddit(post: any, connection: any) {
     throw new Error('No Reddit content found')
   }
 
+  // Get fresh token with automatic refresh
+  const freshToken = await TokenManager.getFreshToken(
+    connection.org_id, 
+    'reddit', 
+    connection.account_id
+  )
+
+  if (!freshToken) {
+    throw new Error('Unable to get fresh Reddit token')
+  }
+
   // Reddit requires subreddit, we'll need to get this from the connection
   const subreddit = connection.account_id // Assuming this is the subreddit
   
   const response = await fetch(`https://oauth.reddit.com/r/${subreddit}/submit`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${connection.access_token}`,
+      'Authorization': `Bearer ${freshToken}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
