@@ -90,6 +90,11 @@ export class TokenManager {
         needsRefresh = false
         break
 
+      case 'wordpress':
+        // WordPress connections use username/password, no token expiry
+        needsRefresh = false
+        break
+
       default:
         needsRefresh = false
     }
@@ -132,6 +137,12 @@ export class TokenManager {
           return await this.refreshDiscordToken(connection)
         case 'reddit':
           return await this.refreshRedditToken(connection)
+        case 'telegram':
+          return await this.refreshTelegramToken(connection)
+        case 'wordpress':
+          return await this.refreshWordPressToken(connection)
+        case 'instagram':
+          return await this.refreshInstagramToken(connection)
         default:
           return { success: false, error: 'Platform not supported for refresh' }
       }
@@ -256,6 +267,45 @@ export class TokenManager {
       }
     } catch (error) {
       return { success: false, error: `Reddit refresh error: ${error}` }
+    }
+  }
+
+  /**
+   * Refresh Telegram token - Bot tokens don't expire
+   */
+  private static async refreshTelegramToken(connection: any): Promise<RefreshResult> {
+    // Telegram bot tokens don't expire and don't need refreshing
+    // If the bot is inactive, re-authentication is required
+    return { 
+      success: true, 
+      newAccessToken: connection.access_token,
+      error: 'Telegram bot tokens don\'t expire. If posting fails, please check bot permissions and re-authenticate.'
+    }
+  }
+
+  /**
+   * Refresh WordPress token - Uses username/password authentication
+   */
+  private static async refreshWordPressToken(connection: any): Promise<RefreshResult> {
+    // WordPress connections use username/password, not tokens
+    // No refresh needed, credentials are stored securely
+    return { 
+      success: true, 
+      newAccessToken: connection.access_token, // This would be the stored credentials
+      error: 'WordPress uses username/password authentication. No token refresh needed.'
+    }
+  }
+
+  /**
+   * Refresh Instagram token - Instagram tokens are long-lived
+   */
+  private static async refreshInstagramToken(connection: any): Promise<RefreshResult> {
+    // Instagram tokens are long-lived and don't expire frequently
+    // If posting fails, re-authentication might be required
+    return { 
+      success: true, 
+      newAccessToken: connection.access_token,
+      error: 'Instagram tokens are long-lived. If posting fails, please re-authenticate.'
     }
   }
 
