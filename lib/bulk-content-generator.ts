@@ -102,14 +102,30 @@ export async function generateBulkContent(request: BulkContentRequest): Promise<
       
       results.summary.successful++
       
-      // Small delay between generations to respect API limits
+      // Rate limiting to prevent quota issues
       if (index < request.items.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        console.log(`⏳ Waiting 3 seconds before next generation...`)
+        await new Promise(resolve => setTimeout(resolve, 3000)) // 3 second delay
       }
       
     } catch (error) {
       console.error(`❌ Failed to generate content for trend: ${item.trend}`, error)
-      results.errors?.push(`Failed to generate content for "${item.trend}": ${error instanceof Error ? error.message : 'Unknown error'}`)
+      
+      // Check if it's a quota/rate limit error
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const isQuotaError = errorMessage.includes('quota') || errorMessage.includes('429') || errorMessage.includes('Too Many Requests')
+      
+      if (isQuotaError) {
+        console.log(`🚨 Quota/Rate limit detected. Stopping bulk generation to prevent further errors.`)
+        results.errors?.push(`⚠️ QUOTA LIMIT REACHED: OpenAI API quota exceeded. Please check your billing and try again later.`)
+        
+        // Stop processing remaining items to avoid more quota errors
+        results.summary.failed = request.items.length - results.summary.successful
+        break
+      } else {
+        results.errors?.push(`Failed to generate content for "${item.trend}": ${errorMessage}`)
+      }
+      
       results.summary.failed++
     }
   }
@@ -192,13 +208,33 @@ NON-PUBLISHABLE (INTERNAL ONLY)
   "SUGGESTIONS (DO NOT PUBLISH):"
 - Keep each suggestion to one sentence.`
 
-  // Use OpenAI API directly (the same method as our existing content generation)
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+  // Use Vercel AI Gateway if available, otherwise fallback to OpenAI
+  const gatewayUrl = process.env.AI_GATEWAY_URL
+  const gatewayToken = process.env.AI_GATEWAY_TOKEN
+  
+  let apiUrl: string
+  let headers: Record<string, string>
+  
+  if (gatewayUrl && gatewayToken) {
+    console.log('🚀 Using Vercel AI Gateway for bulk content generation')
+    apiUrl = `${gatewayUrl}/chat/completions`
+    headers = {
+      'Authorization': `Bearer ${gatewayToken}`,
       'Content-Type': 'application/json',
-    },
+      'X-Vercel-AI-Gateway': 'true'
+    }
+  } else {
+    console.log('⚠️ Using direct OpenAI API (no gateway configured)')
+    apiUrl = 'https://api.openai.com/v1/chat/completions'
+    headers = {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers,
     body: JSON.stringify({
       model: 'gpt-4',
       messages: [
@@ -223,7 +259,8 @@ No clichés or purple prose. Be punchy, clear, and practical for spiritual seeke
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`)
+    const apiType = gatewayUrl ? 'Vercel AI Gateway' : 'OpenAI API'
+    throw new Error(`${apiType} error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
   const data = await response.json()

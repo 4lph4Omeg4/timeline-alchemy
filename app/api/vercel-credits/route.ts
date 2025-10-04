@@ -18,15 +18,36 @@ export async function GET(req: NextRequest) {
     
     // Test basic connectivity by making a simple request to the gateway
     try {
-      const testResponse = await fetch(`${gatewayUrl}/models`, {
-        headers: {
-          'Authorization': `Bearer ${gatewayToken}`,
-          'Content-Type': 'application/json'
+      // Try different gateway endpoints to test connectivity
+      const endpoints = [
+        `${gatewayUrl}/models`,
+        `${gatewayUrl}/v1/models`,
+        `${gatewayUrl}/chat/completions`
+      ]
+      
+      let testResponse = null
+      let workingEndpoint = null
+      
+      for (const endpoint of endpoints) {
+        try {
+          testResponse = await fetch(endpoint, {
+            headers: {
+              'Authorization': `Bearer ${gatewayToken}`,
+              'Content-Type': 'application/json'
+            }
+          })
+          if (testResponse.ok) {
+            workingEndpoint = endpoint
+            break
+          }
+        } catch (endpointError) {
+          console.log(`❌ Endpoint ${endpoint} failed:`, endpointError)
+          continue
         }
-      })
+      }
 
-      if (testResponse.ok) {
-        console.log('✅ AI Gateway is accessible')
+      if (testResponse && testResponse.ok) {
+        console.log(`✅ AI Gateway is accessible via ${workingEndpoint}`)
         
         return NextResponse.json({
           success: true,
@@ -41,12 +62,13 @@ export async function GET(req: NextRequest) {
           },
           usage: {
             gateway: 'Connected',
-            models: 'Available'
+            models: 'Available',
+            endpoint: workingEndpoint
           },
           message: 'AI Gateway is operational - credit details require Vercel dashboard access'
         })
       } else {
-        console.log('⚠️ AI Gateway test failed:', testResponse.status)
+        console.log('⚠️ All AI Gateway endpoints failed')
         
         return NextResponse.json({
           success: false,
@@ -59,7 +81,8 @@ export async function GET(req: NextRequest) {
             name: 'Gateway Error',
             type: 'Connection Issue'
           },
-          error: `Gateway connectivity test failed: ${testResponse.status}`
+          error: `All gateway endpoints failed. Check your AI_GATEWAY_URL and AI_GATEWAY_TOKEN.`,
+          suggestion: 'Verify your Vercel AI Gateway credentials in your environment variables'
         })
       }
     } catch (gatewayError) {

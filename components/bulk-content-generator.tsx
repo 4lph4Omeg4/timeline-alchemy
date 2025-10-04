@@ -291,9 +291,14 @@ Metadata:
 
           {/* Processing Info */}
           {isGenerating && (
-            <Alert>
+            <Alert className="bg-blue-900/30 border-blue-500/50">
               <AlertDescription>
-                Processing {parsedItemsCount} trends... This may take a few minutes for large datasets.
+                <div className="font-semibold">🔄 Processing {parsedItemsCount} trends...</div>
+                <div className="text-sm mt-1">
+                  This may take a few minutes for large datasets. 
+                  <br />
+                  <span className="text-yellow-300">⚠️ Rate limited to 3 seconds per post to prevent quota issues.</span>
+                </div>
               </AlertDescription>
             </Alert>
           )}
@@ -316,14 +321,33 @@ Metadata:
           </CardHeader>
           <CardContent>
             {currentResponse.errors && currentResponse.errors.length > 0 && (
-              <Alert className="mb-4">
+              <Alert className={`mb-4 ${currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) ? 'bg-red-900/30 border-red-500/50' : ''}`}>
                 <AlertDescription>
-                  <div className="font-semibold">Errors encountered:</div>
+                  <div className="font-semibold">
+                    {currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) 
+                      ? '🚨 Quota Limit Reached' 
+                      : 'Errors encountered:'}
+                  </div>
                   <ul className="list-disc list-inside mt-2">
                     {currentResponse.errors.map((error: string, index: number) => (
-                      <li key={index} className="text-sm">{error}</li>
+                      <li key={index} className={`text-sm ${error.includes('QUOTA LIMIT') ? 'text-red-300 font-semibold' : ''}`}>
+                        {error}
+                      </li>
                     ))}
                   </ul>
+                  {currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) && (
+                    <div className="mt-3 p-3 bg-red-800/20 border border-red-500/30 rounded">
+                      <div className="text-red-200 text-sm">
+                        <strong>💡 Solutions:</strong>
+                        <ul className="list-disc list-inside mt-1 ml-4">
+                          <li>Check your OpenAI billing and add credits</li>
+                          <li>Wait for quota to reset (usually 24 hours)</li>
+                          <li>Try generating fewer posts at once</li>
+                          <li>Consider upgrading your OpenAI plan</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </AlertDescription>
               </Alert>
             )}
