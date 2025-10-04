@@ -3,9 +3,23 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, content, excerpt, hashtags, suggestions } = await request.json()
+    const body = await request.json()
+    const { title, content, excerpt, hashtags, suggestions } = body
+
+    console.log('🔍 Create admin package request:', {
+      title: title,
+      hasContent: !!content,
+      contentLength: content?.length || 0,
+      excerpt: excerpt,
+      hasHashtags: !!hashtags,
+      hashtagsCount: hashtags?.length || 0
+    })
 
     if (!title || !content) {
+      console.error('❌ Missing required fields:', {
+        title: title,
+        content: content
+      })
       return NextResponse.json(
         { error: 'Title and content are required' },
         { status: 400 }

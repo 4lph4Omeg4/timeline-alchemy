@@ -128,6 +128,24 @@ Metadata:
 
   const savePostAsPackage = async (post: GeneratedPost) => {
     setSavingPost(post.trend)
+    
+    // Debug: Check if required fields are present
+    console.log('🔍 Saving post:', {
+      title: post.title,
+      hasContent: !!post.generatedContent,
+      contentLength: post.generatedContent?.length || 0,
+      excerpt: post.excerpt
+    })
+    
+    if (!post.title || !post.generatedContent) {
+      toast.error('Missing title or content - cannot save package')
+      console.error('❌ Missing required fields:', {
+        title: post.title,
+        content: post.generatedContent
+      })
+      return
+    }
+    
     try {
       const response = await fetch('/api/create-admin-package', {
         method: 'POST',
