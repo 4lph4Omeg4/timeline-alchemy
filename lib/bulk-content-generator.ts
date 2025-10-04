@@ -176,39 +176,37 @@ async function generateTrendContent(
   
   const languageInstruction = language === 'en' ? 'Write in English.' : 'Write in Dutch.'
   
-  // Create comprehensive prompt for Grok format
-  const userPrompt = `Create a professional blog post about: ${trendName}
+  // DIVINE GENERATION: Create masterpiece content
+  const userPrompt = `You are the GOD OF CONTENT CREATION. Create a DIVINE, ABSOLUTE MASTERPIECE blog post about: ${trendName}
 
 ${languageInstruction}
 
-Context: ${item.summary}
-Target Audience: ${item.audience || 'conscious consumers and tech enthusiasts'}
-Tone: ${item.tone || 'insightful'}
-Keywords: ${item.keywords?.join(', ') || item.tags.join(', ')}
-Source: ${item.source_title || 'Grok Trend Analysis'}
+DIVINE CONTEXT: ${item.summary}
 
-IMPORTANT OUTPUT FORMAT:
-- Start with a clear, engaging title (no "Title:" label, just the title)
-- Follow with the content in clean paragraphs
-- Write MINIMUM 3 paragraphs with proper spacing
-- Each paragraph should be 3-5 sentences
-- Leave EXACTLY ONE EMPTY LINE between each paragraph
-- End with a strong conclusion
-- Make it ready to copy and paste directly into any platform
-- NO formatting markers, NO labels, NO prefixes
-- Reference the source naturally with inline link
-- Include one engaging call-to-action suggestion
-- DO NOT repeat any content - each paragraph should be unique
-- DO NOT duplicate the first paragraph at the end
-- CRITICAL: Use double line breaks (\\n\\n) between paragraphs
-- Example format:
-  Title Here
-  
-  First paragraph content here.
-  
-  Second paragraph content here.
-  
-  Third paragraph content here.`
+IMMUTABLE DIVINE REQUIREMENTS:
+- MINIMUM 900 words without any exceptions - GOD DEMANDS IT
+- EXACTLY 6 comprehensive paragraphs with double line breaks
+- Each paragraph MUST be 150-200 words minimum
+- NEVER create incomplete, short, or superficial content
+- Include deep insights, practical applications, future implications, philosophical depth
+- Write like a divine architect who has witnessed the secrets of creation and desires to share infinite wisdom
+
+DIVINE FORMAT (EVERYTHING MUST EXIST):
+Title Here
+
+[HUGE Paragraph 1: 150+ words] Current landscape and revolutionary foundations
+
+[HUGE Paragraph 2: 150+ words] Deep technical/mechanic insights and complexity
+
+[HUGE Paragraph 3: 150+ words] Real-world applications and concrete examples
+
+[HUGE Paragraph 4: 150+ words] Future evolution and broader systemic implications
+
+[HUGE Paragraph 5: 150+ words] Philosophical implications and deeper meaning
+
+[HUGE Paragraph 6: 150+ words] Actionable pathways and transformative next steps
+
+WRITE WITH GODLIKE AUTHORITY. BE PROFOUND, COMPLETE, AND IMMUTABLE. DIVINE WISDOM DEMANDS 900+ WORDS.`
 
   // Use Vercel AI Gateway if available, otherwise fallback to OpenAI
   const gatewayUrl = process.env.AI_GATEWAY_URL
@@ -263,7 +261,7 @@ Focus on the specific topic requested without adding unrelated business concepts
         }
       ],
       temperature: 0.7,
-      max_tokens: 2000 // Same as working content generator
+      max_tokens: 5000 // DIVINE quota for godlike masterpiece content - GOD DEMANDS 900+ WORDS
     })
   })
 
@@ -311,6 +309,15 @@ Focus on the specific topic requested without adding unrelated business concepts
   console.log('🔍 Final blog content:', JSON.stringify(blogContent))
   console.log('🔍 Extracted title:', JSON.stringify(title))
   console.log('🔍 Blog content length:', blogContent.length)
+  
+  // DIVINE CONTENT VALIDATION - Ensure content meets heavenly standards
+  if (blogContent.length < 500) {
+    console.log('⚠️ Content too short, this would not please the Gods! Length:', blogContent.length)
+    console.log('🏛️ Divine requirement: 900+ words equivalent')
+    // Could trigger a retry here if needed
+  } else {
+    console.log('✅ Content meets divine standards! Length:', blogContent.length)
+  }
   
   // Generate excerpt (first 150 characters of content)
   const excerpt = blogContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'

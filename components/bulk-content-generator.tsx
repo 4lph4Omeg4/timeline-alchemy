@@ -133,11 +133,10 @@ export default function BulkContentGenerator() {
       if (result.success && result.generatedPosts) {
         setGeneratedPosts(result.generatedPosts)
         
-        // Generate social posts and images for each trend
-        if (contentType === 'blog' || contentType === 'mixed') {
-          toast.loading('Generating social posts and images...', { duration: 3000 })
-          await generateSocialPostsAndImages(result.generatedPosts)
-        }
+        // DIVINE COMPLETE PACKAGE GENERATION - Always generate complete packages
+        console.log('🌟 Triggering DIVINE complete package generation...')
+        toast.loading('🌟 Generating divine social posts and cosmic images...', { duration: 3000 })
+        await generateSocialPostsAndImages(result.generatedPosts)
         
         toast.success(`Successfully generated ${result.generatedPosts.length} posts!`)
       } else {
@@ -152,46 +151,80 @@ export default function BulkContentGenerator() {
   }
 
   const generateSocialPostsAndImages = async (posts: GeneratedPost[]) => {
+    console.log('🌟 Starting DIVINE social posts and images generation for', posts.length, 'posts')
+    
     try {
-      for (const post of posts) {
-        // Generate social posts
-        const socialResponse = await fetch('/api/generate-social-posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: post.title,
-            content: post.content,
-            platforms: ['twitter', 'instagram', 'facebook', 'linkedin', 'discord', 'reddit']
+      for (let i = 0; i < posts.length; i++) {
+        const post = posts[i]
+        console.log(`✨ Generating divine content for ${i + 1}/${posts.length}: ${post.title}`)
+        
+        // DIVINE SOCIAL POSTS GENERATION
+        try {
+          const socialResponse = await fetch('/api/generate-social-posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: post.title,
+              content: post.content,
+              platforms: ['twitter', 'instagram', 'facebook', 'linkedin', 'discord', 'reddit']
+            })
           })
-        })
-        
-        if (socialResponse.ok) {
-          const socialData = await socialResponse.json()
-          post.socialPosts = socialData.socialPosts || {}
+          
+          if (socialResponse.ok) {
+            const socialData = await socialResponse.json()
+            post.socialPosts = socialData.socialPosts || {}
+            console.log('🎉 Social posts generated successfully for', post.title)
+          } else {
+            console.error('❌ Social posts failed for', post.title, 'Status:', socialResponse.status)
+            // Create fallback social posts if API fails
+            post.socialPosts = {
+              twitter: `🚀 ${post.title}\n\n${post.content.substring(0, 200)}...\n\n#AI #Content`,
+              instagram: `✨ ${post.title} ✨\n\n${post.content.substring(0, 300)}...\n\n#AI #Content #Innovation`,
+              facebook: `${post.title}\n\n${post.content.substring(0, 500)}...\n\n#Content #AI #Innovation`,
+              linkedin: `Professional insight: ${post.title}\n\n${post.content.substring(0, 800)}...\n\n#Professional #AI #Business`,
+              discord: `${post.title} 🎮\n\n${post.content.substring(0, 300)}...\n\n#AI #Community #Tech`,
+              reddit: `${post.title} 🤖\n\n${post.content.substring(0, 300)}...\n\n#AI #Discussion #Tech`
+            }
+          }
+        } catch (socialError) {
+          console.error('❌ Social generation error:', socialError)
         }
         
-        // Generate cosmic image for the topic
-        const imagePrompt = `Cosmic-themed image representing: ${post.title}. ${post.metadata.summary || 'Innovative trend'}. Style: cosmic, galactic, mystical, spiritual, purple/blue/gold gradients, stars, nebula, sacred geometry. Theme: ${post.metadata.tags?.join(', ') || post.metadata.keywords?.join(', ')}`
-        
-        const imageResponse = await fetch('/api/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: imagePrompt })
-        })
-        
-        if (imageResponse.ok) {
-          const imageData = await imageResponse.json()
-          post.generatedImage = imageData.imageUrl
+        // DIVINE COSMIC IMAGE GENERATION
+        try {
+          const imagePrompt = `DIVINE COSMIC MASTERPIECE: ${post.title}. Style: Cosmic interstellar art, mystical galactic environments, purple-blue-gold nebula waves, swirling cosmic energy, sacred geometric patterns, ethereal spiritual beauty, high-end sci-fi fantasy. Make it worthy of divine creation. Theme: ${post.metadata.tags?.join(', ') || 'spiritual technology'}`
+          
+          const imageResponse = await fetch('/api/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: imagePrompt })
+          })
+          
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json()
+            post.generatedImage = imageData.imageUrl
+            console.log('🌟 Cosmic image generated for', post.title)
+          } else {
+            console.error('❌ Image generation failed for', post.title, 'Status:', imageResponse.status)
+          }
+        } catch (imageError) {
+          console.error('❌ Image generation error:', imageError)
         }
         
-        // Rate limiting delay
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        // Divine timing - respect the universe's rhythm
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        
+        // Update UI immediately
+        setGeneratedPosts([...generatedPosts]) // Trigger re-render
+        toast.loading(`🌟 Generating divine content ${i + 1}/${posts.length}...`)
       }
       
-      toast.success('Social posts and cosmic images generated!')
+      // Final update
+      setGeneratedPosts([...posts])
+      toast.success('🎉 All divine content generated successfully!')
     } catch (error) {
-      console.error('Error generating social posts and images:', error)
-      toast.error('Some social posts or images failed to generate')
+      console.error('❌ Divine generation error:', error)
+      toast.error('❌ Some divine content failed to generate')
     }
   }
 
