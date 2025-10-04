@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle, AlertCircle, Rocket, Zap, BarChart3, Cpu, RefreshCw, CreditCard } from 'lucide-react'
+import { CheckCircle, AlertCircle, Rocket, Zap, Cpu, RefreshCw, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface GatewayStats {
@@ -16,13 +16,6 @@ interface GatewayStats {
   creditsAvailable: boolean
 }
 
-interface UserUsage {
-  promptTokens?: number
-  completionTokens?: number
-  totalTokens?: number
-  requests: number
-  lastUsed: string
-}
 
 interface VercelCredits {
   success: boolean
@@ -48,7 +41,6 @@ interface VercelCredits {
 
 export default function AIGatewayPage() {
   const [gatewayStats, setGatewayStats] = useState<GatewayStats | null>(null)
-  const [usage, setUsage] = useState<UserUsage | null>(null)
   const [vercelCredits, setVercelCredits] = useState<VercelCredits | null>(null)
   const [loading, setLoading] = useState(true)
   const [creditsLoading, setCreditsLoading] = useState(false)
@@ -67,12 +59,6 @@ export default function AIGatewayPage() {
       
       if (data.success) {
         setGatewayStats(data.gateway)
-        // Simulate usage data (this would come from Gateway analytics in production)
-        setUsage({
-          totalTokens: 15420,
-          requests: 127,
-          lastUsed: new Date().toISOString()
-        })
       }
     } catch (error) {
       console.error('Failed to fetch gateway stats:', error)
@@ -431,44 +417,6 @@ export default function AIGatewayPage() {
         </Card>
       )}
 
-      {/* Usage Statistics */}
-      {usage && (
-        <Card className="bg-gray-900 border-gray-800">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center space-x-2">
-              <BarChart3 className="h-6 w-6 text-blue-400" />
-              <span>Usage Statistics</span>
-            </CardTitle>
-            <CardDescription className="text-gray-200">
-              Current AI Gateway usage and performance metrics
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-400">{usage.totalTokens?.toLocaleString() || 0}</div>
-                <div className="text-gray-300 text-sm">Total Tokens</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-400">{usage.requests}</div>
-                <div className="text-gray-300 text-sm">API Requests</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400">
-                  {usage.requests > 0 ? Math.round(usage.totalTokens! / usage.requests) : 0}
-                </div>
-                <div className="text-gray-300 text-sm">Avg Tokens/Request</div>
-              </div>
-            </div>
-            
-            <Separator className="my-6" />
-            
-            <div className="text-sm text-gray-400">
-              Last request: {new Date(usage.lastUsed).toLocaleDateString()}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Testing Tools */}
       <Card className="bg-gray-900 border-gray-800">
