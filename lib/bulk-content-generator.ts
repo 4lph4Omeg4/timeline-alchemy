@@ -347,24 +347,41 @@ export function stripInternalSuggestions(text: string): string {
 
 // Helper function to validate trend data structure
 export function validateTrendData(data: any): boolean {
+  console.log('🔍 Validating trend data:', JSON.stringify(data, null, 2))
+  
   if (!data || !Array.isArray(data.items)) {
+    console.log('❌ No data or items array')
     return false
   }
   
-  const requiredFields = ['trend', 'summary', 'keywords', 'audience', 'tone']
+  // Required fields for Grok format: title, summary, tags
+  const requiredFields = ['title', 'summary', 'tags']
   
-  for (const item of data.items) {
+  for (let i = 0; i < data.items.length; i++) {
+    const item = data.items[i]
+    console.log(`🔍 Checking item ${i}:`, JSON.stringify(item, null, 2))
+    
     if (!item || typeof item !== 'object') {
+      console.log(`❌ Item ${i} is not an object`)
       return false
     }
     
+    // Check required fields
     for (const field of requiredFields) {
       if (!item[field]) {
+        console.log(`❌ Missing required field: ${field} in item ${i}:`, item)
         return false
       }
     }
+    
+    // Check that tags is array
+    if (!Array.isArray(item.tags)) {
+      console.log(`❌ Tags must be an array in item ${i}:`, item, 'tags type:', typeof item.tags)
+      return false
+    }
   }
   
+  console.log('✅ Trend data validation passed for Grok format')
   return true
 }
 

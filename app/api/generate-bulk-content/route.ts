@@ -6,6 +6,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     
     console.log('🚀 Bulk content generation request received')
+    console.log('📊 Request body items:', body.items?.length || 'no items')
+    console.log('📊 First item example:', JSON.stringify(body.items?.[0], null, 2))
     
     // Validate request body
     if (!body.items || !Array.isArray(body.items)) {
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (!validateTrendData(body)) {
       return NextResponse.json({
         success: false,
-        error: 'Invalid trend data structure. Each item must have: trend, summary, keywords, audience, tone'
+        error: 'Invalid trend data structure. Each item must have: title, summary, tags'
       }, { status: 400 })
     }
     
