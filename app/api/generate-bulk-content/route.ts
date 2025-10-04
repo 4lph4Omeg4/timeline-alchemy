@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateBulkContent, validateTrendData } from '@/lib/bulk-content-generator'
+import { generateBulkContent, validateTrendData, BulkContentResult } from '@/lib/bulk-content-generator'
 
 export async function POST(req: NextRequest) {
   try {

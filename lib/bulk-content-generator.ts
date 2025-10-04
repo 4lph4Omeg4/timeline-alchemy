@@ -22,7 +22,7 @@ interface BulkContentRequest {
   language?: 'nl' | 'en'
 }
 
-interface BulkContentResult {
+export interface BulkContentResult {
   success: boolean
   generatedPosts: Array<{
     trend: string
