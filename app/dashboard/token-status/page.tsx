@@ -18,53 +18,173 @@ export default function TokenStatusPage() {
     fetchUserOrg()
   }, [])
 
+  // Helper function to get user's personal organization ID (same as socials page)
+  const getUserOrgId = async (userId: string) => {
+    const { data: orgMembers } = await supabase
+      .from('org_members')
+      .select('org_id, role')
+      .eq('user_id', userId)
+
+    if (!orgMembers || orgMembers.length === 0) {
+      return null
+    }
+
+    // Find the user's personal organization (not Admin Organization)
+    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+    if (!userOrgId) {
+      userOrgId = orgMembers[0].org_id
+    }
+    return userOrgId
+  }
+
   const fetchUserOrg = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: memberships } = await supabase
-        .from('org_members')
-        .select('org_id')
-        .eq('user_id', user.id)
-        .eq('role', 'owner')
-
-      if (memberships && memberships.length > 0) {
-        setUserOrgId(memberships[0].org_id)
-        fetchTokenStatus(memberships[0].org_id)
+      // Get user's personal organization ID (same logic as socials page)
+      const userOrgId = await getUserOrgId(user.id)
+      if (!userOrgId) {
+        console.error('No organization found for user')
+        return
       }
+
+      setUserOrgId(userOrgId)
+      fetchTokenStatus(userOrgId)
     } catch (error) {
       console.error('Error fetching user org:', error)
     }
   }
 
-  const fetchTokenStatus = async (orgId: string) => {
-    setLoading(true)
-    try {
-      const statuses = await TokenManager.checkTokenStatus(orgId)
-      setTokenStatuses(statuses)
-    } catch (error) {
-      console.error('Error fetching token status:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+        const fetchTokenStatus = async (orgId: string) => {
+          setLoading(true)
+          try {
+            console.log('🔍 Fetching token status for org:', orgId)
+            
+            // Fetch social connections
+            const { data: connections, error } = await supabase
+              .from('social_connections')
+              .select('*')
+              .eq('org_id', orgId)
+            
+            console.log('🔗 Raw connections found:', connections)
+            console.log('❌ Raw connections error:', error)
+            
+            // Fetch Telegram channels
+            const { data: telegramChannels, error: telegramError } = await supabase
+              .from('telegram_channels')
+              .select('*')
+              .eq('org_id', orgId)
+            
+            console.log('📱 Telegram channels found:', telegramChannels)
+            console.log('❌ Telegram channels error:', telegramError)
+            
+            // Create statuses manually since TokenManager might have issues
+            const statuses: TokenStatus[] = []
+            
+            // Process social connections
+            for (const connection of connections || []) {
+              const now = new Date()
+              let isExpired = false
+              let needsRefresh = false
+              let expiresAt: Date | undefined
+
+              // Check token expiry based on platform
+              switch (connection.platform) {
+                case 'twitter':
+                  // Twitter OAuth 1.0a tokens are long-lived and don't expire in the same way
+                  needsRefresh = false
+                  break
+                case 'linkedin':
+                  const linkedinAge = now.getTime() - new Date(connection.created_at).getTime()
+                  needsRefresh = linkedinAge > 50 * 24 * 60 * 60 * 1000 // 50 days
+                  break
+                case 'facebook':
+                case 'instagram':
+                case 'youtube':
+                case 'discord':
+                case 'reddit':
+                  needsRefresh = false
+                  break
+                case 'wordpress':
+                  needsRefresh = false
+                  break
+                default:
+                  console.warn(`Unknown platform for token status check: ${connection.platform}`)
+                  break
+              }
+
+              statuses.push({
+                platform: connection.platform,
+                accountId: connection.account_id,
+                accountName: connection.account_name,
+                isExpired: isExpired,
+                expiresAt: expiresAt,
+                lastChecked: now,
+                needsRefresh: needsRefresh,
+              })
+            }
+            
+            // Process Telegram channels
+            for (const channel of telegramChannels || []) {
+              const now = new Date()
+              statuses.push({
+                platform: 'telegram',
+                accountId: channel.channel_id,
+                accountName: channel.channel_name,
+                isExpired: false,
+                expiresAt: undefined,
+                lastChecked: now,
+                needsRefresh: false, // Telegram bot tokens don't expire
+              })
+            }
+            
+            console.log('📊 Token statuses:', statuses)
+            setTokenStatuses(statuses)
+          } catch (error) {
+            console.error('Error fetching token status:', error)
+          } finally {
+            setLoading(false)
+          }
+        }
+
 
   const handleRefreshToken = async (platform: string, accountId: string) => {
     if (!userOrgId) return
 
     setRefreshing(`${platform}-${accountId}`)
     try {
-      const result = await TokenManager.refreshToken(userOrgId, platform, accountId)
-      
+      // For Telegram, we don't need to refresh tokens (they don't expire)
+      if (platform === 'telegram') {
+        alert('Telegram bot tokens don\'t expire and don\'t need refreshing. If posting fails, please check bot permissions.')
+        setRefreshing(null)
+        return
+      }
+
+      // Call the refresh API endpoint
+      const response = await fetch('/api/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orgId: userOrgId,
+          platform: platform,
+          accountId: accountId
+        })
+      })
+
+      const result = await response.json()
       if (result.success) {
-        // Refresh the status list
-        await fetchTokenStatus(userOrgId)
+        console.log(`Successfully refreshed token for ${platform} ${accountId}`)
+        // Re-fetch all statuses to update the UI
+        fetchTokenStatus(userOrgId)
       } else {
+        console.error(`Failed to refresh token for ${platform} ${accountId}: ${result.error}`)
         alert(`Failed to refresh ${platform} token: ${result.error}`)
       }
     } catch (error) {
-      console.error('Error refreshing token:', error)
+      console.error(`Error refreshing token for ${platform} ${accountId}:`, error)
       alert(`Error refreshing ${platform} token`)
     } finally {
       setRefreshing(null)
@@ -122,7 +242,7 @@ export default function TokenStatusPage() {
           </p>
         </div>
         <Button 
-          onClick={() => userOrgId && fetchTokenStatus(userOrgId)}
+          onClick={() => fetchUserOrg()}
           disabled={loading}
           className="bg-purple-600 hover:bg-purple-700"
         >

@@ -4,55 +4,132 @@ import { TwitterOAuth, LinkedInOAuth, InstagramOAuth, YouTubeOAuth, DiscordOAuth
 import { TokenManager } from '@/lib/token-manager'
 import { withRetry, RetryManager } from '@/lib/retry-manager'
 
-// WordPress posting function
+// Enhanced WordPress posting function
 async function postToWordPress(content: string, title: string, siteUrl: string, username: string, password: string) {
   try {
+    console.log('🚀 Starting WordPress post:', { title, siteUrl })
+    
     // Clean up the site URL (remove trailing slash)
     const cleanSiteUrl = siteUrl.replace(/\/$/, '')
     
     // Check if it's a WordPress.com site
     const isWordPressCom = cleanSiteUrl.includes('.wordpress.com')
     
+    console.log('🔍 WordPress site type:', isWordPressCom ? 'WordPress.com' : 'Self-hosted')
+    
+    // Prepare the post data with better formatting
+    const postData = {
+      title: title,
+      content: content,
+      status: 'publish',
+      format: 'standard',
+      // Add metadata to track posts from Timeline Alchemy
+      meta: {
+        timeline_alchemy: true,
+        created_at: new Date().toISOString()
+      }
+    }
+    
+    // For WordPress.com, we might need different handling
     let apiUrl: string
+    let headers: Record<string, string>
+    
     if (isWordPressCom) {
-      // WordPress.com might have different posting endpoints
+      // WordPress.com uses different endpoints and might have stricter limitations
       apiUrl = `${cleanSiteUrl}/wp-json/wp/v2/posts`
+      
+      // WordPress.com might require different authentication
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64'),
+        'User-Agent': 'Timeline-Alchemy/1.0',
+        'Accept': 'application/json'
+      }
     } else {
       // Self-hosted WordPress
       apiUrl = `${cleanSiteUrl}/wp-json/wp/v2/posts`
+      
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64'),
+        'User-Agent': 'Timeline-Alchemy/1.0',
+        'Accept': 'application/json'
+      }
     }
     
+    console.log('📡 Making request to:', apiUrl)
+    console.log('🔐 Using auth header length:', headers.Authorization.length)
+    
+    // Make the posting request with timeout
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64')
-      },
-      body: JSON.stringify({
-        title: title,
-        content: content,
-        status: 'publish',
-        format: 'standard'
-      })
-    })
+      headers,
+      body: JSON.stringify(postData),
+      timeout: 30000 // 30 second timeout
+    } as any)
+
+    console.log('📊 WordPress response status:', response.status)
+    console.log('📊 WordPress response headers:', Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
-      const errorData = await response.json()
-      if (isWordPressCom) {
-        throw new Error(`WordPress.com API error: ${errorData.message || response.statusText}. Note: WordPress.com has limited REST API access.`)
-      } else {
-        throw new Error(`WordPress API error: ${errorData.message || response.statusText}`)
+      let errorMessage = ''
+      let errorDetails = ''
+      
+      try {
+        const errorData = await response.json()
+        errorDetails = JSON.stringify(errorData, null, 2)
+        
+        if (isWordPressCom) {
+          errorMessage = `WordPress.com API error (${response.status}): ${errorData.message || response.statusText}`
+          
+          // Provide specific guidance for WordPress.com issues
+          if (response.status === 403) {
+            errorMessage += '. WordPress.com has limited REST API access for posting.'
+          } else if (response.status === 401) {
+            errorMessage += '. Please check your WordPress.com credentials and ensure REST API access is enabled.'
+          }
+        } else {
+          errorMessage = `WordPress API error (${response.status}): ${errorData.message || response.statusText}`
+          
+          // Provide specific guidance for self-hosted WordPress issues
+          if (response.status === 404) {
+            errorMessage += '. Please ensure WordPress REST API is enabled on your site.'
+          } else if (response.status === 403) {
+            errorMessage += '. Please check your permissions and ensure you have posting rights.'
+          } else if (response.status === 401) {
+            errorMessage += '. Please check your WordPress credentials.'
+          }
+        }
+      } catch (parseError) {
+        errorMessage = `WordPress API error (${response.status}): ${response.statusText}. Could not parse error details.`
+        errorDetails = 'Failed to parse error response'
       }
+      
+      console.error('❌ WordPress posting failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorDetails
+      })
+      
+      throw new Error(errorMessage)
     }
 
     const result = await response.json()
+    console.log('✅ WordPress post successful:', {
+      postId: result.id,
+      link: result.link,
+      title: result.title?.rendered
+    })
+    
     return {
       success: true,
       postId: result.id,
       url: result.link,
-      message: `Posted to WordPress: ${result.link}`
+      message: `Posted to WordPress: ${result.link}`,
+      postTitle: result.title?.rendered || title
     }
   } catch (error) {
+    console.error('💥 WordPress posting error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown WordPress error'
@@ -154,7 +231,17 @@ export async function POST(request: NextRequest) {
               username: (connection as any).username,
               password: (connection as any).password
             }
-            result = await postToWordPress((post as any).content, (post as any).title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
+            
+            // Use retry logic for WordPress posting
+            const wpResult = await withRetry(async () => {
+              return await postToWordPress((post as any).content, (post as any).title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
+            }, 'wordpress')
+            
+            if (!wpResult.success) {
+              throw new Error(`WordPress posting failed after ${wpResult.attempts} attempts: ${wpResult.error}`)
+            }
+            
+            result = wpResult.data
             break
           default:
             errors.push({

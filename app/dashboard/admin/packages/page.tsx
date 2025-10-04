@@ -9,6 +9,7 @@ import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Loader } from '@/components/Loader'
+import { Loader2, Image as ImageIcon } from 'lucide-react'
 
 interface AdminPackage {
   id: string
@@ -18,11 +19,13 @@ interface AdminPackage {
   created_at: string
   published_at: string | null
   scheduled_for: string | null
+  images?: Array<{ id: string; url: string }>
 }
 
 export default function AdminPackagesPage() {
   const [packages, setPackages] = useState<AdminPackage[]>([])
   const [loading, setLoading] = useState(true)
+  const [generatingImages, setGeneratingImages] = useState<Set<string>>(new Set())
 
   const fetchPackages = async () => {
     setLoading(true)
@@ -49,7 +52,7 @@ export default function AdminPackagesPage() {
         return
       }
 
-      // Fetch admin-created packages
+      // Fetch admin-created packages with images
       const { data: packagesData, error: packagesError } = await supabase
         .from('blog_posts')
         .select(`
@@ -59,7 +62,11 @@ export default function AdminPackagesPage() {
           state,
           created_at,
           published_at,
-          scheduled_for
+          scheduled_for,
+          images (
+            id,
+            url
+          )
         `)
         .eq('org_id', orgMember.org_id)
         .eq('created_by_admin', true)
@@ -80,6 +87,7 @@ export default function AdminPackagesPage() {
         created_at: pkg.created_at,
         published_at: pkg.published_at,
         scheduled_for: pkg.scheduled_for,
+        images: pkg.images || [],
       }))
 
       setPackages(packagesList)
@@ -118,6 +126,60 @@ export default function AdminPackagesPage() {
         return 'Published'
       default:
         return 'Unknown'
+    }
+  }
+
+  const handleGenerateImage = async (pkg: AdminPackage) => {
+    setGeneratingImages(prev => new Set(prev).add(pkg.id))
+    
+    try {
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: pkg.title,
+          size: '1024x1024',
+          style: 'vivid'
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate image')
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.imageUrl) {
+        // Save the image to the package
+        const { error: imageError } = await supabase
+          .from('images')
+          .insert({
+            post_id: pkg.id,
+            url: result.imageUrl,
+            org_id: (await supabase.from('org_members').select('org_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).eq('role', 'owner').single()).data?.org_id
+          })
+
+        if (imageError) {
+          console.error('Error saving image:', imageError)
+          toast.error('Image generated but failed to save')
+        } else {
+          toast.success('Image generated and saved successfully!')
+          fetchPackages() // Refresh to show the new image
+        }
+      } else {
+        toast.error('Failed to generate image')
+      }
+    } catch (error) {
+      console.error('Error generating image:', error)
+      toast.error('Failed to generate image')
+    } finally {
+      setGeneratingImages(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(pkg.id)
+        return newSet
+      })
     }
   }
 
@@ -203,12 +265,40 @@ export default function AdminPackagesPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-grow flex flex-col justify-between">
+                {/* Image Status */}
+                {pkg.images && pkg.images.length > 0 && (
+                  <div className="mb-3 p-2 bg-green-900/20 border border-green-500/30 rounded text-xs text-green-300">
+                    🖼️ {pkg.images.length} image(s) attached
+                  </div>
+                )}
+                
                 <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
                   <Link href={`/dashboard/content/package/${pkg.id}`}>
                     <Button className="w-full">
                       📦 View Package
                     </Button>
                   </Link>
+                  
+                  {/* Generate Image Button */}
+                  <Button
+                    variant="outline"
+                    onClick={() => handleGenerateImage(pkg)}
+                    disabled={generatingImages.has(pkg.id)}
+                    className="w-full border-purple-500 text-purple-400 hover:bg-purple-900/30"
+                  >
+                    {generatingImages.has(pkg.id) ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="mr-2 h-4 w-4" />
+                        {pkg.images && pkg.images.length > 0 ? 'Generate New Image' : 'Generate Image'}
+                      </>
+                    )}
+                  </Button>
+                  
                   <div className="flex space-x-2">
                     <Link href={`/dashboard/content/edit/${pkg.id}`}>
                       <Button variant="outline" className="flex-1">

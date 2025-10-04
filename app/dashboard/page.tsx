@@ -149,10 +149,15 @@ export default function DashboardPage() {
             .select('id')
             .eq('org_id', orgMember?.org_id)
 
+          const { data: telegramChannels } = await supabase
+            .from('telegram_channels')
+            .select('id')
+            .eq('org_id', orgMember?.org_id)
+
           setUsageStats({
             postsThisMonth: postsThisMonth?.length || 0,
             organizationsCount: organizations?.length || 0,
-            socialAccountsCount: socialConnections?.length || 0,
+            socialAccountsCount: (socialConnections?.length || 0) + (telegramChannels?.length || 0),
           })
         }
       } catch (error) {

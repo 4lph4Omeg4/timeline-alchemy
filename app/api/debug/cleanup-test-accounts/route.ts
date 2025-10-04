@@ -3,6 +3,15 @@ import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
+    // Skip during build process
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Skipped during build',
+        timestamp: new Date().toISOString()
+      })
+    }
+
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     

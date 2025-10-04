@@ -200,7 +200,7 @@ export default function ContentCreatorPage() {
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-3">
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-200 via-purple-200 to-pink-200 text-transparent bg-clip-text">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-200 via-purple-200 to-pink-200 text-transparent bg-clip-text">
               Divine Content Creator
             </h1>
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
