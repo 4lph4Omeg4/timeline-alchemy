@@ -157,6 +157,7 @@ async function generateTrendContent(
   excerpt: string
   hashtags: string[]
   suggestions: string[]
+  category: string
 }> {
   
   // Get trend name (use title or trend field)
