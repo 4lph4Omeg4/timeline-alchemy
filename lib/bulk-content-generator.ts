@@ -31,6 +31,7 @@ export interface BulkContentResult {
     excerpt: string
     hashtags: string[]
     suggestions: string[]
+    category: string
     metadata: {
       sourceTitle: string
       sourceUrl: string
