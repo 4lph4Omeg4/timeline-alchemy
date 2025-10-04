@@ -160,17 +160,16 @@ async function generateTrendContent(
   
   const languageInstruction = language === 'en' ? 'Write in English.' : 'Write in Dutch.'
   
-  // Simplified prompt similar to the working content generator
-  const enhancedPrompt = `Create a professional blog post about: ${item.trend}
+  // Use the EXACT SAME prompt as the working content generator
+  const userPrompt = `Create a professional blog post about: ${item.trend}
 
 ${languageInstruction}
 
-Context:
-- Summary: ${item.summary}
-- Target Audience: ${item.audience}
-- Tone: ${item.tone}
-- Keywords: ${item.keywords.join(', ')}
-- Source: ${item.source_title} — ${item.source_url}
+Context: ${item.summary}
+Target Audience: ${item.audience}
+Tone: ${item.tone}
+Keywords: ${item.keywords.join(', ')}
+Source: ${item.source_title} — [${item.source_title}](${item.source_url})
 
 IMPORTANT OUTPUT FORMAT:
 - Start with a clear, engaging title (no "Title:" label, just the title)
@@ -181,8 +180,19 @@ IMPORTANT OUTPUT FORMAT:
 - End with a strong conclusion
 - Make it ready to copy and paste directly into any platform
 - NO formatting markers, NO labels, NO prefixes
-- Reference the source naturally: [${item.source_title}](${item.source_url})
-- Use one call-to-action from: ${item.cta_ideas.join(', ')}`
+- Reference the source naturally with inline link
+- Include one call-to-action from: ${item.cta_ideas.join(', ')}
+- DO NOT repeat any content - each paragraph should be unique
+- DO NOT duplicate the first paragraph at the end
+- CRITICAL: Use double line breaks (\\n\\n) between paragraphs
+- Example format:
+  Title Here
+  
+  First paragraph content here.
+  
+  Second paragraph content here.
+  
+  Third paragraph content here.`
 
   // Use Vercel AI Gateway if available, otherwise fallback to OpenAI
   const gatewayUrl = process.env.AI_GATEWAY_URL
@@ -226,15 +236,18 @@ CRITICAL OUTPUT REQUIREMENTS:
 - Make it copy-paste ready for any platform
 - Focus ONLY on the specific topic requested
 - Do NOT add unrelated concepts or random business terms
-- Write in the same language as the prompt`
+- Write in the same language as the prompt
+
+Write in a professional tone. Create content that is medium in length.
+Focus on the specific topic requested without adding unrelated business concepts.`
         },
         {
           role: 'user',
-          content: enhancedPrompt
+          content: userPrompt
         }
       ],
       temperature: 0.7,
-      max_tokens: contentType === 'blog' ? 1500 : 800
+      max_tokens: 2000 // Same as working content generator
     })
   })
 

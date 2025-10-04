@@ -43,26 +43,40 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // For now, we'll create packages without user authentication
-    // In production, you'd want to validate the user session
-    console.log('🔍 Looking for organization...')
-    const { data: organization, error: orgError } = await supabaseClient
+    // Find the primary admin organization
+    console.log('🔍 Looking for admin organization...')
+    let { data: organization, error: orgError } = await supabaseClient
       .from('organizations')
-      .select('id')
+      .select('id, name, type')
+      .eq('type', 'admin')
       .limit(1)
       .single()
       
-    console.log('🔍 Organization query result:', { organization, orgError })
+    console.log('🔍 Admin organization query result:', { organization, orgError })
 
     if (!organization?.id) {
-      console.error('❌ No organization found')
-      return NextResponse.json(
-        { error: 'No organization found' },
-        { status: 400 }
-      )
+      console.log('🔍 No admin org found, looking for any organization...')
+      // Fallback: get any organization
+      const fallbackResult = await supabaseClient
+        .from('organizations')
+        .select('id, name, type')
+        .limit(1)
+        .single()
+        
+      console.log('🔍 Fallback organization:', fallbackResult)
+      
+      if (!fallbackResult.data?.id) {
+        console.error('❌ No organization found at all')
+        return NextResponse.json(
+          { error: 'No organization found' },
+          { status: 400 }
+        )
+      }
+      
+      organization = fallbackResult.data
     }
     
-    console.log('🔍 Using organization ID:', organization.id)
+    console.log('🔍 Using organization:', { id: organization.id, name: organization.name, type: organization.type })
 
     // Create the package (simplified - only basic fields)
     console.log('🔍 Creating package with simplified data:', {
@@ -72,9 +86,12 @@ export async function POST(request: NextRequest) {
       note: 'using only basic columns: title, content, state'
     })
     
+    // Add admin marker to title
+    const adminTitle = `[ADMIN] ${title}`
+    
     const insertData = {
       org_id: organization.id,
-      title: title,
+      title: adminTitle,
       content: content,
       state: 'draft'
     }
