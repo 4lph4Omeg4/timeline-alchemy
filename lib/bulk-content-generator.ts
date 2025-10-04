@@ -215,7 +215,7 @@ WRITE WITH GODLIKE AUTHORITY. BE PROFOUND, COMPLETE, AND IMMUTABLE. DIVINE WISDO
 
   // Use Vercel AI Gateway if available, otherwise fallback to OpenAI
   const gatewayUrl = process.env.AI_GATEWAY_URL
-  const gatewayToken = process.env.AI_GATEWAY_TOKEN
+  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
   
   let apiUrl: string
   let headers: Record<string, string>

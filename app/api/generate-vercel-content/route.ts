@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
         '✅ Access to advanced prompt optimization',
         '✅ Usage analytics and monitoring'
       ] : [
-        '💡 Configure AI_GATEWAY_URL and AI_GATEWAY_TOKEN to enable Gateway features',
+        '💡 Configure AI_GATEWAY_URL and AI_GATEWAY_TOKEN (or AI_GATEWAY_API_KEY) to enable Gateway features',
         '💡 Get better performance and cost optimization',
         '💡 Access to advanced prompt optimization features'
       ]

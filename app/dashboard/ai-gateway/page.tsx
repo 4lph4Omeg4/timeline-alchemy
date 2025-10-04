@@ -264,7 +264,7 @@ export default function AIGatewayPage() {
             <Alert className="mt-4 bg-yellow-900/30 border-yellow-500/50">
               <AlertCircle className="h-4 w-4 text-yellow-400" />
               <AlertDescription className="text-yellow-200">
-                Configure AI_GATEWAY_URL and AI_GATEWAY_TOKEN in your environment variables to enable enhanced AI features
+                Configure AI_GATEWAY_URL and AI_GATEWAY_TOKEN (or AI_GATEWAY_API_KEY) in your environment variables to enable enhanced AI features
               </AlertDescription>
             </Alert>
           )}
@@ -599,6 +599,7 @@ export default function AIGatewayPage() {
                   <div className="text-green-400"># Vercel AI Gateway Configuration</div>
                   <div className="text-blue-400">AI_GATEWAY_URL=https://your-gateway-url.vercel.app</div>
                   <div className="text-blue-400">AI_GATEWAY_TOKEN=your_gateway_token</div>
+                  <div className="text-blue-400"># OR use AI_GATEWAY_API_KEY instead</div>
                 </div>
               </div>
               
