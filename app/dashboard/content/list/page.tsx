@@ -72,8 +72,9 @@ export default function ContentListPage() {
       }
 
       // Apply category filtering
-      if (selectedCategory !== 'all')
+      if (selectedCategory !== 'all') {
         query = query.like('title', `[${selectedCategory}]%`)
+      }
 
       // Apply sorting
       switch (sortBy) {
@@ -318,250 +319,252 @@ export default function ContentListPage() {
             </Badge>
           </div>
 
-      {/* Filter Tabs */}
-      <div className="flex space-x-2">
-        {(['all', 'draft', 'scheduled', 'published'] as const).map((filterType) => (
-          <Button
-            key={filterType}
-            variant={filter === filterType ? 'default' : 'outline'}
-            onClick={() => setFilter(filterType)}
-            className="capitalize"
-          >
-            {filterType === 'all' ? 'All Content' : getStateText(filterType)}
-          </Button>
-        ))}
-      </div>
+          {/* Filter Tabs */}
+          <div className="flex space-x-2">
+            {(['all', 'draft', 'scheduled', 'published'] as const).map((filterType) => (
+              <Button
+                key={filterType}
+                variant={filter === filterType ? 'default' : 'outline'}
+                onClick={() => setFilter(filterType)}
+                className="capitalize"
+              >
+                {filterType === 'all' ? 'All Content' : getStateText(filterType)}
+              </Button>
+            ))}
+          </div>
 
-      {/* Sort Options */}
-      <div className="flex items-center space-x-4">
-        <span className="text-gray-300 text-sm font-medium">Sort by:</span>
-        <div className="flex space-x-2">
-          {(['newest', 'oldest', 'rating', 'title'] as const).map((sortType) => (
-            <Button
-              key={sortType}
-              variant={sortBy === sortType ? 'default' : 'outline'}
-              onClick={() => setSortBy(sortType)}
-              size="sm"
-              className="capitalize"
-            >
-              {sortType === 'newest' ? 'Newest First' : 
-               sortType === 'oldest' ? 'Oldest First' :
-               sortType === 'rating' ? 'Top Rated' : 'Title A-Z'}
-            </Button>
-          ))}
-        </div>
-      </div>
+          {/* Sort Options */}
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-300 text-sm font-medium">Sort by:</span>
+            <div className="flex space-x-2">
+              {(['newest', 'oldest', 'rating', 'title'] as const).map((sortType) => (
+                <Button
+                  key={sortType}
+                  variant={sortBy === sortType ? 'default' : 'outline'}
+                  onClick={() => setSortBy(sortType)}
+                  size="sm"
+                  className="capitalize"
+                >
+                  {sortType === 'newest' ? 'Newest First' : 
+                   sortType === 'oldest' ? 'Oldest First' :
+                   sortType === 'rating' ? 'Top Rated' : 'Title A-Z'}
+                </Button>
+              ))}
+            </div>
+          </div>
 
-      {/* Content Grid */}
-      {posts.length === 0 ? (
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-xl font-semibold text-white mb-2">No content found</h3>
-            <p className="text-gray-400 text-center mb-6">
-              {filter === 'all' 
-                ? "No content found in your organization. Start by creating your first post or ask your admin to create packages for you!"
-                : `No ${filter} content found. Try creating some content or check other filters.`
-              }
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post) => (
-            <Card key={post.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-white text-lg line-clamp-2">
-                    {post.title}
-                  </CardTitle>
-                  <Badge className={`${getStateColor(post.state)} text-white ml-2`}>
-                    {getStateText(post.state)}
-                  </Badge>
-                </div>
-                <CardDescription className="text-gray-400">
-                  <div className="flex items-center space-x-2">
-                    <span>Created {formatDate(post.created_at)}</span>
-                    {post.created_by_admin && (
-                      <Badge className="bg-purple-600 text-white text-xs">
-                        Admin Package
+          {/* Content Grid */}
+          {posts.length === 0 ? (
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="text-6xl mb-4">📝</div>
+                <h3 className="text-xl font-semibold text-white mb-2">No content found</h3>
+                <p className="text-gray-400 text-center mb-6">
+                  {filter === 'all' 
+                    ? "No content found in your organization. Start by creating your first post or ask your admin to create packages for you!"
+                    : `No ${filter} content found. Try creating some content or check other filters.`
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {posts.map((post) => (
+                <Card key={post.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-white text-lg line-clamp-2">
+                        {post.title}
+                      </CardTitle>
+                      <Badge className={`${getStateColor(post.state)} text-white ml-2`}>
+                        {getStateText(post.state)}
                       </Badge>
-                    )}
-                    {post.state === 'scheduled' && !post.created_by_admin && (
-                      <Badge className="bg-orange-600 text-white text-xs">
-                        📅 Scheduled Task
-                      </Badge>
-                    )}
-                  </div>
-                  {post.published_at && (
-                    <span className="block">
-                      Published {formatDate(post.published_at)}
-                    </span>
-                  )}
-                  {post.scheduled_for && (
-                    <span className="block text-blue-400">
-                      Scheduled for {formatDateTime(post.scheduled_for)}
-                    </span>
-                  )}
-                  {/* Rating Display */}
-                  <div className="flex items-center space-x-2 mt-2">
-                    <StarRating 
-                      rating={post.average_rating || 0} 
-                      size="sm" 
-                      showNumber={true}
-                    />
-                    <span className="text-xs text-gray-500">
-                      ({post.rating_count || 0} {post.rating_count === 1 ? 'rating' : 'ratings'})
-                    </span>
-                  </div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Warning for scheduled tasks */}
-                  {post.state === 'scheduled' && !post.created_by_admin && (
-                    <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-3">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-orange-400 text-lg">⚠️</span>
-                        <div className="text-orange-200 text-sm">
-                          <strong>Scheduled Task:</strong> This is a scheduled post created from an admin package. 
-                          <br />
-                          <span className="text-orange-300">
-                            Scheduled for: <strong>{formatDateTime(post.scheduled_for || '')}</strong>
-                          </span>
-                          <br />
-                          <span className="text-orange-300">Do not delete - it will be automatically posted!</span>
-                        </div>
-                      </div>
                     </div>
-                  )}
-                  
-                  {(post.state !== 'scheduled' || post.created_by_admin) && (
-                    <p className="text-gray-300 text-sm line-clamp-6">
-                      {post.content.substring(0, 900)}...
-                    </p>
-                  )}
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {post.state === 'draft' && (
-                      <>
-                        {post.created_by_admin ? (
-                          <Link href={`/dashboard/content/package/${post.id}`}>
-                            <Button size="sm" className="flex-1">
-                              📦 View Package
-                            </Button>
-                          </Link>
-                        ) : (
+                    <CardDescription className="text-gray-400">
+                      <div className="flex items-center space-x-2">
+                        <span>Created {formatDate(post.created_at)}</span>
+                        {post.created_by_admin && (
+                          <Badge className="bg-purple-600 text-white text-xs">
+                            Admin Package
+                          </Badge>
+                        )}
+                        {post.state === 'scheduled' && !post.created_by_admin && (
+                          <Badge className="bg-orange-600 text-white text-xs">
+                            📅 Scheduled Task
+                          </Badge>
+                        )}
+                      </div>
+                      {post.published_at && (
+                        <span className="block">
+                          Published {formatDate(post.published_at)}
+                        </span>
+                      )}
+                      {post.scheduled_for && (
+                        <span className="block text-blue-400">
+                          Scheduled for {formatDateTime(post.scheduled_for)}
+                        </span>
+                      )}
+                      {/* Rating Display */}
+                      <div className="flex items-center space-x-2 mt-2">
+                        <StarRating 
+                          rating={post.average_rating || 0} 
+                          size="sm" 
+                          showNumber={true}
+                        />
+                        <span className="text-xs text-gray-500">
+                          ({post.rating_count || 0} {post.rating_count === 1 ? 'rating' : 'ratings'})
+                        </span>
+                      </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Warning for scheduled tasks */}
+                      {post.state === 'scheduled' && !post.created_by_admin && (
+                        <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-3">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-orange-400 text-lg">⚠️</span>
+                            <div className="text-orange-200 text-sm">
+                              <strong>Scheduled Task:</strong> This is a scheduled post created from an admin package. 
+                              <br />
+                              <span className="text-orange-300">
+                                Scheduled for: <strong>{formatDateTime(post.scheduled_for || '')}</strong>
+                              </span>
+                              <br />
+                              <span className="text-orange-300">Do not delete - it will be automatically posted!</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {(post.state !== 'scheduled' || post.created_by_admin) && (
+                        <p className="text-gray-300 text-sm line-clamp-6">
+                          {post.content.substring(0, 300)}...
+                        </p>
+                      )}
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {post.state === 'draft' && (
                           <>
-                            <Button
-                              size="sm"
-                              onClick={() => handlePublishPost(post.id)}
-                              className="flex-1"
-                            >
-                              Publish
-                            </Button>
-                            <Link href={`/dashboard/content/edit/${post.id}`}>
-                              <Button size="sm" variant="outline" className="flex-1">
-                                Edit
-                              </Button>
-                            </Link>
+                            {post.created_by_admin ? (
+                              <Link href={`/dashboard/content/package/${post.id}`}>
+                                <Button size="sm" className="flex-1">
+                                  📦 View Package
+                                </Button>
+                              </Link>
+
+
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handlePublishPost(post.id)}
+                                  className="flex-1"
+                                >
+                                  Publish
+                                </Button>
+                                <Link href={`/dashboard/content/edit/${post.id}`}>
+                                  <Button size="sm" variant="outline" className="flex-1">
+                                    Edit
+                                  </Button>
+                                </Link>
+                              </>
+                            )}
                           </>
                         )}
-                      </>
-                    )}
-                    
-                    {post.state === 'published' && (
-                      <>
-                        <Link href={`/dashboard/content/package/${post.id}`}>
-                          <Button size="sm" className="flex-1">
-                            📦 View Package
+                        
+                        {post.state === 'published' && (
+                          <>
+                            <Link href={`/dashboard/content/package/${post.id}`}>
+                              <Button size="sm" className="flex-1">
+                                📦 View Package
+                              </Button>
+                            </Link>
+                            {!post.created_by_admin && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRecyclePost(post.id)}
+                                className="flex-1"
+                              >
+                                ♻️ Recycle
+                              </Button>
+                            )}
+                          </>
+                        )}
+
+                        {post.state === 'scheduled' && (
+                          <>
+                            <Link href={`/dashboard/content/package/${post.id}`}>
+                              <Button size="sm" className="flex-1">
+                                📦 View Package
+                              </Button>
+                            </Link>
+                            {!post.created_by_admin && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handlePublishPost(post.id)}
+                                  className="flex-1"
+                                >
+                                  Publish Now
+                                </Button>
+                                <Link href={`/dashboard/content/edit/${post.id}`}>
+                                  <Button size="sm" variant="outline" className="flex-1">
+                                    Edit
+                                  </Button>
+                                </Link>
+                              </>
+                            )}
+                          </>
+                        )}
+                        
+                        {!post.created_by_admin && post.state !== 'scheduled' && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeletePost(post.id)}
+                          >
+                            Delete
                           </Button>
-                        </Link>
-                        {!post.created_by_admin && (
+                        )}
+                        
+                        {!post.created_by_admin && post.state === 'scheduled' && (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleRecyclePost(post.id)}
-                            className="flex-1"
+                            disabled
+                            className="text-gray-500 border-gray-600"
+                            title="Cannot delete scheduled tasks - they will be automatically posted"
                           >
-                            ♻️ Recycle
+                            🔒 Protected
                           </Button>
                         )}
-                      </>
-                    )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
-                    {post.state === 'scheduled' && (
-                      <>
-                        <Link href={`/dashboard/content/package/${post.id}`}>
-                          <Button size="sm" className="flex-1">
-                            📦 View Package
-                          </Button>
-                        </Link>
-                        {!post.created_by_admin && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handlePublishPost(post.id)}
-                              className="flex-1"
-                            >
-                              Publish Now
-                            </Button>
-                            <Link href={`/dashboard/content/edit/${post.id}`}>
-                              <Button size="sm" variant="outline" className="flex-1">
-                                Edit
-                              </Button>
-                            </Link>
-                          </>
-                        )}
-                      </>
-                    )}
-                    
-                    {!post.created_by_admin && post.state !== 'scheduled' && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeletePost(post.id)}
-                      >
-                        Delete
-                      </Button>
-                    )}
-                    
-                    {!post.created_by_admin && post.state === 'scheduled' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled
-                        className="text-gray-500 border-gray-600"
-                        title="Cannot delete scheduled tasks - they will be automatically posted"
-                      >
-                        🔒 Protected
-                      </Button>
-                    )}
-                  </div>
+          {/* Stats */}
+          {posts.length > 0 && (
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="pt-6">
+                <div className="flex justify-between text-sm text-gray-400">
+                  <span>Total: {posts.length} posts</span>
+                  <span>
+                    Draft: {posts.filter(p => p.state === 'draft').length} | 
+                    Published: {posts.filter(p => p.state === 'published').length} |
+                    Scheduled: {posts.filter(p => p.state === 'scheduled').length}
+                  </span>
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )}
         </div>
-      )}
-
-      {/* Stats */}
-      {posts.length > 0 && (
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="pt-6">
-            <div className="flex justify-between text-sm text-gray-400">
-              <span>Total: {posts.length} posts</span>
-              <span>
-                Draft: {posts.filter(p => p.state === 'draft').length} | 
-                Published: {posts.filter(p => p.state === 'published').length} |
-                Scheduled: {posts.filter(p => p.state === 'scheduled').length}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-        </div> {/* End Content Area */}
-      </div> {/* End Grid Layout */}
-    </div> {/* End Main Container */}
+      </div>
+    </div>
   )
 }
