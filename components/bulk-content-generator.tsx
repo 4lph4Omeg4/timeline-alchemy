@@ -27,6 +27,16 @@ interface TrendItem {
   cta_ideas?: string[]
 }
 
+const CONTENT_CATEGORIES = [
+  'Consciousness & Awakening & Enlightenment',
+  'Esoterica & Ancient Wisdom & Mysteries', 
+  'AI & Conscious Technology & Future',
+  'Crypto & Decentralized Sovereignty',
+  'Divine Lifestyle & New Earth & Harmony',
+  'Mythology & Archetypes & Ancient Secrets',
+  'Global Shifts & Conscious Culture & Awakening'
+] as const
+
 interface GeneratedPost {
   trend: string
   content: string
@@ -34,6 +44,7 @@ interface GeneratedPost {
   excerpt: string
   hashtags: string[]
   suggestions: string[]
+  category: string
   socialPosts?: Record<string, string>
   generatedImage?: string
   metadata: {
@@ -46,6 +57,63 @@ interface GeneratedPost {
     summary?: string
     generatedAt: string
   }
+}
+
+// 🌟 Divine category classifier
+const detectCategoryFromContent = (title: string, summary: string, tags: string[]): string => {
+  const combinedText = `${title} ${summary} ${tags.join(' ')}`.toLowerCase()
+  
+  // Consciousness & Awakening keywords
+  if (combinedText.includes('consciousness') || combinedText.includes('awakening') || 
+      combinedText.includes('enlightenment') || combinedText.includes('meditation') ||
+      combinedText.includes('spiritual evolution') || combinedText.includes('conscious')) {
+    return 'Consciousness & Awakening & Enlightenment'
+  }
+  
+  // AI & Tech keywords  
+  if (combinedText.includes('ai') || combinedText.includes('artificial intelligence') ||
+      combinedText.includes('technology') || combinedText.includes('future') ||
+      combinedText.includes('quantum') || combinedText.includes('conscious tech')) {
+    return 'AI & Conscious Technology & Future'
+  }
+  
+  // Crypto & Decentralization keywords
+  if (combinedText.includes('crypto') || combinedText.includes('blockchain') ||
+      combinedText.includes('decentralized') || combinedText.includes('bitcoin') ||
+      combinedText.includes('web3') || combinedText.includes('finance')) {
+    return 'Crypto & Decentralized Sovereignty'
+  }
+  
+  // Esoterica & Ancient Wisdom keywords
+  if (combinedText.includes('ancient') || combinedText.includes('wisdom') ||
+      combinedText.includes('mystery') || combinedText.includes('esoteric') ||
+      combinedText.includes('sacred') || combinedText.includes('heritage')) {
+    return 'Esoterica & Ancient Wisdom & Mysteries'
+  }
+  
+  // Lifestyle & New Earth keywords
+  if (combinedText.includes('lifestyle') || combinedText.includes('wellness') ||
+      combinedText.includes('harmony') || combinedText.includes('balance') ||
+      combinedText.includes('zen') || combinedText.includes('mindful')) {
+    return 'Divine Lifestyle & New Earth & Harmony'
+  }
+  
+  // Mythology & Archetypes keywords
+  if (combinedText.includes('mythology') || combinedText.includes('archetype') ||
+      combinedText.includes('legend') || combinedText.includes('symbol') ||
+      combinedText.includes('ritual') || combinedText.includes('tradition')) {
+    return 'Mythology & Archetypes & Ancient Secrets'
+  }
+  
+  // Global shifts & culture keywords  
+  if (combinedText.includes('global') || combinedText.includes('culture') ||
+      combinedText.includes('shift') || combinedText.includes('society') ||
+      combinedText.includes('movement') || combinedText.includes('transformation')) {
+    return 'Global Shifts & Conscious Culture & Awakening'
+  }
+  
+  // Default category
+  return 'Consciousness & Awakening & Enlightenment'
 }
 
 export default function BulkContentGenerator() {
@@ -293,6 +361,7 @@ Metadata:
               excerpt: post.excerpt,
               hashtags: post.hashtags,
               suggestions: post.suggestions,
+              category: post.category,
               userId: userId,
               socialPosts: post.socialPosts || {},
               generatedImage: post.generatedImage || null,
@@ -363,6 +432,7 @@ Metadata:
           excerpt: post.excerpt,
           hashtags: post.hashtags,
           suggestions: post.suggestions,
+          category: post.category,
           userId: userId,
           socialPosts: post.socialPosts || {},
           generatedImage: post.generatedImage || null,
@@ -572,7 +642,7 @@ Metadata:
                           {post.title}
                         </CardTitle>
                         <CardDescription className="mt-1 text-gray-300">
-                          📈 Trend: {post.trend} • 🎯 Audience: {post.metadata.audience}
+                          📈 Trend: {post.trend} • 🌟 Category: <span className="text-purple-300 font-semibold">{post.category}</span> • 🎯 Audience: {post.metadata.audience}
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">

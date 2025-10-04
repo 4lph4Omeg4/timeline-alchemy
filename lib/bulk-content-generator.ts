@@ -332,12 +332,18 @@ Focus on the specific topic requested without adding unrelated business concepts
     language === 'en' ? 'Create engaging visuals or infographics' : 'Maak boeiende visuals of infographics'
   ]
 
+  // 🌟 Use category from Grok data (much simpler!)
+  const category = item.category || 'Consciousness & Awakening & Enlightenment' // Default fallback
+  
+  console.log('🌟 Using Grok category:', category, 'for trend:', trendName)
+
   const result = {
     content: blogContent,
     title,
     excerpt,
     hashtags,
-    suggestions
+    suggestions,
+    category: category
   }
   
   console.log('✅ Final result for trend:', item.trend, result)
@@ -361,8 +367,8 @@ export function validateTrendData(data: any): boolean {
     return false
   }
   
-  // Required fields for Grok format: title, summary, tags
-  const requiredFields = ['title', 'summary', 'tags']
+  // Required fields for Grok format: title, summary, tags, category
+  const requiredFields = ['title', 'summary', 'tags', 'category']
   
   for (let i = 0; i < data.items.length; i++) {
     const item = data.items[i]

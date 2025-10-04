@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, content, excerpt, hashtags, suggestions, userId, socialPosts, generatedImage } = body
+    const { title, content, excerpt, hashtags, suggestions, userId, socialPosts, generatedImage, category } = body
 
     console.log('🔍 Create admin package request:', {
       title: title,
@@ -40,14 +40,15 @@ export async function POST(request: NextRequest) {
     // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Mimic the working content generator
     console.log('🔍 Using admin organization for this admin-only package...')
     
-    // Create basic blog post (like the working content generator)
+    // Create basic blog post with category metadata (like the working content generator)
     const { data: insertedPackage, error: packageError } = await supabaseClient
       .from('blog_posts')
       .insert({
         org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID
-        title: title,
+        title: category ? `[${category}] ${title}` : title,
         content: content,
-        state: 'draft'
+        state: 'draft',
+        // Note: category prefix added to title for visibility
       })
       .select()
       .single()
