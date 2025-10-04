@@ -220,27 +220,20 @@ WRITE WITH GODLIKE AUTHORITY. BE PROFOUND, COMPLETE, AND IMMUTABLE. DIVINE WISDO
   let apiUrl: string
   let headers: Record<string, string>
   
-  if (gatewayUrl && gatewayToken) {
-    console.log('🚀 Using Vercel AI Gateway for bulk content generation')
-    apiUrl = `${gatewayUrl}/v1/chat/completions`
-    headers = {
-      'Authorization': `Bearer ${gatewayToken}`,
-      'Content-Type': 'application/json'
-    }
-  } else {
-    console.log('⚠️ Using direct OpenAI API (no gateway configured)')
-    apiUrl = 'https://api.openai.com/v1/chat/completions'
-    headers = {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
-    }
+  // For now, let's use OpenAI directly to avoid gateway issues
+  // TODO: Fix Vercel AI Gateway configuration
+  console.log('📡 Using direct OpenAI API for bulk content generation')
+  apiUrl = 'https://api.openai.com/v1/chat/completions'
+  headers = {
+    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+    'Content-Type': 'application/json'
   }
 
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: gatewayUrl ? 'openai/gpt-5' : 'gpt-4', // Vercel Gateway uses openai/gpt-5 format
+      model: 'gpt-4', // Using OpenAI directly
       messages: [
         {
           role: 'system',
@@ -275,9 +268,8 @@ Focus on the specific topic requested without adding unrelated business concepts
   
   if (!response.ok) {
     const errorText = await response.text()
-    const apiType = gatewayUrl ? 'Vercel AI Gateway' : 'OpenAI API'
-    console.log('❌ API Error:', errorText)
-    throw new Error(`${apiType} error: ${response.status} ${response.statusText} - ${errorText}`)
+    console.log('❌ OpenAI API Error:', errorText)
+    throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
   const data = await response.json()
