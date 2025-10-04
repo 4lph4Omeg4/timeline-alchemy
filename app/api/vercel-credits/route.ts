@@ -5,10 +5,20 @@ export async function GET(req: NextRequest) {
     const gatewayUrl = process.env.AI_GATEWAY_URL
     const gatewayToken = process.env.AI_GATEWAY_TOKEN
     
+    console.log('🔍 Debug - Gateway URL:', gatewayUrl)
+    console.log('🔍 Debug - Token present:', !!gatewayToken)
+    console.log('🔍 Debug - Token length:', gatewayToken?.length || 0)
+    
     if (!gatewayUrl || !gatewayToken) {
+      console.log('❌ Missing gateway configuration')
       return NextResponse.json({
         success: false,
-        error: 'Vercel AI Gateway not configured'
+        error: 'Vercel AI Gateway not configured',
+        debug: {
+          hasUrl: !!gatewayUrl,
+          hasToken: !!gatewayToken,
+          url: gatewayUrl
+        }
       }, { status: 400 })
     }
 
@@ -45,6 +55,9 @@ export async function GET(req: NextRequest) {
           continue
         }
       }
+      
+      console.log('🔍 Tested endpoints:', endpoints)
+      console.log('🔍 Working endpoint found:', workingEndpoint)
 
       if (testResponse && testResponse.ok) {
         console.log(`✅ AI Gateway is accessible via ${workingEndpoint}`)
