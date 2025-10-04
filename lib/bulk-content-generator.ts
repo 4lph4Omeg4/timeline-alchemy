@@ -48,6 +48,15 @@ interface BulkContentResult {
 }
 
 // Enhanced content generation with trend-specific data
+// Map content types to supported formats
+const mapContentType = (type: string): string => {
+  switch (type) {
+    case 'social': return 'short_form'
+    case 'mixed': return 'blog'
+    default: return type
+  }
+}
+
 export async function generateBulkContent(request: BulkContentRequest): Promise<BulkContentResult> {
   const startTime = Date.now()
   const results: BulkContentResult = {
@@ -70,7 +79,8 @@ export async function generateBulkContent(request: BulkContentRequest): Promise<
     try {
       console.log(`📝 Processing trend ${index + 1}/${request.items.length}: ${item.trend}`)
       
-      const generatedContent = await generateTrendContent(item, request.contentType, request.language || 'nl')
+      const mappedContentType = mapContentType(request.contentType)
+      const generatedContent = await generateTrendContent(item, mappedContentType, request.language || 'nl')
       
       results.generatedPosts.push({
         trend: item.trend,
@@ -125,34 +135,62 @@ async function generateTrendContent(
   suggestions: string[]
 }> {
   
-  const languageInstruction = language === 'en' ? 'Write in English and maintain professional quality' : 'Schrijf in Nederlands en behoud professionele kwaliteit'
+  const languageInstruction = language === 'en' ? 'Write in English.' : 'Write in Dutch.'
   
   const enhancedPrompt = `Create a comprehensive ${contentType} post about: ${item.trend}
 
 ${languageInstruction}
 
-Context Information:
+Context:
 - Summary: ${item.summary}
 - Target Audience: ${item.audience}
-- Preferred Tone: ${item.tone}
-- Keywords to integrate: ${item.keywords.join(', ')}
+- Preferred Tone: ${item.tone}  (playful | bold | sacred-rebel | insightful)
+- Keywords: ${item.keywords.join(', ')}
 - Topic Tags: ${item.tags.join(', ')}
 - Call-to-Action Ideas: ${item.cta_ideas.join(', ')}
+- Source: ${item.source_title} — ${item.source_url}
 
-Content Requirements:
-- Include engaging title
-- Create 3-5 well-structured ${contentType === 'blog' ? 'paragraphs' : 'sentences'}
-- Each paragraph should be 3-5 sentences (for blog) or concise (for social)
-- Add relevant hashtags (5-8)
-- Provide 3 content improvement suggestions
-- Make it ready for immediate publication
-- Use double line breaks (\n\n) between paragraphs (for blog)
-- Include a call-to-action based on the provided ideas
-- Reference the source research naturally
-- Target the specified audience
-- Maintain the specified tone
+GLOBAL RULES
+- Reference the source naturally once (inline link: [${item.source_title}](${item.source_url})).
+- Use exactly 1 CTA from Call-to-Action Ideas (no new CTAs).
+- Build 5–8 hashtags from Keywords (+ up to 2 from Topic Tags). Lowercase, no spaces, no duplicates.
+- Language: follow LANGUAGE_INSTRUCTION; keep it consistent within the post.
+- Tone mapping:
+  * playful → witty, light, 0–2 emojis max
+  * bold → assertive, active voice, no hedging
+  * sacred-rebel → devotional + nonconform, mystical but grounded
+  * insightful → calm, precise, with concrete takeaways
+- Banned words: journey, realm, tapestry, profound, immerse, unlock.
+- Make it publication-ready. Do NOT include any "suggestions" in the published body.
 
-Make the content engaging, informative, and aligned with spiritual/esoteric themes while being accessible to the intended audience.`
+CONTENT-TYPE RULES
+If ${contentType} == "blog":
+  - Title: engaging (≤ 60 chars).
+  - Body: 3–5 paragraphs, each 3–5 sentences, with double line breaks.
+  - Include one short checklist (2–3 bullets) in any paragraph.
+  - Close with 1 CTA line.
+  - After the body, print a single line of hashtags (no "Hashtags:" label).
+
+If ${contentType} == "thread":
+  - Title (hooky).
+  - 7–10 short posts numbered 1/ … N/.
+  - Post 1 = hook; final post = CTA.
+  - End with one line of hashtags.
+
+If ${contentType} == "short_form":
+  - Hook (≤ 80 chars).
+  - 4–6 snappy sentences (script vibe).
+  - Add a one-paragraph caption (≤ 180 words) that ends with the CTA.
+  - End with one line of hashtags.
+
+If ${contentType} == "caption":
+  - 1–2 punchy paragraphs (≤ 180 words total), end with the CTA.
+  - End with one line of hashtags.
+
+NON-PUBLISHABLE (INTERNAL ONLY)
+- Provide exactly 3 improvement suggestions AFTER the final hashtags, preceded by the line:
+  "SUGGESTIONS (DO NOT PUBLISH):"
+- Keep each suggestion to one sentence.`
 
   // Use OpenAI API directly (the same method as our existing content generation)
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -166,9 +204,12 @@ Make the content engaging, informative, and aligned with spiritual/esoteric them
       messages: [
         {
           role: 'system',
-          content: language === 'en' 
-            ? 'You are a professional content creator specializing in spiritual, esoteric, and consciousness topics. Create engaging, well-structured content that resonates with spiritual seekers and consciousness enthusiasts.'
-            : 'Je bent een professional content creator gespecialiseerd in spirituele, esoterische en bewustzijnsonderwerpen. Maak boeiende, goed gestructureerde content die resoneert met spirituele zoekers en bewustzijnsenthusiasten.'
+          content: `You are an elite multi-platform content creator for "Timeline Alchemy".
+You STRICTLY follow constraints. You NEVER include meta sections (like "Hashtags:", "Suggestions:") in the publishable body.
+Always match the requested CONTENT_TYPE with the exact structure and length rules below.
+Keep language consistent with the LANGUAGE_INSTRUCTION (fallback: detect from Target Audience).
+Use exactly one Call-to-Action from the provided ideas. Build hashtags only from the provided keywords (+ up to 2 topic tags).
+No clichés or purple prose. Be punchy, clear, and practical for spiritual seekers.`
         },
         {
           role: 'user',
@@ -188,32 +229,35 @@ Make the content engaging, informative, and aligned with spiritual/esoteric them
   const data = await response.json()
   const fullContent = data.choices?.[0]?.message?.content || ''
   
+  // Apply sanitizer to remove internal suggestions
+  const sanitizedContent = stripInternalSuggestions(fullContent)
+  
   // Parse the structured response
-  const lines = fullContent.split('\n').filter((line: string) => line.trim())
+  const lines = sanitizedContent.split('\n').filter((line: string) => line.trim())
   const title = lines.find((line: string) => line.includes('Title:'))?.replace('Title:', '').trim() || 
                lines.find((line: string) => line.includes('Titel:'))?.replace('Titel:', '').trim() ||
                item.trend
   
-  const contentParts = fullContent.split(/\n\n|\r\n\r\n/)
-  const postContent = contentParts.length > 1 ? contentParts.slice(1).join('\n\n') : fullContent.replace(title || '', '').trim()
+  const contentParts = sanitizedContent.split(/\n\n|\r\n\r\n/)
+  const postContent = contentParts.length > 1 ? contentParts.slice(1).join('\n\n') : sanitizedContent.replace(title || '', '').trim()
   
   const excerpt = postContent.substring(0, language === 'en' ? 120 : 150).replace(/\n/g, ' ').trim() + '...'
   
-  // Extract hashtags from content or generate them
-  const hashtagMatches = fullContent.match(/#[\w]+/g)
+  // Extract hashtags from content or generate them following new rules
+  const hashtagMatches = sanitizedContent.match(/#[\w]+/g)
   let hashtags: string[] = []
   
   if (hashtagMatches) {
-    hashtags = hashtagMatches.slice(0, 6).filter((tag: string) => tag.length <= 20)
+    // Clean and deduplicate hashtags
+    const uniqueTags = new Set(hashtagMatches.map((tag: string) => tag.toLowerCase()))
+    hashtags = Array.from(uniqueTags).slice(0, 8)
   } else {
-    // Generate hashtags from keywords and trend
-    const trendWords = item.trend.toLowerCase().split(' ')
-    const keywordWords = item.keywords.map((k: string) => k.toLowerCase())
-    const allWords = [...trendWords, ...keywordWords]
-      .filter((word: string) => word.length > 3)
-      .slice(0, 5)
+    // Generate hashtags from keywords + up to 2 topic tags (new rules)
+    const keywordWords = item.keywords.map((k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, ''))
+    const tagWords = item.tags.slice(0, 2).map((t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, ''))
+    const allWords = [...keywordWords, ...tagWords].filter((word: string) => word.length > 2)
     
-    hashtags = allWords.map((word: string) => `#${word.replace(/[^a-z0-9]/g, '')}${language === 'nl' ? 'Nederland' : ''}`)
+    hashtags = allWords.slice(0, 8).map((word: string) => `#${word}`)
   }
   
   const suggestions = [
@@ -229,6 +273,13 @@ Make the content engaging, informative, and aligned with spiritual/esoteric them
     hashtags,
     suggestions
   }
+}
+
+// Publish Sanitizer - removes internal suggestions from published content
+export function stripInternalSuggestions(text: string): string {
+  if (!text) return text;
+  const marker = "SUGGESTIONS (DO NOT PUBLISH):";
+  return text.includes(marker) ? text.split(marker)[0].trim() : text.trim();
 }
 
 // Helper function to validate trend data structure
