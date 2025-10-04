@@ -45,7 +45,12 @@ export async function POST(request: NextRequest) {
     })
 
   // Determine organization based on user role
-  console.log('🔍 Determining organization for user:', userId || 'bulk-generator')
+  console.log('🔍 Determining organization for user:', {
+    userId: userId || 'bulk-generator',
+    hasUserId: !!userId,
+    bodyKeys: Object.keys(body),
+    allBodyValues: body
+  })
   
   let organization: { id: string; name: string; type: string } | null = null
   let isAdminUser = false
@@ -106,20 +111,32 @@ export async function POST(request: NextRequest) {
   if (!organization?.id) {
     console.log('🔍 No specific organization found, using fallback strategy...')
     
-    const { data: fallbackOrg } = await supabaseClient
+    const { data: fallbackOrg, error: fallbackError } = await supabaseClient
       .from('organizations')
       .select('id, name, type')
       .order('created_at', { ascending: true })
       .limit(1)
       .single()
       
+    console.log('🔍 Fallback organization result:', { fallbackOrg, fallbackError })
     organization = fallbackOrg
   }
   
   if (!organization?.id) {
-    console.error('❌ No organization found at all')
+    console.error('❌ No organization found - debug info:', {
+      userId: userId,
+      hasUserId: !!userId,
+      organization: organization,
+      adminEmail: process.env.ADMIN_EMAIL || 'sh4m4ni4k@sh4m4ni4k.nl'
+    })
     return NextResponse.json(
-      { error: 'No organization found' },
+      { 
+        error: 'No organization found',
+        debug: {
+          userId: userId || 'no-user-id-provided',
+          hasUserId: !!userId
+        }
+      },
       { status: 400 }
     )
   }
