@@ -159,11 +159,19 @@ async function generateTrendContent(
   // Get trend name (use title or trend field)
   const trendName = item.title || item.trend || 'Unknown Trend'
   
-  console.log('🚀 generateTrendContent called with:', {
+      console.log('🚀 generateTrendContent called with:', {
     trend: trendName,
     contentType,
     language,
-    hasGateway: !!(process.env.AI_GATEWAY_URL && process.env.AI_GATEWAY_TOKEN)
+    hasGateway: !!(process.env.AI_GATEWAY_URL && process.env.AI_GATEWAY_TOKEN),
+    itemFields: {
+      title: item.title,
+      summary: item.summary,
+      tags: item.tags,
+      hasAudience: !!item.audience,
+      hasTone: !!item.tone,
+      hasKeywords: !!item.keywords
+    }
   })
   
   const languageInstruction = language === 'en' ? 'Write in English.' : 'Write in Dutch.'
