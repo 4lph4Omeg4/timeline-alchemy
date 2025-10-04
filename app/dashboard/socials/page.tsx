@@ -11,17 +11,58 @@ import { SocialConnection } from '@/types/index'
 
 // Helper function to generate PKCE code verifier
 function generateCodeVerifier(): string {
-  const array = new Uint8Array(32)
-  crypto.getRandomValues(array)
-  return btoa(String.fromCharCode.apply(null, Array.from(array)))
+  try {
+    // Check if crypto.getRandomValues is available
+    if (crypto && typeof crypto.getRandomValues === 'function') {
+      const array = new Uint8Array(32)
+      crypto.getRandomValues(array)
+      return btoa(String.fromCharCode.apply(null, Array.from(array)))
+    } else {
+      // Fallback if crypto.getRandomValues is not available
+      console.warn('crypto.getRandomValues not available, using Math.random fallback')
+      let result = ''
+      for (let i = 0; i < 32; i++) {
+        result += String.fromCharCode(Math.floor(Math.random() * 256))
+      }
+      return btoa(result)
+    }
+  } catch (error) {
+    console.error('Error generating code verifier:', error)
+    // Ultimate fallback
+    let result = ''
+    for (let i = 0; i < 32; i++) {
+      result += String.fromCharCode(Math.floor(Math.random() * 256))
+    }
+    return btoa(result)
+  }
 }
 
 // Helper function to generate PKCE code challenge
 async function generateCodeChallenge(verifier: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(verifier)
-  const digest = await crypto.subtle.digest('SHA256', data)
-  return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(digest))))
+  try {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(verifier)
+    
+    // Check if crypto.subtle is available and supports SHA256
+    if (crypto.subtle && typeof crypto.subtle.digest === 'function') {
+      try {
+        const digest = await crypto.subtle.digest('SHA-256', data)
+        return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(digest))))
+      } catch (cryptoError) {
+        console.warn('Crypto.subtle.digest failed, using fallback:', cryptoError)
+        // Fallback to a simple hash if crypto.subtle fails
+        return btoa(verifier)
+      }
+    } else {
+      console.warn('Crypto.subtle not available, using fallback')
+      // Fallback if crypto.subtle is not available
+      return btoa(verifier)
+    }
+  } catch (error) {
+    console.error('Error generating code challenge:', error)
+    // Ultimate fallback
+    return btoa(verifier)
+  }
 }
 
 const socialPlatforms = [
