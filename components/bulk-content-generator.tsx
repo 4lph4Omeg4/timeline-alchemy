@@ -278,18 +278,6 @@ Metadata:
           "audience": "Crypto enthusiasts",
           "tone": "bold",
           "cta_ideas": ["Join the community", "Explore crypto options"]
-        },
-        {
-          "trend": "Ancient Symbols in Modern Tech",
-          "source_title": "Sacred Geometry Driving UX Design Innovation",
-          "source_url": "https://example.com/sacred-geometry-ux",
-          "summary": "Designers are incorporating sacred geometry and ancient symbols into modern interfaces, creating more intuitive and spiritually aligned user experiences.",
-          "keywords": ["sacred geometry", "ancient symbols", "UX design", "spiritual tech"],
-          "recommended_formats": ["blog", "social"],
-          "tags": ["ancient symbols", "UX design", "sacred geometry", "modern tech"],
-          "audience": "Design conscious users",
-          "tone": "playful",
-          "cta_ideas": ["Design with symbols", "Explore sacred geometry"]
         }
       ]
     }
