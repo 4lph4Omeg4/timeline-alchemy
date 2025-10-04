@@ -183,6 +183,10 @@ export default function BulkContentGenerator() {
       // Handle direct Grok format (array) or wrapped format ({items: array})
       const items = Array.isArray(parsedData) ? parsedData : parsedData.items
       
+      // Create abort controller for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes
+      
       const response = await fetch('/api/generate-bulk-content', {
         method: 'POST',
         headers: {
@@ -193,8 +197,11 @@ export default function BulkContentGenerator() {
           contentType,
           language
         }),
-        timeout: 300000 // 5 minutes timeout
+        signal: controller.signal // Use abort signal for timeout
       })
+      
+      // Clear timeout if request completes successfully
+      clearTimeout(timeoutId)
 
       // Better error handling for non-JSON responses
       let result
