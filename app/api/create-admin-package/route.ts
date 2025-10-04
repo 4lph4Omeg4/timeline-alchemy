@@ -4,12 +4,14 @@ import { createClient } from '@supabase/supabase-js'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, content, excerpt, hashtags, suggestions, userId } = body
+    const { title, content, excerpt, hashtags, suggestions, userId, socialPosts, generatedImage } = body
 
     console.log('🔍 Create admin package request:', {
       title: title,
       hasContent: !!content,
       contentLength: content?.length || 0,
+      hasSocialPosts: !!socialPosts,
+      hasGeneratedImage: !!generatedImage,
       userId: userId
     })
     
@@ -38,16 +40,43 @@ export async function POST(request: NextRequest) {
     // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Use the known admin organization ID
     console.log('🔍 Using admin organization for this admin-only package...')
     
-    const { data: packageData, error: packageError } = await supabaseClient
+    // Create package data with all fields
+    const packageData = {
+      org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID
+      title: title, // No admin prefix needed since this is admin-only
+      content: content,
+      excerpt: excerpt || content.substring(0, 150) + '...',
+      state: 'draft',
+      metadata: {
+        socialPosts: socialPosts || {},
+        generatedImage: generatedImage || null,
+        hashtags: hashtags || [],
+        suggestions: suggestions || [],
+        source: 'bulk_content_generator',
+        created_at: new Date().toISOString()
+      }
+    }
+    
+    const { data: insertedPackage, error: packageError } = await supabaseClient
       .from('blog_posts')
-      .insert({
-        org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID
-        title: `[ADMIN] ${title}`,
-        content: content,
-        state: 'draft'
-      })
+      .insert(packageData)
       .select()
       .single()
+    
+    // If we have a generated image, save it to the images table
+    if (generatedImage && insertedPackage?.id) {
+      console.log('🖼️ Saving generated image for package:', insertedPackage.id)
+      
+      await supabaseClient
+        .from('images')
+        .insert({
+          org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Same admin organization
+          post_id: insertedPackage.id, // Use post_id as per schema
+          url: generatedImage
+        })
+        .select()
+        .single()
+    }
 
     if (packageError) {
       console.error('❌ Error creating admin package:', packageError)

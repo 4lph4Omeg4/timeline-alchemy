@@ -216,15 +216,25 @@ export default function BulkContentGenerator() {
         
         // Update UI immediately
         setGeneratedPosts([...generatedPosts]) // Trigger re-render
-        toast.loading(`🌟 Generating divine content ${i + 1}/${posts.length}...`)
+        
+        // Update loading toast
+        toast.loading(`🌟 Generating divine content ${i + 1}/${posts.length}...`, {
+          id: 'divine-generation'
+        })
       }
       
       // Final update
       setGeneratedPosts([...posts])
-      toast.success('🎉 All divine content generated successfully!')
+      // Replace loading toast with success
+      toast.success('🎉 All divine content generated successfully!', {
+        id: 'divine-generation'
+      })
     } catch (error) {
       console.error('❌ Divine generation error:', error)
-      toast.error('❌ Some divine content failed to generate')
+      // Replace loading toast with error
+      toast.error('❌ Some divine content failed to generate', {
+        id: 'divine-generation'
+      })
     }
   }
 
@@ -273,6 +283,8 @@ Metadata:
           hashtags: post.hashtags,
           suggestions: post.suggestions,
           userId: userId,
+          socialPosts: post.socialPosts || {},
+          generatedImage: post.generatedImage || null,
           metadata: {
             ...post.metadata,
             bulkGenerated: true,
