@@ -1,3 +1,5 @@
+'use client'
+
 import BulkContentGenerator from '@/components/bulk-content-generator'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileText, Database, Zap, Sparkles, Shield } from 'lucide-react'
