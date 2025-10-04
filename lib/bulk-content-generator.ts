@@ -3,6 +3,7 @@ interface TrendItem {
   title: string
   summary: string
   tags: string[]
+  category: string
   // Optional fields for backward compatibility
   trend?: string
   source_title?: string
