@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Upload, FileText, TrendingUp, Users } from 'lucide-react'
+import { Loader2, Upload, FileText, TrendingUp, Users, Save, Package, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface TrendItem {
@@ -50,6 +50,7 @@ export default function BulkContentGenerator() {
   const [parsedItemsCount, setParsedItemsCount] = useState(0)
   const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([])
   const [currentResponse, setCurrentResponse] = useState<any>(null)
+  const [savingPost, setSavingPost] = useState<string | null>(null)
 
   const validateJsonInput = (jsonString: string): boolean => {
     try {
@@ -125,6 +126,45 @@ Metadata:
     toast.success('Post copied to clipboard!')
   }
 
+  const savePostAsPackage = async (post: GeneratedPost) => {
+    setSavingPost(post.trend)
+    try {
+      const response = await fetch('/api/create-admin-package', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: post.title,
+          content: post.generatedContent,
+          excerpt: post.excerpt,
+          hashtags: post.hashtags,
+          suggestions: post.suggestions,
+          metadata: {
+            ...post.metadata,
+            bulkGenerated: true,
+            sourceType: 'bulk-generator',
+            contentType: contentType,
+            language: language
+          }
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        toast.success(`✅ "${post.title}" saved as package!`)
+      } else {
+        toast.error(`❌ Failed to save package: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Save package error:', error)
+      toast.error('❌ Failed to save package')
+    } finally {
+      setSavingPost(null)
+    }
+  }
+
   const parseSampleData = () => {
     const sampleData = {
       "items": [
@@ -162,14 +202,14 @@ Metadata:
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <Card>
+      <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Bulk Content Generator
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Sparkles className="h-6 w-6 text-yellow-400" />
+            <span>✨ Bulk Content Generator</span>
           </CardTitle>
-          <CardDescription>
-            Upload your Grok trends data and generate multiple blog posts automatically
+          <CardDescription className="text-gray-200">
+            Upload your Grok trends data and generate multiple blog posts automatically with Timeline Alchemy magic
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -233,18 +273,18 @@ Metadata:
           <Button 
             onClick={handleGenerate} 
             disabled={isGenerating || parsedItemsCount === 0}
-            className="w-full"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0"
             size="lg"
           >
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating Content...
+                ✨ Generating Content...
               </>
             ) : (
               <>
-                <Upload className="mr-2 h-4 w-4" />
-                Generate {parsedItemsCount} Posts
+                <Sparkles className="mr-2 h-4 w-4" />
+                🚀 Generate {parsedItemsCount} Posts
               </>
             )}
           </Button>
@@ -262,15 +302,15 @@ Metadata:
 
       {/* Results */}
       {currentResponse && (
-        <Card>
+        <Card className="bg-gradient-to-br from-green-900/20 to-blue-900/20 border-green-500/30 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Generation Results
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Users className="h-6 w-6 text-green-400" />
+              ✨ Generation Results
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-200">
               {currentResponse.summary && (
-                `${currentResponse.summary.successful}/${currentResponse.summary.totalProcessed} posts generated successfully`
+                `🎉 ${currentResponse.summary.successful}/${currentResponse.summary.totalProcessed} posts generated successfully`
               )}
             </CardDescription>
           </CardHeader>
@@ -291,42 +331,69 @@ Metadata:
             {/* Generated Posts */}
             <div className="space-y-4">
               {generatedPosts.map((post, index) => (
-                <Card key={index} className="border-dashed">
+                <Card key={index} className="bg-gradient-to-br from-purple-800/10 to-blue-800/10 border-purple-500/20 backdrop-blur-sm">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="text-lg">{post.title}</CardTitle>
-                        <CardDescription className="mt-1">
-                          Trend: {post.trend} • Audience: {post.metadata.audience}
+                        <CardTitle className="text-lg text-white flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-yellow-400" />
+                          {post.title}
+                        </CardTitle>
+                        <CardDescription className="mt-1 text-gray-300">
+                          📈 Trend: {post.trend} • 🎯 Audience: {post.metadata.audience}
                         </CardDescription>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => copyPostToClipboard(post)}
-                      >
-                        Copy
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => savePostAsPackage(post)}
+                          disabled={savingPost === post.trend}
+                          className="border-green-500 text-green-400 hover:bg-green-900/30"
+                        >
+                          {savingPost === post.trend ? (
+                            <>
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="mr-1 h-3 w-3" />
+                              Save
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => copyPostToClipboard(post)}
+                          className="border-blue-500 text-blue-400 hover:bg-blue-900/30"
+                        >
+                          Copy
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="space-y-3">
-                      <div className="text-sm">
+                      <div className="text-sm text-gray-200">
                         <div className="whitespace-pre-wrap">{post.excerpt}</div>
                       </div>
                       
                       <div className="flex flex-wrap gap-1">
                         {post.hashtags.map((tag, tagIndex) => (
-                          <Badge key={tagIndex} variant="outline" className="text-xs">
+                          <Badge key={tagIndex} variant="outline" className="text-xs border-purple-500/50 text-purple-300">
                             {tag}
                           </Badge>
                         ))}
                       </div>
                       
-                      <div className="text-xs text-muted-foreground">
-                        <div>Keywords: {post.metadata.keywords.join(', ')}</div>
-                        <div>Tags: {post.metadata.tags.join(', ')}</div>
-                        <div>Tone: {post.metadata.tone}</div>
+                      <div className="text-xs text-gray-400 bg-gray-800/50 rounded p-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <div><span className="font-medium text-purple-300">Keywords:</span> {post.metadata.keywords.join(', ')}</div>
+                          <div><span className="font-medium text-blue-300">Tags:</span> {post.metadata.tags.join(', ')}</div>
+                          <div><span className="font-medium text-green-300">Tone:</span> {post.metadata.tone}</div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
