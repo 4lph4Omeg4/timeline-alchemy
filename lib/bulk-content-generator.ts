@@ -23,7 +23,7 @@ interface BulkContentResult {
   success: boolean
   generatedPosts: Array<{
     trend: string
-    generatedContent: string
+    content: string  // Changed from generatedContent to match frontend
     title: string
     excerpt: string
     hashtags: string[]
@@ -84,7 +84,7 @@ export async function generateBulkContent(request: BulkContentRequest): Promise<
       
       results.generatedPosts.push({
         trend: item.trend,
-        generatedContent: generatedContent.content,
+        content: generatedContent.content,
         title: generatedContent.title,
         excerpt: generatedContent.excerpt,
         hashtags: generatedContent.hashtags,
@@ -345,7 +345,7 @@ export function validateTrendData(data: any): boolean {
 export function formatForWordPress(generatedContent: BulkContentResult['generatedPosts'][0], baseUrl: string = '/content') {
   return {
     title: generatedContent.title,
-    content: generatedContent.generatedContent,
+    content: generatedContent.content,
     excerpt: generatedContent.excerpt,
     status: 'publish',
     categories: generatedContent.metadata.tags.map(tag => ({ name: tag })),
