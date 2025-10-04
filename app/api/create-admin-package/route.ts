@@ -64,27 +64,19 @@ export async function POST(request: NextRequest) {
     
     console.log('🔍 Using organization ID:', organization.id)
 
-    // Create the package
-    console.log('🔍 Creating package with data:', {
+    // Create the package (simplified - only basic fields)
+    console.log('🔍 Creating package with simplified data:', {
       org_id: organization.id,
       title: title.substring(0, 50) + '...',
       contentLength: content.length,
-      excerptLength: (excerpt || content.substring(0, 150) + '...').length,
-      note: 'excerpt will be stored in metadata field'
+      note: 'using only basic columns: title, content, state'
     })
     
     const insertData = {
       org_id: organization.id,
       title: title,
       content: content,
-      state: 'draft',
-      created_by_admin: true,
-      metadata: {
-        hashtags: hashtags || [],
-        suggestions: suggestions || [],
-        excerpt: excerpt || content.substring(0, 150) + '...', // Store excerpt in metadata instead
-        source: 'bulk_content_generator'
-      }
+      state: 'draft'
     }
     
     const { data: packageData, error: packageError } = await supabaseClient
