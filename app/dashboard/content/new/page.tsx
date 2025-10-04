@@ -18,6 +18,7 @@ export default function ContentEditorPage() {
   const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
   const [prompt, setPrompt] = useState('')
   const [generatedImageUrl, setGeneratedImageUrl] = useState('')
+  const [category, setCategory] = useState('consciousness')
   const [contentLoading, setContentLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -75,6 +76,9 @@ export default function ContentEditorPage() {
       if (contentData.content) {
         setContent(contentData.content)
         setTitle(contentData.title || prompt)
+        if (contentData.category) {
+          setCategory(contentData.category)
+        }
       }
 
       if (socialData.socialPosts) {
@@ -164,6 +168,7 @@ export default function ContentEditorPage() {
           org_id: userOrgId,
           title,
           content,
+          category,
           state: 'draft',
         })
         .select()
@@ -197,6 +202,7 @@ export default function ContentEditorPage() {
                 org_id: adminOrg.id,
                 title: title,
                 content: content,
+                category: category,
                 state: 'published',
                 created_by_admin: true,
                 social_posts: socialPosts
@@ -360,6 +366,24 @@ export default function ContentEditorPage() {
                       onChange={(e) => setTitle(e.target.value)}
                       className="bg-blue-800/30 border-blue-400/50 text-white placeholder-blue-300/70 focus:border-blue-300 focus:ring-blue-500/20"
                     />
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label htmlFor="category" className="text-blue-200 font-semibold text-lg">Category</Label>
+                    <select
+                      id="category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full px-3 py-2 bg-blue-800/30 border border-blue-400/50 text-white rounded-md focus:border-blue-300 focus:ring-blue-500/20"
+                    >
+                      <option value="consciousness">🧠 Consciousness & Awakening</option>
+                      <option value="ancient_wisdom">🏛️ Ancient Wisdom & Mysteries</option>
+                      <option value="ai_technology">🤖 AI & Conscious Technology</option>
+                      <option value="crypto_decentralized">💰 Crypto & Decentralized Sovereignty</option>
+                      <option value="divine_lifestyle">🌱 Divine Lifestyle & New Earth</option>
+                      <option value="mythology_archetypes">⚡ Mythology & Archetypes</option>
+                      <option value="global_shifts">🌍 Global Shifts & Conscious Culture</option>
+                    </select>
                   </div>
                   
                   <div className="space-y-3">

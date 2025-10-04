@@ -30,6 +30,7 @@ export interface BlogPost {
   title: string
   content: string
   excerpt?: string
+  category?: string
   social_posts?: Record<string, string>
   state: 'draft' | 'scheduled' | 'published'
   scheduled_for?: string

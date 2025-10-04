@@ -10,27 +10,43 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Upload, FileText, TrendingUp, Users, Save, Package, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { supabase } from '@/lib/supabase'
 
 interface TrendItem {
-  trend: string
-  source_title: string
-  source_url: string
+  title: string
   summary: string
-  keywords: string[]
-  recommended_formats: string[]
   tags: string[]
-  audience: string
-  tone: string
-  cta_ideas: string[]
+  // Optional fields for backward compatibility
+  trend?: string
+  source_title?: string
+  source_url?: string
+  keywords?: string[]
+  recommended_formats?: string[]
+  audience?: string
+  tone?: string
+  cta_ideas?: string[]
 }
+
+const CONTENT_CATEGORIES = [
+  'Consciousness & Awakening & Enlightenment',
+  'Esoterica & Ancient Wisdom & Mysteries', 
+  'AI & Conscious Technology & Future',
+  'Crypto & Decentralized Sovereignty',
+  'Divine Lifestyle & New Earth & Harmony',
+  'Mythology & Archetypes & Ancient Secrets',
+  'Global Shifts & Conscious Culture & Awakening'
+] as const
 
 interface GeneratedPost {
   trend: string
-  content: string  // Changed from generatedContent to match API response
+  content: string
   title: string
   excerpt: string
   hashtags: string[]
   suggestions: string[]
+  category: string
+  socialPosts?: Record<string, string>
+  generatedImage?: string
   metadata: {
     sourceTitle: string
     sourceUrl: string
@@ -38,8 +54,66 @@ interface GeneratedPost {
     tone: string
     keywords: string[]
     tags: string[]
+    summary?: string
     generatedAt: string
   }
+}
+
+// 🌟 Divine category classifier
+const detectCategoryFromContent = (title: string, summary: string, tags: string[]): string => {
+  const combinedText = `${title} ${summary} ${tags.join(' ')}`.toLowerCase()
+  
+  // Consciousness & Awakening keywords
+  if (combinedText.includes('consciousness') || combinedText.includes('awakening') || 
+      combinedText.includes('enlightenment') || combinedText.includes('meditation') ||
+      combinedText.includes('spiritual evolution') || combinedText.includes('conscious')) {
+    return 'Consciousness & Awakening & Enlightenment'
+  }
+  
+  // AI & Tech keywords  
+  if (combinedText.includes('ai') || combinedText.includes('artificial intelligence') ||
+      combinedText.includes('technology') || combinedText.includes('future') ||
+      combinedText.includes('quantum') || combinedText.includes('conscious tech')) {
+    return 'AI & Conscious Technology & Future'
+  }
+  
+  // Crypto & Decentralization keywords
+  if (combinedText.includes('crypto') || combinedText.includes('blockchain') ||
+      combinedText.includes('decentralized') || combinedText.includes('bitcoin') ||
+      combinedText.includes('web3') || combinedText.includes('finance')) {
+    return 'Crypto & Decentralized Sovereignty'
+  }
+  
+  // Esoterica & Ancient Wisdom keywords
+  if (combinedText.includes('ancient') || combinedText.includes('wisdom') ||
+      combinedText.includes('mystery') || combinedText.includes('esoteric') ||
+      combinedText.includes('sacred') || combinedText.includes('heritage')) {
+    return 'Esoterica & Ancient Wisdom & Mysteries'
+  }
+  
+  // Lifestyle & New Earth keywords
+  if (combinedText.includes('lifestyle') || combinedText.includes('wellness') ||
+      combinedText.includes('harmony') || combinedText.includes('balance') ||
+      combinedText.includes('zen') || combinedText.includes('mindful')) {
+    return 'Divine Lifestyle & New Earth & Harmony'
+  }
+  
+  // Mythology & Archetypes keywords
+  if (combinedText.includes('mythology') || combinedText.includes('archetype') ||
+      combinedText.includes('legend') || combinedText.includes('symbol') ||
+      combinedText.includes('ritual') || combinedText.includes('tradition')) {
+    return 'Mythology & Archetypes & Ancient Secrets'
+  }
+  
+  // Global shifts & culture keywords  
+  if (combinedText.includes('global') || combinedText.includes('culture') ||
+      combinedText.includes('shift') || combinedText.includes('society') ||
+      combinedText.includes('movement') || combinedText.includes('transformation')) {
+    return 'Global Shifts & Conscious Culture & Awakening'
+  }
+  
+  // Default category
+  return 'Consciousness & Awakening & Enlightenment'
 }
 
 export default function BulkContentGenerator() {
@@ -55,15 +129,44 @@ export default function BulkContentGenerator() {
   const validateJsonInput = (jsonString: string): boolean => {
     try {
       const parsed = JSON.parse(jsonString)
+      
+      // Check if it's direct Grok format (array of trends)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.every(item => 
+          item.title && 
+          item.summary && 
+          item.tags && 
+          Array.isArray(item.tags)
+        )
+      }
+      
+      // Check if it's wrapped format with items
       if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
-        setParsedItemsCount(parsed.items.length)
         return true
       }
-    } catch (error) {
+      
+      return false
+    } catch {
+      return false
+    }
+  }
+
+  const isJsonValid = validateJsonInput(jsonInput)
+
+  React.useEffect(() => {
+    if (isJsonValid) {
+      try {
+        const parsed = JSON.parse(jsonInput)
+        // Handle direct Grok format (array) or wrapped format ({items: array})
+        const itemsLength = Array.isArray(parsed) ? parsed.length : (parsed.items?.length || 0)
+        setParsedItemsCount(itemsLength)
+      } catch {
+        setParsedItemsCount(0)
+      }
+    } else {
       setParsedItemsCount(0)
     }
-    return false
-  }
+  }, [jsonInput, isJsonValid])
 
   const handleGenerate = async () => {
     if (!validateJsonInput(jsonInput)) {
@@ -77,23 +180,52 @@ export default function BulkContentGenerator() {
     try {
       const parsedData = JSON.parse(jsonInput)
       
+      // Handle direct Grok format (array) or wrapped format ({items: array})
+      const items = Array.isArray(parsedData) ? parsedData : parsedData.items
+      
+      // Create abort controller for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes
+      
       const response = await fetch('/api/generate-bulk-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          items: parsedData.items,
+          items: items,
           contentType,
           language
-        })
+        }),
+        signal: controller.signal // Use abort signal for timeout
       })
+      
+      // Clear timeout if request completes successfully
+      clearTimeout(timeoutId)
 
-      const result = await response.json()
+      // Better error handling for non-JSON responses
+      let result
+      try {
+        const responseText = await response.text()
+        if (!responseText) {
+          throw new Error('Empty response from server')
+        }
+        result = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError)
+        toast.error(`Server error: ${response.status} ${response.statusText}`)
+        return
+      }
       setCurrentResponse(result)
 
       if (result.success && result.generatedPosts) {
         setGeneratedPosts(result.generatedPosts)
+        
+        // DIVINE COMPLETE PACKAGE GENERATION - Always generate complete packages
+        console.log('🌟 Triggering DIVINE complete package generation...')
+        toast.loading('🌟 Generating divine social posts and cosmic images...', { duration: 3000 })
+        await generateSocialPostsAndImages(result.generatedPosts)
+        
         toast.success(`Successfully generated ${result.generatedPosts.length} posts!`)
       } else {
         toast.error(result.error || 'Generation failed')
@@ -103,6 +235,123 @@ export default function BulkContentGenerator() {
       toast.error('Failed to generate content')
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const generateSocialPostsAndImages = async (posts: GeneratedPost[]) => {
+    console.log('🌟 Starting DIVINE social posts and images generation for', posts.length, 'posts')
+    
+    try {
+      for (let i = 0; i < posts.length; i++) {
+        const post = posts[i]
+        console.log(`✨ Generating divine content for ${i + 1}/${posts.length}: ${post.title}`)
+        
+        // DIVINE SOCIAL POSTS GENERATION
+        try {
+          const socialResponse = await fetch('/api/generate-social-posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: post.title,
+              content: post.content,
+              platforms: ['twitter', 'instagram', 'facebook', 'linkedin', 'discord', 'reddit']
+            })
+          })
+          
+          if (socialResponse.ok) {
+            const socialData = await socialResponse.json()
+            post.socialPosts = socialData.socialPosts || {}
+            console.log('🎉 Social posts generated successfully for', post.title)
+          } else {
+            console.error('❌ Social posts failed for', post.title, 'Status:', socialResponse.status)
+            // Create fallback social posts if API fails
+            post.socialPosts = {
+              twitter: `🚀 ${post.title}\n\n${post.content.substring(0, 200)}...\n\n#AI #Content`,
+              instagram: `✨ ${post.title} ✨\n\n${post.content.substring(0, 300)}...\n\n#AI #Content #Innovation`,
+              facebook: `${post.title}\n\n${post.content.substring(0, 500)}...\n\n#Content #AI #Innovation`,
+              linkedin: `Professional insight: ${post.title}\n\n${post.content.substring(0, 800)}...\n\n#Professional #AI #Business`,
+              discord: `${post.title} 🎮\n\n${post.content.substring(0, 300)}...\n\n#AI #Community #Tech`,
+              reddit: `${post.title} 🤖\n\n${post.content.substring(0, 300)}...\n\n#AI #Discussion #Tech`
+            }
+          }
+        } catch (socialError) {
+          console.error('❌ Social generation error:', socialError)
+        }
+        
+        // 🌟 TOPIC-SPECIFIC IMAGE GENERATION
+        try {
+          // Create relevant image prompt based on content and category
+          const category = post.category || 'Consciousness & Awakening'
+          const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
+          
+          let imagePrompt = `Professional illustration for article: "${post.title}". `
+          
+          // Category-specific styling
+          if (category.includes('Consciousness') || category.includes('Awakening')) {
+            imagePrompt += `Style: Meditative mind visualization, brain networks, enlightenment symbols, peaceful spiritual imagery, warm golden light, consciousness awakening.`
+          } else if (category.includes('AI') || category.includes('Technology')) {
+            imagePrompt += `Style: Modern tech illustration, AI brain, digital networks, futuristic technology, clean minimalist design, blue-silver color scheme.`
+          } else if (category.includes('Crypto') || category.includes('Decentralized')) {
+            imagePrompt += `Style: Blockchain visualization, digital currency symbols, decentralized networks, modern fintech design, geometric patterns.`
+          } else if (category.includes('Ancient') || category.includes('Wisdom')) {
+            imagePrompt += `Style: Ancient wisdom symbols, historical artifacts, mystical elements, earthy tones, sacred geometry, timeless beauty.`
+          } else if (category.includes('Lifestyle') || category.includes('New Earth')) {
+            imagePrompt += `Style: Sustainable living, earth elements, wellness lifestyle, natural harmony, green earth tones, healing symbols.`
+          } else if (category.includes('Mythology') || category.includes('Archetypes')) {
+            imagePrompt += `Style: Mythological symbols, ancient archetypes, legendary creatures, symbolic imagery, mystical artistic portrayal.`
+          } else if (category.includes('Global') || category.includes('Culture')) {
+            imagePrompt += `Style: Global culture blend, world unity symbols, cultural diversity, contemporary social movements, earth-connected imagery.`
+          } else {
+            imagePrompt += `Style: Professional illustration, relevant symbolic imagery, clean modern design, appropriate color scheme.`
+          }
+          
+          imagePrompt += ` Theme: ${topicTags}. High quality, professional article illustration.`
+          
+          const imageResponse = await fetch('/api/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: imagePrompt })
+          })
+          
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json()
+            post.generatedImage = imageData.imageUrl
+            console.log('🌟 Cosmic image generated for', post.title)
+          } else {
+            console.error('❌ Image generation failed for', post.title, 'Status:', imageResponse.status)
+          }
+        } catch (imageError) {
+          console.error('❌ Image generation error:', imageError)
+        }
+        
+        // Divine timing - respect the universe's rhythm
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        
+        // Update UI immediately
+        setGeneratedPosts([...generatedPosts]) // Trigger re-render
+        
+        // Update loading toast
+        toast.loading(`🌟 Generating divine content ${i + 1}/${posts.length}...`, {
+          id: 'divine-generation'
+        })
+      }
+      
+      // Final update
+      setGeneratedPosts([...posts])
+      
+      // 🚀 AUTOMATICALLY SAVE ALL POSTS AS ADMIN PACKAGES
+      await saveAllPostsAsPackages(posts)
+      
+      // Replace loading toast with success
+      toast.success('🎉 All divine content generated and automatically saved as packages!', {
+        id: 'divine-generation'
+      })
+    } catch (error) {
+      console.error('❌ Divine generation error:', error)
+      // Replace loading toast with error
+      toast.error('❌ Some divine content failed to generate', {
+        id: 'divine-generation'
+      })
     }
   }
 
@@ -126,27 +375,97 @@ Metadata:
     toast.success('Post copied to clipboard!')
   }
 
+  const saveAllPostsAsPackages = async (posts: GeneratedPost[]) => {
+    console.log('🚀 Auto-saving all posts as admin packages:', posts.length)
+    
+    try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id
+
+      toast.loading('💾 Auto-saving all packages...', {
+        id: 'auto-save'
+      })
+
+      let successCount = 0
+      let failCount = 0
+
+      for (let i = 0; i < posts.length; i++) {
+        const post = posts[i]
+        console.log(`💾 Auto-saving package ${i + 1}/${posts.length}: ${post.title}`)
+        
+        try {
+          const response = await fetch('/api/create-admin-package', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              title: post.title,
+              content: post.content,
+              excerpt: post.excerpt,
+              hashtags: post.hashtags,
+              suggestions: post.suggestions,
+              category: post.category,
+              userId: userId,
+              socialPosts: post.socialPosts || {},
+              generatedImage: post.generatedImage || null,
+              metadata: {
+                ...post.metadata,
+                bulkGenerated: true,
+                sourceType: 'bulk-generator',
+                contentType: contentType,
+                language: language,
+                autoSaved: true
+              }
+            })
+          })
+
+          const result = await response.json()
+          
+          if (result.success) {
+            successCount++
+            console.log(`✅ Auto-saved: ${post.title}`)
+          } else {
+            failCount++
+            console.error(`❌ Auto-save failed: ${post.title}`, result.error)
+          }
+
+          // Respect the universe
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+        } catch (error) {
+          failCount++
+          console.error(`❌ Auto-save error for ${post.title}:`, error)
+        }
+      }
+
+      // Update loading toast
+      toast.success(`🎉 Auto-saved ${successCount} packages successfully! ${failCount > 0 ? `${failCount} failed.` : ''}`, {
+        id: 'auto-save'
+      })
+
+    } catch (error) {
+      console.error('❌ Auto-save error:', error)
+      toast.error('❌ Auto-save failed', {
+        id: 'auto-save'
+      })
+    }
+  }
+
   const savePostAsPackage = async (post: GeneratedPost) => {
     setSavingPost(post.trend)
     
-    // Debug: Check if required fields are present
-    console.log('🔍 Saving post:', {
-      title: post.title,
-      hasContent: !!post.content,
-      contentLength: post.content?.length || 0,
-      excerpt: post.excerpt
-    })
-    
-    if (!post.title || !post.content) {
-      toast.error('Missing title or content - cannot save package')
-      console.error('❌ Missing required fields:', {
-        title: post.title,
-        content: post.content
-      })
+    if (!post.title || !post.content || post.content.length === 0) {
+      toast.error(`Missing title or content - cannot save package`)
       return
     }
     
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id
+
       const response = await fetch('/api/create-admin-package', {
         method: 'POST',
         headers: {
@@ -158,6 +477,10 @@ Metadata:
           excerpt: post.excerpt,
           hashtags: post.hashtags,
           suggestions: post.suggestions,
+          category: post.category,
+          userId: userId,
+          socialPosts: post.socialPosts || {},
+          generatedImage: post.generatedImage || null,
           metadata: {
             ...post.metadata,
             bulkGenerated: true,
@@ -176,7 +499,7 @@ Metadata:
         toast.error(`❌ Failed to save package: ${result.error}`)
       }
     } catch (error) {
-      console.error('Save package error:', error)
+      console.error('❌ Save package error:', error)
       toast.error('❌ Failed to save package')
     } finally {
       setSavingPost(null)
@@ -184,38 +507,27 @@ Metadata:
   }
 
   const parseSampleData = () => {
-    const sampleData = {
-      "items": [
-        {
-          "trend": "Kundalini Vocal Activation",
-          "source_title": "Vocal Techniques for Kundalini Awakening",
-          "source_url": "https://example.com/kundalini-vocal",
-          "summary": "Vocal techniques like chanting and toning are used to activate kundalini energy.",
-          "keywords": ["kundalini awakening", "vocal activation", "chanting"],
-          "recommended_formats": ["short_form", "thread"],
-          "tags": ["Spiritualiteit", "kundalini"],
-          "audience": "Vocal meditators",
-          "tone": "playful",
-          "cta_ideas": ["Try a chanting session", "Record your vocal practice"]
-        },
-        {
-          "trend": "Non-Dual Leadership Training",
-          "source_title": "Training Leaders in Non-Dual Awareness",
-          "source_url": "https://example.com/nondual-leadership-training",
-          "summary": "Non-dual leadership training teaches presence and unity in decision-making.",
-          "keywords": ["non-dualiteit", "leadership training", "presence"],
-          "recommended_formats": ["blog_draft", "caption"],
-          "tags": ["Spiritualiteit", "bewustzijn"],
-          "audience": "Emerging leaders",
-          "tone": "insightful",
-          "cta_ideas": ["Enroll in a training", "Apply non-dual principles"]
-        }
-      ]
-    }
+    const sampleData = [
+      {
+        "title": "AI Consciousness Meditation: Digital Enlightenment Platforms Emerge",
+        "summary": "New meditation apps using AI to guide consciousness expansion and track awareness states are gaining popularity among spiritual tech enthusiasts across Substack, Medium, and consciousness blogs.",
+        "tags": ["consciousness", "AI", "meditation", "tech", "spiritual"]
+      },
+      {
+        "title": "Crypto Nomad Communities: Decentralized Living on Luxury Yachts",
+        "summary": "Crypto-enabled nomads are creating borderless communities using blockchain technology for governance and resource sharing, merging digital sovereignty with luxury nomadic lifestyle.",
+        "tags": ["crypto", "nomads", "decentralization", "luxury", "yachts"]
+      },
+      {
+        "title": "Quantum Echoes: Ancient Sound Tech Powers Modern Consciousness Hacks",
+        "summary": "Consciousness blogs and Medium threads converge on reviving psychoacoustic architecture from ancient traditions, using AI to amplify sound waves for transcending default states.",
+        "tags": ["psychoacoustics", "consciousness", "AItherapy", "vibration", "ancientwisdom"]
+      }
+    ]
     
     setJsonInput(JSON.stringify(sampleData, null, 2))
-    setParsedItemsCount(2)
-    toast.success('Sample data loaded!')
+    setParsedItemsCount(sampleData.length)
+    toast.success('Real Grok format loaded!')
   }
 
   return (
@@ -227,7 +539,7 @@ Metadata:
             <span>✨ Bulk Content Generator</span>
           </CardTitle>
           <CardDescription className="text-gray-200">
-            Upload your Grok trends data and generate multiple blog posts automatically with Timeline Alchemy magic
+            📅 Daily Grok Workflow: Paste trend data → Generate blog + social posts + cosmic images automatically
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -262,21 +574,18 @@ Metadata:
 
           {/* JSON Input */}
           <div>
-            <Label htmlFor="jsonInput">Trends JSON Data</Label>
+            <Label htmlFor="jsonInput">Trend Data (JSON)</Label>
             <Textarea
               id="jsonInput"
               value={jsonInput}
-              onChange={(e) => {
-                setJsonInput(e.target.value)
-                validateJsonInput(e.target.value)
-              }}
+              onChange={(e) => setJsonInput(e.target.value)}
               placeholder="Paste your Grok trends JSON data here..."
               rows={10}
               className="font-mono text-sm"
             />
             <div className="flex items-center gap-2 mt-2">
               <Button variant="outline" size="sm" onClick={parseSampleData}>
-                Load Sample Data
+                Load Grok Sample Data
               </Button>
               {parsedItemsCount > 0 && (
                 <Badge variant="secondary">
@@ -285,6 +594,19 @@ Metadata:
                 </Badge>
               )}
             </div>
+            
+            {/* Grok Workflow Instructions */}
+            <Alert className="bg-purple-900/20 border-purple-500/30">
+              <AlertDescription>
+                <div className="font-semibold text-purple-200 mb-2">📅 Daily Grok Workflow Instructions:</div>
+                <div className="text-sm text-gray-300 space-y-1">
+                  <div><strong>1. Copy Grok Response:</strong> Take the JSON array from Grok and paste it directly above</div>
+                  <div><strong>2. Select Content Type:</strong> Choose "Blog Posts" for complete package generation</div>
+                  <div><strong>3. Generate Complete Package:</strong> Each trend will create blog + social posts + cosmic image</div>
+                  <div><strong>4. Save Individual Posts:</strong> Use "Save" buttons to add to your content calendar</div>
+                </div>
+              </AlertDescription>
+            </Alert>
           </div>
 
           {/* Generate Button */}
@@ -302,7 +624,7 @@ Metadata:
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                🚀 Generate {parsedItemsCount} Posts
+                🚀 Generate Complete Package ({parsedItemsCount} items)
               </>
             )}
           </Button>
@@ -339,33 +661,16 @@ Metadata:
           </CardHeader>
           <CardContent>
             {currentResponse.errors && currentResponse.errors.length > 0 && (
-              <Alert className={`mb-4 ${currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) ? 'bg-red-900/30 border-red-500/50' : ''}`}>
+              <Alert>
                 <AlertDescription>
-                  <div className="font-semibold">
-                    {currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) 
-                      ? '🚨 Quota Limit Reached' 
-                      : 'Errors encountered:'}
-                  </div>
+                  <div className="font-semibold">Errors encountered:</div>
                   <ul className="list-disc list-inside mt-2">
                     {currentResponse.errors.map((error: string, index: number) => (
-                      <li key={index} className={`text-sm ${error.includes('QUOTA LIMIT') ? 'text-red-300 font-semibold' : ''}`}>
+                      <li key={index} className="text-sm">
                         {error}
                       </li>
                     ))}
                   </ul>
-                  {currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) && (
-                    <div className="mt-3 p-3 bg-red-800/20 border border-red-500/30 rounded">
-                      <div className="text-red-200 text-sm">
-                        <strong>💡 Solutions:</strong>
-                        <ul className="list-disc list-inside mt-1 ml-4">
-                          <li>Check your OpenAI billing and add credits</li>
-                          <li>Wait for quota to reset (usually 24 hours)</li>
-                          <li>Try generating fewer posts at once</li>
-                          <li>Consider upgrading your OpenAI plan</li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
                 </AlertDescription>
               </Alert>
             )}
@@ -382,13 +687,13 @@ Metadata:
                           {post.title}
                         </CardTitle>
                         <CardDescription className="mt-1 text-gray-300">
-                          📈 Trend: {post.trend} • 🎯 Audience: {post.metadata.audience}
+                          📈 Trend: {post.trend} • 🌟 Category: <span className="text-purple-300 font-semibold">{post.category}</span> • 🎯 Audience: {post.metadata.audience}
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => savePostAsPackage(post)}
                           disabled={savingPost === post.trend}
                           className="border-green-500 text-green-400 hover:bg-green-900/30"
@@ -417,24 +722,81 @@ Metadata:
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <div className="text-sm text-gray-200">
-                        <div className="whitespace-pre-wrap">{post.excerpt}</div>
+                    <div className="space-y-4">
+                      {/* Blog Content */}
+                      <div className="bg-purple-800/10 p-4 rounded-lg border border-purple-500/20">
+                        <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+                          📝 Blog Post
+                        </h4>
+                        <div className="text-sm text-gray-200 whitespace-pre-wrap">
+                          {post.content}
+                        </div>
                       </div>
                       
-                      <div className="flex flex-wrap gap-1">
-                        {post.hashtags.map((tag, tagIndex) => (
-                          <Badge key={tagIndex} variant="outline" className="text-xs border-purple-500/50 text-purple-300">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
+                      {/* Generated Image */}
+                      {post.generatedImage && (
+                        <div className="bg-pink-800/10 p-4 rounded-lg border border-pink-500/20">
+                          <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+                            <Package className="h-4 w-4 text-pink-400" />
+                            Cosmic Image
+                          </h4>
+                          <div className="relative">
+                            <img 
+                              src={post.generatedImage} 
+                              alt={`Generated cosmic image for ${post.title}`}
+                              className="w-full max-w-md h-auto rounded-lg border border-pink-500/30 shadow-lg"
+                              onError={(e) => {
+                                console.error('Image failed to load:', post.generatedImage)
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                            <Badge className="absolute top-2 right-2 bg-pink-500/20 text-pink-300">
+                              AI Cosmic
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
                       
-                      <div className="text-xs text-gray-400 bg-gray-800/50 rounded p-2">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      {/* Social Posts */}
+                      {post.socialPosts && Object.keys(post.socialPosts).length > 0 && (
+                        <div className="bg-blue-800/10 p-4 rounded-lg border border-blue-500/20">
+                          <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <Users className="h-4 w-4 text-blue-400" />
+                            Social Media Posts
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {Object.entries(post.socialPosts).map(([platform, content]) => (
+                              <div key={platform} className="bg-blue-800/20 p-3 rounded border border-blue-500/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-blue-400 font-bold text-sm capitalize">{platform}</span>
+                                  <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-300">
+                                    {platform === 'twitter' ? '280 chars' : 
+                                     platform === 'instagram' ? 'Caption' :
+                                     platform === 'linkedin' ? 'Professional' : 'Social'}
+                                  </Badge>
+                                </div>
+                                <div className="text-gray-200 text-sm whitespace-pre-wrap">
+                                  {content}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Metadata */}
+                      <div className="text-xs text-gray-400 bg-gray-800/50 rounded p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                           <div><span className="font-medium text-purple-300">Keywords:</span> {post.metadata.keywords.join(', ')}</div>
                           <div><span className="font-medium text-blue-300">Tags:</span> {post.metadata.tags.join(', ')}</div>
                           <div><span className="font-medium text-green-300">Tone:</span> {post.metadata.tone}</div>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {post.hashtags.map((tag, tagIndex) => (
+                            <Badge key={tagIndex} variant="outline" className="text-xs border-purple-500/50 text-purple-300">
+                              {tag}
+                            </Badge>
+                          ))}
                         </div>
                       </div>
                     </div>

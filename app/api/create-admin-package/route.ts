@@ -4,21 +4,21 @@ import { createClient } from '@supabase/supabase-js'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, content, excerpt, hashtags, suggestions } = body
+    const { title, content, excerpt, hashtags, suggestions, userId, socialPosts, generatedImage, category } = body
 
     console.log('🔍 Create admin package request:', {
       title: title,
       hasContent: !!content,
       contentLength: content?.length || 0,
-      excerpt: excerpt,
-      hasHashtags: !!hashtags,
-      hashtagsCount: hashtags?.length || 0
+      hasSocialPosts: !!socialPosts,
+      hasGeneratedImage: !!generatedImage,
+      userId: userId
     })
-
+    
     if (!title || !content) {
       console.error('❌ Missing required fields:', {
         title: title,
-        content: content
+        sourceContent: content
       })
       return NextResponse.json(
         { error: 'Title and content are required' },
@@ -37,56 +37,66 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // For now, we'll create packages without user authentication
-    // In production, you'd want to validate the user session
-    const { data: organization } = await supabaseClient
-      .from('organizations')
-      .select('id')
-      .limit(1)
-      .single()
-
-    if (!organization?.id) {
-      return NextResponse.json(
-        { error: 'No organization found' },
-        { status: 400 }
-      )
-    }
-
-    // Create the package
-    const { data: packageData, error: packageError } = await supabaseClient
+    // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Mimic the working content generator
+    console.log('🔍 Using admin organization for this admin-only package...')
+    
+    // 🚀 CREATE ADMIN PACKAGE DIRECTLY - Skip the manual conversion workflow!
+    const { data: insertedPackage, error: packageError } = await supabaseClient
       .from('blog_posts')
       .insert({
-        org_id: organization.id,
-        title: title,
+        org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID  
+        title: category ? `[${category}] ${title}` : title,
         content: content,
-        excerpt: excerpt || content.substring(0, 150) + '...',
-        state: 'draft',
-        created_by_admin: true,
-        metadata: {
-          hashtags: hashtags || [],
-          suggestions: suggestions || [],
-          source: 'bulk_content_generator'
-        }
+        state: 'published', // DIRECT PUBLISH - Available immediately!
+        published_at: new Date().toISOString(), // Publish immediately
+        created_by_admin: true, // 🎯 This makes it an admin packages immediately!
+        // Category will be stored in title prefix for now: [Category] Title
       })
       .select()
       .single()
 
     if (packageError) {
-      console.error('Error creating package:', packageError)
+      console.error('❌ Save post error:', packageError)
       return NextResponse.json(
-        { error: 'Failed to create package' },
+        { error: 'Failed to save post', details: packageError.message },
         { status: 500 }
       )
     }
 
+    // Save social posts to separate table (like working content generator)
+    if (socialPosts && Object.keys(socialPosts).length > 0) {
+      for (const [platform, socialContent] of Object.entries(socialPosts)) {
+        await supabaseClient
+          .from('social_posts')
+          .insert({
+            post_id: insertedPackage.id,
+            platform,
+            content: socialContent
+          })
+      }
+    }
+
+    // Save image (simple approach like working generator)
+    if (generatedImage && insertedPackage?.id) {
+      await supabaseClient
+        .from('images')
+        .insert({
+          org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+          post_id: insertedPackage.id,
+          url: generatedImage
+        })
+    }
+    
+    console.log('✅ Admin package created successfully:', insertedPackage?.id)
+
     return NextResponse.json({
       success: true,
-      package: packageData,
-      message: 'Package created successfully'
+      package: insertedPackage,
+      message: 'Admin package created successfully'
     })
 
   } catch (error) {
-    console.error('Create admin package error:', error)
+    console.error('❌ Create admin package error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

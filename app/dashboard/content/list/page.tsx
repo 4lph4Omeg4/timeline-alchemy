@@ -12,16 +12,29 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
+const CONTENT_CATEGORIES = [
+  { id: 'consciousness', label: 'Consciousness & Awakening', emoji: '🧠' },
+  { id: 'ancient_wisdom', label: 'Ancient Wisdom & Mysteries', emoji: '🏛️' },
+  { id: 'ai_technology', label: 'AI & Conscious Technology', emoji: '🤖' },
+  { id: 'crypto_decentralized', label: 'Crypto & Decentralized Sovereignty', emoji: '💰' },
+  { id: 'divine_lifestyle', label: 'Divine Lifestyle & New Earth', emoji: '🌱' },
+  { id: 'mythology_archetypes', label: 'Mythology & Archetypes', emoji: '⚡' },
+  { id: 'global_shifts', label: 'Global Shifts & Conscious Culture', emoji: '🌍' }
+] as const
+
 export default function ContentListPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'draft' | 'scheduled' | 'published'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rating' | 'title'>('newest')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
+  const [categorizing, setCategorizing] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     fetchPosts()
-  }, [filter, sortBy])
+  }, [filter, sortBy, selectedCategory])
 
   const fetchPosts = async () => {
     try {
@@ -59,6 +72,11 @@ export default function ContentListPage() {
         query = query.eq('state', filter)
       }
 
+      // Apply category filtering  
+      if (selectedCategory !== 'all') {
+        query = query.eq('category', selectedCategory)
+      }
+
       // Apply sorting
       switch (sortBy) {
         case 'newest':
@@ -83,7 +101,15 @@ export default function ContentListPage() {
         console.error('Error fetching posts:', error)
         toast.error('Failed to load content')
       } else {
-        setPosts(data || [])
+        const posts = data || []
+        setPosts(posts)
+        
+        // Calculate category counts
+        const counts: Record<string, number> = {}
+        CONTENT_CATEGORIES.forEach(category => {
+          counts[category.id] = posts.filter(post => post.category === category.id).length
+        })
+        setCategoryCounts(counts)
       }
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -184,6 +210,44 @@ export default function ContentListPage() {
     return state.charAt(0).toUpperCase() + state.slice(1)
   }
 
+  const handleCategorizePosts = async () => {
+    if (!confirm('🌟 This will automatically categorize all uncategorized blog posts based on their content and titles. This action cannot be easily undone. Continue?')) {
+      return
+    }
+
+    setCategorizing(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const token = (await supabase.auth.getSession()).data.session?.access_token
+      
+      const response = await fetch('/api/categorize-existing-posts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        toast.success(`✨ Successfully categorized ${result.results.categorizedPosts} posts!`)
+        console.log('Categorization results:', result.results)
+        fetchPosts() // Refresh the posts to show updated categories
+      } else {
+        toast.error(`❌ Categorization failed: ${result.error}`)
+        console.error('Categorization error details:', result.details)
+      }
+    } catch (error) {
+      console.error('Unexpected categorization error:', error)
+      toast.error('❌ An unexpected error occurred during categorization')
+    } finally {
+      setCategorizing(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -197,9 +261,9 @@ export default function ContentListPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">Content Library</h1>
+          <h1 className="text-3xl font-bold text-white">🌟 Divine Content Library</h1>
           <p className="text-gray-300 mt-2">
-            Manage your content and view packages created by your admin.
+            Explore categorized content and view packages across all domains of consciousness.
           </p>
         </div>
         <Link href="/dashboard/content/new">
@@ -207,248 +271,320 @@ export default function ContentListPage() {
         </Link>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex space-x-2">
-        {(['all', 'draft', 'scheduled', 'published'] as const).map((filterType) => (
-          <Button
-            key={filterType}
-            variant={filter === filterType ? 'default' : 'outline'}
-            onClick={() => setFilter(filterType)}
-            className="capitalize"
-          >
-            {filterType === 'all' ? 'All Content' : getStateText(filterType)}
-          </Button>
-        ))}
-      </div>
+      {/* Main Layout: Sidebar + Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Category Sidebar */}
+        <div className="lg:col-span-1">
+          <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                🗂️ Categories
+              </CardTitle>
+              <CardDescription className="text-gray-300">
+                Filter content by divine domains
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {/* All Content */}
+              <Button
+                variant={selectedCategory === 'all' ? 'default' : 'ghost'}
+                className="w-full justify-start text-left"
+                onClick={() => setSelectedCategory('all')}
+              >
+                <span className="flex items-center justify-between w-full">
+                  <span>🌟 All Content</span>
+                  <Badge variant="secondary">{posts.length}</Badge>
+                </span>
+              </Button>
 
-      {/* Sort Options */}
-      <div className="flex items-center space-x-4">
-        <span className="text-gray-300 text-sm font-medium">Sort by:</span>
-        <div className="flex space-x-2">
-          {(['newest', 'oldest', 'rating', 'title'] as const).map((sortType) => (
-            <Button
-              key={sortType}
-              variant={sortBy === sortType ? 'default' : 'outline'}
-              onClick={() => setSortBy(sortType)}
-              size="sm"
-              className="capitalize"
-            >
-              {sortType === 'newest' ? 'Newest First' : 
-               sortType === 'oldest' ? 'Oldest First' :
-               sortType === 'rating' ? 'Top Rated' : 'Title A-Z'}
-            </Button>
-          ))}
+              {/* Category Buttons */}
+              {CONTENT_CATEGORIES.map(category => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? 'default' : 'ghost'}
+                  className="w-full justify-start text-left h-auto py-2"
+                  onClick={() => setSelectedCategory(category.id)}
+                >
+                  <span className="flex flex-col items-start w-full">
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      {category.emoji} {category.label.split(' & ')[0]}
+                    </span>
+                    <span className="text-xs text-gray-400 truncate w-full">
+                      {category.label.split(' & ')[1] && category.label.split(' & ')[1]}
+                    </span>
+                    <Badge variant="secondary" className="mt-1">
+                      {categoryCounts[category.id] || 0}
+                    </Badge>
+                  </span>
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
         </div>
-      </div>
 
-      {/* Content Grid */}
-      {posts.length === 0 ? (
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-xl font-semibold text-white mb-2">No content found</h3>
-            <p className="text-gray-400 text-center mb-6">
-              {filter === 'all' 
-                ? "No content found in your organization. Start by creating your first post or ask your admin to create packages for you!"
-                : `No ${filter} content found. Try creating some content or check other filters.`
-              }
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post) => (
-            <Card key={post.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-white text-lg line-clamp-2">
-                    {post.title}
-                  </CardTitle>
-                  <Badge className={`${getStateColor(post.state)} text-white ml-2`}>
-                    {getStateText(post.state)}
-                  </Badge>
-                </div>
-                <CardDescription className="text-gray-400">
-                  <div className="flex items-center space-x-2">
-                    <span>Created {formatDate(post.created_at)}</span>
-                    {post.created_by_admin && (
-                      <Badge className="bg-purple-600 text-white text-xs">
-                        Admin Package
+        {/* Content Area */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Current Selection */}
+          <div className="flex items-center gap-2">
+            {selectedCategory === 'all' ? (
+              <span className="text-lg text-white">🌟 All Content</span>
+            ) : (
+              <span className="text-lg text-white flex items-center gap-2">
+                {CONTENT_CATEGORIES.find(cat => cat.id === selectedCategory)?.emoji}
+                {CONTENT_CATEGORIES.find(cat => cat.id === selectedCategory)?.label.split(' & ')[0]}
+              </span>
+            )}
+            <Badge variant="outline" className="text-purple-300 border-purple-500">
+              {selectedCategory === 'all' ? posts.length : categoryCounts[selectedCategory] || 0} articles
+            </Badge>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex space-x-2">
+            {(['all', 'draft', 'scheduled', 'published'] as const).map((filterType) => (
+              <Button
+                key={filterType}
+                variant={filter === filterType ? 'default' : 'outline'}
+                onClick={() => setFilter(filterType)}
+                className="capitalize"
+              >
+                {filterType === 'all' ? 'All Content' : getStateText(filterType)}
+              </Button>
+            ))}
+          </div>
+
+          {/* Sort Options */}
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-300 text-sm font-medium">Sort by:</span>
+            <div className="flex space-x-2">
+              {(['newest', 'oldest', 'rating', 'title'] as const).map((sortType) => (
+                <Button
+                  key={sortType}
+                  variant={sortBy === sortType ? 'default' : 'outline'}
+                  onClick={() => setSortBy(sortType)}
+                  size="sm"
+                  className="capitalize"
+                >
+                  {sortType === 'newest' ? 'Newest First' : 
+                   sortType === 'oldest' ? 'Oldest First' :
+                   sortType === 'rating' ? 'Top Rated' : 'Title A-Z'}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content Grid */}
+          {posts.length === 0 ? (
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="text-6xl mb-4">📝</div>
+                <h3 className="text-xl font-semibold text-white mb-2">No content found</h3>
+                <p className="text-gray-400 text-center mb-6">
+                  {filter === 'all' 
+                    ? "No content found in your organization. Start by creating your first post or ask your admin to create packages for you!"
+                    : `No ${filter} content found. Try creating some content or check other filters.`
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {posts.map((post) => (
+                <Card key={post.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-white text-lg line-clamp-2">
+                        {post.title}
+                      </CardTitle>
+                      <Badge className={`${getStateColor(post.state)} text-white ml-2`}>
+                        {getStateText(post.state)}
                       </Badge>
-                    )}
-                    {post.state === 'scheduled' && !post.created_by_admin && (
-                      <Badge className="bg-orange-600 text-white text-xs">
-                        📅 Scheduled Task
-                      </Badge>
-                    )}
-                  </div>
-                  {post.published_at && (
-                    <span className="block">
-                      Published {formatDate(post.published_at)}
-                    </span>
-                  )}
-                  {post.scheduled_for && (
-                    <span className="block text-blue-400">
-                      Scheduled for {formatDateTime(post.scheduled_for)}
-                    </span>
-                  )}
-                  {/* Rating Display */}
-                  <div className="flex items-center space-x-2 mt-2">
-                    <StarRating 
-                      rating={post.average_rating || 0} 
-                      size="sm" 
-                      showNumber={true}
-                    />
-                    <span className="text-xs text-gray-500">
-                      ({post.rating_count || 0} {post.rating_count === 1 ? 'rating' : 'ratings'})
-                    </span>
-                  </div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Warning for scheduled tasks */}
-                  {post.state === 'scheduled' && !post.created_by_admin && (
-                    <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-3">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-orange-400 text-lg">⚠️</span>
-                        <div className="text-orange-200 text-sm">
-                          <strong>Scheduled Task:</strong> This is a scheduled post created from an admin package. 
-                          <br />
-                          <span className="text-orange-300">
-                            Scheduled for: <strong>{formatDateTime(post.scheduled_for || '')}</strong>
-                          </span>
-                          <br />
-                          <span className="text-orange-300">Do not delete - it will be automatically posted!</span>
-                        </div>
-                      </div>
                     </div>
-                  )}
-                  
-                  {(post.state !== 'scheduled' || post.created_by_admin) && (
-                    <p className="text-gray-300 text-sm line-clamp-6">
-                      {post.content.substring(0, 900)}...
-                    </p>
-                  )}
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {post.state === 'draft' && (
-                      <>
-                        {post.created_by_admin ? (
-                          <Link href={`/dashboard/content/package/${post.id}`}>
-                            <Button size="sm" className="flex-1">
-                              📦 View Package
-                            </Button>
-                          </Link>
-                        ) : (
+                    <CardDescription className="text-gray-400">
+                      <div className="flex items-center space-x-2">
+                        <span>Created {formatDate(post.created_at)}</span>
+                        {post.created_by_admin && (
+                          <Badge className="bg-purple-600 text-white text-xs">
+                            Admin Package
+                          </Badge>
+                        )}
+                        {post.state === 'scheduled' && !post.created_by_admin && (
+                          <Badge className="bg-orange-600 text-white text-xs">
+                            📅 Scheduled Task
+                          </Badge>
+                        )}
+                      </div>
+                      {post.published_at && (
+                        <span className="block">
+                          Published {formatDate(post.published_at)}
+                        </span>
+                      )}
+                      {post.scheduled_for && (
+                        <span className="block text-blue-400">
+                          Scheduled for {formatDateTime(post.scheduled_for)}
+                        </span>
+                      )}
+                      {/* Rating Display */}
+                      <div className="flex items-center space-x-2 mt-2">
+                        <StarRating 
+                          rating={post.average_rating || 0} 
+                          size="sm" 
+                          showNumber={true}
+                        />
+                        <span className="text-xs text-gray-500">
+                          ({post.rating_count || 0} {post.rating_count === 1 ? 'rating' : 'ratings'})
+                        </span>
+                      </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Warning for scheduled tasks */}
+                      {post.state === 'scheduled' && !post.created_by_admin && (
+                        <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-3">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-orange-400 text-lg">⚠️</span>
+                            <div className="text-orange-200 text-sm">
+                              <strong>Scheduled Task:</strong> This is a scheduled post created from an admin package. 
+                              <br />
+                              <span className="text-orange-300">
+                                Scheduled for: <strong>{formatDateTime(post.scheduled_for || '')}</strong>
+                              </span>
+                              <br />
+                              <span className="text-orange-300">Do not delete - it will be automatically posted!</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {(post.state !== 'scheduled' || post.created_by_admin) && (
+                        <p className="text-gray-300 text-sm line-clamp-6">
+                          {post.content.substring(0, 300)}...
+                        </p>
+                      )}
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {post.state === 'draft' && (
                           <>
-                            <Button
-                              size="sm"
-                              onClick={() => handlePublishPost(post.id)}
-                              className="flex-1"
-                            >
-                              Publish
-                            </Button>
-                            <Link href={`/dashboard/content/edit/${post.id}`}>
-                              <Button size="sm" variant="outline" className="flex-1">
-                                Edit
-                              </Button>
-                            </Link>
+                            {post.created_by_admin ? (
+                              <Link href={`/dashboard/content/package/${post.id}`}>
+                                <Button size="sm" className="flex-1">
+                                  📦 View Package
+                                </Button>
+                              </Link>
+
+
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handlePublishPost(post.id)}
+                                  className="flex-1"
+                                >
+                                  Publish
+                                </Button>
+                                <Link href={`/dashboard/content/edit/${post.id}`}>
+                                  <Button size="sm" variant="outline" className="flex-1">
+                                    Edit
+                                  </Button>
+                                </Link>
+                              </>
+                            )}
                           </>
                         )}
-                      </>
-                    )}
-                    
-                    {post.state === 'published' && (
-                      <>
-                        <Link href={`/dashboard/content/package/${post.id}`}>
-                          <Button size="sm" className="flex-1">
-                            📦 View Package
+                        
+                        {post.state === 'published' && (
+                          <>
+                            <Link href={`/dashboard/content/package/${post.id}`}>
+                              <Button size="sm" className="flex-1">
+                                📦 View Package
+                              </Button>
+                            </Link>
+                            {!post.created_by_admin && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRecyclePost(post.id)}
+                                className="flex-1"
+                              >
+                                ♻️ Recycle
+                              </Button>
+                            )}
+                          </>
+                        )}
+
+                        {post.state === 'scheduled' && (
+                          <>
+                            <Link href={`/dashboard/content/package/${post.id}`}>
+                              <Button size="sm" className="flex-1">
+                                📦 View Package
+                              </Button>
+                            </Link>
+                            {!post.created_by_admin && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handlePublishPost(post.id)}
+                                  className="flex-1"
+                                >
+                                  Publish Now
+                                </Button>
+                                <Link href={`/dashboard/content/edit/${post.id}`}>
+                                  <Button size="sm" variant="outline" className="flex-1">
+                                    Edit
+                                  </Button>
+                                </Link>
+                              </>
+                            )}
+                          </>
+                        )}
+                        
+                        {!post.created_by_admin && post.state !== 'scheduled' && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeletePost(post.id)}
+                          >
+                            Delete
                           </Button>
-                        </Link>
-                        {!post.created_by_admin && (
+                        )}
+                        
+                        {!post.created_by_admin && post.state === 'scheduled' && (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleRecyclePost(post.id)}
-                            className="flex-1"
+                            disabled
+                            className="text-gray-500 border-gray-600"
+                            title="Cannot delete scheduled tasks - they will be automatically posted"
                           >
-                            ♻️ Recycle
+                            🔒 Protected
                           </Button>
                         )}
-                      </>
-                    )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
-                    {post.state === 'scheduled' && (
-                      <>
-                        <Link href={`/dashboard/content/package/${post.id}`}>
-                          <Button size="sm" className="flex-1">
-                            📦 View Package
-                          </Button>
-                        </Link>
-                        {!post.created_by_admin && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handlePublishPost(post.id)}
-                              className="flex-1"
-                            >
-                              Publish Now
-                            </Button>
-                            <Link href={`/dashboard/content/edit/${post.id}`}>
-                              <Button size="sm" variant="outline" className="flex-1">
-                                Edit
-                              </Button>
-                            </Link>
-                          </>
-                        )}
-                      </>
-                    )}
-                    
-                    {!post.created_by_admin && post.state !== 'scheduled' && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeletePost(post.id)}
-                      >
-                        Delete
-                      </Button>
-                    )}
-                    
-                    {!post.created_by_admin && post.state === 'scheduled' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled
-                        className="text-gray-500 border-gray-600"
-                        title="Cannot delete scheduled tasks - they will be automatically posted"
-                      >
-                        🔒 Protected
-                      </Button>
-                    )}
-                  </div>
+          {/* Stats */}
+          {posts.length > 0 && (
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="pt-6">
+                <div className="flex justify-between text-sm text-gray-400">
+                  <span>Total: {posts.length} posts</span>
+                  <span>
+                    Draft: {posts.filter(p => p.state === 'draft').length} | 
+                    Published: {posts.filter(p => p.state === 'published').length} |
+                    Scheduled: {posts.filter(p => p.state === 'scheduled').length}
+                  </span>
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )}
         </div>
-      )}
-
-      {/* Stats */}
-      {posts.length > 0 && (
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="pt-6">
-            <div className="flex justify-between text-sm text-gray-400">
-              <span>Total: {posts.length} posts</span>
-              <span>
-                Draft: {posts.filter(p => p.state === 'draft').length} | 
-                Published: {posts.filter(p => p.state === 'published').length} |
-                Scheduled: {posts.filter(p => p.state === 'scheduled').length}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      </div>
     </div>
   )
 }

@@ -196,7 +196,7 @@ Return only the enhanced prompt, no explanations.`, 'gpt-4', 500)
 // Unified OpenAI API call with Gateway routing
 async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: number = 1000): Promise<string> {
   const gatewayUrl = process.env.AI_GATEWAY_URL
-  const gatewayToken = process.env.AI_GATEWAY_TOKEN
+  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
   
   let apiUrl = 'https://api.openai.com/v1/chat/completions'
   let apiKey = process.env.OPENAI_API_KEY
@@ -271,7 +271,7 @@ export async function* generateStreamingContent(prompt: string, type: 'blog' | '
 // Analytics and monitoring with Vercel AI Gateway
 export function getVercelAIStats() {
   const gatewayUrl = process.env.AI_GATEWAY_URL
-  const gatewayToken = process.env.AI_GATEWAY_TOKEN
+  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
   
   return {
     isUsingGateway: !!(gatewayUrl && gatewayToken),

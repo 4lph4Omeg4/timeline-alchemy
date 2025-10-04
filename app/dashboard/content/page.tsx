@@ -195,26 +195,26 @@ export default function ContentCreatorPage() {
 
   return (
     <div className="space-y-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="space-y-8">
         {/* Divine Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-200 via-purple-200 to-pink-200 text-transparent bg-clip-text">
               Divine Content Creator
             </h1>
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
           </div>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-300">
             Craft legendary content with the power of divine AI assistance
           </p>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
           {/* AI Generation Panel */}
-          <div>
-            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full">
+          <div className="w-full">
+            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full w-full">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Wand2 className="w-5 h-5 text-purple-400" />
@@ -258,8 +258,8 @@ export default function ContentCreatorPage() {
           </div>
 
           {/* Editor Panel */}
-          <div>
-            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full">
+          <div className="w-full">
+            <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full w-full">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

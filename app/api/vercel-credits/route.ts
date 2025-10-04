@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(req: NextRequest) {
   try {
     const gatewayUrl = process.env.AI_GATEWAY_URL
-    const gatewayToken = process.env.AI_GATEWAY_TOKEN
+    const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
     
     console.log('🔍 Debug - Gateway URL:', gatewayUrl)
     console.log('🔍 Debug - Token present:', !!gatewayToken)
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     const { testPrompt } = await req.json()
     
     const gatewayUrl = process.env.AI_GATEWAY_URL
-    const gatewayToken = process.env.AI_GATEWAY_TOKEN
+    const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
     
     if (!gatewayUrl || !gatewayToken) {
       return NextResponse.json({
