@@ -38,8 +38,12 @@ interface VercelCredits {
   }
   usage?: {
     projects: number
+    gateway?: string
+    models?: string
   }
   error?: string
+  message?: string
+  suggestion?: string
 }
 
 export default function AIGatewayPage() {
@@ -284,12 +288,21 @@ export default function AIGatewayPage() {
                       <div className="text-gray-300 text-sm">Used Credits</div>
                     </div>
                     <div className="bg-gray-800 rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-blue-400">
+                      <div className={`text-2xl font-bold ${vercelCredits.credits.status === 'Connected' || vercelCredits.credits.status === 'Active' ? 'text-blue-400' : 'text-orange-400'}`}>
                         {vercelCredits.credits.status}
                       </div>
-                      <div className="text-gray-300 text-sm">Account Status</div>
+                      <div className="text-gray-300 text-sm">Gateway Status</div>
                     </div>
                   </div>
+                  
+                  {vercelCredits.message && (
+                    <Alert className="bg-blue-900/30 border-blue-500/50">
+                      <AlertCircle className="h-4 w-4 text-blue-400" />
+                      <AlertDescription className="text-blue-200">
+                        {vercelCredits.message}
+                      </AlertDescription>
+                    </Alert>
+                  )}
                   
                   <div className="bg-gray-800 rounded-lg p-4">
                     <h4 className="text-white font-semibold mb-2">Account Information</h4>
@@ -311,6 +324,11 @@ export default function AIGatewayPage() {
                   <AlertDescription className="text-red-200">
                     <div className="font-semibold">Failed to fetch credit information</div>
                     <div className="text-sm mt-1">{vercelCredits.error}</div>
+                    {vercelCredits.suggestion && (
+                      <div className="text-sm mt-2 text-orange-200">
+                        💡 {vercelCredits.suggestion}
+                      </div>
+                    )}
                   </AlertDescription>
                 </Alert>
               )}

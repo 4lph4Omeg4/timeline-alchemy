@@ -2,111 +2,94 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
   try {
-    const vercelToken = process.env.AI_GATEWAY_TOKEN
+    const gatewayUrl = process.env.AI_GATEWAY_URL
+    const gatewayToken = process.env.AI_GATEWAY_TOKEN
     
-    if (!vercelToken) {
+    if (!gatewayUrl || !gatewayToken) {
       return NextResponse.json({
         success: false,
-        error: 'Vercel AI Gateway token not configured'
+        error: 'Vercel AI Gateway not configured'
       }, { status: 400 })
     }
 
-    // Get Vercel account information and credits
-    const response = await fetch('https://api.vercel.com/v2/user', {
-      headers: {
-        'Authorization': `Bearer ${vercelToken}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (!response.ok) {
-      // If direct user API fails, try alternative approach
-      console.log('Direct user API failed, trying alternative approach')
-      
-      // Alternative: Use Vercel's team/project API
-      const projectResponse = await fetch('https://api.vercel.com/v9/projects', {
+    // Since Vercel API access is restricted, provide basic gateway status
+    // The AI Gateway token is primarily for AI requests, not account management
+    console.log('🔍 Checking AI Gateway connectivity...')
+    
+    // Test basic connectivity by making a simple request to the gateway
+    try {
+      const testResponse = await fetch(`${gatewayUrl}/models`, {
         headers: {
-          'Authorization': `Bearer ${vercelToken}`,
+          'Authorization': `Bearer ${gatewayToken}`,
           'Content-Type': 'application/json'
         }
       })
 
-      if (!projectResponse.ok) {
-        throw new Error(`Vercel API error: ${projectResponse.status} ${projectResponse.statusText}`)
+      if (testResponse.ok) {
+        console.log('✅ AI Gateway is accessible')
+        
+        return NextResponse.json({
+          success: true,
+          credits: {
+            available: 'Active',
+            used: 'In Use',
+            status: 'Connected'
+          },
+          account: {
+            name: 'AI Gateway User',
+            type: 'Gateway Access'
+          },
+          usage: {
+            gateway: 'Connected',
+            models: 'Available'
+          },
+          message: 'AI Gateway is operational - credit details require Vercel dashboard access'
+        })
+      } else {
+        console.log('⚠️ AI Gateway test failed:', testResponse.status)
+        
+        return NextResponse.json({
+          success: false,
+          credits: {
+            available: 'Unknown',
+            used: 'Unknown',
+            status: 'Connection Failed'
+          },
+          account: {
+            name: 'Gateway Error',
+            type: 'Connection Issue'
+          },
+          error: `Gateway connectivity test failed: ${testResponse.status}`
+        })
       }
-
-      const projectData = await projectResponse.json()
+    } catch (gatewayError) {
+      console.log('❌ AI Gateway test error:', gatewayError)
       
       return NextResponse.json({
-        success: true,
+        success: false,
         credits: {
           available: 'Unknown',
           used: 'Unknown',
-          status: 'Connected',
-          source: 'project_api'
+          status: 'Not Accessible'
         },
         account: {
-          name: 'Connected',
-          type: 'Project Access'
+          name: 'Gateway Unavailable',
+          type: 'Connection Error'
         },
-        usage: {
-          projects: projectData.projects?.length || 0
-        }
+        error: 'Unable to connect to AI Gateway',
+        suggestion: 'Check your AI_GATEWAY_URL and AI_GATEWAY_TOKEN configuration'
       })
     }
-
-    const userData = await response.json()
-    
-    // Try to get usage/billing information
-    let creditInfo = {
-      available: 'Unknown',
-      used: 'Unknown', 
-      status: 'Connected'
-    }
-
-    try {
-      // Attempt to get billing/usage info
-      const billingResponse = await fetch('https://api.vercel.com/v1/billing', {
-        headers: {
-          'Authorization': `Bearer ${vercelToken}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (billingResponse.ok) {
-        const billingData = await billingResponse.json()
-        creditInfo = {
-          available: billingData.credit || 'Unknown',
-          used: billingData.usage || 'Unknown',
-          status: 'Active'
-        }
-      }
-    } catch (billingError) {
-      console.log('Billing API not accessible, using basic info')
-    }
-
-    return NextResponse.json({
-      success: true,
-      credits: creditInfo,
-      account: {
-        name: userData.name || userData.username || 'Vercel User',
-        email: userData.email,
-        type: userData.type || 'Personal'
-      },
-      usage: {
-        projects: userData.projects || 0
-      }
-    })
 
   } catch (error) {
-    console.error('❌ Vercel credits fetch error:', error)
+    console.error('❌ Gateway status check error:', error)
     
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
       fallback: {
-        message: 'Unable to fetch credit information',
-        suggestion: 'Check your Vercel AI Gateway token configuration'
+        message: 'Unable to check Gateway status',
+        suggestion: 'Verify your environment variables'
       }
     }, { status: 500 })
   }
