@@ -27,11 +27,13 @@ interface TrendItem {
 
 interface GeneratedPost {
   trend: string
-  content: string  // Changed from generatedContent to match API response
+  content: string
   title: string
   excerpt: string
   hashtags: string[]
   suggestions: string[]
+  socialPosts?: Record<string, string>
+  generatedImage?: string
   metadata: {
     sourceTitle: string
     sourceUrl: string
@@ -39,6 +41,7 @@ interface GeneratedPost {
     tone: string
     keywords: string[]
     tags: string[]
+    summary?: string
     generatedAt: string
   }
 }
@@ -95,6 +98,13 @@ export default function BulkContentGenerator() {
 
       if (result.success && result.generatedPosts) {
         setGeneratedPosts(result.generatedPosts)
+        
+        // Generate social posts and images for each trend
+        if (contentType === 'blog' || contentType === 'mixed') {
+          toast.info('Generating social posts and images...')
+          await generateSocialPostsAndImages(result.generatedPosts)
+        }
+        
         toast.success(`Successfully generated ${result.generatedPosts.length} posts!`)
       } else {
         toast.error(result.error || 'Generation failed')
@@ -104,6 +114,52 @@ export default function BulkContentGenerator() {
       toast.error('Failed to generate content')
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const generateSocialPostsAndImages = async (posts: GeneratedPost[]) => {
+    try {
+      for (const post of posts) {
+        // Generate social posts
+        const socialResponse = await fetch('/api/generate-social-posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: post.title,
+            content: post.content,
+            platforms: ['twitter', 'instagram', 'facebook', 'linkedin', 'discord', 'reddit']
+          })
+        })
+        
+        if (socialResponse.ok) {
+          const socialData = await socialResponse.json()
+          post.socialPosts = socialData.socialPosts || {}
+        }
+        
+        // Generate cosmic image for the topic
+        const imagePrompt = `Cosmic-themed image representing: ${post.title}. ${post.metadata.summary}. 
+        Style: cosmic, galactic, mystical, spiritual, purple/blue/gold gradients, stars, nebula, sacred geometry. 
+        Theme: ${post.metadata.tags?.join(', ') || post.metadata.keywords?.join(', ')}`
+        
+        const imageResponse = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: imagePrompt })
+        })
+        
+        if (imageResponse.ok) {
+          const imageData = await imageResponse.json()
+          post.generatedImage = imageData.imageUrl
+        }
+        
+        // Rate limiting delay
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      }
+      
+      toast.success('Social posts and cosmic images generated!')
+    } catch (error) {
+      console.error('Error generating social posts and images:', error)
+      toast.error('Some social posts or images failed to generate')
     }
   }
 
@@ -200,35 +256,47 @@ Metadata:
     const sampleData = {
       "items": [
         {
-          "trend": "Kundalini Vocal Activation",
-          "source_title": "Vocal Techniques for Kundalini Awakening",
-          "source_url": "https://example.com/kundalini-vocal",
-          "summary": "Vocal techniques like chanting and toning are used to activate kundalini energy.",
-          "keywords": ["kundalini awakening", "vocal activation", "chanting"],
-          "recommended_formats": ["short_form", "thread"],
-          "tags": ["Spiritualiteit", "kundalini"],
-          "audience": "Vocal meditators",
-          "tone": "playful",
-          "cta_ideas": ["Try a chanting session", "Record your vocal practice"]
+          "trend": "AI Consciousness Meditation",
+          "source_title": "AI-Assisted Consciousness Practices Emerge",
+          "source_url": "https://example.com/ai-consciousness-meditation",
+          "summary": "New meditation apps using AI to guide consciousness expansion and track awareness states are gaining popularity among spiritual tech enthusiasts.",
+          "keywords": ["AI consciousness", "meditation tech", "awareness tracking", "spiritual AI"],
+          "recommended_formats": ["blog", "social"],
+          "tags": ["consciousness", "AI", "meditation", "tech"],
+          "audience": "Spiritual tech adopters",
+          "tone": "insightful",
+          "cta_ideas": ["Try AI meditation", "Track your consciousness"]
         },
         {
-          "trend": "Non-Dual Leadership Training",
-          "source_title": "Training Leaders in Non-Dual Awareness",
-          "source_url": "https://example.com/nondual-leadership-training",
-          "summary": "Non-dual leadership training teaches presence and unity in decision-making.",
-          "keywords": ["non-dualiteit", "leadership training", "presence"],
-          "recommended_formats": ["blog_draft", "caption"],
-          "tags": ["Spiritualiteit", "bewustzijn"],
-          "audience": "Emerging leaders",
-          "tone": "insightful",
-          "cta_ideas": ["Enroll in a training", "Apply non-dual principles"]
+          "trend": "Crypto Nomad Communities",
+          "source_title": "Digital Nomads Building Decentralized Communities",
+          "source_url": "https://example.com/crypto-nomad-communities",
+          "summary": "Crypto-enabled nomads are creating borderless communities using blockchain technology for governance and resource sharing.",
+          "keywords": ["crypto nomad", "decentralized communities", "blockchain governance", "digital sovereignty"],
+          "recommended_formats": ["blog", "social"],
+          "tags": ["crypto", "nomads", "decentralization", "community"],
+          "audience": "Crypto enthusiasts",
+          "tone": "bold",
+          "cta_ideas": ["Join the community", "Explore crypto options"]
+        },
+        {
+          "trend": "Ancient Symbols in Modern Tech",
+          "source_title": "Sacred Geometry Driving UX Design Innovation",
+          "source_url": "https://example.com/sacred-geometry-ux",
+          "summary": "Designers are incorporating sacred geometry and ancient symbols into modern interfaces, creating more intuitive and spiritually aligned user experiences.",
+          "keywords": ["sacred geometry", "ancient symbols", "UX design", "spiritual tech"],
+          "recommended_formats": ["blog", "social"],
+          "tags": ["ancient symbols", "UX design", "sacred geometry", "modern tech"],
+          "audience": "Design conscious users",
+          "tone": "playful",
+          "cta_ideas": ["Design with symbols", "Explore sacred geometry"]
         }
       ]
     }
     
     setJsonInput(JSON.stringify(sampleData, null, 2))
-    setParsedItemsCount(2)
-    toast.success('Sample data loaded!')
+    setParsedItemsCount(sampleData.items.length)
+    toast.success('Grok-style sample data loaded!')
   }
 
   return (
@@ -240,7 +308,7 @@ Metadata:
             <span>✨ Bulk Content Generator</span>
           </CardTitle>
           <CardDescription className="text-gray-200">
-            Upload your Grok trends data and generate multiple blog posts automatically with Timeline Alchemy magic
+            📅 Daily Grok Workflow: Paste trend data → Generate blog + social posts + cosmic images automatically
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -288,9 +356,9 @@ Metadata:
               className="font-mono text-sm"
             />
             <div className="flex items-center gap-2 mt-2">
-              <Button variant="outline" size="sm" onClick={parseSampleData}>
-                Load Sample Data
-              </Button>
+            <Button variant="outline" size="sm" onClick={parseSampleData}>
+              Load Grok Sample Data
+            </Button>
               {parsedItemsCount > 0 && (
                 <Badge variant="secondary">
                   <FileText className="h-3 w-3 mr-1" />
@@ -298,7 +366,19 @@ Metadata:
                 </Badge>
               )}
             </div>
-          </div>
+            
+            {/* Grok Workflow Instructions */}
+            <Alert className="bg-purple-900/20 border-purple-500/30">
+              <AlertDescription>
+                <div className="font-semibold text-purple-200 mb-2">📅 Daily Grok Workflow Instructions:</div>
+                <div className="text-sm text-gray-300 space-y-1">
+                  <div><strong>1. Copy Grok Response:</strong> Take the JSON array from Grok and paste it directly above</div>
+                  <div><strong>2. Select Content Type:</strong> Choose "Blog Posts" for complete package generation</div>
+                  <div><strong>3. Generate Complete Package:</strong> Each trend will create blog + social posts + cosmic image</div>
+                  <div><strong>4. Save Individual Posts:</strong> Use "Save" buttons to add to your content calendar</div>
+                </div>
+              </AlertDescription>
+            </Alert>
 
           {/* Generate Button */}
           <Button 
@@ -315,7 +395,7 @@ Metadata:
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                🚀 Generate {parsedItemsCount} Posts
+                🚀 Generate Complete Package ({parsedItemsCount} trends)
               </>
             )}
           </Button>
@@ -430,24 +510,81 @@ Metadata:
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <div className="text-sm text-gray-200">
-                        <div className="whitespace-pre-wrap">{post.excerpt}</div>
+                    <div className="space-y-4">
+                      {/* Blog Content */}
+                      <div className="bg-purple-800/10 p-4 rounded-lg border border-purple-500/20">
+                        <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+                          📝 Blog Post
+                        </h4>
+                        <div className="text-sm text-gray-200 whitespace-pre-wrap">
+                          {post.content}
+                        </div>
                       </div>
                       
-                      <div className="flex flex-wrap gap-1">
-                        {post.hashtags.map((tag, tagIndex) => (
-                          <Badge key={tagIndex} variant="outline" className="text-xs border-purple-500/50 text-purple-300">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
+                      {/* Generated Image */}
+                      {post.generatedImage && (
+                        <div className="bg-pink-800/10 p-4 rounded-lg border border-pink-500/20">
+                          <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
+                            <Package className="h-4 w-4 text-pink-400" />
+                            Cosmic Image
+                          </h4>
+                          <div className="relative">
+                            <img 
+                              src={post.generatedImage} 
+                              alt={`Generated cosmic image for ${post.title}`}
+                              className="w-full max-w-md h-auto rounded-lg border border-pink-500/30 shadow-lg"
+                              onError={(e) => {
+                                console.error('Image failed to load:', post.generatedImage)
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                            <Badge className="absolute top-2 right-2 bg-pink-500/20 text-pink-300">
+                              AI Cosmic
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
                       
-                      <div className="text-xs text-gray-400 bg-gray-800/50 rounded p-2">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      {/* Social Posts */}
+                      {post.socialPosts && Object.keys(post.socialPosts).length > 0 && (
+                        <div className="bg-blue-800/10 p-4 rounded-lg border border-blue-500/20">
+                          <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                            <Users className="h-4 w-4 text-blue-400" />
+                            Social Media Posts
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {Object.entries(post.socialPosts).map(([platform, content]) => (
+                              <div key={platform} className="bg-blue-800/20 p-3 rounded border border-blue-500/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-blue-400 font-bold text-sm capitalize">{platform}</span>
+                                  <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-300">
+                                    {platform === 'twitter' ? '280 chars' : 
+                                     platform === 'instagram' ? 'Caption' :
+                                     platform === 'linkedin' ? 'Professional' : 'Social'}
+                                  </Badge>
+                                </div>
+                                <div className="text-gray-200 text-sm whitespace-pre-wrap">
+                                  {content}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Metadata */}
+                      <div className="text-xs text-gray-400 bg-gray-800/50 rounded p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                           <div><span className="font-medium text-purple-300">Keywords:</span> {post.metadata.keywords.join(', ')}</div>
                           <div><span className="font-medium text-blue-300">Tags:</span> {post.metadata.tags.join(', ')}</div>
                           <div><span className="font-medium text-green-300">Tone:</span> {post.metadata.tone}</div>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {post.hashtags.map((tag, tagIndex) => (
+                            <Badge key={tagIndex} variant="outline" className="text-xs border-purple-500/50 text-purple-300">
+                              {tag}
+                            </Badge>
+                          ))}
                         </div>
                       </div>
                     </div>
