@@ -134,14 +134,16 @@ Metadata:
       title: post.title,
       hasContent: !!post.content,
       contentLength: post.content?.length || 0,
-      excerpt: post.excerpt
+      excerpt: post.excerpt,
+      fullPost: post
     })
     
-    if (!post.title || !post.content) {
-      toast.error('Missing title or content - cannot save package')
+    if (!post.title || !post.content || post.content.length === 0) {
+      toast.error(`Missing title or content - cannot save package. Content length: ${post.content?.length || 0}`)
       console.error('❌ Missing required fields:', {
         title: post.title,
-        content: post.content
+        content: post.content,
+        contentLength: post.content?.length || 0
       })
       return
     }
@@ -168,15 +170,20 @@ Metadata:
         })
       })
 
+      console.log('🔍 Save response status:', response.status)
+      console.log('🔍 Save response headers:', Object.fromEntries(response.headers.entries()))
+      
       const result = await response.json()
+      console.log('🔍 Save response data:', result)
       
       if (result.success) {
         toast.success(`✅ "${post.title}" saved as package!`)
       } else {
         toast.error(`❌ Failed to save package: ${result.error}`)
+        console.error('❌ Save package error:', result)
       }
     } catch (error) {
-      console.error('Save package error:', error)
+      console.error('❌ Save package error:', error)
       toast.error('❌ Failed to save package')
     } finally {
       setSavingPost(null)
