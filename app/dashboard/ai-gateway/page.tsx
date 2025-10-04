@@ -51,8 +51,9 @@ export default function AIGatewayPage() {
   const [usage, setUsage] = useState<UserUsage | null>(null)
   const [vercelCredits, setVercelCredits] = useState<VercelCredits | null>(null)
   const [loading, setLoading] = useState(true)
-  const [testLoading, setTestLoading] = useState(false)
   const [creditsLoading, setCreditsLoading] = useState(false)
+  const [testResult, setTestResult] = useState<string | null>(null)
+  const [testLoading, setTestLoading] = useState(false)
 
   useEffect(() => {
     fetchGatewayStats()
@@ -103,6 +104,38 @@ export default function AIGatewayPage() {
       })
     } finally {
       setCreditsLoading(false)
+    }
+  }
+
+  const testGatewayConnection = async () => {
+    setTestLoading(true)
+    setTestResult(null)
+    
+    try {
+      const response = await fetch('/api/vercel-credits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          testPrompt: 'Hello, this is a gateway connectivity test. Please respond with "Gateway working!" if you can read this message.'
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setTestResult(`✅ Gateway Test Successful! Response: "${data.response}"`)
+        toast.success('Gateway connection test passed!')
+      } else {
+        setTestResult(`❌ Gateway Test Failed: ${data.error}`)
+        toast.error('Gateway connection test failed')
+      }
+    } catch (error) {
+      setTestResult(`❌ Network Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error('Gateway test failed due to network error')
+    } finally {
+      setTestLoading(false)
     }
   }
 
@@ -235,6 +268,38 @@ export default function AIGatewayPage() {
               </AlertDescription>
             </Alert>
           )}
+          
+          {/* Test Gateway Connection */}
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-white font-semibold">Test Gateway Connection</h4>
+              <Button
+                onClick={testGatewayConnection}
+                disabled={testLoading}
+                variant="outline"
+                size="sm"
+                className="border-purple-500 text-purple-400 hover:bg-purple-900/30"
+              >
+                {testLoading ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Testing...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="mr-2 h-4 w-4" />
+                    Test Connection
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {testResult && (
+              <div className="mt-2 p-3 bg-gray-800 rounded-lg">
+                <pre className="text-sm text-gray-200 whitespace-pre-wrap">{testResult}</pre>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -512,27 +577,67 @@ export default function AIGatewayPage() {
 
       {/* Configuration Help */}
       {!isEnabled && (
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30">
           <CardHeader>
-            <CardTitle className="text-white">Configuration Required</CardTitle>
+            <CardTitle className="text-white flex items-center space-x-2">
+              <Rocket className="h-6 w-6 text-yellow-400" />
+              <span>🚀 Setup Instructions</span>
+            </CardTitle>
             <CardDescription className="text-gray-200">
-              Follow these steps to enable Vercel AI Gateway
+              Follow these steps to enable Vercel AI Gateway integration
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="bg-gray-800 rounded-lg p-4">
-              <ol className="space-y-2 text-gray-300">
-                <li>1. Add your Vercel AI Gateway URL to your environment variables</li>
-                <li>2. Add your AI Gateway Token to your environment variables</li>
-                <li>3. Ensure you have credits loaded in your Vercel AI account</li>
-                <li>4. Restart your development server</li>
-              </ol>
+            <div className="space-y-4">
+              <div className="bg-gray-800/80 rounded-lg p-4">
+                <h4 className="text-white font-semibold mb-3 flex items-center space-x-2">
+                  <span className="text-purple-400">📋</span>
+                  <span>Step 1: Create .env.local file</span>
+                </h4>
+                <p className="text-gray-300 text-sm mb-3">Create a <code className="bg-gray-700 px-2 py-1 rounded text-purple-300">.env.local</code> file in your project root:</p>
+                <div className="bg-gray-700 rounded p-3 font-mono text-sm space-y-1">
+                  <div className="text-green-400"># Vercel AI Gateway Configuration</div>
+                  <div className="text-blue-400">AI_GATEWAY_URL=https://your-gateway-url.vercel.app</div>
+                  <div className="text-blue-400">AI_GATEWAY_TOKEN=your_gateway_token</div>
+                </div>
+              </div>
               
-              <div className="mt-4 p-3 bg-gray-700 rounded">
-                <code className="text-green-400 text-sm">
-                  AI_GATEWAY_URL=your_gateway_url<br />
-                  AI_GATEWAY_TOKEN=your_gateway_token
-                </code>
+              <div className="bg-gray-800/80 rounded-lg p-4">
+                <h4 className="text-white font-semibold mb-3 flex items-center space-x-2">
+                  <span className="text-purple-400">🔑</span>
+                  <span>Step 2: Get Vercel AI Gateway Credentials</span>
+                </h4>
+                <ol className="list-decimal list-inside space-y-2 text-gray-300 text-sm pl-4">
+                  <li>Go to your <a href="https://vercel.com/dashboard" target="_blank" rel="noopener" className="text-blue-400 hover:underline">Vercel Dashboard</a></li>
+                  <li>Navigate to AI Gateway section</li>
+                  <li>Create a new Gateway or copy existing credentials</li>
+                  <li>Ensure you have credits loaded</li>
+                </ol>
+              </div>
+              
+              <div className="bg-gray-800/80 rounded-lg p-4">
+                <h4 className="text-white font-semibold mb-3 flex items-center space-x-2">
+                  <span className="text-purple-400">🧪</span>
+                  <span>Step 3: Test Your Configuration</span>
+                </h4>
+                <p className="text-gray-300 text-sm">After adding your credentials:</p>
+                <ol className="list-decimal list-inside space-y-2 text-gray-300 text-sm pl-4 mt-2">
+                  <li>Restart your development server (<code className="bg-gray-700 px-2 py-1 rounded text-purple-300">npm run dev</code>)</li>
+                  <li>Use the "Test Connection" button above to verify setup</li>
+                  <li>Refresh this page to see updated status</li>
+                </ol>
+              </div>
+              
+              <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <CheckCircle className="h-5 w-5 text-blue-400 mt-0.5" />
+                  <div>
+                    <h4 className="text-blue-200 font-semibold">Need Help?</h4>
+                    <p className="text-blue-300 text-sm mt-1">
+                      The test button will show you exactly what's working and what needs to be fixed
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
