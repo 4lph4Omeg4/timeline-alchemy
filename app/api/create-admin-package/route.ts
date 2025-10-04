@@ -37,60 +37,58 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Use the known admin organization ID
+    // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Mimic the working content generator
     console.log('🔍 Using admin organization for this admin-only package...')
     
-    // Create package data with all fields
-    const packageData = {
-      org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID
-      title: title, // No admin prefix needed since this is admin-only
-      content: content,
-      excerpt: excerpt || content.substring(0, 150) + '...',
-      state: 'draft',
-      metadata: {
-        socialPosts: socialPosts || {},
-        generatedImage: generatedImage || null,
-        hashtags: hashtags || [],
-        suggestions: suggestions || [],
-        source: 'bulk_content_generator',
-        created_at: new Date().toISOString()
-      }
-    }
-    
+    // Create basic blog post (like the working content generator)
     const { data: insertedPackage, error: packageError } = await supabaseClient
       .from('blog_posts')
-      .insert(packageData)
+      .insert({
+        org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID
+        title: title,
+        content: content,
+        state: 'draft'
+      })
       .select()
       .single()
-    
-    // If we have a generated image, save it to the images table
-    if (generatedImage && insertedPackage?.id) {
-      console.log('🖼️ Saving generated image for package:', insertedPackage.id)
-      
-      await supabaseClient
-        .from('images')
-        .insert({
-          org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Same admin organization
-          post_id: insertedPackage.id, // Use post_id as per schema
-          url: generatedImage
-        })
-        .select()
-        .single()
-    }
 
     if (packageError) {
-      console.error('❌ Error creating admin package:', packageError)
+      console.error('❌ Save post error:', packageError)
       return NextResponse.json(
-        { error: 'Failed to create package', details: packageError.message },
+        { error: 'Failed to save post', details: packageError.message },
         { status: 500 }
       )
     }
+
+    // Save social posts to separate table (like working content generator)
+    if (socialPosts && Object.keys(socialPosts).length > 0) {
+      for (const [platform, socialContent] of Object.entries(socialPosts)) {
+        await supabaseClient
+          .from('social_posts')
+          .insert({
+            post_id: insertedPackage.id,
+            platform,
+            content: socialContent
+          })
+      }
+    }
+
+    // Save image (simple approach like working generator)
+    if (generatedImage && insertedPackage?.id) {
+      await supabaseClient
+        .from('images')
+        .insert({
+          org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+          post_id: insertedPackage.id,
+          url: generatedImage
+        })
+    }
     
-    console.log('✅ Admin package created successfully:', packageData)
+    console.log('✅ Admin package created successfully:', insertedPackage?.id)
 
     return NextResponse.json({
       success: true,
-      package: packageData,
+      package: insertedPackage,
       message: 'Admin package created successfully'
     })
 
