@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`📊 Found ${uncategorizedPosts.length} uncategorized posts`)
 
-    const results = {
+    const results: Record<string, number> = {
       consciousness: 0,
       ancient: 0,
       ai: 0,

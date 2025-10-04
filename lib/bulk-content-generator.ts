@@ -1,4 +1,5 @@
 // Bulk Content Generator for Grok Trends Arrays
+import { detectCategory, getCategoryInfo } from './category-detector'
 interface TrendItem {
   title: string
   summary: string
@@ -336,10 +337,12 @@ Focus on the specific topic requested without adding unrelated business concepts
     language === 'en' ? 'Create engaging visuals or infographics' : 'Maak boeiende visuals of infographics'
   ]
 
-  // 🌟 Use category from Grok data (much simpler!)
-  const category = item.category || 'Consciousness & Awakening & Enlightenment' // Default fallback
+  // 🌟 Auto-detect category based on content analysis
+  const detectedCategory = detectCategory(trendName, item.summary)
+  const categoryInfo = getCategoryInfo(detectedCategory)
+  const category = categoryInfo.id
   
-  console.log('🌟 Using Grok category:', category, 'for trend:', trendName)
+  console.log('🌟 Auto-detected category:', categoryInfo.label, 'for trend:', trendName)
 
   const result = {
     content: blogContent,
