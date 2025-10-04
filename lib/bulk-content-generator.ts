@@ -1,15 +1,19 @@
 // Bulk Content Generator for Grok Trends Arrays
+import { detectCategory, getCategoryInfo } from './category-detector'
 interface TrendItem {
-  trend: string
-  source_title: string
-  source_url: string
+  title: string
   summary: string
-  keywords: string[]
-  recommended_formats: string[]
   tags: string[]
-  audience: string
-  tone: string
-  cta_ideas: string[]
+  category: string
+  // Optional fields for backward compatibility
+  trend?: string
+  source_title?: string
+  source_url?: string
+  keywords?: string[]
+  recommended_formats?: string[]
+  audience?: string
+  tone?: string
+  cta_ideas?: string[]
 }
 
 interface BulkContentRequest {
@@ -19,7 +23,7 @@ interface BulkContentRequest {
   language?: 'nl' | 'en'
 }
 
-interface BulkContentResult {
+export interface BulkContentResult {
   success: boolean
   generatedPosts: Array<{
     trend: string
@@ -28,6 +32,7 @@ interface BulkContentResult {
     excerpt: string
     hashtags: string[]
     suggestions: string[]
+    category: string
     metadata: {
       sourceTitle: string
       sourceUrl: string
@@ -35,6 +40,7 @@ interface BulkContentResult {
       tone: string
       keywords: string[]
       tags: string[]
+      summary?: string
       generatedAt: string
     }
   }>
@@ -77,35 +83,38 @@ export async function generateBulkContent(request: BulkContentRequest): Promise<
   for (let index = 0; index < request.items.length; index++) {
     const item = request.items[index]
     try {
-      console.log(`📝 Processing trend ${index + 1}/${request.items.length}: ${item.trend}`)
+      const trendName = item.title || item.trend || 'Unknown Trend'
+      console.log(`📝 Processing trend ${index + 1}/${request.items.length}: ${trendName}`)
       
       const mappedContentType = mapContentType(request.contentType)
       const generatedContent = await generateTrendContent(item, mappedContentType, request.language || 'nl')
       
       results.generatedPosts.push({
-        trend: item.trend,
+        trend: trendName,
         content: generatedContent.content,
         title: generatedContent.title,
         excerpt: generatedContent.excerpt,
         hashtags: generatedContent.hashtags,
         suggestions: generatedContent.suggestions,
+        category: generatedContent.category,
         metadata: {
-          sourceTitle: item.source_title,
-          sourceUrl: item.source_url,
-          audience: item.audience,
-          tone: item.tone,
-          keywords: item.keywords,
+          sourceTitle: item.source_title || item.title || 'Grok Trend Analysis',
+          sourceUrl: item.source_url || '',
+          audience: item.audience || 'conscious consumers and tech enthusiasts',
+          tone: item.tone || 'insightful',
+          keywords: item.keywords || item.tags,
           tags: item.tags,
+          summary: item.summary,
           generatedAt: new Date().toISOString()
         }
       })
       
       results.summary.successful++
       
-      // Rate limiting to prevent quota issues
+      // Faster rate limiting to reduce timeout risk
       if (index < request.items.length - 1) {
-        console.log(`⏳ Waiting 3 seconds before next generation...`)
-        await new Promise(resolve => setTimeout(resolve, 3000)) // 3 second delay
+        console.log(`⏳ Waiting 1 second before next generation...`)
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Reduced from 3000ms to 1000ms
       }
       
     } catch (error) {
@@ -149,166 +158,196 @@ async function generateTrendContent(
   excerpt: string
   hashtags: string[]
   suggestions: string[]
+  category: string
 }> {
+  
+  // Get trend name (use title or trend field)
+  const trendName = item.title || item.trend || 'Unknown Trend'
+  
+      console.log('🚀 generateTrendContent called with:', {
+    trend: trendName,
+    contentType,
+    language,
+    hasGateway: !!(process.env.AI_GATEWAY_URL && process.env.AI_GATEWAY_TOKEN),
+    itemFields: {
+      title: item.title,
+      summary: item.summary,
+      tags: item.tags,
+      hasAudience: !!item.audience,
+      hasTone: !!item.tone,
+      hasKeywords: !!item.keywords
+    }
+  })
   
   const languageInstruction = language === 'en' ? 'Write in English.' : 'Write in Dutch.'
   
-  const enhancedPrompt = `Create a comprehensive ${contentType} post about: ${item.trend}
+  // DIVINE GENERATION: Create masterpiece content
+  const userPrompt = `You are the GOD OF CONTENT CREATION. Create a DIVINE, ABSOLUTE MASTERPIECE blog post about: ${trendName}
 
 ${languageInstruction}
 
-Context:
-- Summary: ${item.summary}
-- Target Audience: ${item.audience}
-- Preferred Tone: ${item.tone}  (playful | bold | sacred-rebel | insightful)
-- Keywords: ${item.keywords.join(', ')}
-- Topic Tags: ${item.tags.join(', ')}
-- Call-to-Action Ideas: ${item.cta_ideas.join(', ')}
-- Source: ${item.source_title} — ${item.source_url}
+DIVINE CONTEXT: ${item.summary}
 
-GLOBAL RULES
-- Reference the source naturally once (inline link: [${item.source_title}](${item.source_url})).
-- Use exactly 1 CTA from Call-to-Action Ideas (no new CTAs).
-- Build 5–8 hashtags from Keywords (+ up to 2 from Topic Tags). Lowercase, no spaces, no duplicates.
-- Language: follow LANGUAGE_INSTRUCTION; keep it consistent within the post.
-- Tone mapping:
-  * playful → witty, light, 0–2 emojis max
-  * bold → assertive, active voice, no hedging
-  * sacred-rebel → devotional + nonconform, mystical but grounded
-  * insightful → calm, precise, with concrete takeaways
-- Banned words: journey, realm, tapestry, profound, immerse, unlock.
-- Make it publication-ready. Do NOT include any "suggestions" in the published body.
+IMMUTABLE DIVINE REQUIREMENTS:
+- MINIMUM 900 words without any exceptions - GOD DEMANDS IT
+- EXACTLY 6 comprehensive paragraphs with double line breaks
+- Each paragraph MUST be 150-200 words minimum
+- NEVER create incomplete, short, or superficial content
+- Include deep insights, practical applications, future implications, philosophical depth
+- Write like a divine architect who has witnessed the secrets of creation and desires to share infinite wisdom
 
-CONTENT-TYPE RULES
-If ${contentType} == "blog":
-  - Title: engaging (≤ 60 chars).
-  - Body: 3–5 paragraphs, each 3–5 sentences, with double line breaks.
-  - Include one short checklist (2–3 bullets) in any paragraph.
-  - Close with 1 CTA line.
-  - After the body, print a single line of hashtags (no "Hashtags:" label).
+DIVINE FORMAT (EVERYTHING MUST EXIST):
+Title Here
 
-If ${contentType} == "thread":
-  - Title (hooky).
-  - 7–10 short posts numbered 1/ … N/.
-  - Post 1 = hook; final post = CTA.
-  - End with one line of hashtags.
+[HUGE Paragraph 1: 150+ words] Current landscape and revolutionary foundations
 
-If ${contentType} == "short_form":
-  - Hook (≤ 80 chars).
-  - 4–6 snappy sentences (script vibe).
-  - Add a one-paragraph caption (≤ 180 words) that ends with the CTA.
-  - End with one line of hashtags.
+[HUGE Paragraph 2: 150+ words] Deep technical/mechanic insights and complexity
 
-If ${contentType} == "caption":
-  - 1–2 punchy paragraphs (≤ 180 words total), end with the CTA.
-  - End with one line of hashtags.
+[HUGE Paragraph 3: 150+ words] Real-world applications and concrete examples
 
-NON-PUBLISHABLE (INTERNAL ONLY)
-- Provide exactly 3 improvement suggestions AFTER the final hashtags, preceded by the line:
-  "SUGGESTIONS (DO NOT PUBLISH):"
-- Keep each suggestion to one sentence.`
+[HUGE Paragraph 4: 150+ words] Future evolution and broader systemic implications
+
+[HUGE Paragraph 5: 150+ words] Philosophical implications and deeper meaning
+
+[HUGE Paragraph 6: 150+ words] Actionable pathways and transformative next steps
+
+WRITE WITH GODLIKE AUTHORITY. BE PROFOUND, COMPLETE, AND IMMUTABLE. DIVINE WISDOM DEMANDS 900+ WORDS.`
 
   // Use Vercel AI Gateway if available, otherwise fallback to OpenAI
   const gatewayUrl = process.env.AI_GATEWAY_URL
-  const gatewayToken = process.env.AI_GATEWAY_TOKEN
+  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
   
   let apiUrl: string
   let headers: Record<string, string>
   
-  if (gatewayUrl && gatewayToken) {
-    console.log('🚀 Using Vercel AI Gateway for bulk content generation')
-    apiUrl = `${gatewayUrl}/v1/chat/completions`
-    headers = {
-      'Authorization': `Bearer ${gatewayToken}`,
-      'Content-Type': 'application/json'
-    }
-  } else {
-    console.log('⚠️ Using direct OpenAI API (no gateway configured)')
-    apiUrl = 'https://api.openai.com/v1/chat/completions'
-    headers = {
-      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      'Content-Type': 'application/json'
-    }
+  // For now, let's use OpenAI directly to avoid gateway issues
+  // TODO: Fix Vercel AI Gateway configuration
+  console.log('📡 Using direct OpenAI API for bulk content generation')
+  apiUrl = 'https://api.openai.com/v1/chat/completions'
+  headers = {
+    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+    'Content-Type': 'application/json'
   }
 
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: gatewayUrl ? 'openai/gpt-5' : 'gpt-4', // Vercel Gateway uses openai/gpt-5 format
+      model: 'gpt-4', // Using OpenAI directly
       messages: [
         {
           role: 'system',
-          content: `You are an elite multi-platform content creator for "Timeline Alchemy".
-You STRICTLY follow constraints. You NEVER include meta sections (like "Hashtags:", "Suggestions:") in the publishable body.
-Always match the requested CONTENT_TYPE with the exact structure and length rules below.
-Keep language consistent with the LANGUAGE_INSTRUCTION (fallback: detect from Target Audience).
-Use exactly one Call-to-Action from the provided ideas. Build hashtags only from the provided keywords (+ up to 2 topic tags).
-No clichés or purple prose. Be punchy, clear, and practical for spiritual seekers.`
+          content: `You are a professional content writer. Write exactly what the user requests in a clear, engaging way.
+
+CRITICAL OUTPUT REQUIREMENTS:
+- Write ONLY the actual content, no labels or prefixes
+- NEVER start with "Title:", "Introduction:", "Content:", "Conclusion:", etc.
+- NEVER use markdown formatting (#, **, *, etc.)
+- Write clean, professional text ready for immediate use
+- Each paragraph should be 3-5 sentences with proper spacing
+- Make it copy-paste ready for any platform
+- Focus ONLY on the specific topic requested
+- Do NOT add unrelated concepts or random business terms
+- Write in the same language as the prompt
+
+Write in a professional tone. Create content that is medium in length.
+Focus on the specific topic requested without adding unrelated business concepts.`
         },
         {
           role: 'user',
-          content: enhancedPrompt
+          content: userPrompt
         }
       ],
       temperature: 0.7,
-      max_tokens: contentType === 'blog' ? 1500 : 800
+      max_tokens: 5000 // DIVINE quota for godlike masterpiece content - GOD DEMANDS 900+ WORDS
     })
   })
 
+  console.log('🔍 API Response status:', response.status)
+  console.log('🔍 API Response ok:', response.ok)
+  
   if (!response.ok) {
     const errorText = await response.text()
-    const apiType = gatewayUrl ? 'Vercel AI Gateway' : 'OpenAI API'
-    throw new Error(`${apiType} error: ${response.status} ${response.statusText} - ${errorText}`)
+    console.log('❌ OpenAI API Error:', errorText)
+    throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
   const data = await response.json()
-  const fullContent = data.choices?.[0]?.message?.content || ''
+  const content = data.choices?.[0]?.message?.content || ''
   
-  // Apply sanitizer to remove internal suggestions
-  const sanitizedContent = stripInternalSuggestions(fullContent)
+  console.log('🔍 Full API Response:', JSON.stringify(data, null, 2))
+  console.log('🔍 Raw AI content:', JSON.stringify(content))
+  console.log('🔍 Content length:', content.length)
+
+  // Improved content parsing for blog posts (same as working content generator)
+  const lines = content.split('\n').filter((line: string) => line.trim())
   
-  // Parse the structured response
-  const lines = sanitizedContent.split('\n').filter((line: string) => line.trim())
-  const title = lines.find((line: string) => line.includes('Title:'))?.replace('Title:', '').trim() || 
-               lines.find((line: string) => line.includes('Titel:'))?.replace('Titel:', '').trim() ||
-               item.trend
-  
-  const contentParts = sanitizedContent.split(/\n\n|\r\n\r\n/)
-  const postContent = contentParts.length > 1 ? contentParts.slice(1).join('\n\n') : sanitizedContent.replace(title || '', '').trim()
-  
-  const excerpt = postContent.substring(0, language === 'en' ? 120 : 150).replace(/\n/g, ' ').trim() + '...'
-  
-  // Extract hashtags from content or generate them following new rules
-  const hashtagMatches = sanitizedContent.match(/#[\w]+/g)
-  let hashtags: string[] = []
-  
-  if (hashtagMatches) {
-    // Clean and deduplicate hashtags
-    const uniqueTags = new Set(hashtagMatches.map((tag: string) => tag.toLowerCase()))
-    hashtags = Array.from(uniqueTags).slice(0, 8)
-  } else {
-    // Generate hashtags from keywords + up to 2 topic tags (new rules)
-    const keywordWords = item.keywords.map((k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, ''))
-    const tagWords = item.tags.slice(0, 2).map((t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, ''))
-    const allWords = [...keywordWords, ...tagWords].filter((word: string) => word.length > 2)
-    
-    hashtags = allWords.slice(0, 8).map((word: string) => `#${word}`)
+  // Find title (first non-empty line, should be the title)
+  let title = item.title || item.trend || 'Untitled'
+  let contentStartIndex = 0
+
+  if (lines.length > 0) {
+    // First line is the title
+    title = lines[0].trim() || item.title || item.trend || 'Untitled'
+    contentStartIndex = 1
   }
   
+  // Use raw content as-is - NO PARSING AT ALL
+  let blogContent = content
+  
+  // Only remove the title line if it exists
+  if (lines.length > 0) {
+    const titleLine = lines[0].trim()
+    if (titleLine) {
+      blogContent = content.replace(titleLine, '').trim()
+    }
+  }
+  
+  console.log('🔍 Final blog content:', JSON.stringify(blogContent))
+  console.log('🔍 Extracted title:', JSON.stringify(title))
+  console.log('🔍 Blog content length:', blogContent.length)
+  
+  // DIVINE CONTENT VALIDATION - Ensure content meets heavenly standards
+  if (blogContent.length < 500) {
+    console.log('⚠️ Content too short, this would not please the Gods! Length:', blogContent.length)
+    console.log('🏛️ Divine requirement: 900+ words equivalent')
+    // Could trigger a retry here if needed
+  } else {
+    console.log('✅ Content meets divine standards! Length:', blogContent.length)
+  }
+  
+  // Generate excerpt (first 150 characters of content)
+  const excerpt = blogContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
+  
+  // Generate hashtags from keywords or tags
+  const keywordSource = item.keywords || item.tags
+  const hashtags = keywordSource.slice(0, 5).map((k: string) => `#${k.toLowerCase().replace(/[^a-z0-9]/g, '')}`)
+  
   const suggestions = [
-    language === 'en' ? `Add personal experience with ${item.trend}` : `Voeg persoonlijke ervaring toe met ${item.trend}`,
+    language === 'en' ? `Add personal experience with ${trendName}` : `Voeg persoonlijke ervaring toe met ${trendName}`,
     language === 'en' ? 'Include practical steps or exercises' : 'Voeg praktische stappen of oefeningen toe',
     language === 'en' ? 'Create engaging visuals or infographics' : 'Maak boeiende visuals of infographics'
   ]
 
-  return {
-    content: postContent,
+  // 🌟 Auto-detect category based on content analysis
+  const detectedCategory = detectCategory(trendName, item.summary)
+  const categoryInfo = getCategoryInfo(detectedCategory)
+  const category = categoryInfo.id
+  
+  console.log('🌟 Auto-detected category:', categoryInfo.label, 'for trend:', trendName)
+
+  const result = {
+    content: blogContent,
     title,
     excerpt,
     hashtags,
-    suggestions
+    suggestions,
+    category: category
   }
+  
+  console.log('✅ Final result for trend:', item.trend, result)
+  
+  return result
 }
 
 // Publish Sanitizer - removes internal suggestions from published content
@@ -320,24 +359,41 @@ export function stripInternalSuggestions(text: string): string {
 
 // Helper function to validate trend data structure
 export function validateTrendData(data: any): boolean {
+  console.log('🔍 Validating trend data:', JSON.stringify(data, null, 2))
+  
   if (!data || !Array.isArray(data.items)) {
+    console.log('❌ No data or items array')
     return false
   }
   
-  const requiredFields = ['trend', 'summary', 'keywords', 'audience', 'tone']
+  // Required fields for Grok format: title, summary, tags, category
+  const requiredFields = ['title', 'summary', 'tags', 'category']
   
-  for (const item of data.items) {
+  for (let i = 0; i < data.items.length; i++) {
+    const item = data.items[i]
+    console.log(`🔍 Checking item ${i}:`, JSON.stringify(item, null, 2))
+    
     if (!item || typeof item !== 'object') {
+      console.log(`❌ Item ${i} is not an object`)
       return false
     }
     
+    // Check required fields
     for (const field of requiredFields) {
       if (!item[field]) {
+        console.log(`❌ Missing required field: ${field} in item ${i}:`, item)
         return false
       }
     }
+    
+    // Check that tags is array
+    if (!Array.isArray(item.tags)) {
+      console.log(`❌ Tags must be an array in item ${i}:`, item, 'tags type:', typeof item.tags)
+      return false
+    }
   }
   
+  console.log('✅ Trend data validation passed for Grok format')
   return true
 }
 

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateBulkContent, validateTrendData } from '@/lib/bulk-content-generator'
+import { generateBulkContent, validateTrendData, BulkContentResult } from '@/lib/bulk-content-generator'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     
     console.log('🚀 Bulk content generation request received')
+    console.log('📊 Request body items:', body.items?.length || 'no items')
+    console.log('📊 First item example:', JSON.stringify(body.items?.[0], null, 2))
     
     // Validate request body
     if (!body.items || !Array.isArray(body.items)) {
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (!validateTrendData(body)) {
       return NextResponse.json({
         success: false,
-        error: 'Invalid trend data structure. Each item must have: trend, summary, keywords, audience, tone'
+        error: 'Invalid trend data structure. Each item must have: title, summary, tags'
       }, { status: 400 })
     }
     
@@ -38,28 +40,40 @@ export async function POST(req: NextRequest) {
       }, { status: 500 })
     }
     
-    // Generate bulk content
+    // Generate bulk content with timeout protection
     const startTime = Date.now()
-    const result = await generateBulkContent({
-      items: body.items,
-      contentType,
-      language,
-      customPrompt
-    })
+    
+    // Add 4 minute timeout to prevent server timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Generation timeout after 4 minutes')), 4 * 60 * 1000)
+    )
+    
+    const result = await Promise.race([
+      generateBulkContent({
+        items: body.items,
+        contentType,
+        language,
+        customPrompt
+      }),
+      timeoutPromise
+    ])
     
     const duration = Date.now() - startTime
     
+    // Type assertion for better TypeScript support
+    const bulkResult = result as BulkContentResult
+    
     console.log(`✅ Bulk generation completed in ${duration}ms`, {
-      successful: result.summary.successful,
-      total: result.summary.totalProcessed,
-      failed: result.summary.failed
+      successful: bulkResult.summary.successful,
+      total: bulkResult.summary.totalProcessed,
+      failed: bulkResult.summary.failed
     })
     
     return NextResponse.json({
-      success: result.success,
-      generatedPosts: result.generatedPosts,
-      summary: result.summary,
-      errors: result.errors,
+      success: bulkResult.success,
+      generatedPosts: bulkResult.generatedPosts,
+      summary: bulkResult.summary,
+      errors: bulkResult.errors,
       metadata: {
         contentType,
         language,
