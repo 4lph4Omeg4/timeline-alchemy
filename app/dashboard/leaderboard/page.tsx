@@ -234,8 +234,8 @@ export default function LeaderboardPage() {
               {topPackages.slice(3).map((package_) => (
                 <Card key={package_.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors">
                   <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3 flex-1">
                         <Badge className={`${getRankBadgeColor(package_.rank)} min-w-[2rem] text-center`}>
                           {package_.rank}
                         </Badge>
@@ -260,8 +260,8 @@ export default function LeaderboardPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-gray-400 text-sm">
+                      <div className="flex items-center space-x-4 ml-4">
+                        <span className="text-gray-400 text-sm whitespace-nowrap">
                           {formatDate(package_.created_at)}
                         </span>
                         <Link href={`/dashboard/content/package/${package_.id}`}>
