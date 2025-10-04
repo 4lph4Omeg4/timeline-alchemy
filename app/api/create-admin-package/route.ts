@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   // Determine organization based on user role
   console.log('🔍 Determining organization for user:', userId || 'bulk-generator')
   
-  let organization = null
+  let organization: { id: string; name: string; type: string } | null = null
   let isAdminUser = false
   
   if (userId) {
@@ -94,7 +94,9 @@ export async function POST(request: NextRequest) {
         
       console.log('🔍 User organization query result:', { userOrgs, userOrgsError })
       
-      if (userOrgs?.organizations) {
+      if (userOrgs?.organizations && Array.isArray(userOrgs.organizations) && userOrgs.organizations[0]) {
+        organization = userOrgs.organizations[0]
+      } else if (userOrgs?.organizations && !Array.isArray(userOrgs.organizations)) {
         organization = userOrgs.organizations
       }
     }
