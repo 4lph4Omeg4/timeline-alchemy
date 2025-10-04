@@ -225,8 +225,12 @@ export default function BulkContentGenerator() {
       
       // Final update
       setGeneratedPosts([...posts])
+      
+      // 🚀 AUTOMATICALLY SAVE ALL POSTS AS ADMIN PACKAGES
+      await saveAllPostsAsPackages(posts)
+      
       // Replace loading toast with success
-      toast.success('🎉 All divine content generated successfully!', {
+      toast.success('🎉 All divine content generated and automatically saved as packages!', {
         id: 'divine-generation'
       })
     } catch (error) {
@@ -256,6 +260,83 @@ Metadata:
     
     navigator.clipboard.writeText(formattedPost)
     toast.success('Post copied to clipboard!')
+  }
+
+  const saveAllPostsAsPackages = async (posts: GeneratedPost[]) => {
+    console.log('🚀 Auto-saving all posts as admin packages:', posts.length)
+    
+    try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id
+
+      toast.loading('💾 Auto-saving all packages...', {
+        id: 'auto-save'
+      })
+
+      let successCount = 0
+      let failCount = 0
+
+      for (let i = 0; i < posts.length; i++) {
+        const post = posts[i]
+        console.log(`💾 Auto-saving package ${i + 1}/${posts.length}: ${post.title}`)
+        
+        try {
+          const response = await fetch('/api/create-admin-package', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              title: post.title,
+              content: post.content,
+              excerpt: post.excerpt,
+              hashtags: post.hashtags,
+              suggestions: post.suggestions,
+              userId: userId,
+              socialPosts: post.socialPosts || {},
+              generatedImage: post.generatedImage || null,
+              metadata: {
+                ...post.metadata,
+                bulkGenerated: true,
+                sourceType: 'bulk-generator',
+                contentType: contentType,
+                language: language,
+                autoSaved: true
+              }
+            })
+          })
+
+          const result = await response.json()
+          
+          if (result.success) {
+            successCount++
+            console.log(`✅ Auto-saved: ${post.title}`)
+          } else {
+            failCount++
+            console.error(`❌ Auto-save failed: ${post.title}`, result.error)
+          }
+
+          // Respect the universe
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+        } catch (error) {
+          failCount++
+          console.error(`❌ Auto-save error for ${post.title}:`, error)
+        }
+      }
+
+      // Update loading toast
+      toast.success(`🎉 Auto-saved ${successCount} packages successfully! ${failCount > 0 ? `${failCount} failed.` : ''}`, {
+        id: 'auto-save'
+      })
+
+    } catch (error) {
+      console.error('❌ Auto-save error:', error)
+      toast.error('❌ Auto-save failed', {
+        id: 'auto-save'
+      })
+    }
   }
 
   const savePostAsPackage = async (post: GeneratedPost) => {
