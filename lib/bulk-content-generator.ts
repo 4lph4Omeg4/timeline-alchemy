@@ -1,15 +1,17 @@
 // Bulk Content Generator for Grok Trends Arrays
 interface TrendItem {
-  trend: string
-  source_title: string
-  source_url: string
+  title: string
   summary: string
-  keywords: string[]
-  recommended_formats: string[]
   tags: string[]
-  audience: string
-  tone: string
-  cta_ideas: string[]
+  // Optional fields for backward compatibility
+  trend?: string
+  source_title?: string
+  source_url?: string
+  keywords?: string[]
+  recommended_formats?: string[]
+  audience?: string
+  tone?: string
+  cta_ideas?: string[]
 }
 
 interface BulkContentRequest {
@@ -35,6 +37,7 @@ interface BulkContentResult {
       tone: string
       keywords: string[]
       tags: string[]
+      summary?: string
       generatedAt: string
     }
   }>
@@ -77,25 +80,27 @@ export async function generateBulkContent(request: BulkContentRequest): Promise<
   for (let index = 0; index < request.items.length; index++) {
     const item = request.items[index]
     try {
-      console.log(`📝 Processing trend ${index + 1}/${request.items.length}: ${item.trend}`)
+      const trendName = item.title || item.trend || 'Unknown Trend'
+      console.log(`📝 Processing trend ${index + 1}/${request.items.length}: ${trendName}`)
       
       const mappedContentType = mapContentType(request.contentType)
       const generatedContent = await generateTrendContent(item, mappedContentType, request.language || 'nl')
       
       results.generatedPosts.push({
-        trend: item.trend,
+        trend: trendName,
         content: generatedContent.content,
         title: generatedContent.title,
         excerpt: generatedContent.excerpt,
         hashtags: generatedContent.hashtags,
         suggestions: generatedContent.suggestions,
         metadata: {
-          sourceTitle: item.source_title,
-          sourceUrl: item.source_url,
-          audience: item.audience,
-          tone: item.tone,
-          keywords: item.keywords,
+          sourceTitle: item.source_title || item.title || 'Grok Trend Analysis',
+          sourceUrl: item.source_url || '',
+          audience: item.audience || 'conscious consumers and tech enthusiasts',
+          tone: item.tone || 'insightful',
+          keywords: item.keywords || item.tags,
           tags: item.tags,
+          summary: item.summary,
           generatedAt: new Date().toISOString()
         }
       })
@@ -151,8 +156,11 @@ async function generateTrendContent(
   suggestions: string[]
 }> {
   
+  // Get trend name (use title or trend field)
+  const trendName = item.title || item.trend || 'Unknown Trend'
+  
   console.log('🚀 generateTrendContent called with:', {
-    trend: item.trend,
+    trend: trendName,
     contentType,
     language,
     hasGateway: !!(process.env.AI_GATEWAY_URL && process.env.AI_GATEWAY_TOKEN)
@@ -160,16 +168,16 @@ async function generateTrendContent(
   
   const languageInstruction = language === 'en' ? 'Write in English.' : 'Write in Dutch.'
   
-  // Use the EXACT SAME prompt as the working content generator
-  const userPrompt = `Create a professional blog post about: ${item.trend}
+  // Create comprehensive prompt for Grok format
+  const userPrompt = `Create a professional blog post about: ${trendName}
 
 ${languageInstruction}
 
 Context: ${item.summary}
-Target Audience: ${item.audience}
-Tone: ${item.tone}
-Keywords: ${item.keywords.join(', ')}
-Source: ${item.source_title} — [${item.source_title}](${item.source_url})
+Target Audience: ${item.audience || 'conscious consumers and tech enthusiasts'}
+Tone: ${item.tone || 'insightful'}
+Keywords: ${item.keywords?.join(', ') || item.tags.join(', ')}
+Source: ${item.source_title || 'Grok Trend Analysis'}
 
 IMPORTANT OUTPUT FORMAT:
 - Start with a clear, engaging title (no "Title:" label, just the title)
@@ -181,7 +189,7 @@ IMPORTANT OUTPUT FORMAT:
 - Make it ready to copy and paste directly into any platform
 - NO formatting markers, NO labels, NO prefixes
 - Reference the source naturally with inline link
-- Include one call-to-action from: ${item.cta_ideas.join(', ')}
+- Include one engaging call-to-action suggestion
 - DO NOT repeat any content - each paragraph should be unique
 - DO NOT duplicate the first paragraph at the end
 - CRITICAL: Use double line breaks (\\n\\n) between paragraphs
@@ -272,12 +280,12 @@ Focus on the specific topic requested without adding unrelated business concepts
   const lines = content.split('\n').filter((line: string) => line.trim())
   
   // Find title (first non-empty line, should be the title)
-  let title = item.trend
+  let title = item.title || item.trend || 'Untitled'
   let contentStartIndex = 0
-  
+
   if (lines.length > 0) {
     // First line is the title
-    title = lines[0].trim()
+    title = lines[0].trim() || item.title || item.trend || 'Untitled'
     contentStartIndex = 1
   }
   
@@ -299,11 +307,12 @@ Focus on the specific topic requested without adding unrelated business concepts
   // Generate excerpt (first 150 characters of content)
   const excerpt = blogContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
   
-  // Generate hashtags from keywords
-  const hashtags = item.keywords.slice(0, 5).map((k: string) => `#${k.toLowerCase().replace(/[^a-z0-9]/g, '')}`)
+  // Generate hashtags from keywords or tags
+  const keywordSource = item.keywords || item.tags
+  const hashtags = keywordSource.slice(0, 5).map((k: string) => `#${k.toLowerCase().replace(/[^a-z0-9]/g, '')}`)
   
   const suggestions = [
-    language === 'en' ? `Add personal experience with ${item.trend}` : `Voeg persoonlijke ervaring toe met ${item.trend}`,
+    language === 'en' ? `Add personal experience with ${trendName}` : `Voeg persoonlijke ervaring toe met ${trendName}`,
     language === 'en' ? 'Include practical steps or exercises' : 'Voeg praktische stappen of oefeningen toe',
     language === 'en' ? 'Create engaging visuals or infographics' : 'Maak boeiende visuals of infographics'
   ]

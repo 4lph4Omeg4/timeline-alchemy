@@ -13,16 +13,18 @@ import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 
 interface TrendItem {
-  trend: string
-  source_title: string
-  source_url: string
+  title: string
   summary: string
-  keywords: string[]
-  recommended_formats: string[]
   tags: string[]
-  audience: string
-  tone: string
-  cta_ideas: string[]
+  // Optional fields for backward compatibility
+  trend?: string
+  source_title?: string
+  source_url?: string
+  keywords?: string[]
+  recommended_formats?: string[]
+  audience?: string
+  tone?: string
+  cta_ideas?: string[]
 }
 
 interface GeneratedPost {
@@ -59,7 +61,23 @@ export default function BulkContentGenerator() {
   const validateJsonInput = (jsonString: string): boolean => {
     try {
       const parsed = JSON.parse(jsonString)
-      return parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0
+      
+      // Check if it's direct Grok format (array of trends)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.every(item => 
+          item.title && 
+          item.summary && 
+          item.tags && 
+          Array.isArray(item.tags)
+        )
+      }
+      
+      // Check if it's wrapped format with items
+      if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
+        return true
+      }
+      
+      return false
     } catch {
       return false
     }
@@ -71,7 +89,9 @@ export default function BulkContentGenerator() {
     if (isJsonValid) {
       try {
         const parsed = JSON.parse(jsonInput)
-        setParsedItemsCount(parsed.items.length)
+        // Handle direct Grok format (array) or wrapped format ({items: array})
+        const itemsLength = Array.isArray(parsed) ? parsed.length : (parsed.items?.length || 0)
+        setParsedItemsCount(itemsLength)
       } catch {
         setParsedItemsCount(0)
       }
@@ -92,13 +112,16 @@ export default function BulkContentGenerator() {
     try {
       const parsedData = JSON.parse(jsonInput)
       
+      // Handle direct Grok format (array) or wrapped format ({items: array})
+      const items = Array.isArray(parsedData) ? parsedData : parsedData.items
+      
       const response = await fetch('/api/generate-bulk-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          items: parsedData.items,
+          items: items,
           contentType,
           language
         })
@@ -243,38 +266,27 @@ Metadata:
   }
 
   const parseSampleData = () => {
-    const sampleData = {
-      "items": [
-        {
-          "trend": "AI Consciousness Meditation",
-          "source_title": "AI-Assisted Consciousness Practices Emerge",
-          "source_url": "https://example.com/ai-consciousness-meditation",
-          "summary": "New meditation apps using AI to guide consciousness expansion and track awareness states are gaining popularity among spiritual tech enthusiasts.",
-          "keywords": ["AI consciousness", "meditation tech", "awareness tracking", "spiritual AI"],
-          "recommended_formats": ["blog", "social"],
-          "tags": ["consciousness", "AI", "meditation", "tech"],
-          "audience": "Spiritual tech adopters",
-          "tone": "insightful",
-          "cta_ideas": ["Try AI meditation", "Track your consciousness"]
-        },
-        {
-          "trend": "Crypto Nomad Communities",
-          "source_title": "Digital Nomads Building Decentralized Communities",
-          "source_url": "https://example.com/crypto-nomad-communities",
-          "summary": "Crypto-enabled nomads are creating borderless communities using blockchain technology for governance and resource sharing.",
-          "keywords": ["crypto nomad", "decentralized communities", "blockchain governance", "digital sovereignty"],
-          "recommended_formats": ["blog", "social"],
-          "tags": ["crypto", "nomads", "decentralization", "community"],
-          "audience": "Crypto enthusiasts",
-          "tone": "bold",
-          "cta_ideas": ["Join the community", "Explore crypto options"]
-        }
-      ]
-    }
+    const sampleData = [
+      {
+        "title": "AI Consciousness Meditation: Digital Enlightenment Platforms Emerge",
+        "summary": "New meditation apps using AI to guide consciousness expansion and track awareness states are gaining popularity among spiritual tech enthusiasts across Substack, Medium, and consciousness blogs.",
+        "tags": ["consciousness", "AI", "meditation", "tech", "spiritual"]
+      },
+      {
+        "title": "Crypto Nomad Communities: Decentralized Living on Luxury Yachts",
+        "summary": "Crypto-enabled nomads are creating borderless communities using blockchain technology for governance and resource sharing, merging digital sovereignty with luxury nomadic lifestyle.",
+        "tags": ["crypto", "nomads", "decentralization", "luxury", "yachts"]
+      },
+      {
+        "title": "Quantum Echoes: Ancient Sound Tech Powers Modern Consciousness Hacks",
+        "summary": "Consciousness blogs and Medium threads converge on reviving psychoacoustic architecture from ancient traditions, using AI to amplify sound waves for transcending default states.",
+        "tags": ["psychoacoustics", "consciousness", "AItherapy", "vibration", "ancientwisdom"]
+      }
+    ]
     
     setJsonInput(JSON.stringify(sampleData, null, 2))
-    setParsedItemsCount(sampleData.items.length)
-    toast.success('Grok-style sample data loaded!')
+    setParsedItemsCount(sampleData.length)
+    toast.success('Real Grok format loaded!')
   }
 
   return (
