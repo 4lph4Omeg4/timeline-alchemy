@@ -40,15 +40,17 @@ export async function POST(request: NextRequest) {
     // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Mimic the working content generator
     console.log('🔍 Using admin organization for this admin-only package...')
     
-    // Create basic blog post with category metadata (like the working content generator)
+    // 🚀 CREATE ADMIN PACKAGE DIRECTLY - Skip the manual conversion workflow!
     const { data: insertedPackage, error: packageError } = await supabaseClient
       .from('blog_posts')
       .insert({
-        org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID
+        org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID  
         title: category ? `[${category}] ${title}` : title,
         content: content,
-        state: 'draft',
-        // Note: category prefix added to title for visibility
+        state: 'published', // DIRECT PUBLISH - Available immediately!
+        published_at: new Date().toISOString(), // Publish immediately
+        created_by_admin: true, // 🎯 This makes it an admin packages immediately!
+        // Category will be stored in title prefix for now: [Category] Title
       })
       .select()
       .single()

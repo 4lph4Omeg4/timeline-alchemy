@@ -192,10 +192,23 @@ export default function BulkContentGenerator() {
           items: items,
           contentType,
           language
-        })
+        }),
+        timeout: 300000 // 5 minutes timeout
       })
 
-      const result = await response.json()
+      // Better error handling for non-JSON responses
+      let result
+      try {
+        const responseText = await response.text()
+        if (!responseText) {
+          throw new Error('Empty response from server')
+        }
+        result = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError)
+        toast.error(`Server error: ${response.status} ${response.statusText}`)
+        return
+      }
       setCurrentResponse(result)
 
       if (result.success && result.generatedPosts) {
@@ -258,9 +271,34 @@ export default function BulkContentGenerator() {
           console.error('❌ Social generation error:', socialError)
         }
         
-        // DIVINE COSMIC IMAGE GENERATION
+        // 🌟 TOPIC-SPECIFIC IMAGE GENERATION
         try {
-          const imagePrompt = `DIVINE COSMIC MASTERPIECE: ${post.title}. Style: Cosmic interstellar art, mystical galactic environments, purple-blue-gold nebula waves, swirling cosmic energy, sacred geometric patterns, ethereal spiritual beauty, high-end sci-fi fantasy. Make it worthy of divine creation. Theme: ${post.metadata.tags?.join(', ') || 'spiritual technology'}`
+          // Create relevant image prompt based on content and category
+          const category = post.category || 'Consciousness & Awakening'
+          const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
+          
+          let imagePrompt = `Professional illustration for article: "${post.title}". `
+          
+          // Category-specific styling
+          if (category.includes('Consciousness') || category.includes('Awakening')) {
+            imagePrompt += `Style: Meditative mind visualization, brain networks, enlightenment symbols, peaceful spiritual imagery, warm golden light, consciousness awakening.`
+          } else if (category.includes('AI') || category.includes('Technology')) {
+            imagePrompt += `Style: Modern tech illustration, AI brain, digital networks, futuristic technology, clean minimalist design, blue-silver color scheme.`
+          } else if (category.includes('Crypto') || category.includes('Decentralized')) {
+            imagePrompt += `Style: Blockchain visualization, digital currency symbols, decentralized networks, modern fintech design, geometric patterns.`
+          } else if (category.includes('Ancient') || category.includes('Wisdom')) {
+            imagePrompt += `Style: Ancient wisdom symbols, historical artifacts, mystical elements, earthy tones, sacred geometry, timeless beauty.`
+          } else if (category.includes('Lifestyle') || category.includes('New Earth')) {
+            imagePrompt += `Style: Sustainable living, earth elements, wellness lifestyle, natural harmony, green earth tones, healing symbols.`
+          } else if (category.includes('Mythology') || category.includes('Archetypes')) {
+            imagePrompt += `Style: Mythological symbols, ancient archetypes, legendary creatures, symbolic imagery, mystical artistic portrayal.`
+          } else if (category.includes('Global') || category.includes('Culture')) {
+            imagePrompt += `Style: Global culture blend, world unity symbols, cultural diversity, contemporary social movements, earth-connected imagery.`
+          } else {
+            imagePrompt += `Style: Professional illustration, relevant symbolic imagery, clean modern design, appropriate color scheme.`
+          }
+          
+          imagePrompt += ` Theme: ${topicTags}. High quality, professional article illustration.`
           
           const imageResponse = await fetch('/api/generate-image', {
             method: 'POST',

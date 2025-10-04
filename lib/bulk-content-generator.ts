@@ -94,6 +94,7 @@ export async function generateBulkContent(request: BulkContentRequest): Promise<
         excerpt: generatedContent.excerpt,
         hashtags: generatedContent.hashtags,
         suggestions: generatedContent.suggestions,
+        category: generatedContent.category,
         metadata: {
           sourceTitle: item.source_title || item.title || 'Grok Trend Analysis',
           sourceUrl: item.source_url || '',
@@ -108,10 +109,10 @@ export async function generateBulkContent(request: BulkContentRequest): Promise<
       
       results.summary.successful++
       
-      // Rate limiting to prevent quota issues
+      // Faster rate limiting to reduce timeout risk
       if (index < request.items.length - 1) {
-        console.log(`⏳ Waiting 3 seconds before next generation...`)
-        await new Promise(resolve => setTimeout(resolve, 3000)) // 3 second delay
+        console.log(`⏳ Waiting 1 second before next generation...`)
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Reduced from 3000ms to 1000ms
       }
       
     } catch (error) {

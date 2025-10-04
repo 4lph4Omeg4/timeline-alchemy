@@ -40,14 +40,23 @@ export async function POST(req: NextRequest) {
       }, { status: 500 })
     }
     
-    // Generate bulk content
+    // Generate bulk content with timeout protection
     const startTime = Date.now()
-    const result = await generateBulkContent({
-      items: body.items,
-      contentType,
-      language,
-      customPrompt
-    })
+    
+    // Add 4 minute timeout to prevent server timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Generation timeout after 4 minutes')), 4 * 60 * 1000)
+    )
+    
+    const result = await Promise.race([
+      generateBulkContent({
+        items: body.items,
+        contentType,
+        language,
+        customPrompt
+      }),
+      timeoutPromise
+    ])
     
     const duration = Date.now() - startTime
     
