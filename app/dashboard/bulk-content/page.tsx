@@ -1,8 +1,64 @@
 import BulkContentGenerator from '@/components/bulk-content-generator'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Database, Zap, Sparkles } from 'lucide-react'
+import { FileText, Database, Zap, Sparkles, Shield } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function BulkContentPage() {
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user?.email?.includes('sh4m4ni4k@sh4m4ni4k.nl')) {
+          // Redirect non-admin users
+          router.push('/dashboard')
+          return
+        }
+        
+        setIsAdmin(true)
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+        router.push('/dashboard')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAdminStatus()
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center space-y-4">
+            <Shield className="h-12 w-12 text-purple-400 mx-auto animate-pulse" />
+            <p className="text-gray-300">Checking admin permissions...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center space-y-4">
+            <Shield className="h-12 w-12 text-red-400 mx-auto" />
+            <h2 className="text-2xl font-bold text-white">Admin Access Required</h2>
+            <p className="text-gray-300">This feature is only available for administrators.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="space-y-6">
       {/* Header */}
