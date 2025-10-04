@@ -12,16 +12,28 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
+const CONTENT_CATEGORIES = [
+  'Consciousness & Awakening & Enlightenment',
+  'Esoterica & Ancient Wisdom & Mysteries', 
+  'AI & Conscious Technology & Future',
+  'Crypto & Decentralized Sovereignty',
+  'Divine Lifestyle & New Earth & Harmony',
+  'Mythology & Archetypes & Ancient Secrets',
+  'Global Shifts & Conscious Culture & Awakening'
+] as const
+
 export default function ContentListPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'draft' | 'scheduled' | 'published'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rating' | 'title'>('newest')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
   const router = useRouter()
 
   useEffect(() => {
     fetchPosts()
-  }, [filter, sortBy])
+  }, [filter, sortBy, selectedCategory])
 
   const fetchPosts = async () => {
     try {
@@ -59,6 +71,10 @@ export default function ContentListPage() {
         query = query.eq('state', filter)
       }
 
+      // Apply category filtering
+      if (selectedCategory !== 'all')
+        query = query.like('title', `[${selectedCategory}]%`)
+
       // Apply sorting
       switch (sortBy) {
         case 'newest':
@@ -83,7 +99,15 @@ export default function ContentListPage() {
         console.error('Error fetching posts:', error)
         toast.error('Failed to load content')
       } else {
-        setPosts(data || [])
+        const posts = data || []
+        setPosts(posts)
+        
+        // Calculate category counts
+        const counts: Record<string, number> = {}
+        CONTENT_CATEGORIES.forEach(category => {
+          counts[category] = posts.filter(post => post.title.startsWith(`[${category}]`)).length
+        })
+        setCategoryCounts(counts)
       }
     } catch (error) {
       console.error('Unexpected error:', error)
@@ -197,15 +221,102 @@ export default function ContentListPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">Content Library</h1>
+          <h1 className="text-3xl font-bold text-white">🌟 Divine Content Library</h1>
           <p className="text-gray-300 mt-2">
-            Manage your content and view packages created by your admin.
+            Explore categorized content and view packages across all domains of consciousness.
           </p>
         </div>
         <Link href="/dashboard/content/new">
           <Button>Create New Content</Button>
         </Link>
       </div>
+
+      {/* Main Layout: Sidebar + Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Category Sidebar */}
+        <div className="lg:col-span-1">
+          <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                🗂️ Categories
+              </CardTitle>
+              <CardDescription className="text-gray-300">
+                Filter content by divine domains
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {/* All Content */}
+              <Button
+                variant={selectedCategory === 'all' ? 'default' : 'ghost'}
+                className="w-full justify-start text-left"
+                onClick={() => setSelectedCategory('all')}
+              >
+                <span className="flex items-center justify-between w-full">
+                  <span>🌟 All Content</span>
+                  <Badge variant="secondary">{posts.length}</Badge>
+                </span>
+              </Button>
+
+              {/* Category Buttons */}
+              {CONTENT_CATEGORIES.map(category => {
+                const getCategoryEmoji = (cat: string) => {
+                  if (cat.includes('Consciousness')) return '🧠'
+                  if (cat.includes('Ancient')) return '🏛️'
+                  if (cat.includes('AI')) return '🤖'
+                  if (cat.includes('Crypto')) return '💰'
+                  if (cat.includes('Lifestyle')) return '🌱'
+                  if (cat.includes('Mythology')) return '⚡'
+                  if (cat.includes('Global')) return '🌍'
+                  return '📚'
+                }
+
+                return (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category ? 'default' : 'ghost'}
+                    className="w-full justify-start text-left h-auto py-2"
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    <span className="flex flex-col items-start w-full">
+                      <span className="text-sm font-medium flex items-center gap-2">
+                        {getCategoryEmoji(category)} {category.split(' & ')[0]}
+                      </span>
+                      <span className="text-xs text-gray-400 truncate w-full">
+                        {category.split(' & ')[1] && category.split(' & ')[1]}
+                      </span>
+                      <Badge variant="secondary" className="mt-1">
+                        {categoryCounts[category] || 0}
+                      </Badge>
+                    </span>
+                  </Button>
+                )
+              })}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Content Area */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Current Selection */}
+          <div className="flex items-center gap-2">
+            {selectedCategory === 'all' ? (
+              <span className="text-lg text-white">🌟 All Content</span>
+            ) : (
+              <span className="text-lg text-white flex items-center gap-2">
+                {selectedCategory.includes('Consciousness') && '🧠'}
+                {selectedCategory.includes('Ancient') && '🏛️'}
+                {selectedCategory.includes('AI') && '🤖'}
+                {selectedCategory.includes('Crypto') && '💰'}
+                {selectedCategory.includes('Lifestyle') && '🌱'}
+                {selectedCategory.includes('Mythology') && '⚡'}
+                {selectedCategory.includes('Global') && '🌍'}
+                {selectedCategory.split(' & ')[0]}
+              </span>
+            )}
+            <Badge variant="outline" className="text-purple-300 border-purple-500">
+              {selectedCategory === 'all' ? posts.length : categoryCounts[selectedCategory] || 0} articles
+            </Badge>
+          </div>
 
       {/* Filter Tabs */}
       <div className="flex space-x-2">
@@ -449,6 +560,8 @@ export default function ContentListPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+        </div> {/* End Content Area */}
+      </div> {/* End Grid Layout */}
+    </div> {/* End Main Container */}
   )
 }
