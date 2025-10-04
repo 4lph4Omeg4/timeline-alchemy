@@ -13,13 +13,13 @@ import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 const CONTENT_CATEGORIES = [
-  'Consciousness & Awakening & Enlightenment',
-  'Esoterica & Ancient Wisdom & Mysteries', 
-  'AI & Conscious Technology & Future',
-  'Crypto & Decentralized Sovereignty',
-  'Divine Lifestyle & New Earth & Harmony',
-  'Mythology & Archetypes & Ancient Secrets',
-  'Global Shifts & Conscious Culture & Awakening'
+  { id: 'consciousness', label: 'Consciousness & Awakening', emoji: '🧠' },
+  { id: 'ancient_wisdom', label: 'Ancient Wisdom & Mysteries', emoji: '🏛️' },
+  { id: 'ai_technology', label: 'AI & Conscious Technology', emoji: '🤖' },
+  { id: 'crypto_decentralized', label: 'Crypto & Decentralized Sovereignty', emoji: '💰' },
+  { id: 'divine_lifestyle', label: 'Divine Lifestyle & New Earth', emoji: '🌱' },
+  { id: 'mythology_archetypes', label: 'Mythology & Archetypes', emoji: '⚡' },
+  { id: 'global_shifts', label: 'Global Shifts & Conscious Culture', emoji: '🌍' }
 ] as const
 
 export default function ContentListPage() {
@@ -72,9 +72,9 @@ export default function ContentListPage() {
         query = query.eq('state', filter)
       }
 
-      // Apply category filtering
+      // Apply category filtering  
       if (selectedCategory !== 'all') {
-        query = query.like('title', `[${selectedCategory}]%`)
+        query = query.eq('category', selectedCategory)
       }
 
       // Apply sorting
@@ -107,7 +107,7 @@ export default function ContentListPage() {
         // Calculate category counts
         const counts: Record<string, number> = {}
         CONTENT_CATEGORIES.forEach(category => {
-          counts[category] = posts.filter(post => post.title.startsWith(`[${category}]`)).length
+          counts[category.id] = posts.filter(post => post.category === category.id).length
         })
         setCategoryCounts(counts)
       }
@@ -298,39 +298,26 @@ export default function ContentListPage() {
               </Button>
 
               {/* Category Buttons */}
-              {CONTENT_CATEGORIES.map(category => {
-                const getCategoryEmoji = (cat: string) => {
-                  if (cat.includes('Consciousness')) return '🧠'
-                  if (cat.includes('Ancient')) return '🏛️'
-                  if (cat.includes('AI')) return '🤖'
-                  if (cat.includes('Crypto')) return '💰'
-                  if (cat.includes('Lifestyle')) return '🌱'
-                  if (cat.includes('Mythology')) return '⚡'
-                  if (cat.includes('Global')) return '🌍'
-                  return '📚'
-                }
-
-                return (
-                  <Button
-                    key={category}
-                    variant={selectedCategory === category ? 'default' : 'ghost'}
-                    className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    <span className="flex flex-col items-start w-full">
-                      <span className="text-sm font-medium flex items-center gap-2">
-                        {getCategoryEmoji(category)} {category.split(' & ')[0]}
-                      </span>
-                      <span className="text-xs text-gray-400 truncate w-full">
-                        {category.split(' & ')[1] && category.split(' & ')[1]}
-                      </span>
-                      <Badge variant="secondary" className="mt-1">
-                        {categoryCounts[category] || 0}
-                      </Badge>
+              {CONTENT_CATEGORIES.map(category => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? 'default' : 'ghost'}
+                  className="w-full justify-start text-left h-auto py-2"
+                  onClick={() => setSelectedCategory(category.id)}
+                >
+                  <span className="flex flex-col items-start w-full">
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      {category.emoji} {category.label.split(' & ')[0]}
                     </span>
-                  </Button>
-                )
-              })}
+                    <span className="text-xs text-gray-400 truncate w-full">
+                      {category.label.split(' & ')[1] && category.label.split(' & ')[1]}
+                    </span>
+                    <Badge variant="secondary" className="mt-1">
+                      {categoryCounts[category.id] || 0}
+                    </Badge>
+                  </span>
+                </Button>
+              ))}
             </CardContent>
           </Card>
         </div>
@@ -343,14 +330,8 @@ export default function ContentListPage() {
               <span className="text-lg text-white">🌟 All Content</span>
             ) : (
               <span className="text-lg text-white flex items-center gap-2">
-                {selectedCategory.includes('Consciousness') && '🧠'}
-                {selectedCategory.includes('Ancient') && '🏛️'}
-                {selectedCategory.includes('AI') && '🤖'}
-                {selectedCategory.includes('Crypto') && '💰'}
-                {selectedCategory.includes('Lifestyle') && '🌱'}
-                {selectedCategory.includes('Mythology') && '⚡'}
-                {selectedCategory.includes('Global') && '🌍'}
-                {selectedCategory.split(' & ')[0]}
+                {CONTENT_CATEGORIES.find(cat => cat.id === selectedCategory)?.emoji}
+                {CONTENT_CATEGORIES.find(cat => cat.id === selectedCategory)?.label.split(' & ')[0]}
               </span>
             )}
             <Badge variant="outline" className="text-purple-300 border-purple-500">
