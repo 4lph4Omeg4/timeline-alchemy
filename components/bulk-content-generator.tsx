@@ -26,7 +26,7 @@ interface TrendItem {
 
 interface GeneratedPost {
   trend: string
-  generatedContent: string
+  content: string  // Changed from generatedContent to match API response
   title: string
   excerpt: string
   hashtags: string[]
@@ -109,7 +109,7 @@ export default function BulkContentGenerator() {
   const copyPostToClipboard = (post: GeneratedPost) => {
     const formattedPost = `Title: ${post.title}
 
-${post.generatedContent}
+${post.content}
 
 Hashtags: ${post.hashtags.join(' ')}
 
@@ -132,16 +132,16 @@ Metadata:
     // Debug: Check if required fields are present
     console.log('🔍 Saving post:', {
       title: post.title,
-      hasContent: !!post.generatedContent,
-      contentLength: post.generatedContent?.length || 0,
+      hasContent: !!post.content,
+      contentLength: post.content?.length || 0,
       excerpt: post.excerpt
     })
     
-    if (!post.title || !post.generatedContent) {
+    if (!post.title || !post.content) {
       toast.error('Missing title or content - cannot save package')
       console.error('❌ Missing required fields:', {
         title: post.title,
-        content: post.generatedContent
+        content: post.content
       })
       return
     }
@@ -154,7 +154,7 @@ Metadata:
         },
         body: JSON.stringify({
           title: post.title,
-          content: post.generatedContent,
+          content: post.content,
           excerpt: post.excerpt,
           hashtags: post.hashtags,
           suggestions: post.suggestions,
