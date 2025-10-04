@@ -69,19 +69,20 @@ export async function POST(request: NextRequest) {
       org_id: organization.id,
       title: title.substring(0, 50) + '...',
       contentLength: content.length,
-      excerptLength: (excerpt || content.substring(0, 150) + '...').length
+      excerptLength: (excerpt || content.substring(0, 150) + '...').length,
+      note: 'excerpt will be stored in metadata field'
     })
     
     const insertData = {
       org_id: organization.id,
       title: title,
       content: content,
-      excerpt: excerpt || content.substring(0, 150) + '...',
       state: 'draft',
       created_by_admin: true,
       metadata: {
         hashtags: hashtags || [],
         suggestions: suggestions || [],
+        excerpt: excerpt || content.substring(0, 150) + '...', // Store excerpt in metadata instead
         source: 'bulk_content_generator'
       }
     }
