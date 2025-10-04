@@ -59,15 +59,26 @@ export default function BulkContentGenerator() {
   const validateJsonInput = (jsonString: string): boolean => {
     try {
       const parsed = JSON.parse(jsonString)
-      if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
+      return parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0
+    } catch {
+      return false
+    }
+  }
+
+  const isJsonValid = validateJsonInput(jsonInput)
+
+  React.useEffect(() => {
+    if (isJsonValid) {
+      try {
+        const parsed = JSON.parse(jsonInput)
         setParsedItemsCount(parsed.items.length)
-        return true
+      } catch {
+        setParsedItemsCount(0)
       }
-    } catch (error) {
+    } else {
       setParsedItemsCount(0)
     }
-    return false
-  }
+  }, [jsonInput, isJsonValid])
 
   const handleGenerate = async () => {
     if (!validateJsonInput(jsonInput)) {
@@ -137,9 +148,7 @@ export default function BulkContentGenerator() {
         }
         
         // Generate cosmic image for the topic
-        const imagePrompt = `Cosmic-themed image representing: ${post.title}. ${post.metadata.summary}. 
-        Style: cosmic, galactic, mystical, spiritual, purple/blue/gold gradients, stars, nebula, sacred geometry. 
-        Theme: ${post.metadata.tags?.join(', ') || post.metadata.keywords?.join(', ')}`
+        const imagePrompt = `Cosmic-themed image representing: ${post.title}. ${post.metadata.summary || 'Innovative trend'}. Style: cosmic, galactic, mystical, spiritual, purple/blue/gold gradients, stars, nebula, sacred geometry. Theme: ${post.metadata.tags?.join(', ') || post.metadata.keywords?.join(', ')}`
         
         const imageResponse = await fetch('/api/generate-image', {
           method: 'POST',
@@ -186,22 +195,8 @@ Metadata:
   const savePostAsPackage = async (post: GeneratedPost) => {
     setSavingPost(post.trend)
     
-    // Debug: Check if required fields are present
-    console.log('🔍 Saving post:', {
-      title: post.title,
-      hasContent: !!post.content,
-      contentLength: post.content?.length || 0,
-      excerpt: post.excerpt,
-      fullPost: post
-    })
-    
     if (!post.title || !post.content || post.content.length === 0) {
-      toast.error(`Missing title or content - cannot save package. Content length: ${post.content?.length || 0}`)
-      console.error('❌ Missing required fields:', {
-        title: post.title,
-        content: post.content,
-        contentLength: post.content?.length || 0
-      })
+      toast.error(`Missing title or content - cannot save package`)
       return
     }
     
@@ -232,17 +227,12 @@ Metadata:
         })
       })
 
-      console.log('🔍 Save response status:', response.status)
-      console.log('🔍 Save response headers:', Object.fromEntries(response.headers.entries()))
-      
       const result = await response.json()
-      console.log('🔍 Save response data:', result)
       
       if (result.success) {
         toast.success(`✅ "${post.title}" saved as package!`)
       } else {
         toast.error(`❌ Failed to save package: ${result.error}`)
-        console.error('❌ Save package error:', result)
       }
     } catch (error) {
       console.error('❌ Save package error:', error)
@@ -331,22 +321,19 @@ Metadata:
 
           {/* JSON Input */}
           <div>
-            <Label htmlFor="jsonInput">Trends JSON Data</Label>
+            <Label htmlFor="jsonInput">Trend Data (JSON)</Label>
             <Textarea
               id="jsonInput"
               value={jsonInput}
-              onChange={(e) => {
-                setJsonInput(e.target.value)
-                validateJsonInput(e.target.value)
-              }}
+              onChange={(e) => setJsonInput(e.target.value)}
               placeholder="Paste your Grok trends JSON data here..."
               rows={10}
               className="font-mono text-sm"
             />
             <div className="flex items-center gap-2 mt-2">
-            <Button variant="outline" size="sm" onClick={parseSampleData}>
-              Load Grok Sample Data
-            </Button>
+              <Button variant="outline" size="sm" onClick={parseSampleData}>
+                Load Grok Sample Data
+              </Button>
               {parsedItemsCount > 0 && (
                 <Badge variant="secondary">
                   <FileText className="h-3 w-3 mr-1" />
@@ -357,7 +344,7 @@ Metadata:
             
             {/* Grok Workflow Instructions */}
             <Alert className="bg-purple-900/20 border-purple-500/30">
-              <AlertDescription>
+              <Alert Description>
                 <div className="font-semibold text-purple-200 mb-2">📅 Daily Grok Workflow Instructions:</div>
                 <div className="text-sm text-gray-300 space-y-1">
                   <div><strong>1. Copy Grok Response:</strong> Take the JSON array from Grok and paste it directly above</div>
@@ -367,6 +354,7 @@ Metadata:
                 </div>
               </AlertDescription>
             </Alert>
+          </div>
 
           {/* Generate Button */}
           <Button 
@@ -383,7 +371,7 @@ Metadata:
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                🚀 Generate Complete Package ({parsedItemsCount} trends)
+                🚀 Generate Complete Package ({parsedItemsCount} items)
               </>
             )}
           </Button>
@@ -420,33 +408,16 @@ Metadata:
           </CardHeader>
           <CardContent>
             {currentResponse.errors && currentResponse.errors.length > 0 && (
-              <Alert className={`mb-4 ${currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) ? 'bg-red-900/30 border-red-500/50' : ''}`}>
+              <Alert>
                 <AlertDescription>
-                  <div className="font-semibold">
-                    {currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) 
-                      ? '🚨 Quota Limit Reached' 
-                      : 'Errors encountered:'}
-                  </div>
+                  <div className="font-semibold">Errors encountered:</div>
                   <ul className="list-disc list-inside mt-2">
                     {currentResponse.errors.map((error: string, index: number) => (
-                      <li key={index} className={`text-sm ${error.includes('QUOTA LIMIT') ? 'text-red-300 font-semibold' : ''}`}>
+                      <li key={index} className="text-sm">
                         {error}
                       </li>
                     ))}
                   </ul>
-                  {currentResponse.errors.some((error: string) => error.includes('QUOTA LIMIT')) && (
-                    <div className="mt-3 p-3 bg-red-800/20 border border-red-500/30 rounded">
-                      <div className="text-red-200 text-sm">
-                        <strong>💡 Solutions:</strong>
-                        <ul className="list-disc list-inside mt-1 ml-4">
-                          <li>Check your OpenAI billing and add credits</li>
-                          <li>Wait for quota to reset (usually 24 hours)</li>
-                          <li>Try generating fewer posts at once</li>
-                          <li>Consider upgrading your OpenAI plan</li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
                 </AlertDescription>
               </Alert>
             )}
@@ -467,9 +438,9 @@ Metadata:
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => savePostAsPackage(post)}
                           disabled={savingPost === post.trend}
                           className="border-green-500 text-green-400 hover:bg-green-900/30"
