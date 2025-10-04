@@ -29,6 +29,7 @@ export default function ContentListPage() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rating' | 'title'>('newest')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
+  const [categorizing, setCategorizing] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -207,6 +208,44 @@ export default function ContentListPage() {
 
   const getStateText = (state: string) => {
     return state.charAt(0).toUpperCase() + state.slice(1)
+  }
+
+  const handleCategorizePosts = async () => {
+    if (!confirm('🌟 This will automatically categorize all uncategorized blog posts based on their content and titles. This action cannot be easily undone. Continue?')) {
+      return
+    }
+
+    setCategorizing(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const token = (await supabase.auth.getSession()).data.session?.access_token
+      
+      const response = await fetch('/api/categorize-existing-posts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        toast.success(`✨ Successfully categorized ${result.results.categorizedPosts} posts!`)
+        console.log('Categorization results:', result.results)
+        fetchPosts() // Refresh the posts to show updated categories
+      } else {
+        toast.error(`❌ Categorization failed: ${result.error}`)
+        console.error('Categorization error details:', result.details)
+      }
+    } catch (error) {
+      console.error('Unexpected categorization error:', error)
+      toast.error('❌ An unexpected error occurred during categorization')
+    } finally {
+      setCategorizing(false)
+    }
   }
 
   if (loading) {
