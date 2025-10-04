@@ -43,76 +43,23 @@ export async function POST(request: NextRequest) {
       }
     })
 
-  // Strategy: Find any organization, prioritize admin type
-  console.log('🔍 Looking for organizations...')
+  // Use the existing "Admin Organization" that's created for all users
+  console.log('🔍 Looking for Admin Organization...')
   
-  // First try to find admin organization
-  let { data: adminOrg, error: adminOrgError } = await supabaseClient
+  const { data: organization, error: orgError } = await supabaseClient
     .from('organizations')
     .select('id, name, type')
-    .eq('type', 'admin')
-    .limit(1)
+    .eq('name', 'Admin Organization')
     .single()
     
-  console.log('🔍 Admin organization query result:', { adminOrg, adminOrgError })
-
-  // If admin org exists, use it
-  let organization = adminOrg
+  console.log('🔍 Admin Organization query result:', { organization, orgError })
   
-  // If no admin org, get ANY organization
   if (!organization?.id) {
-    console.log('🔍 No admin org found, looking for any organization...')
-    
-    const { data: anyOrg, error: anyOrgError } = await supabaseClient
-      .from('organizations')
-      .select('id, name, type')
-      .order('created_at', { ascending: true }) // Get oldest organization
-      .limit(1)
-      .single()
-      
-    console.log('🔍 Any organization result:', { anyOrg, anyOrgError })
-    
-    organization = anyOrg
-  }
-  
-  // If still no organization, create a default one
-  if (!organization?.id) {
-    console.log('🔍 No organization exists, creating default admin organization...')
-    
-    const defaultOrgData = {
-      name: 'System Admin Organization',
-      type: 'admin',
-      plan: 'enterprise'
-    }
-    
-    const { data: newOrg, error: createError } = await supabaseClient
-      .from('organizations')
-      .insert(defaultOrgData)
-      .select('id, name, type')
-      .single()
-      
-    console.log('🔍 Created default organization:', { newOrg, createError })
-    
-    if (createError || !newOrg?.id) {
-      console.error('❌ Failed to create default organization:', createError)
-      return NextResponse.json(
-        { error: 'Failed to find or create organization' },
-        { status: 500 }
-      )
-    }
-    
-    organization = newOrg
-    
-    // Also create a subscription for this organization
-    await supabaseClient
-      .from('subscriptions')
-      .insert({
-        org_id: organization.id,
-        stripe_customer_id: 'system-admin-' + organization.id,
-        stripe_subscription_id: 'system-sub-' + organization.id,
-        plan: 'enterprise',
-        status: 'active'
-      })
+    console.error('❌ Admin Organization not found - this should always exist')
+    return NextResponse.json(
+      { error: 'Admin Organization not found' },
+      { status: 400 }
+    )
   }
     
     console.log('🔍 Using organization:', { id: organization.id, name: organization.name, type: organization.type })
