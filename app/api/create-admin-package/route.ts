@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, content, excerpt, hashtags, suggestions } = body
+    const { title, content, excerpt, hashtags, suggestions, userId } = body
 
     console.log('🔍 Create admin package request:', {
       title: title,
@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
       contentLength: content?.length || 0,
       excerpt: excerpt,
       hasHashtags: !!hashtags,
-      hashtagsCount: hashtags?.length || 0
+      hashtagsCount: hashtags?.length || 0,
+      userId: userId
     })
     
     // Check environment variables
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!title || !content) {
       console.error('❌ Missing required fields:', {
         title: title,
-        content: content
+        sourceContent: content
       })
       return NextResponse.json(
         { error: 'Title and content are required' },
@@ -43,21 +44,80 @@ export async function POST(request: NextRequest) {
       }
     })
 
-  // Use the existing "Admin Organization" that's created for all users
-  console.log('🔍 Looking for Admin Organization...')
+  // Determine organization based on user role
+  console.log('🔍 Determining organization for user:', userId || 'bulk-generator')
   
-  const { data: organization, error: orgError } = await supabaseClient
-    .from('organizations')
-    .select('id, name, type')
-    .eq('name', 'Admin Organization')
-    .single()
+  let organization = null
+  let isAdminUser = false
+  
+  if (userId) {
+    // Check if this is the admin user
+    const adminEmail = process.env.ADMIN_EMAIL || 'sh4m4ni4k@sh4m4ni4k.nl'
     
-  console.log('🔍 Admin Organization query result:', { organization, orgError })
+    // Get user details to check email
+    const { data: userData, error: userError } = await supabaseClient.auth.admin.getUserById(userId)
+    
+    if (userData?.user?.email === adminEmail) {
+      isAdminUser = true
+      console.log('🔍 This is admin user, looking for admin organization...')
+      
+      // Admin: use admin org e6c0db74-03ee-4bb3-b08d-d94512efab91
+      const { data: adminOrg, error: adminOrgError } = await supabaseClient
+        .from('organizations')
+        .select('id, name, type')
+        .eq('id', 'e6c0db74-03ee-4bb3-b08d-d94512efab91')
+        .single()
+        
+      console.log('🔍 Admin organization query result:', { adminOrg, adminOrgError })
+      organization = adminOrg
+      
+      if (!organization?.id) {
+        // Fallback: find admin organization by name
+        const { data: fallbackOrg } = await supabaseClient
+          .from('organizations')
+          .select('id, name, type')
+          .eq('name', 'Admin Organization')
+          .single()
+          
+        organization = fallbackOrg
+      }
+    } else {
+      // Client: find organization where user is owner
+      console.log('🔍 This is client user, looking for user-owned organization...')
+      
+      const { data: userOrgs, error: userOrgsError } = await supabaseClient
+        .from('org_members')
+        .select('org_id, role, organizations(id, name, type)')
+        .eq('user_id', userId)
+        .eq('role', 'owner')
+        .single()
+        
+      console.log('🔍 User organization query result:', { userOrgs, userOrgsError })
+      
+      if (userOrgs?.organizations) {
+        organization = userOrgs.organizations
+      }
+    }
+  }
+  
+  // Fallback: if still no organization, find any usable one
+  if (!organization?.id) {
+    console.log('🔍 No specific organization found, using fallback strategy...')
+    
+    const { data: fallbackOrg } = await supabaseClient
+      .from('organizations')
+      .select('id, name, type')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single()
+      
+    organization = fallbackOrg
+  }
   
   if (!organization?.id) {
-    console.error('❌ Admin Organization not found - this should always exist')
+    console.error('❌ No organization found at all')
     return NextResponse.json(
-      { error: 'Admin Organization not found' },
+      { error: 'No organization found' },
       { status: 400 }
     )
   }

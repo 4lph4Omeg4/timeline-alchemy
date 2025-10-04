@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Upload, FileText, TrendingUp, Users, Save, Package, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { supabase } from '@/lib/supabase'
 
 interface TrendItem {
   trend: string
@@ -149,6 +150,10 @@ Metadata:
     }
     
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id
+
       const response = await fetch('/api/create-admin-package', {
         method: 'POST',
         headers: {
@@ -160,6 +165,7 @@ Metadata:
           excerpt: post.excerpt,
           hashtags: post.hashtags,
           suggestions: post.suggestions,
+          userId: userId,
           metadata: {
             ...post.metadata,
             bulkGenerated: true,
