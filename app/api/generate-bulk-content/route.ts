@@ -60,17 +60,20 @@ export async function POST(req: NextRequest) {
     
     const duration = Date.now() - startTime
     
+    // Type assertion for better TypeScript support
+    const bulkResult = result as BulkContentResult
+    
     console.log(`✅ Bulk generation completed in ${duration}ms`, {
-      successful: result.summary.successful,
-      total: result.summary.totalProcessed,
-      failed: result.summary.failed
+      successful: bulkResult.summary.successful,
+      total: bulkResult.summary.totalProcessed,
+      failed: bulkResult.summary.failed
     })
     
     return NextResponse.json({
-      success: result.success,
-      generatedPosts: result.generatedPosts,
-      summary: result.summary,
-      errors: result.errors,
+      success: bulkResult.success,
+      generatedPosts: bulkResult.generatedPosts,
+      summary: bulkResult.summary,
+      errors: bulkResult.errors,
       metadata: {
         contentType,
         language,
