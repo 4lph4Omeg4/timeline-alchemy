@@ -151,6 +151,13 @@ async function generateTrendContent(
   suggestions: string[]
 }> {
   
+  console.log('🚀 generateTrendContent called with:', {
+    trend: item.trend,
+    contentType,
+    language,
+    hasGateway: !!(process.env.AI_GATEWAY_URL && process.env.AI_GATEWAY_TOKEN)
+  })
+  
   const languageInstruction = language === 'en' ? 'Write in English.' : 'Write in Dutch.'
   
   // Simplified prompt similar to the working content generator
@@ -231,16 +238,22 @@ CRITICAL OUTPUT REQUIREMENTS:
     })
   })
 
+  console.log('🔍 API Response status:', response.status)
+  console.log('🔍 API Response ok:', response.ok)
+  
   if (!response.ok) {
     const errorText = await response.text()
     const apiType = gatewayUrl ? 'Vercel AI Gateway' : 'OpenAI API'
+    console.log('❌ API Error:', errorText)
     throw new Error(`${apiType} error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
   const data = await response.json()
   const content = data.choices?.[0]?.message?.content || ''
   
-  console.log('Raw AI content:', JSON.stringify(content)) // Debug logging
+  console.log('🔍 Full API Response:', JSON.stringify(data, null, 2))
+  console.log('🔍 Raw AI content:', JSON.stringify(content))
+  console.log('🔍 Content length:', content.length)
 
   // Improved content parsing for blog posts (same as working content generator)
   const lines = content.split('\n').filter((line: string) => line.trim())
@@ -266,7 +279,9 @@ CRITICAL OUTPUT REQUIREMENTS:
     }
   }
   
-  console.log('Final blog content:', JSON.stringify(blogContent)) // Debug logging
+  console.log('🔍 Final blog content:', JSON.stringify(blogContent))
+  console.log('🔍 Extracted title:', JSON.stringify(title))
+  console.log('🔍 Blog content length:', blogContent.length)
   
   // Generate excerpt (first 150 characters of content)
   const excerpt = blogContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
@@ -280,13 +295,17 @@ CRITICAL OUTPUT REQUIREMENTS:
     language === 'en' ? 'Create engaging visuals or infographics' : 'Maak boeiende visuals of infographics'
   ]
 
-  return {
+  const result = {
     content: blogContent,
     title,
     excerpt,
     hashtags,
     suggestions
   }
+  
+  console.log('✅ Final result for trend:', item.trend, result)
+  
+  return result
 }
 
 // Publish Sanitizer - removes internal suggestions from published content
