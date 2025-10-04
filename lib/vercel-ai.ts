@@ -53,7 +53,9 @@ Content Requirements:
 - Use double line breaks (\n\n) between paragraphs
 - Focus on practical insights and actionable advice`
 
-  const content = await callOpenAI(enhancedPrompt, 'gpt-4', 1500)
+  const gatewayUrl = process.env.AI_GATEWAY_URL
+  const model = gatewayUrl ? 'openai/gpt-5' : 'gpt-4' // Use openai/gpt-5 for gateway, gpt-4 for direct API
+  const content = await callOpenAI(enhancedPrompt, model, 1500)
   
   // Parse the structured response
   const lines = content.split('\n').filter(line => line.trim())

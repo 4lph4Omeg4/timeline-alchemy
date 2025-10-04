@@ -18,12 +18,12 @@ export async function GET(req: NextRequest) {
     
     // Test basic connectivity by making a simple request to the gateway
     try {
-      // Try different gateway endpoints to test connectivity
-      const endpoints = [
-        `${gatewayUrl}/models`,
-        `${gatewayUrl}/v1/models`,
-        `${gatewayUrl}/chat/completions`
-      ]
+    // Try different gateway endpoints to test connectivity
+    const endpoints = [
+      `${gatewayUrl}/v1/chat/completions`,
+      `${gatewayUrl}/chat/completions`,
+      `${gatewayUrl}/models`
+    ]
       
       let testResponse = null
       let workingEndpoint = null
@@ -133,28 +133,47 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    // Test the gateway with a simple request
-    const testResponse = await fetch(`${gatewayUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${gatewayToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4',
-        messages: [
-          {
-            role: 'user',
-            content: testPrompt || 'Hello, this is a test message. Please respond with "Gateway working!"'
-          }
-        ],
-        max_tokens: 50
-      })
-    })
+    // Test the gateway with different model names (Vercel AI Gateway format)
+    const modelsToTry = ['openai/gpt-5', 'openai/gpt-4', 'openai/gpt-3.5-turbo', 'gpt-4', 'gpt-3.5-turbo']
+    
+    let testResponse = null
+    let workingModel = null
+    
+    for (const model of modelsToTry) {
+      try {
+        testResponse = await fetch(`${gatewayUrl}/v1/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${gatewayToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              {
+                role: 'user',
+                content: testPrompt || 'Hello, this is a test message. Please respond with "Gateway working!"'
+              }
+            ],
+            max_tokens: 50
+          })
+        })
+        
+        if (testResponse.ok) {
+          workingModel = model
+          break
+        } else {
+          console.log(`❌ Model ${model} failed:`, testResponse.status)
+        }
+      } catch (modelError) {
+        console.log(`❌ Model ${model} error:`, modelError)
+        continue
+      }
+    }
 
-    if (!testResponse.ok) {
-      const errorText = await testResponse.text()
-      throw new Error(`Gateway test failed: ${testResponse.status} ${errorText}`)
+    if (!testResponse || !testResponse.ok) {
+      const errorText = testResponse ? await testResponse.text() : 'No response received'
+      throw new Error(`Gateway test failed: ${testResponse?.status || 'No response'} ${errorText}`)
     }
 
     const result = await testResponse.json()
@@ -166,7 +185,8 @@ export async function POST(req: NextRequest) {
       usage: result.usage,
       gateway: {
         url: gatewayUrl,
-        connected: true
+        connected: true,
+        workingModel: workingModel
       }
     })
 

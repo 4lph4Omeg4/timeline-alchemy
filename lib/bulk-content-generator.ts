@@ -217,11 +217,10 @@ NON-PUBLISHABLE (INTERNAL ONLY)
   
   if (gatewayUrl && gatewayToken) {
     console.log('🚀 Using Vercel AI Gateway for bulk content generation')
-    apiUrl = `${gatewayUrl}/chat/completions`
+    apiUrl = `${gatewayUrl}/v1/chat/completions`
     headers = {
       'Authorization': `Bearer ${gatewayToken}`,
-      'Content-Type': 'application/json',
-      'X-Vercel-AI-Gateway': 'true'
+      'Content-Type': 'application/json'
     }
   } else {
     console.log('⚠️ Using direct OpenAI API (no gateway configured)')
@@ -236,7 +235,7 @@ NON-PUBLISHABLE (INTERNAL ONLY)
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: 'gpt-4',
+      model: gatewayUrl ? 'openai/gpt-5' : 'gpt-4', // Vercel Gateway uses openai/gpt-5 format
       messages: [
         {
           role: 'system',
