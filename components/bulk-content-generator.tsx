@@ -112,7 +112,7 @@ export default function BulkContentGenerator() {
         
         // Generate social posts and images for each trend
         if (contentType === 'blog' || contentType === 'mixed') {
-          toast.info('Generating social posts and images...')
+          toast.loading('Generating social posts and images...', { duration: 3000 })
           await generateSocialPostsAndImages(result.generatedPosts)
         }
         
@@ -344,7 +344,7 @@ Metadata:
             
             {/* Grok Workflow Instructions */}
             <Alert className="bg-purple-900/20 border-purple-500/30">
-              <Alert Description>
+              <AlertDescription>
                 <div className="font-semibold text-purple-200 mb-2">📅 Daily Grok Workflow Instructions:</div>
                 <div className="text-sm text-gray-300 space-y-1">
                   <div><strong>1. Copy Grok Response:</strong> Take the JSON array from Grok and paste it directly above</div>
