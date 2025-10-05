@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       hasContent: !!content,
       contentLength: content?.length || 0,
       hasSocialPosts: !!socialPosts,
+      socialPostsKeys: socialPosts ? Object.keys(socialPosts) : [],
       hasGeneratedImage: !!generatedImage,
       userId: userId
     })
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
         title: title, // Clean title without category prefix
         content: content,
         category: category || 'uncategorized', // Store category in dedicated column
+        social_posts: socialPosts || {}, // 🔧 ALSO save in JSONB column for scheduled publisher
         state: 'published', // DIRECT PUBLISH - Available immediately!
         published_at: new Date().toISOString(), // Publish immediately
         created_by_admin: true, // 🎯 This makes it an admin packages immediately!
@@ -67,8 +69,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('✅ Admin package created successfully:', {
+      id: insertedPackage?.id,
+      title: insertedPackage?.title,
+      hasSocialPostsInJSONB: !!insertedPackage?.social_posts,
+      socialPostsKeysInJSONB: insertedPackage?.social_posts ? Object.keys(insertedPackage.social_posts) : []
+    })
+
     // Save social posts to separate table (like working content generator)
     if (socialPosts && Object.keys(socialPosts).length > 0) {
+      console.log('🔧 Saving social posts to separate table:', Object.keys(socialPosts))
       for (const [platform, socialContent] of Object.entries(socialPosts)) {
         await supabaseClient
           .from('social_posts')
@@ -78,6 +88,9 @@ export async function POST(request: NextRequest) {
             content: socialContent
           })
       }
+      console.log('✅ Social posts saved to separate table')
+    } else {
+      console.log('⚠️ No social posts to save to separate table')
     }
 
     // Save image to database
