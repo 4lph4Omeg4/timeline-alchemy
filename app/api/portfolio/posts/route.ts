@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
           rating_count: null,
           organizations: null,
           images: post.org_id && post.id ? [{
-            url: `${supabaseUrl}/storage/v1/object/public/blog-images/${post.org_id}/${post.id}-image.png`
+            url: `${supabaseUrl}/storage/v1/object/public/blog-images/${post.org_id}/${post.id}`
           }] : [],
           social_posts: socialPostsObj
         }

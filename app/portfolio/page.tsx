@@ -328,7 +328,7 @@ export default function PortfolioPage() {
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
                         <img 
-                          src={post.images[0].url} 
+                          src={`${post.images[0].url}-image.png`} 
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
                           onError={(e) => {
@@ -338,6 +338,8 @@ export default function PortfolioPage() {
                               img.src = img.src.replace('-image.png', '-post-image.png')
                             } else if (img.src.includes('-post-image.png')) {
                               img.src = img.src.replace('-post-image.png', '-main.png')
+                            } else if (img.src.includes('-main.png')) {
+                              img.src = img.src.replace('-main.png', '.png')
                             } else {
                               img.style.display = 'none'
                             }
@@ -391,7 +393,7 @@ export default function PortfolioPage() {
             {selectedPost.images && selectedPost.images.length > 0 && (
               <div className="w-full">
                 <img 
-                  src={selectedPost.images[0].url} 
+                  src={`${selectedPost.images[0].url}-image.png`} 
                   alt={selectedPost.title}
                   className="w-full h-64 md:h-80 object-cover rounded-lg border border-purple-500/20"
                   onError={(e) => {
@@ -401,6 +403,8 @@ export default function PortfolioPage() {
                       img.src = img.src.replace('-image.png', '-post-image.png')
                     } else if (img.src.includes('-post-image.png')) {
                       img.src = img.src.replace('-post-image.png', '-main.png')
+                    } else if (img.src.includes('-main.png')) {
+                      img.src = img.src.replace('-main.png', '.png')
                     } else {
                       img.style.display = 'none'
                     }
@@ -444,23 +448,13 @@ export default function PortfolioPage() {
                   <span className="mr-2">🔗</span>
                   Social Media Posts
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   {getSocialLinks(selectedPost).map((social, index) => (
                     <div key={index} className="bg-white/5 border border-purple-500/20 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="mb-2">
                         <h4 className="font-semibold text-purple-200 capitalize">
                           {social.platform}
                         </h4>
-                        {social.url !== '#' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(social.url, '_blank')}
-                            className="text-xs bg-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-purple-600/30"
-                          >
-                            Share
-                          </Button>
-                        )}
                       </div>
                       <p className="text-sm text-gray-300 leading-relaxed">
                         {social.content}
