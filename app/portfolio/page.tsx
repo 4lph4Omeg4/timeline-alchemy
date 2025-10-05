@@ -372,7 +372,7 @@ export default function PortfolioPage() {
         isOpen={isModalOpen}
         onClose={closePostModal}
         title={selectedPost?.title || ''}
-        className="max-w-[95vw]"
+        className="max-w-5xl"
       >
         {selectedPost && (
           <div className="space-y-6">
@@ -382,7 +382,7 @@ export default function PortfolioPage() {
                 <img 
                   src={selectedPost.images[0].url} 
                   alt={selectedPost.title}
-                  className="w-full h-64 md:h-80 object-cover rounded-lg border border-purple-500/20"
+                  className="w-full h-80 object-cover rounded-lg border border-purple-500/20"
                 />
               </div>
             )}
