@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Debug API - Checking database content')
 
     // Check total posts count
-    const { count: totalCount, error: countError } = await supabase
+    const { count: totalCount, error: countError } = await supabaseAdmin
       .from('blog_posts')
       .select('*', { count: 'exact', head: true })
 
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check published posts count
-    const { count: publishedCount, error: publishedCountError } = await supabase
+    const { count: publishedCount, error: publishedCountError } = await supabaseAdmin
       .from('blog_posts')
       .select('*', { count: 'exact', head: true })
       .eq('state', 'published')
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get sample posts
-    const { data: samplePosts, error: sampleError } = await supabase
+    const { data: samplePosts, error: sampleError } = await supabaseAdmin
       .from('blog_posts')
       .select('id, title, state, category, published_at, created_at')
       .limit(10)
@@ -38,18 +38,25 @@ export async function GET(request: NextRequest) {
     }
 
     // Get categories
-    const { data: categories, error: categoriesError } = await supabase
+    const { data: categories, error: categoriesError } = await supabaseAdmin
       .from('blog_posts')
       .select('category')
       .not('category', 'is', null)
 
     const uniqueCategories = Array.from(new Set(categories?.map(c => c.category) || []))
 
+    // Check organizations
+    const { data: orgs, error: orgError } = await supabaseAdmin
+      .from('organizations')
+      .select('id, name')
+      .limit(5)
+
     console.log('✅ Debug results:', {
       totalCount,
       publishedCount,
       samplePosts: samplePosts?.length || 0,
-      categories: uniqueCategories
+      categories: uniqueCategories,
+      organizations: orgs?.length || 0
     })
 
     return NextResponse.json({
@@ -57,6 +64,7 @@ export async function GET(request: NextRequest) {
       publishedPosts: publishedCount,
       samplePosts: samplePosts || [],
       categories: uniqueCategories,
+      organizations: orgs || [],
       message: 'Debug info retrieved successfully'
     })
 

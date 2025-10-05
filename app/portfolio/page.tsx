@@ -31,13 +31,29 @@ export default function PortfolioPage() {
       setError(null)
 
       console.log('🔍 Fetching posts for category:', selectedCategory)
+      console.log('🔍 API URL:', `/api/portfolio/posts?category=${selectedCategory}`)
 
-      const response = await fetch(`/api/portfolio/posts?category=${selectedCategory}`)
+      const response = await fetch(`/api/portfolio/posts?category=${selectedCategory}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-cache'
+      })
+      
+      console.log('📡 Response status:', response.status)
+      console.log('📡 Response ok:', response.ok)
       
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error('❌ API Error:', errorData)
-        throw new Error(errorData.error || 'Failed to fetch posts')
+        const errorText = await response.text()
+        console.error('❌ API Error Response:', errorText)
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          errorData = { error: errorText }
+        }
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
@@ -45,7 +61,7 @@ export default function PortfolioPage() {
       
       setPosts(data.posts || [])
     } catch (err) {
-      console.error('Error fetching posts:', err)
+      console.error('❌ Error fetching posts:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
@@ -119,6 +135,40 @@ export default function PortfolioPage() {
                 className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-blue-500/50 text-blue-200 hover:bg-gradient-to-r hover:from-blue-600/30 hover:to-purple-600/30 hover:border-blue-400 transition-all duration-300"
               >
                 🔍 Debug
+              </Button>
+              <Button 
+                onClick={async () => {
+                  try {
+                    console.log('🧪 Testing Portfolio API...')
+                    const response = await fetch('/api/portfolio/posts', {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      cache: 'no-cache'
+                    })
+                    console.log('🧪 Test Response Status:', response.status)
+                    console.log('🧪 Test Response OK:', response.ok)
+                    
+                    if (!response.ok) {
+                      const errorText = await response.text()
+                      console.error('🧪 Test Error:', errorText)
+                      alert(`API Test Failed:\nStatus: ${response.status}\nError: ${errorText}`)
+                      return
+                    }
+                    
+                    const data = await response.json()
+                    console.log('🧪 Test Data:', data)
+                    alert(`API Test Success!\nPosts: ${data.posts?.length || 0}\nTotal: ${data.total}\nCategory: ${data.category}`)
+                  } catch (err) {
+                    console.error('🧪 Test Error:', err)
+                    alert('API Test Failed: ' + (err instanceof Error ? err.message : 'Unknown error'))
+                  }
+                }}
+                variant="outline"
+                className="bg-gradient-to-r from-green-600/20 to-blue-600/20 border-green-500/50 text-green-200 hover:bg-gradient-to-r hover:from-green-600/30 hover:to-blue-600/30 hover:border-green-400 transition-all duration-300"
+              >
+                🧪 Test API
               </Button>
             </div>
           </div>

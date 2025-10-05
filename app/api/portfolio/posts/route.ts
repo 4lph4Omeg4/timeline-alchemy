@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import { BlogPost } from '@/types/index'
 
 interface DatabasePost {
@@ -27,55 +27,37 @@ interface DatabasePost {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 Portfolio API - Starting request')
+    
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category') || 'all'
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    console.log('🔍 Portfolio API - Fetching posts for category:', category)
+    console.log('🔍 Portfolio API - Parameters:', { category, limit, offset })
 
-    // First, let's check if we have any published posts at all
-    const { count: totalPublished, error: countError } = await supabase
+    // Test Supabase connection first
+    console.log('🔍 Testing Supabase connection...')
+    const { data: testData, error: testError } = await supabaseAdmin
       .from('blog_posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('state', 'published')
+      .select('count')
+      .limit(1)
 
-    if (countError) {
-      console.error('❌ Portfolio API - Count error:', countError)
+    if (testError) {
+      console.error('❌ Supabase connection error:', testError)
       return NextResponse.json(
-        { error: 'Failed to count posts', details: countError.message },
+        { error: 'Database connection failed', details: testError.message },
         { status: 500 }
       )
     }
 
-    console.log('📊 Total published posts:', totalPublished)
+    console.log('✅ Supabase connection OK')
 
-    // Build the query
-    let query = supabase
+    // Simplified query - only use columns that exist
+    let query = supabaseAdmin
       .from('blog_posts')
-      .select(`
-        id,
-        org_id,
-        title,
-        content,
-        excerpt,
-        category,
-        state,
-        published_at,
-        created_at,
-        updated_at,
-        average_rating,
-        rating_count,
-        organizations (
-          id,
-          name
-        ),
-        images (
-          id,
-          url
-        )
-      `)
-      .eq('state', 'published') // Only published posts
+      .select('id, org_id, title, content, category, state, published_at, created_at, updated_at')
+      .eq('state', 'published')
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -84,6 +66,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('category', category)
     }
 
+    console.log('🔍 Executing query...')
     const { data: posts, error } = await query
 
     if (error) {
@@ -95,39 +78,53 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`✅ Portfolio API - Found ${posts?.length || 0} posts for category: ${category}`)
-    console.log('📝 Sample posts:', posts?.slice(0, 2).map(p => ({ id: p.id, title: p.title, category: p.category })))
 
-    // Transform the data to match our interface
-    const transformedPosts: BlogPost[] = (posts || []).map((post: any) => ({
+    // Simple transformation
+    const transformedPosts = (posts || []).map((post: any) => ({
       id: post.id,
       org_id: post.org_id,
       title: post.title,
       content: post.content,
-      excerpt: post.excerpt,
+      excerpt: post.content ? post.content.substring(0, 200) + '...' : '', // Generate excerpt from content
       category: post.category,
-      state: post.state as 'draft' | 'scheduled' | 'published',
+      state: post.state,
       published_at: post.published_at,
       created_at: post.created_at,
       updated_at: post.updated_at,
-      average_rating: post.average_rating,
-      rating_count: post.rating_count,
-      organizations: post.organizations,
-      images: post.images
+      average_rating: null,
+      rating_count: null,
+      organizations: null,
+      images: []
     }))
 
-    return NextResponse.json({
+    const result = {
       posts: transformedPosts,
       total: transformedPosts.length,
-      totalPublished,
       category,
       limit,
-      offset
-    })
+      offset,
+      debug: {
+        supabaseConnected: true,
+        queryExecuted: true,
+        postsFound: posts?.length || 0
+      }
+    }
+
+    console.log('✅ Portfolio API - Returning result:', result)
+    return NextResponse.json(result)
 
   } catch (error) {
     console.error('❌ Portfolio API - Unexpected error:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        debug: {
+          supabaseConnected: false,
+          queryExecuted: false,
+          errorType: error instanceof Error ? error.constructor.name : 'Unknown'
+        }
+      },
       { status: 500 }
     )
   }
