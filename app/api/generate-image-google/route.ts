@@ -83,21 +83,29 @@ async function generateImageWithImagen(prompt: string): Promise<string> {
 
 async function fallbackToDallE(prompt: string) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-image`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ prompt })
-    })
-
-    if (!response.ok) {
-      throw new Error('DALL-E fallback failed')
+    // Import OpenAI directly instead of making API call
+    const OpenAI = (await import('openai')).default
+    
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured')
     }
 
-    const data = await response.json()
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt: `Cosmic, ethereal, mystical, warm golden light, magical atmosphere, fantasy elements, celestial vibes, otherworldly beauty, dreamlike quality, glowing effects, cosmic dust, stardust particles, aurora-like colors, mystical energy, enchanting, transcendent, divine light, heavenly glow, fantastical, surreal, mesmerizing, captivating, professional photography, high resolution, cinematic lighting, warm color palette, golden hour, magical realism, spiritual energy, cosmic wonder, ethereal glow, mystical aura, enchanting atmosphere, otherworldly, celestial beauty, divine inspiration, magical realism, warm and inviting, cosmically beautiful, fantastically stunning: ${prompt}`,
+      n: 1,
+      size: '1024x1024',
+      quality: 'standard',
+    })
+
+    const imageUrl = response.data?.[0]?.url || ''
+    
     return NextResponse.json({
-      imageUrl: data.imageUrl,
+      imageUrl,
       provider: 'dall-e-fallback',
       metadata: {
         model: 'dall-e-3',
