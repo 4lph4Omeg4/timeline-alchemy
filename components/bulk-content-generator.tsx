@@ -328,43 +328,9 @@ export default function BulkContentGenerator() {
             const imageData = await imageResponse.json()
             console.log('🌟 Cosmic image generated for', post.title)
             
-            // 🚀 PERMANENTLY SAVE IMAGE TO SUPABASE STORAGE
-            try {
-              console.log('🔄 Attempting to save image permanently...')
-              console.log('Image URL:', imageData.imageUrl)
-              console.log('Post ID:', `temp-${Date.now()}-${i}`)
-              console.log('Org ID:', 'e6c0db74-03ee-4bb3-b08d-d94512efab91')
-              
-              const saveImageResponse = await fetch('/api/save-image', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  imageUrl: imageData.imageUrl,
-                  postId: `temp-${Date.now()}-${i}`, // Temporary ID for bulk generation
-                  orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin org
-                  prompt: `AI generated image for: ${post.title}`
-                })
-              })
-
-              console.log('Save image response status:', saveImageResponse.status)
-              
-              if (saveImageResponse.ok) {
-                const saveImageData = await saveImageResponse.json()
-                post.generatedImage = saveImageData.permanentUrl
-                console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
-              } else {
-                const errorData = await saveImageResponse.json()
-                console.error('❌ Failed to save image permanently:', errorData)
-                console.warn('⚠️ Using temporary URL as fallback')
-                post.generatedImage = imageData.imageUrl
-              }
-            } catch (saveError) {
-              console.error('❌ Error saving image permanently:', saveError)
-              console.warn('⚠️ Using temporary URL as fallback')
-              post.generatedImage = imageData.imageUrl
-            }
+            // Store temporary image URL - will be saved permanently after post creation
+            post.generatedImage = imageData.imageUrl
+            console.log('🌟 Image generated, will be saved permanently after post creation')
           } else {
             console.error('❌ Image generation failed for', post.title, 'Status:', imageResponse.status)
           }

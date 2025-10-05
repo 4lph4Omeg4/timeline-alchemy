@@ -139,6 +139,35 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    // Save image permanently AFTER post creation (now we have the real postId)
+    if (generatedImage && insertedPackage?.id) {
+      try {
+        console.log('🔄 Saving image permanently with real postId:', insertedPackage.id)
+        
+        const saveImageResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/save-image`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageUrl: generatedImage,
+            postId: insertedPackage.id, // Real postId now!
+            orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+            prompt: `AI generated image for: ${title}`
+          })
+        })
+
+        if (saveImageResponse.ok) {
+          const saveImageData = await saveImageResponse.json()
+          console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
+        } else {
+          console.warn('⚠️ Failed to save image permanently, using temporary URL')
+        }
+      } catch (imageError) {
+        console.error('❌ Error saving image permanently:', imageError)
+      }
+    }
+    
     console.log('✅ Admin package created successfully:', insertedPackage?.id)
 
     return NextResponse.json({
