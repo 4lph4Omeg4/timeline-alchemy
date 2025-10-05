@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if we have Google Cloud credentials
-    if (!process.env.GOOGLE_CLOUD_PROJECT_ID || !process.env.GOOGLE_CLOUD_CREDENTIALS) {
+    if (!process.env.GOOGLE_CLOUD_PROJECT_ID || !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
       console.log('🔄 Google Cloud not configured, falling back to DALL-E')
       return await fallbackToDallE(prompt)
     }
@@ -48,11 +48,10 @@ export async function POST(request: NextRequest) {
 async function generateImageWithImagen(prompt: string): Promise<string> {
   const { VertexAI } = await import('@google-cloud/vertexai')
   
-  // Initialize Vertex AI
+  // Initialize Vertex AI with environment variable for credentials
   const vertexAI = new VertexAI({
     project: process.env.GOOGLE_CLOUD_PROJECT_ID,
     location: 'us-central1',
-    credentials: JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS!)
   })
 
   const generativeModel = vertexAI.getGenerativeModel({

@@ -40,12 +40,19 @@ Voeg deze variabelen toe aan je `.env.local`:
 ```bash
 # Google Cloud Configuration
 GOOGLE_CLOUD_PROJECT_ID=your-project-id-here
-GOOGLE_CLOUD_CREDENTIALS={"type":"service_account","project_id":"your-project-id",...}
+GOOGLE_APPLICATION_CREDENTIALS=path/to/your/service-account-key.json
 ```
 
 **Belangrijk:** 
 - Vervang `your-project-id-here` met je echte Project ID
-- Vervang de hele JSON string met de inhoud van je gedownloade service account key
+- Vervang `path/to/your/service-account-key.json` met het pad naar je gedownloade JSON bestand
+
+**Alternatief (JSON in environment variable):**
+```bash
+# Google Cloud Configuration
+GOOGLE_CLOUD_PROJECT_ID=your-project-id-here
+GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account","project_id":"your-project-id",...}
+```
 
 ## 3. Pricing & Limits
 
