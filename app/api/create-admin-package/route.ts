@@ -5,6 +5,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { title, content, excerpt, hashtags, suggestions, userId, socialPosts, generatedImage, category } = body
+    
+    console.log('🔍 Debug - Received generatedImage:', generatedImage)
+    console.log('🔍 Debug - GeneratedImage type:', typeof generatedImage)
+    console.log('🔍 Debug - GeneratedImage length:', generatedImage?.length)
 
     console.log('🔍 Create admin package request:', {
       title: title,
@@ -140,31 +144,85 @@ export async function POST(request: NextRequest) {
     }
     
     // Save image permanently AFTER post creation (now we have the real postId)
+    console.log('🔍 Debug - generatedImage:', generatedImage)
+    console.log('🔍 Debug - insertedPackage?.id:', insertedPackage?.id)
+    
     if (generatedImage && insertedPackage?.id) {
       try {
         console.log('🔄 Saving image permanently with real postId:', insertedPackage.id)
+        console.log('🔄 Image URL:', generatedImage)
         
-        const saveImageResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/save-image`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageUrl: generatedImage,
-            postId: insertedPackage.id, // Real postId now!
-            orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+        // Download the image from DALL-E URL
+        const imageResponse = await fetch(generatedImage)
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to download image: ${imageResponse.status}`)
+        }
+
+        const imageBlob = await imageResponse.blob()
+        const arrayBuffer = await imageBlob.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        console.log('🔄 Image downloaded, size:', buffer.length)
+
+        // Generate unique filename
+        const timestamp = Date.now()
+        const filename = `e6c0db74-03ee-4bb3-b08d-d94512efab91/${insertedPackage.id}-${timestamp}.png`
+        console.log('🔄 Uploading to filename:', filename)
+
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          .from('blog-images')
+          .upload(filename, buffer, {
+            contentType: 'image/png',
+            upsert: false
+          })
+
+        if (uploadError) {
+          console.error('❌ Upload error:', uploadError)
+          throw new Error(`Failed to upload image: ${uploadError.message}`)
+        }
+
+        console.log('✅ Upload successful:', uploadData)
+
+        // Get public URL
+        const { data: { publicUrl } } = supabaseClient.storage
+          .from('blog-images')
+          .getPublicUrl(filename)
+
+        console.log('✅ Public URL:', publicUrl)
+
+        // Save to images table
+        const { error: dbError } = await supabaseClient
+          .from('images')
+          .insert({
+            org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+            post_id: insertedPackage.id,
+            url: publicUrl,
             prompt: `AI generated image for: ${title}`
           })
-        })
 
-        if (saveImageResponse.ok) {
-          const saveImageData = await saveImageResponse.json()
-          console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
-        } else {
-          console.warn('⚠️ Failed to save image permanently, using temporary URL')
+        if (dbError) {
+          console.error('❌ Database error:', dbError)
+          throw new Error(`Failed to save image to database: ${dbError.message}`)
         }
+
+        console.log('✅ Image saved permanently to database:', publicUrl)
+        
       } catch (imageError) {
         console.error('❌ Error saving image permanently:', imageError)
+        // Fallback: save temporary URL to database
+        try {
+          await supabaseClient
+            .from('images')
+            .insert({
+              org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+              post_id: insertedPackage.id,
+              url: generatedImage,
+              prompt: `AI generated image for: ${title}`
+            })
+          console.log('⚠️ Saved temporary URL as fallback')
+        } catch (fallbackError) {
+          console.error('❌ Fallback save also failed:', fallbackError)
+        }
       }
     }
     
