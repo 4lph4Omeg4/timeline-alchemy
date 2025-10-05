@@ -264,29 +264,51 @@ export default function BulkContentGenerator() {
             console.log('🎉 Social posts generated successfully for', post.title)
           } else {
             console.error('❌ Social posts failed for', post.title, 'Status:', socialResponse.status)
-            // Create comprehensive fallback social posts if API fails
+            // Create platform-optimized fallback social posts if API fails
+            const shortTitle = post.title.length > 50 ? post.title.substring(0, 47) + '...' : post.title
+            
             post.socialPosts = {
-              twitter: `🚀 ${post.title}\n\n${post.content.substring(0, 200)}...\n\n#AI #Content #Innovation`,
-              instagram: `✨ ${post.title} ✨\n\n${post.content.substring(0, 300)}...\n\n#AI #Content #Innovation #Tech`,
-              facebook: `${post.title}\n\n${post.content.substring(0, 500)}...\n\n#Content #AI #Innovation #Technology`,
-              linkedin: `Professional insight: ${post.title}\n\n${post.content.substring(0, 800)}...\n\n#Professional #AI #Business #Innovation`,
-              discord: `${post.title} 🎮\n\n${post.content.substring(0, 300)}...\n\n#AI #Community #Tech #Discussion`,
-              reddit: `${post.title} 🤖\n\n${post.content.substring(0, 300)}...\n\n#AI #Discussion #Tech #Innovation`,
-              telegram: `📢 ${post.title}\n\n${post.content.substring(0, 400)}...\n\n#AI #Tech #Innovation #Update`
+              twitter: `🚀 ${shortTitle}\n\n${post.content.substring(0, 150)}...\n\n#AI #Content #Innovation`,
+              instagram: `✨ ${shortTitle} ✨\n\n${post.content.substring(0, 200)}...\n\n#AI #Content #Innovation #Tech`,
+              facebook: `${shortTitle}\n\n${post.content.substring(0, 400)}...\n\n#Content #AI #Innovation #Technology`,
+              linkedin: `Professional insight: ${shortTitle}\n\n${post.content.substring(0, 600)}...\n\n#Professional #AI #Business #Innovation`,
+              discord: `${shortTitle} 🎮\n\n${post.content.substring(0, 200)}...\n\n#AI #Community #Tech #Discussion`,
+              reddit: `${shortTitle} 🤖\n\n${post.content.substring(0, 200)}...\n\n#AI #Discussion #Tech #Innovation`,
+              telegram: `📢 ${shortTitle}\n\n${post.content.substring(0, 300)}...\n\n#AI #Tech #Innovation #Update`
             }
           }
         } catch (socialError) {
           console.error('❌ Social generation error:', socialError)
           // Ultimate fallback - ensure all platforms have posts
+          const shortTitle = post.title.length > 50 ? post.title.substring(0, 47) + '...' : post.title
+          
           post.socialPosts = {
-            twitter: `🚀 ${post.title}\n\n${post.content.substring(0, 200)}...\n\n#AI #Content #Innovation`,
-            instagram: `✨ ${post.title} ✨\n\n${post.content.substring(0, 300)}...\n\n#AI #Content #Innovation #Tech`,
-            facebook: `${post.title}\n\n${post.content.substring(0, 500)}...\n\n#Content #AI #Innovation #Technology`,
-            linkedin: `Professional insight: ${post.title}\n\n${post.content.substring(0, 800)}...\n\n#Professional #AI #Business #Innovation`,
-            discord: `${post.title} 🎮\n\n${post.content.substring(0, 300)}...\n\n#AI #Community #Tech #Discussion`,
-            reddit: `${post.title} 🤖\n\n${post.content.substring(0, 300)}...\n\n#AI #Discussion #Tech #Innovation`,
-            telegram: `📢 ${post.title}\n\n${post.content.substring(0, 400)}...\n\n#AI #Tech #Innovation #Update`
+            twitter: `🚀 ${shortTitle}\n\n${post.content.substring(0, 150)}...\n\n#AI #Content #Innovation`,
+            instagram: `✨ ${shortTitle} ✨\n\n${post.content.substring(0, 200)}...\n\n#AI #Content #Innovation #Tech`,
+            facebook: `${shortTitle}\n\n${post.content.substring(0, 400)}...\n\n#Content #AI #Innovation #Technology`,
+            linkedin: `Professional insight: ${shortTitle}\n\n${post.content.substring(0, 600)}...\n\n#Professional #AI #Business #Innovation`,
+            discord: `${shortTitle} 🎮\n\n${post.content.substring(0, 200)}...\n\n#AI #Community #Tech #Discussion`,
+            reddit: `${shortTitle} 🤖\n\n${post.content.substring(0, 200)}...\n\n#AI #Discussion #Tech #Innovation`,
+            telegram: `📢 ${shortTitle}\n\n${post.content.substring(0, 300)}...\n\n#AI #Tech #Innovation #Update`
           }
+        }
+        
+        // Validate and fix Twitter posts (max 280 characters)
+        if (post.socialPosts?.twitter) {
+          const twitterPost = post.socialPosts.twitter
+          if (twitterPost.length > 280) {
+            // Truncate Twitter post to fit within 280 characters
+            const truncatedContent = twitterPost.substring(0, 250) + '...'
+            post.socialPosts.twitter = truncatedContent
+            console.log('🔧 Twitter post truncated to fit 280 character limit')
+          }
+        }
+        
+        // Ensure Telegram post exists
+        if (!post.socialPosts?.telegram) {
+          const shortTitle = post.title.length > 50 ? post.title.substring(0, 47) + '...' : post.title
+          post.socialPosts.telegram = `📢 ${shortTitle}\n\n${post.content.substring(0, 300)}...\n\n#AI #Tech #Innovation #Update`
+          console.log('🔧 Telegram post added as fallback')
         }
         
         // 🌟 TOPIC-SPECIFIC IMAGE GENERATION
