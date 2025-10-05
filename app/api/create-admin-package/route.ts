@@ -45,12 +45,12 @@ export async function POST(request: NextRequest) {
       .from('blog_posts')
       .insert({
         org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID  
-        title: category ? `[${category}] ${title}` : title,
+        title: title, // Clean title without category prefix
         content: content,
+        category: category || 'uncategorized', // Store category in dedicated column
         state: 'published', // DIRECT PUBLISH - Available immediately!
         published_at: new Date().toISOString(), // Publish immediately
         created_by_admin: true, // 🎯 This makes it an admin packages immediately!
-        // Category will be stored in title prefix for now: [Category] Title
       })
       .select()
       .single()
