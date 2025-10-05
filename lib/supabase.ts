@@ -34,11 +34,11 @@ if (typeof window !== 'undefined') {
       }
     } else {
       // Override the existing digest function to handle unsupported algorithms
-      const originalDigest = window.crypto.subtle.digest
+      const originalDigest = window.crypto.subtle.digest.bind(window.crypto.subtle)
       (window as any).crypto.subtle.digest = async (algorithm: string, data: ArrayBuffer) => {
         try {
           // Try the original function first
-          return await originalDigest.call(window.crypto.subtle, algorithm, data)
+          return await originalDigest(algorithm, data)
         } catch (error) {
           // If it fails with "Unrecognized name" or similar, use our fallback
           console.warn('crypto.subtle.digest failed with algorithm:', algorithm, 'using fallback')
