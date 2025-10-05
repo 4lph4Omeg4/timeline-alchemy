@@ -438,16 +438,6 @@ export default function PortfolioPage() {
                 </div>
               </div>
             )}
-
-            {/* Close Button */}
-            <div className="flex justify-end pt-4 border-t border-purple-500/30">
-              <Button
-                onClick={closePostModal}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold"
-              >
-                Sluiten
-              </Button>
-            </div>
           </div>
         )}
       </Modal>
