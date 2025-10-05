@@ -24,7 +24,7 @@ const generateSocialMediaPosts = async (title: string, content: string) => {
       body: JSON.stringify({
         title,
         content,
-        platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
+        platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'telegram']
       })
     })
 
@@ -43,7 +43,8 @@ const generateSocialMediaPosts = async (title: string, content: string) => {
     twitter: `${title}\n\n${content.substring(0, 100)}...\n\n#AI #Content`,
     linkedin: `Professional insight: ${title}\n\n${content.substring(0, 180)}...\n\n#Professional #AI #Content`,
     discord: `${title} 🎮\n\n${content.substring(0, 120)}...\n\n#AI #Community #Tech`,
-    reddit: `${title} 🤖\n\n${content.substring(0, 120)}...\n\n#AI #Discussion #Tech`
+    reddit: `${title} 🤖\n\n${content.substring(0, 120)}...\n\n#AI #Discussion #Tech`,
+    telegram: `📢 ${title}\n\n${content.substring(0, 300)}...\n\n#AI #Tech #Innovation #Update`
   }
 }
 
@@ -65,6 +66,7 @@ interface GeneratedContent {
     linkedin: string
     discord: string
     reddit: string
+    telegram: string
   }
 }
 
@@ -147,7 +149,7 @@ export default function ContentPackagePage() {
       if (platform === 'all') {
         // Schedule all platforms
         const scheduledDate = new Date(scheduleDateTime)
-        const platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
+        const platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'telegram']
         let successCount = 0
         let errorCount = 0
 
@@ -820,6 +822,30 @@ export default function ContentPackagePage() {
               <p className="text-gray-300 select-all">{socialPosts.reddit}</p>
             </div>
           </div>
+
+          <Separator className="bg-gray-700" />
+
+          {/* Telegram */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">📢</span>
+                </div>
+                <h4 className="font-semibold text-white">Telegram</h4>
+              </div>
+            <Button
+                size="sm"
+                onClick={() => openScheduleModal('telegram')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+              >
+                📅 Schedule
+            </Button>
+            </div>
+            <div className="bg-gray-700 p-4 rounded-lg">
+              <p className="text-gray-300 select-all">{socialPosts.telegram}</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
              )}
@@ -940,6 +966,7 @@ export default function ContentPackagePage() {
                     <li>• LinkedIn Post</li>
                     <li>• Discord Post</li>
                     <li>• Reddit Post</li>
+                    <li>• Telegram Post</li>
                     {generatedContent?.image?.url && (
                       <li>• Generated Image (included with all posts)</li>
                     )}
