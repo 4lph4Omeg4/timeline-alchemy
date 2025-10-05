@@ -425,6 +425,26 @@ export const MINLI_TANKSTATION_PROFILE: BusinessProfile = {
 
 export async function generateImage(prompt: string): Promise<string> {
   try {
+    // Try Google Imagen first, fallback to DALL-E
+    try {
+      const response = await fetch('/api/generate-image-google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('✅ Image generated with Google Imagen')
+        return data.imageUrl
+      }
+    } catch (googleError) {
+      console.log('🔄 Google Imagen failed, falling back to DALL-E:', googleError)
+    }
+
+    // Fallback to DALL-E
     const openai = getOpenAI()
     const response = await openai.images.generate({
       model: 'dall-e-3',
@@ -434,6 +454,7 @@ export async function generateImage(prompt: string): Promise<string> {
       quality: 'standard',
     })
 
+    console.log('✅ Image generated with DALL-E fallback')
     return response.data?.[0]?.url || ''
   } catch (error) {
     console.error('Error generating image:', error)
