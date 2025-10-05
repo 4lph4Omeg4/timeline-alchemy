@@ -242,23 +242,64 @@ export default function ContentEditorPage() {
         }
       }
 
-      // If there's a generated image, save it too
+      // If there's a generated image, save it permanently to Supabase Storage
       if (generatedImageUrl) {
-        console.log('Saving image with URL:', generatedImageUrl)
-        const { error: imageError } = await (supabase as any)
-          .from('images')
-          .insert({
-            org_id: userOrgId,
-            post_id: postData.id,
-            url: generatedImageUrl,
+        console.log('Saving image permanently with URL:', generatedImageUrl)
+        try {
+          // Use the save-image API to permanently store the image
+          const saveImageResponse = await fetch('/api/save-image', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageUrl: generatedImageUrl,
+              postId: postData.id,
+              orgId: userOrgId,
+              prompt: `AI generated image for: ${title}`
+            })
           })
 
-        if (imageError) {
-          console.error('Failed to save image:', imageError)
-          toast.error('Post saved but image failed to save')
-        } else {
-          console.log('Image saved successfully')
-          toast.success('Post, social posts, and image saved successfully!')
+          if (saveImageResponse.ok) {
+            const saveImageData = await saveImageResponse.json()
+            console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
+            toast.success('Post, social posts, and image saved successfully!')
+          } else {
+            console.warn('⚠️ Failed to save image permanently, using temporary URL')
+            // Fallback to temporary URL if permanent save fails
+            const { error: imageError } = await (supabase as any)
+              .from('images')
+              .insert({
+                org_id: userOrgId,
+                post_id: postData.id,
+                url: generatedImageUrl,
+              })
+
+            if (imageError) {
+              console.error('Failed to save image:', imageError)
+              toast.error('Post saved but image failed to save')
+            } else {
+              console.log('Image saved with temporary URL')
+              toast.success('Post and social posts saved successfully! (Image saved temporarily)')
+            }
+          }
+        } catch (imageError) {
+          console.error('Error saving image permanently:', imageError)
+          // Fallback to temporary URL
+          const { error: fallbackError } = await (supabase as any)
+            .from('images')
+            .insert({
+              org_id: userOrgId,
+              post_id: postData.id,
+              url: generatedImageUrl,
+            })
+
+          if (fallbackError) {
+            console.error('Failed to save image:', fallbackError)
+            toast.error('Post saved but image failed to save')
+          } else {
+            toast.success('Post and social posts saved successfully! (Image saved temporarily)')
+          }
         }
       } else {
         toast.success('Post and social posts saved successfully!')

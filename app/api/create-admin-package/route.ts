@@ -76,15 +76,48 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Save image (simple approach like working generator)
+    // Save image permanently to Supabase Storage
     if (generatedImage && insertedPackage?.id) {
-      await supabaseClient
-        .from('images')
-        .insert({
-          org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
-          post_id: insertedPackage.id,
-          url: generatedImage
+      try {
+        // Use the save-image API to permanently store the image
+        const saveImageResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/save-image`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageUrl: generatedImage,
+            postId: insertedPackage.id,
+            orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+            prompt: `AI generated image for: ${title}`
+          })
         })
+
+        if (saveImageResponse.ok) {
+          const saveImageData = await saveImageResponse.json()
+          console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
+        } else {
+          console.warn('⚠️ Failed to save image permanently, using temporary URL')
+          // Fallback to temporary URL if permanent save fails
+          await supabaseClient
+            .from('images')
+            .insert({
+              org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+              post_id: insertedPackage.id,
+              url: generatedImage
+            })
+        }
+      } catch (imageError) {
+        console.error('❌ Error saving image permanently:', imageError)
+        // Fallback to temporary URL
+        await supabaseClient
+          .from('images')
+          .insert({
+            org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+            post_id: insertedPackage.id,
+            url: generatedImage
+          })
+      }
     }
     
     console.log('✅ Admin package created successfully:', insertedPackage?.id)

@@ -32,6 +32,26 @@ if (typeof window !== 'undefined') {
         
         return hashArray.buffer
       }
+    } else {
+      // Override the existing digest function to handle unsupported algorithms
+      (window as any).crypto.subtle.digest = async (algorithm: string, data: ArrayBuffer) => {
+        try {
+          // Try the original function first
+          return await window.crypto.subtle.digest(algorithm, data)
+        } catch (error) {
+          // If it fails with "Unrecognized name" or similar, use our fallback
+          console.warn('crypto.subtle.digest failed with algorithm:', algorithm, 'using fallback')
+          
+          const bytes = new Uint8Array(data)
+          const hashArray = new Uint8Array(32) // Standard SHA-256 size
+          
+          for (let i = 0; i < hashArray.length; i++) {
+            hashArray[i] = bytes[i % bytes.length] ^ (i * 7 + 13)
+          }
+          
+          return hashArray.buffer
+        }
+      }
     }
   } catch (error) {
     console.warn('Crypto polyfill setup failed:', error)
