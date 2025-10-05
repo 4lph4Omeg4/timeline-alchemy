@@ -144,73 +144,15 @@ export default function PortfolioPage() {
             <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
               Ontdek onze collectie van gepubliceerde content, georganiseerd per categorie
             </p>
-            <div className="flex justify-center space-x-4">
-              <Link href="/auth/signin">
+            <div className="flex justify-center">
+              <Link href="/">
                 <Button 
                   variant="outline"
-                  className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300"
+                  className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300 px-8 py-3 text-lg"
                 >
-                  Inloggen
+                  ← Terug naar Home
                 </Button>
               </Link>
-              <Link href="/auth/signup">
-                <Button 
-                  className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-500 hover:via-pink-500 hover:to-purple-500 text-white font-bold shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
-                >
-                  Aanmelden
-                </Button>
-              </Link>
-              <Button 
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/debug/portfolio')
-                    const data = await response.json()
-                    console.log('🔍 Debug Info:', data)
-                    alert(`Debug Info:\nTotal Posts: ${data.totalPosts}\nPublished Posts: ${data.publishedPosts}\nCategories: ${data.categories?.join(', ') || 'None'}`)
-                  } catch (err) {
-                    console.error('Debug error:', err)
-                    alert('Debug failed: ' + (err instanceof Error ? err.message : 'Unknown error'))
-                  }
-                }}
-                variant="outline"
-                className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-blue-500/50 text-blue-200 hover:bg-gradient-to-r hover:from-blue-600/30 hover:to-purple-600/30 hover:border-blue-400 transition-all duration-300"
-              >
-                🔍 Debug
-              </Button>
-              <Button 
-                onClick={async () => {
-                  try {
-                    console.log('🧪 Testing Portfolio API...')
-                    const response = await fetch('/api/portfolio/posts', {
-                      method: 'GET',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      cache: 'no-cache'
-                    })
-                    console.log('🧪 Test Response Status:', response.status)
-                    console.log('🧪 Test Response OK:', response.ok)
-                    
-                    if (!response.ok) {
-                      const errorText = await response.text()
-                      console.error('🧪 Test Error:', errorText)
-                      alert(`API Test Failed:\nStatus: ${response.status}\nError: ${errorText}`)
-                      return
-                    }
-                    
-                    const data = await response.json()
-                    console.log('🧪 Test Data:', data)
-                    alert(`API Test Success!\nPosts: ${data.posts?.length || 0}\nTotal: ${data.total}\nCategory: ${data.category}`)
-                  } catch (err) {
-                    console.error('🧪 Test Error:', err)
-                    alert('API Test Failed: ' + (err instanceof Error ? err.message : 'Unknown error'))
-                  }
-                }}
-                variant="outline"
-                className="bg-gradient-to-r from-green-600/20 to-blue-600/20 border-green-500/50 text-green-200 hover:bg-gradient-to-r hover:from-green-600/30 hover:to-blue-600/30 hover:border-green-400 transition-all duration-300"
-              >
-                🧪 Test API
-              </Button>
             </div>
           </div>
         </div>
@@ -332,7 +274,18 @@ export default function PortfolioPage() {
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
                         />
+                        {/* Post Title */}
+                        <h3 className="text-lg font-semibold text-white mt-3 mb-2">
+                          {post.title}
+                        </h3>
                       </div>
+                    )}
+                    
+                    {/* Post Title (if no image) */}
+                    {(!post.images || post.images.length === 0) && (
+                      <h3 className="text-lg font-semibold text-white mb-3">
+                        {post.title}
+                      </h3>
                     )}
                     
                     {/* Post Stats */}
