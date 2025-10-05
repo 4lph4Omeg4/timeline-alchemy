@@ -372,7 +372,7 @@ export default function PortfolioPage() {
         isOpen={isModalOpen}
         onClose={closePostModal}
         title={selectedPost?.title || ''}
-        className="max-w-7xl"
+        className="max-w-[95vw]"
       >
         {selectedPost && (
           <div className="space-y-6">
