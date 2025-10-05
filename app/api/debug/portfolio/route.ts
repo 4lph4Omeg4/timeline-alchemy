@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       .select('category')
       .not('category', 'is', null)
 
-    const uniqueCategories = Array.from(new Set(categories?.map(c => c.category) || []))
+    const uniqueCategories = Array.from(new Set((categories as any[])?.map(c => c.category) || []))
 
     // Check organizations
     const { data: orgs, error: orgError } = await supabaseAdmin
