@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const filename = `${orgId}/${postId}-${timestamp}.png`
     console.log('Uploading to filename:', filename)
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (use 'blog-images' bucket)
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('blog-images')
       .upload(filename, buffer, {

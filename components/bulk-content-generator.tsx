@@ -330,6 +330,11 @@ export default function BulkContentGenerator() {
             
             // 🚀 PERMANENTLY SAVE IMAGE TO SUPABASE STORAGE
             try {
+              console.log('🔄 Attempting to save image permanently...')
+              console.log('Image URL:', imageData.imageUrl)
+              console.log('Post ID:', `temp-${Date.now()}-${i}`)
+              console.log('Org ID:', 'e6c0db74-03ee-4bb3-b08d-d94512efab91')
+              
               const saveImageResponse = await fetch('/api/save-image', {
                 method: 'POST',
                 headers: {
@@ -343,16 +348,21 @@ export default function BulkContentGenerator() {
                 })
               })
 
+              console.log('Save image response status:', saveImageResponse.status)
+              
               if (saveImageResponse.ok) {
                 const saveImageData = await saveImageResponse.json()
                 post.generatedImage = saveImageData.permanentUrl
                 console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
               } else {
-                console.warn('⚠️ Failed to save image permanently, using temporary URL')
+                const errorData = await saveImageResponse.json()
+                console.error('❌ Failed to save image permanently:', errorData)
+                console.warn('⚠️ Using temporary URL as fallback')
                 post.generatedImage = imageData.imageUrl
               }
             } catch (saveError) {
               console.error('❌ Error saving image permanently:', saveError)
+              console.warn('⚠️ Using temporary URL as fallback')
               post.generatedImage = imageData.imageUrl
             }
           } else {
