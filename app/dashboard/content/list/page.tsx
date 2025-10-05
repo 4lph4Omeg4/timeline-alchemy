@@ -288,11 +288,18 @@ export default function ContentListPage() {
               {/* All Content */}
               <Button
                 variant={selectedCategory === 'all' ? 'default' : 'ghost'}
-                className="w-full justify-start text-left"
+                className={`w-full justify-start text-left ${
+                  selectedCategory === 'all' 
+                    ? 'bg-purple-600 text-white border-purple-500' 
+                    : 'hover:bg-gray-800'
+                }`}
                 onClick={() => setSelectedCategory('all')}
               >
                 <span className="flex items-center justify-between w-full">
-                  <span>🌟 All Content</span>
+                  <span className="flex items-center gap-2">
+                    🌟 All Content
+                    {selectedCategory === 'all' && <span className="text-xs">✓</span>}
+                  </span>
                   <Badge variant="secondary">{posts.length}</Badge>
                 </span>
               </Button>
@@ -302,17 +309,25 @@ export default function ContentListPage() {
                 <Button
                   key={category.id}
                   variant={selectedCategory === category.id ? 'default' : 'ghost'}
-                  className="w-full justify-start text-left h-auto py-2"
+                  className={`w-full justify-start text-left h-auto py-2 ${
+                    selectedCategory === category.id 
+                      ? 'bg-purple-600 text-white border-purple-500' 
+                      : 'hover:bg-gray-800'
+                  }`}
                   onClick={() => setSelectedCategory(category.id)}
                 >
                   <span className="flex flex-col items-start w-full">
                     <span className="text-sm font-medium flex items-center gap-2">
                       {category.emoji} {category.label.split(' & ')[0]}
+                      {selectedCategory === category.id && <span className="text-xs">✓</span>}
                     </span>
                     <span className="text-xs text-gray-400 truncate w-full">
                       {category.label.split(' & ')[1] && category.label.split(' & ')[1]}
                     </span>
-                    <Badge variant="secondary" className="mt-1">
+                    <Badge 
+                      variant={selectedCategory === category.id ? "default" : "secondary"} 
+                      className="mt-1"
+                    >
                       {categoryCounts[category.id] || 0}
                     </Badge>
                   </span>
@@ -325,18 +340,32 @@ export default function ContentListPage() {
         {/* Content Area */}
         <div className="lg:col-span-3 space-y-6">
           {/* Current Selection */}
-          <div className="flex items-center gap-2">
-            {selectedCategory === 'all' ? (
-              <span className="text-lg text-white">🌟 All Content</span>
-            ) : (
-              <span className="text-lg text-white flex items-center gap-2">
-                {CONTENT_CATEGORIES.find(cat => cat.id === selectedCategory)?.emoji}
-                {CONTENT_CATEGORIES.find(cat => cat.id === selectedCategory)?.label.split(' & ')[0]}
-              </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {selectedCategory === 'all' ? (
+                <span className="text-lg text-white">🌟 All Content</span>
+              ) : (
+                <span className="text-lg text-white flex items-center gap-2">
+                  {CONTENT_CATEGORIES.find(cat => cat.id === selectedCategory)?.emoji}
+                  {CONTENT_CATEGORIES.find(cat => cat.id === selectedCategory)?.label.split(' & ')[0]}
+                </span>
+              )}
+              <Badge variant="outline" className="text-purple-300 border-purple-500">
+                {selectedCategory === 'all' ? posts.length : categoryCounts[selectedCategory] || 0} articles
+              </Badge>
+            </div>
+            
+            {/* Clear Filter Button */}
+            {selectedCategory !== 'all' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCategory('all')}
+                className="text-gray-300 border-gray-600 hover:bg-gray-800"
+              >
+                ✨ Show All Categories
+              </Button>
             )}
-            <Badge variant="outline" className="text-purple-300 border-purple-500">
-              {selectedCategory === 'all' ? posts.length : categoryCounts[selectedCategory] || 0} articles
-            </Badge>
           </div>
 
           {/* Filter Tabs */}
