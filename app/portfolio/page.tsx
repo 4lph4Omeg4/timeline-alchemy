@@ -328,13 +328,16 @@ export default function PortfolioPage() {
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
                         <img 
-                          src={`${post.images[0].url}-image.png`} 
+                          src={post.images[0].url} 
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
                           onError={(e) => {
                             // Try alternative image names if the first one fails
                             const img = e.target as HTMLImageElement
-                            if (img.src.includes('-image.png')) {
+                            if (img.src.includes('-1759684992368.png')) {
+                              // Try other common patterns
+                              img.src = img.src.replace('-1759684992368.png', '-image.png')
+                            } else if (img.src.includes('-image.png')) {
                               img.src = img.src.replace('-image.png', '-post-image.png')
                             } else if (img.src.includes('-post-image.png')) {
                               img.src = img.src.replace('-post-image.png', '-main.png')
@@ -393,13 +396,16 @@ export default function PortfolioPage() {
             {selectedPost.images && selectedPost.images.length > 0 && (
               <div className="w-full">
                 <img 
-                  src={`${selectedPost.images[0].url}-image.png`} 
+                  src={selectedPost.images[0].url} 
                   alt={selectedPost.title}
                   className="w-full h-64 md:h-80 object-cover rounded-lg border border-purple-500/20"
                   onError={(e) => {
                     // Try alternative image names if the first one fails
                     const img = e.target as HTMLImageElement
-                    if (img.src.includes('-image.png')) {
+                    if (img.src.includes('-1759684992368.png')) {
+                      // Try other common patterns
+                      img.src = img.src.replace('-1759684992368.png', '-image.png')
+                    } else if (img.src.includes('-image.png')) {
                       img.src = img.src.replace('-image.png', '-post-image.png')
                     } else if (img.src.includes('-post-image.png')) {
                       img.src = img.src.replace('-post-image.png', '-main.png')
