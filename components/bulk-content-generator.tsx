@@ -264,18 +264,29 @@ export default function BulkContentGenerator() {
             console.log('🎉 Social posts generated successfully for', post.title)
           } else {
             console.error('❌ Social posts failed for', post.title, 'Status:', socialResponse.status)
-            // Create fallback social posts if API fails
+            // Create comprehensive fallback social posts if API fails
             post.socialPosts = {
-              twitter: `🚀 ${post.title}\n\n${post.content.substring(0, 200)}...\n\n#AI #Content`,
-              instagram: `✨ ${post.title} ✨\n\n${post.content.substring(0, 300)}...\n\n#AI #Content #Innovation`,
-              facebook: `${post.title}\n\n${post.content.substring(0, 500)}...\n\n#Content #AI #Innovation`,
-              linkedin: `Professional insight: ${post.title}\n\n${post.content.substring(0, 800)}...\n\n#Professional #AI #Business`,
-              discord: `${post.title} 🎮\n\n${post.content.substring(0, 300)}...\n\n#AI #Community #Tech`,
-              reddit: `${post.title} 🤖\n\n${post.content.substring(0, 300)}...\n\n#AI #Discussion #Tech`
+              twitter: `🚀 ${post.title}\n\n${post.content.substring(0, 200)}...\n\n#AI #Content #Innovation`,
+              instagram: `✨ ${post.title} ✨\n\n${post.content.substring(0, 300)}...\n\n#AI #Content #Innovation #Tech`,
+              facebook: `${post.title}\n\n${post.content.substring(0, 500)}...\n\n#Content #AI #Innovation #Technology`,
+              linkedin: `Professional insight: ${post.title}\n\n${post.content.substring(0, 800)}...\n\n#Professional #AI #Business #Innovation`,
+              discord: `${post.title} 🎮\n\n${post.content.substring(0, 300)}...\n\n#AI #Community #Tech #Discussion`,
+              reddit: `${post.title} 🤖\n\n${post.content.substring(0, 300)}...\n\n#AI #Discussion #Tech #Innovation`,
+              telegram: `📢 ${post.title}\n\n${post.content.substring(0, 400)}...\n\n#AI #Tech #Innovation #Update`
             }
           }
         } catch (socialError) {
           console.error('❌ Social generation error:', socialError)
+          // Ultimate fallback - ensure all platforms have posts
+          post.socialPosts = {
+            twitter: `🚀 ${post.title}\n\n${post.content.substring(0, 200)}...\n\n#AI #Content #Innovation`,
+            instagram: `✨ ${post.title} ✨\n\n${post.content.substring(0, 300)}...\n\n#AI #Content #Innovation #Tech`,
+            facebook: `${post.title}\n\n${post.content.substring(0, 500)}...\n\n#Content #AI #Innovation #Technology`,
+            linkedin: `Professional insight: ${post.title}\n\n${post.content.substring(0, 800)}...\n\n#Professional #AI #Business #Innovation`,
+            discord: `${post.title} 🎮\n\n${post.content.substring(0, 300)}...\n\n#AI #Community #Tech #Discussion`,
+            reddit: `${post.title} 🤖\n\n${post.content.substring(0, 300)}...\n\n#AI #Discussion #Tech #Innovation`,
+            telegram: `📢 ${post.title}\n\n${post.content.substring(0, 400)}...\n\n#AI #Tech #Innovation #Update`
+          }
         }
         
         // 🌟 TOPIC-SPECIFIC IMAGE GENERATION
