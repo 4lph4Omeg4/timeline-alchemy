@@ -40,10 +40,23 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Starting portfolio API...')
 
-    // Simple query without joins for now
+    // Query with images join
     let query = supabaseAdmin
       .from('blog_posts')
-      .select('id, org_id, title, content, category, state, published_at, created_at, updated_at')
+      .select(`
+        id, 
+        org_id, 
+        title, 
+        content, 
+        category, 
+        state, 
+        published_at, 
+        created_at, 
+        updated_at,
+        images (
+          url
+        )
+      `)
       .eq('state', 'published')
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1)
@@ -105,9 +118,7 @@ export async function GET(request: NextRequest) {
           average_rating: null,
           rating_count: null,
           organizations: null,
-          images: post.org_id && post.id ? [{
-            url: `${supabaseUrl}/storage/v1/object/public/blog-images/${post.org_id}/${post.id}`
-          }] : [],
+          images: post.images || [],
           social_posts: socialPostsObj
         }
       })

@@ -328,37 +328,9 @@ export default function PortfolioPage() {
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
                         <img 
-                          src={`${post.images[0].url}-image.png`} 
+                          src={post.images[0].url} 
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
-                          onError={(e) => {
-                            // Try alternative image names if the first one fails
-                            const img = e.target as HTMLImageElement
-                            const baseUrl = img.src.replace('-image.png', '')
-                            
-                            // Try different timestamp patterns
-                            const timestamps = [
-                              '1759684992368', // Known working timestamp
-                              '1759684992369', // Try variations
-                              '1759684992370',
-                              '1759684992371',
-                              '1759684992372'
-                            ]
-                            
-                            let currentIndex = 0
-                            const tryNext = () => {
-                              if (currentIndex < timestamps.length) {
-                                img.src = `${baseUrl}-${timestamps[currentIndex]}.png`
-                                currentIndex++
-                              } else {
-                                // Try other patterns
-                                img.src = `${baseUrl}-post-image.png`
-                              }
-                            }
-                            
-                            img.onerror = tryNext
-                            tryNext()
-                          }}
                         />
                       </div>
                     )}
@@ -408,37 +380,9 @@ export default function PortfolioPage() {
             {selectedPost.images && selectedPost.images.length > 0 && (
               <div className="w-full">
                 <img 
-                  src={`${selectedPost.images[0].url}-image.png`} 
+                  src={selectedPost.images[0].url} 
                   alt={selectedPost.title}
                   className="w-full h-64 md:h-80 object-cover rounded-lg border border-purple-500/20"
-                  onError={(e) => {
-                    // Try alternative image names if the first one fails
-                    const img = e.target as HTMLImageElement
-                    const baseUrl = img.src.replace('-image.png', '')
-                    
-                    // Try different timestamp patterns
-                    const timestamps = [
-                      '1759684992368', // Known working timestamp
-                      '1759684992369', // Try variations
-                      '1759684992370',
-                      '1759684992371',
-                      '1759684992372'
-                    ]
-                    
-                    let currentIndex = 0
-                    const tryNext = () => {
-                      if (currentIndex < timestamps.length) {
-                        img.src = `${baseUrl}-${timestamps[currentIndex]}.png`
-                        currentIndex++
-                      } else {
-                        // Try other patterns
-                        img.src = `${baseUrl}-post-image.png`
-                      }
-                    }
-                    
-                    img.onerror = tryNext
-                    tryNext()
-                  }}
                 />
               </div>
             )}

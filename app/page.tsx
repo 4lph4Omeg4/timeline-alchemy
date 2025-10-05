@@ -152,6 +152,26 @@ export default function HomePage() {
             <span className="text-pink-300 font-semibold">all social media realms</span>
           </p>
           
+          {/* Promo Video */}
+          <div className="mb-16 max-w-4xl mx-auto">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-md">
+              <video 
+                className="w-full h-auto"
+                controls
+                poster=""
+                preload="metadata"
+              >
+                <source 
+                  src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/video/e6c0db74-03ee-4bb3-b08d-d94512efab91/video-promo-portfolio/timeline-alchemy.mp4" 
+                  type="video/mp4" 
+                />
+                Your browser does not support the video tag.
+              </video>
+              {/* Divine Glow Effect */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-3xl blur-2xl -z-10"></div>
+            </div>
+          </div>
+          
           {/* Divine CTA */}
           <div className="flex justify-center space-x-6 mb-16">
             <Button 
