@@ -337,7 +337,18 @@ export default function PortfolioPage() {
                   alt={selectedPost.title}
                   className="w-full h-160 object-cover rounded-lg border border-purple-500/20"
                 />
+                {/* Post Title */}
+                <h2 className="text-2xl font-bold text-white mt-4 mb-2">
+                  {selectedPost.title}
+                </h2>
               </div>
+            )}
+            
+            {/* Post Title (if no image) */}
+            {(!selectedPost.images || selectedPost.images.length === 0) && (
+              <h2 className="text-2xl font-bold text-white mb-4">
+                {selectedPost.title}
+              </h2>
             )}
 
             {/* Post Meta */}
