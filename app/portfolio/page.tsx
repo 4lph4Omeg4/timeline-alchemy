@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader } from '@/components/Loader'
 import { CONTENT_CATEGORIES, getAllCategories, getCategoryInfo, type CategoryId } from '@/lib/category-detector'
 import { BlogPost } from '@/types/index'
+import Link from 'next/link'
 
 interface PortfolioPost extends BlogPost {
   images?: Array<{ url: string }>
@@ -29,13 +30,19 @@ export default function PortfolioPage() {
       setLoading(true)
       setError(null)
 
+      console.log('🔍 Fetching posts for category:', selectedCategory)
+
       const response = await fetch(`/api/portfolio/posts?category=${selectedCategory}`)
       
       if (!response.ok) {
-        throw new Error('Failed to fetch posts')
+        const errorData = await response.json()
+        console.error('❌ API Error:', errorData)
+        throw new Error(errorData.error || 'Failed to fetch posts')
       }
 
       const data = await response.json()
+      console.log('✅ API Response:', data)
+      
       setPosts(data.posts || [])
     } catch (err) {
       console.error('Error fetching posts:', err)
@@ -77,9 +84,43 @@ export default function PortfolioPage() {
             <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-4">
               Content Previews
             </h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
               Ontdek onze collectie van gepubliceerde content, georganiseerd per categorie
             </p>
+            <div className="flex justify-center space-x-4">
+              <Link href="/auth/signin">
+                <Button 
+                  variant="outline"
+                  className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300"
+                >
+                  Inloggen
+                </Button>
+              </Link>
+              <Link href="/auth/signup">
+                <Button 
+                  className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-500 hover:via-pink-500 hover:to-purple-500 text-white font-bold shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
+                >
+                  Aanmelden
+                </Button>
+              </Link>
+              <Button 
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/debug/portfolio')
+                    const data = await response.json()
+                    console.log('🔍 Debug Info:', data)
+                    alert(`Debug Info:\nTotal Posts: ${data.totalPosts}\nPublished Posts: ${data.publishedPosts}\nCategories: ${data.categories?.join(', ') || 'None'}`)
+                  } catch (err) {
+                    console.error('Debug error:', err)
+                    alert('Debug failed: ' + (err instanceof Error ? err.message : 'Unknown error'))
+                  }
+                }}
+                variant="outline"
+                className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-blue-500/50 text-blue-200 hover:bg-gradient-to-r hover:from-blue-600/30 hover:to-purple-600/30 hover:border-blue-400 transition-all duration-300"
+              >
+                🔍 Debug
+              </Button>
+            </div>
           </div>
         </div>
       </div>

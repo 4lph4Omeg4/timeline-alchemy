@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { BlogPost } from '@/types/index'
 
 interface DatabasePost {
@@ -34,8 +34,24 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Portfolio API - Fetching posts for category:', category)
 
+    // First, let's check if we have any published posts at all
+    const { count: totalPublished, error: countError } = await supabase
+      .from('blog_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('state', 'published')
+
+    if (countError) {
+      console.error('❌ Portfolio API - Count error:', countError)
+      return NextResponse.json(
+        { error: 'Failed to count posts', details: countError.message },
+        { status: 500 }
+      )
+    }
+
+    console.log('📊 Total published posts:', totalPublished)
+
     // Build the query
-    let query = supabaseAdmin
+    let query = supabase
       .from('blog_posts')
       .select(`
         id,
@@ -79,6 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`✅ Portfolio API - Found ${posts?.length || 0} posts for category: ${category}`)
+    console.log('📝 Sample posts:', posts?.slice(0, 2).map(p => ({ id: p.id, title: p.title, category: p.category })))
 
     // Transform the data to match our interface
     const transformedPosts: BlogPost[] = (posts as DatabasePost[] || []).map(post => ({
@@ -101,6 +118,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       posts: transformedPosts,
       total: transformedPosts.length,
+      totalPublished,
       category,
       limit,
       offset
@@ -109,7 +127,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('❌ Portfolio API - Unexpected error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
