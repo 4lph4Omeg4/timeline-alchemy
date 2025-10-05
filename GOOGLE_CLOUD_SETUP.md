@@ -1,58 +1,37 @@
-# Google Cloud Setup voor Imagen API
-# Volg deze stappen om Google Imagen te configureren
+# Google Imagen Setup via AI Studio (Eenvoudiger)
+# Volg deze stappen om Google Imagen te configureren via AI Studio
 
-## 1. Google Cloud Project Setup
+## 1. Google AI Studio Setup
 
-### Stap 1: Project aanmaken
+### Stap 1: Ga naar Google AI Studio
+1. Ga naar [Google AI Studio](https://aistudio.google.com/)
+2. Log in met je Google account
+
+### Stap 2: API Key aanmaken
+1. Klik op **"Get API Key"** in de linker sidebar
+2. Klik **"Create API Key"**
+3. Selecteer je project (of maak een nieuw project aan)
+4. Kopieer je API Key
+
+### Stap 3: Imagen API inschakelen
 1. Ga naar [Google Cloud Console](https://console.cloud.google.com/)
-2. Maak een nieuw project aan of selecteer een bestaand project
-3. Noteer je Project ID
-
-### Stap 2: Vertex AI API inschakelen
-1. Ga naar "APIs & Services" > "Library"
-2. Zoek naar "Vertex AI API"
-3. Klik op "Enable"
-
-### Stap 3: Service Account aanmaken
-1. Ga naar "IAM & Admin" > "Service Accounts"
-2. Klik op "Create Service Account"
-3. Geef een naam: `imagen-api-service`
-4. Beschrijving: `Service account for Imagen API access`
-5. Klik "Create and Continue"
-
-### Stap 4: Permissions toewijzen
-1. Selecteer de volgende rollen:
-   - `Vertex AI User`
-   - `AI Platform Developer`
-2. Klik "Continue" en dan "Done"
-
-### Stap 5: Service Account Key genereren
-1. Klik op je service account
-2. Ga naar "Keys" tab
-3. Klik "Add Key" > "Create new key"
-4. Selecteer "JSON"
-5. Download het JSON bestand
+2. Selecteer je project
+3. Ga naar **"APIs & Services"** > **"Library"**
+4. Zoek naar **"Generative Language API"**
+5. Klik op **"Enable"**
 
 ## 2. Environment Variables
 
-Voeg deze variabelen toe aan je `.env.local`:
+Voeg deze variabele toe aan je `.env.local`:
 
 ```bash
-# Google Cloud Configuration
-GOOGLE_CLOUD_PROJECT_ID=your-project-id-here
-GOOGLE_APPLICATION_CREDENTIALS=path/to/your/service-account-key.json
+# Google AI Studio API Key
+GOOGLE_API_KEY=your-api-key-here
 ```
 
 **Belangrijk:** 
-- Vervang `your-project-id-here` met je echte Project ID
-- Vervang `path/to/your/service-account-key.json` met het pad naar je gedownloade JSON bestand
-
-**Alternatief (JSON in environment variable):**
-```bash
-# Google Cloud Configuration
-GOOGLE_CLOUD_PROJECT_ID=your-project-id-here
-GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account","project_id":"your-project-id",...}
-```
+- Vervang `your-api-key-here` met je echte API Key van Google AI Studio
+- Deze API Key geeft toegang tot Imagen via de Generative Language API
 
 ## 3. Pricing & Limits
 
