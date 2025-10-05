@@ -328,24 +328,36 @@ export default function PortfolioPage() {
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
                         <img 
-                          src={post.images[0].url} 
+                          src={`${post.images[0].url}-image.png`} 
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
                           onError={(e) => {
                             // Try alternative image names if the first one fails
                             const img = e.target as HTMLImageElement
-                            if (img.src.includes('-1759684992368.png')) {
-                              // Try other common patterns
-                              img.src = img.src.replace('-1759684992368.png', '-image.png')
-                            } else if (img.src.includes('-image.png')) {
-                              img.src = img.src.replace('-image.png', '-post-image.png')
-                            } else if (img.src.includes('-post-image.png')) {
-                              img.src = img.src.replace('-post-image.png', '-main.png')
-                            } else if (img.src.includes('-main.png')) {
-                              img.src = img.src.replace('-main.png', '.png')
-                            } else {
-                              img.style.display = 'none'
+                            const baseUrl = img.src.replace('-image.png', '')
+                            
+                            // Try different timestamp patterns
+                            const timestamps = [
+                              '1759684992368', // Known working timestamp
+                              '1759684992369', // Try variations
+                              '1759684992370',
+                              '1759684992371',
+                              '1759684992372'
+                            ]
+                            
+                            let currentIndex = 0
+                            const tryNext = () => {
+                              if (currentIndex < timestamps.length) {
+                                img.src = `${baseUrl}-${timestamps[currentIndex]}.png`
+                                currentIndex++
+                              } else {
+                                // Try other patterns
+                                img.src = `${baseUrl}-post-image.png`
+                              }
                             }
+                            
+                            img.onerror = tryNext
+                            tryNext()
                           }}
                         />
                       </div>
@@ -396,24 +408,36 @@ export default function PortfolioPage() {
             {selectedPost.images && selectedPost.images.length > 0 && (
               <div className="w-full">
                 <img 
-                  src={selectedPost.images[0].url} 
+                  src={`${selectedPost.images[0].url}-image.png`} 
                   alt={selectedPost.title}
                   className="w-full h-64 md:h-80 object-cover rounded-lg border border-purple-500/20"
                   onError={(e) => {
                     // Try alternative image names if the first one fails
                     const img = e.target as HTMLImageElement
-                    if (img.src.includes('-1759684992368.png')) {
-                      // Try other common patterns
-                      img.src = img.src.replace('-1759684992368.png', '-image.png')
-                    } else if (img.src.includes('-image.png')) {
-                      img.src = img.src.replace('-image.png', '-post-image.png')
-                    } else if (img.src.includes('-post-image.png')) {
-                      img.src = img.src.replace('-post-image.png', '-main.png')
-                    } else if (img.src.includes('-main.png')) {
-                      img.src = img.src.replace('-main.png', '.png')
-                    } else {
-                      img.style.display = 'none'
+                    const baseUrl = img.src.replace('-image.png', '')
+                    
+                    // Try different timestamp patterns
+                    const timestamps = [
+                      '1759684992368', // Known working timestamp
+                      '1759684992369', // Try variations
+                      '1759684992370',
+                      '1759684992371',
+                      '1759684992372'
+                    ]
+                    
+                    let currentIndex = 0
+                    const tryNext = () => {
+                      if (currentIndex < timestamps.length) {
+                        img.src = `${baseUrl}-${timestamps[currentIndex]}.png`
+                        currentIndex++
+                      } else {
+                        // Try other patterns
+                        img.src = `${baseUrl}-post-image.png`
+                      }
                     }
+                    
+                    img.onerror = tryNext
+                    tryNext()
                   }}
                 />
               </div>
