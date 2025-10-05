@@ -18,7 +18,7 @@ interface DatabasePost {
   organizations?: {
     id: string
     name: string
-  }
+  } | null
   images?: Array<{
     id: string
     url: string
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
     console.log('📝 Sample posts:', posts?.slice(0, 2).map(p => ({ id: p.id, title: p.title, category: p.category })))
 
     // Transform the data to match our interface
-    const transformedPosts: BlogPost[] = (posts as DatabasePost[] || []).map(post => ({
+    const transformedPosts: BlogPost[] = (posts || []).map((post: any) => ({
       id: post.id,
       org_id: post.org_id,
       title: post.title,
