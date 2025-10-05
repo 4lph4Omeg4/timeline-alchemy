@@ -328,16 +328,16 @@ export default function PortfolioPage() {
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
                         <img 
-                          src={`${post.images[0].url}image.jpg`} 
+                          src={post.images[0].url} 
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
                           onError={(e) => {
                             // Try alternative image names if the first one fails
                             const img = e.target as HTMLImageElement
-                            if (img.src.includes('image.jpg')) {
-                              img.src = img.src.replace('image.jpg', 'post-image.jpg')
-                            } else if (img.src.includes('post-image.jpg')) {
-                              img.src = img.src.replace('post-image.jpg', 'main.jpg')
+                            if (img.src.includes('-image.png')) {
+                              img.src = img.src.replace('-image.png', '-post-image.png')
+                            } else if (img.src.includes('-post-image.png')) {
+                              img.src = img.src.replace('-post-image.png', '-main.png')
                             } else {
                               img.style.display = 'none'
                             }
@@ -391,16 +391,16 @@ export default function PortfolioPage() {
             {selectedPost.images && selectedPost.images.length > 0 && (
               <div className="w-full">
                 <img 
-                  src={`${selectedPost.images[0].url}image.jpg`} 
+                  src={selectedPost.images[0].url} 
                   alt={selectedPost.title}
                   className="w-full h-64 md:h-80 object-cover rounded-lg border border-purple-500/20"
                   onError={(e) => {
                     // Try alternative image names if the first one fails
                     const img = e.target as HTMLImageElement
-                    if (img.src.includes('image.jpg')) {
-                      img.src = img.src.replace('image.jpg', 'post-image.jpg')
-                    } else if (img.src.includes('post-image.jpg')) {
-                      img.src = img.src.replace('post-image.jpg', 'main.jpg')
+                    if (img.src.includes('-image.png')) {
+                      img.src = img.src.replace('-image.png', '-post-image.png')
+                    } else if (img.src.includes('-post-image.png')) {
+                      img.src = img.src.replace('-post-image.png', '-main.png')
                     } else {
                       img.style.display = 'none'
                     }

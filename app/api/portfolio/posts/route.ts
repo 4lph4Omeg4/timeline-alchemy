@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { BlogPost } from '@/types/index'
 
+const supabaseUrl = 'https://kjjrzhicspmbiitayrco.supabase.co'
+
 interface DatabasePost {
   id: string
   org_id: string
@@ -65,36 +67,62 @@ export async function GET(request: NextRequest) {
     console.log(`✅ Portfolio API - Found ${posts?.length || 0} posts for category: ${category}`)
 
     // Simple transformation for now - skip social posts temporarily
-    const transformedPosts = (posts || []).map((post: any) => {
-      return {
-        id: post.id,
-        org_id: post.org_id,
-        title: post.title,
-        content: post.content,
-        excerpt: post.content ? post.content.substring(0, 200) + '...' : '',
-        category: post.category,
-        state: post.state,
-        published_at: post.published_at,
-        created_at: post.created_at,
-        updated_at: post.updated_at,
-        average_rating: null,
-        rating_count: null,
-        organizations: null,
-        images: [],
-        social_posts: {}
-      }
-    })
+    // Get social posts for each post separately
+    const postsWithSocialPosts = await Promise.all(
+      (posts || []).map(async (post: any) => {
+        // Try to query social posts for this specific post
+        let socialPostsObj = {}
+        try {
+          const { data: socialPosts, error: socialError } = await supabaseAdmin
+            .from('social_posts')
+            .select('platform, content')
+            .eq('post_id', post.id)
+
+          if (socialError) {
+            console.warn(`⚠️ Could not fetch social posts for post ${post.id}:`, socialError.message)
+          } else {
+            // Transform social posts from array to object format
+            socialPostsObj = socialPosts?.reduce((acc: any, social: any) => {
+              acc[social.platform] = social.content
+              return acc
+            }, {}) || {}
+          }
+        } catch (err) {
+          console.warn(`⚠️ Error fetching social posts for post ${post.id}:`, err)
+        }
+
+        return {
+          id: post.id,
+          org_id: post.org_id,
+          title: post.title,
+          content: post.content,
+          excerpt: post.content ? post.content.substring(0, 200) + '...' : '',
+          category: post.category,
+          state: post.state,
+          published_at: post.published_at,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          average_rating: null,
+          rating_count: null,
+          organizations: null,
+          images: post.org_id && post.id ? [{
+            url: `${supabaseUrl}/storage/v1/object/public/blog-images/${post.org_id}/${post.id}-image.png`
+          }] : [],
+          social_posts: socialPostsObj
+        }
+      })
+    )
 
     const result = {
-      posts: transformedPosts,
-      total: transformedPosts.length,
+      posts: postsWithSocialPosts,
+      total: postsWithSocialPosts.length,
       category,
       limit,
       offset,
       debug: {
         supabaseConnected: true,
         queryExecuted: true,
-        postsFound: transformedPosts.length
+        postsFound: postsWithSocialPosts.length
       }
     }
 
