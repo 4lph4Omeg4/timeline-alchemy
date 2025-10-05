@@ -382,7 +382,7 @@ export default function PortfolioPage() {
                 <img 
                   src={selectedPost.images[0].url} 
                   alt={selectedPost.title}
-                  className="w-full h-80 object-cover rounded-lg border border-purple-500/20"
+                  className="w-full h-160 object-cover rounded-lg border border-purple-500/20"
                 />
               </div>
             )}
