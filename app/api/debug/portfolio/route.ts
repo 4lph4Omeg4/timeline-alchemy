@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Debug API - Checking database content')
 
     // Check total posts count
-    const { count: totalCount, error: countError } = await supabaseAdmin
+    const { count: totalCount, error: countError } = await supabase
       .from('blog_posts')
       .select('*', { count: 'exact', head: true })
 
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check published posts count
-    const { count: publishedCount, error: publishedCountError } = await supabaseAdmin
+    const { count: publishedCount, error: publishedCountError } = await supabase
       .from('blog_posts')
       .select('*', { count: 'exact', head: true })
       .eq('state', 'published')
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get sample posts
-    const { data: samplePosts, error: sampleError } = await supabaseAdmin
+    const { data: samplePosts, error: sampleError } = await supabase
       .from('blog_posts')
       .select('id, title, state, category, published_at, created_at')
       .limit(10)
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get categories
-    const { data: categories, error: categoriesError } = await supabaseAdmin
+    const { data: categories, error: categoriesError } = await supabase
       .from('blog_posts')
       .select('category')
       .not('category', 'is', null)
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const uniqueCategories = Array.from(new Set((categories as any[])?.map(c => c.category) || []))
 
     // Check organizations
-    const { data: orgs, error: orgError } = await supabaseAdmin
+    const { data: orgs, error: orgError } = await supabase
       .from('organizations')
       .select('id, name')
       .limit(5)

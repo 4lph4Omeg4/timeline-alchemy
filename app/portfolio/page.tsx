@@ -328,9 +328,20 @@ export default function PortfolioPage() {
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
                         <img 
-                          src={post.images[0].url} 
+                          src={`${post.images[0].url}image.jpg`} 
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
+                          onError={(e) => {
+                            // Try alternative image names if the first one fails
+                            const img = e.target as HTMLImageElement
+                            if (img.src.includes('image.jpg')) {
+                              img.src = img.src.replace('image.jpg', 'post-image.jpg')
+                            } else if (img.src.includes('post-image.jpg')) {
+                              img.src = img.src.replace('post-image.jpg', 'main.jpg')
+                            } else {
+                              img.style.display = 'none'
+                            }
+                          }}
                         />
                       </div>
                     )}
@@ -380,9 +391,20 @@ export default function PortfolioPage() {
             {selectedPost.images && selectedPost.images.length > 0 && (
               <div className="w-full">
                 <img 
-                  src={selectedPost.images[0].url} 
+                  src={`${selectedPost.images[0].url}image.jpg`} 
                   alt={selectedPost.title}
                   className="w-full h-64 md:h-80 object-cover rounded-lg border border-purple-500/20"
+                  onError={(e) => {
+                    // Try alternative image names if the first one fails
+                    const img = e.target as HTMLImageElement
+                    if (img.src.includes('image.jpg')) {
+                      img.src = img.src.replace('image.jpg', 'post-image.jpg')
+                    } else if (img.src.includes('post-image.jpg')) {
+                      img.src = img.src.replace('post-image.jpg', 'main.jpg')
+                    } else {
+                      img.style.display = 'none'
+                    }
+                  }}
                 />
               </div>
             )}
