@@ -279,28 +279,44 @@ Focus on the specific topic requested without adding unrelated business concepts
   console.log('🔍 Raw AI content:', JSON.stringify(content))
   console.log('🔍 Content length:', content.length)
 
-  // Improved content parsing for blog posts (same as working content generator)
+  // Enhanced content parsing with better title detection
   const lines = content.split('\n').filter((line: string) => line.trim())
   
-  // Find title (first non-empty line, should be the title)
+  // Smart title detection - look for proper title patterns
   let title = item.title || item.trend || 'Untitled'
+  let blogContent = content
   let contentStartIndex = 0
 
   if (lines.length > 0) {
-    // First line is the title
-    title = lines[0].trim() || item.title || item.trend || 'Untitled'
-    contentStartIndex = 1
+    const firstLine = lines[0].trim()
+    
+    // Check if first line looks like a title (not too long, not a full sentence)
+    const isLikelyTitle = firstLine.length < 100 && 
+                         !firstLine.endsWith('.') && 
+                         !firstLine.endsWith('!') && 
+                         !firstLine.endsWith('?') &&
+                         !firstLine.includes('The ') &&
+                         !firstLine.includes('This ') &&
+                         !firstLine.includes('In ') &&
+                         !firstLine.includes('When ') &&
+                         !firstLine.includes('How ')
+    
+    if (isLikelyTitle) {
+      title = firstLine
+      contentStartIndex = 1
+      // Remove title from content
+      blogContent = content.replace(firstLine, '').trim()
+    } else {
+      // First line is probably content, not a title
+      // Generate a title from the trend name
+      title = trendName
+      blogContent = content
+    }
   }
   
-  // Use raw content as-is - NO PARSING AT ALL
-  let blogContent = content
-  
-  // Only remove the title line if it exists
-  if (lines.length > 0) {
-    const titleLine = lines[0].trim()
-    if (titleLine) {
-      blogContent = content.replace(titleLine, '').trim()
-    }
+  // Fallback: if title is still too long or looks like content, generate a better one
+  if (title.length > 80 || title.includes('.')) {
+    title = trendName
   }
   
   console.log('🔍 Final blog content:', JSON.stringify(blogContent))
