@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader } from '@/components/Loader'
+import { Modal } from '@/components/ui/modal'
 import { CONTENT_CATEGORIES, getAllCategories, getCategoryInfo, type CategoryId } from '@/lib/category-detector'
 import { BlogPost } from '@/types/index'
 import Link from 'next/link'
@@ -18,6 +19,8 @@ export default function PortfolioPage() {
   const [posts, setPosts] = useState<PortfolioPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedPost, setSelectedPost] = useState<PortfolioPost | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const categories = getAllCategories()
 
@@ -89,6 +92,44 @@ export default function PortfolioPage() {
   const truncateContent = (content: string, maxLength: number = 200) => {
     if (content.length <= maxLength) return content
     return content.substring(0, maxLength) + '...'
+  }
+
+  const openPostModal = (post: PortfolioPost) => {
+    setSelectedPost(post)
+    setIsModalOpen(true)
+  }
+
+  const closePostModal = () => {
+    setSelectedPost(null)
+    setIsModalOpen(false)
+  }
+
+  const getSocialLinks = (post: PortfolioPost) => {
+    if (!post.social_posts) return []
+    
+    return Object.entries(post.social_posts).map(([platform, content]) => ({
+      platform,
+      content,
+      url: getSocialUrl(platform, content)
+    }))
+  }
+
+  const getSocialUrl = (platform: string, content: string) => {
+    // Generate appropriate URLs based on platform
+    switch (platform.toLowerCase()) {
+      case 'twitter':
+        return `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}`
+      case 'linkedin':
+        return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${encodeURIComponent(content)}`
+      case 'facebook':
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(content)}`
+      case 'instagram':
+        return '#' // Instagram doesn't support direct sharing URLs
+      case 'youtube':
+        return '#' // YouTube doesn't support direct sharing URLs
+      default:
+        return '#'
+    }
   }
 
   return (
@@ -258,7 +299,8 @@ export default function PortfolioPage() {
               {posts.map((post) => (
                 <Card 
                   key={post.id} 
-                  className="bg-white/10 backdrop-blur-md border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 group"
+                  className="bg-white/10 backdrop-blur-md border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 group cursor-pointer"
+                  onClick={() => openPostModal(post)}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between mb-2">
@@ -324,6 +366,101 @@ export default function PortfolioPage() {
           </>
         )}
       </div>
+
+      {/* Post Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closePostModal}
+        title={selectedPost?.title || ''}
+        className="max-w-4xl"
+      >
+        {selectedPost && (
+          <div className="space-y-6">
+            {/* Post Image */}
+            {selectedPost.images && selectedPost.images.length > 0 && (
+              <div className="w-full">
+                <img 
+                  src={selectedPost.images[0].url} 
+                  alt={selectedPost.title}
+                  className="w-full h-64 md:h-80 object-cover rounded-lg border border-purple-500/20"
+                />
+              </div>
+            )}
+
+            {/* Post Meta */}
+            <div className="flex items-center justify-between text-sm text-gray-400">
+              <div className="flex items-center space-x-4">
+                <Badge 
+                  variant="secondary" 
+                  className="bg-purple-600/20 text-purple-200 border-purple-500/30"
+                >
+                  {getCategoryEmoji(selectedPost.category || 'uncategorized')} {getCategoryLabel(selectedPost.category || 'uncategorized')}
+                </Badge>
+                <span>{formatDate(selectedPost.published_at || selectedPost.created_at)}</span>
+              </div>
+              
+              {selectedPost.organizations && (
+                <div className="text-right">
+                  <div className="text-xs text-purple-300">
+                    {selectedPost.organizations.name}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Post Content */}
+            <div className="prose prose-invert max-w-none">
+              <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                {selectedPost.content}
+              </div>
+            </div>
+
+            {/* Social Links */}
+            {selectedPost.social_posts && Object.keys(selectedPost.social_posts).length > 0 && (
+              <div className="border-t border-purple-500/30 pt-6">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <span className="mr-2">🔗</span>
+                  Social Media Posts
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {getSocialLinks(selectedPost).map((social, index) => (
+                    <div key={index} className="bg-white/5 border border-purple-500/20 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-purple-200 capitalize">
+                          {social.platform}
+                        </h4>
+                        {social.url !== '#' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(social.url, '_blank')}
+                            className="text-xs bg-purple-600/20 border-purple-500/50 text-purple-200 hover:bg-purple-600/30"
+                          >
+                            Share
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-300 leading-relaxed">
+                        {social.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Close Button */}
+            <div className="flex justify-end pt-4 border-t border-purple-500/30">
+              <Button
+                onClick={closePostModal}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold"
+              >
+                Sluiten
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
