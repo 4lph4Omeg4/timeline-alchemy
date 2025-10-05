@@ -90,11 +90,14 @@ AND created_at >= NOW() - INTERVAL '30 days';
 -- ========================================
 -- Dit script vindt en repareert posts waarvan de titel identiek is aan de eerste alinea van de content
 
--- Eerst een backup maken
+-- Eerst een backup maken (alleen voor veiligheid - originele titels worden bewaard)
 CREATE TABLE IF NOT EXISTS blog_posts_title_backup AS 
 SELECT id, title, content, created_at 
 FROM blog_posts 
 WHERE created_at >= NOW() - INTERVAL '30 days';
+
+-- BELANGRIJK: Dit script bewerkt de originele blog_posts tabel!
+-- De backup tabel is alleen voor veiligheid
 
 -- Vind posts waarvan de titel overeenkomt met het begin van de content
 -- Dit zijn de echte problematische titels
@@ -166,9 +169,10 @@ AND (
 -- ========================================
 -- 5. VERIFICATIE NA REPARATIE
 -- ========================================
--- Controleer hoeveel titels er zijn gerepareerd
+-- Controleer hoeveel titels er zijn gerepareerd in de ORIGINELE blog_posts tabel
 
 SELECT 
+  'ORIGINELE BLOG_POSTS TABEL' as tabel_naam,
   COUNT(*) as remaining_problematic_titles,
   COUNT(CASE WHEN title LIKE '%.' THEN 1 END) as still_ends_with_period,
   COUNT(CASE WHEN title LIKE '%!' THEN 1 END) as still_ends_with_exclamation,
