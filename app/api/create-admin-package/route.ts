@@ -93,78 +93,12 @@ export async function POST(request: NextRequest) {
       console.log('⚠️ No social posts to save to separate table')
     }
 
-    // Save image to database
-    if (generatedImage && insertedPackage?.id) {
-      try {
-        // Check if this is already a permanent Supabase URL or a temporary DALL-E URL
-        const isPermanentUrl = generatedImage.includes('supabase') || generatedImage.includes('storage.googleapis.com')
-        
-        if (isPermanentUrl) {
-          // Image is already permanent, just save the URL
-          console.log('✅ Using existing permanent image URL:', generatedImage)
-          await supabaseClient
-            .from('images')
-            .insert({
-              org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
-              post_id: insertedPackage.id,
-              url: generatedImage,
-              prompt: `AI generated image for: ${title}`
-            })
-        } else {
-          // Image is temporary (DALL-E), save it permanently
-          console.log('🔄 Converting temporary image to permanent storage...')
-          const saveImageResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/save-image`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              imageUrl: generatedImage,
-              postId: insertedPackage.id,
-              orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
-              prompt: `AI generated image for: ${title}`
-            })
-          })
-
-          if (saveImageResponse.ok) {
-            const saveImageData = await saveImageResponse.json()
-            console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
-          } else {
-            console.warn('⚠️ Failed to save image permanently, using temporary URL')
-            // Fallback to temporary URL if permanent save fails
-            await supabaseClient
-              .from('images')
-              .insert({
-                org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
-                post_id: insertedPackage.id,
-                url: generatedImage,
-                prompt: `AI generated image for: ${title}`
-              })
-          }
-        }
-      } catch (imageError) {
-        console.error('❌ Error saving image:', imageError)
-        // Fallback to temporary URL
-        await supabaseClient
-          .from('images')
-          .insert({
-            org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
-            post_id: insertedPackage.id,
-            url: generatedImage,
-            prompt: `AI generated image for: ${title}`
-          })
-      }
-    }
-    
     // Save image permanently AFTER post creation (now we have the real postId)
-    console.log('🔍 Debug - generatedImage:', generatedImage)
-    console.log('🔍 Debug - insertedPackage?.id:', insertedPackage?.id)
-    
     if (generatedImage && insertedPackage?.id) {
+      console.log('🔄 Starting permanent image save process...')
+      console.log('🔍 Image URL:', generatedImage)
+      console.log('🔍 Post ID:', insertedPackage.id)
       try {
-        console.log('🔄 Saving image permanently with real postId:', insertedPackage.id)
-        console.log('🔄 Image URL:', generatedImage)
-        
         // Download the image from DALL-E URL
         const imageResponse = await fetch(generatedImage)
         if (!imageResponse.ok) {
@@ -222,9 +156,11 @@ export async function POST(request: NextRequest) {
         
       } catch (imageError) {
         console.error('❌ Error saving image permanently:', imageError)
+        console.log('🔄 Attempting fallback: saving temporary URL to database')
+        
         // Fallback: save temporary URL to database
         try {
-          await supabaseClient
+          const { error: fallbackError } = await supabaseClient
             .from('images')
             .insert({
               org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
@@ -232,11 +168,18 @@ export async function POST(request: NextRequest) {
               url: generatedImage,
               prompt: `AI generated image for: ${title}`
             })
-          console.log('⚠️ Saved temporary URL as fallback')
+          
+          if (fallbackError) {
+            console.error('❌ Fallback save also failed:', fallbackError)
+          } else {
+            console.log('⚠️ Saved temporary URL as fallback')
+          }
         } catch (fallbackError) {
           console.error('❌ Fallback save also failed:', fallbackError)
         }
       }
+    } else {
+      console.log('⚠️ No image to save or no post ID available')
     }
     
     console.log('✅ Admin package created successfully:', insertedPackage?.id)

@@ -307,6 +307,9 @@ export default function BulkContentGenerator() {
         // Ensure Telegram post exists
         if (!post.socialPosts?.telegram) {
           const shortTitle = post.title.length > 50 ? post.title.substring(0, 47) + '...' : post.title
+          if (!post.socialPosts) {
+            post.socialPosts = {}
+          }
           post.socialPosts.telegram = `📢 ${shortTitle}\n\n${post.content.substring(0, 300)}...\n\n#AI #Tech #Innovation #Update`
           console.log('🔧 Telegram post added as fallback')
         }
