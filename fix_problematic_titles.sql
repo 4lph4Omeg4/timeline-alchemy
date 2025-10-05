@@ -90,14 +90,7 @@ AND created_at >= NOW() - INTERVAL '30 days';
 -- ========================================
 -- Dit script vindt en repareert posts waarvan de titel identiek is aan de eerste alinea van de content
 
--- Eerst een backup maken (alleen voor veiligheid - originele titels worden bewaard)
-CREATE TABLE IF NOT EXISTS blog_posts_title_backup AS 
-SELECT id, title, content, created_at 
-FROM blog_posts 
-WHERE created_at >= NOW() - INTERVAL '30 days';
-
--- BELANGRIJK: Dit script bewerkt de originele blog_posts tabel!
--- De backup tabel is alleen voor veiligheid
+-- Direct repareren van problematische titels in de originele blog_posts tabel
 
 -- Vind posts waarvan de titel overeenkomt met het begin van de content
 -- Dit zijn de echte problematische titels
@@ -200,27 +193,21 @@ AND created_at >= NOW() - INTERVAL '30 days';
 -- Toon een paar voorbeelden van gerepareerde titels
 
 SELECT 
-  bp.id,
-  bp.title as new_title,
-  btb.title as old_title,
-  bp.created_at
-FROM blog_posts bp
-JOIN blog_posts_title_backup btb ON bp.id = btb.id
-WHERE bp.title != btb.title
-ORDER BY bp.created_at DESC
+  id,
+  title,
+  LEFT(content, 100) as content_preview,
+  created_at
+FROM blog_posts 
+WHERE created_at >= NOW() - INTERVAL '30 days'
+ORDER BY created_at DESC
 LIMIT 10;
 
 -- ========================================
--- 7. RESTORE VAN BACKUP (ALS NODIG)
+-- 7. CLEANUP (OPTIONEEL)
 -- ========================================
--- Als je de oude titels terug wilt, uncomment deze regels:
+-- Als je de backup tabel wilt verwijderen (als die bestaat):
 
--- UPDATE blog_posts 
--- SET title = btb.title
--- FROM blog_posts_title_backup btb
--- WHERE blog_posts.id = btb.id;
-
--- DROP TABLE blog_posts_title_backup;
+-- DROP TABLE IF EXISTS blog_posts_title_backup;
 
 -- ========================================
 -- 8. ADVANCED TITEL GENERATIE (OPTIONEEL)
