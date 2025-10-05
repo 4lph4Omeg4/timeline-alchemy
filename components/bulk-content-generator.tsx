@@ -315,8 +315,35 @@ export default function BulkContentGenerator() {
           
           if (imageResponse.ok) {
             const imageData = await imageResponse.json()
-            post.generatedImage = imageData.imageUrl
             console.log('🌟 Cosmic image generated for', post.title)
+            
+            // 🚀 PERMANENTLY SAVE IMAGE TO SUPABASE STORAGE
+            try {
+              const saveImageResponse = await fetch('/api/save-image', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  imageUrl: imageData.imageUrl,
+                  postId: `temp-${Date.now()}-${i}`, // Temporary ID for bulk generation
+                  orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin org
+                  prompt: `AI generated image for: ${post.title}`
+                })
+              })
+
+              if (saveImageResponse.ok) {
+                const saveImageData = await saveImageResponse.json()
+                post.generatedImage = saveImageData.permanentUrl
+                console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
+              } else {
+                console.warn('⚠️ Failed to save image permanently, using temporary URL')
+                post.generatedImage = imageData.imageUrl
+              }
+            } catch (saveError) {
+              console.error('❌ Error saving image permanently:', saveError)
+              post.generatedImage = imageData.imageUrl
+            }
           } else {
             console.error('❌ Image generation failed for', post.title, 'Status:', imageResponse.status)
           }

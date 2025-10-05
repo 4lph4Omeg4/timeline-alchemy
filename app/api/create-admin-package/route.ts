@@ -76,46 +76,65 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Save image permanently to Supabase Storage
+    // Save image to database
     if (generatedImage && insertedPackage?.id) {
       try {
-        // Use the save-image API to permanently store the image
-        const saveImageResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/save-image`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageUrl: generatedImage,
-            postId: insertedPackage.id,
-            orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
-            prompt: `AI generated image for: ${title}`
-          })
-        })
-
-        if (saveImageResponse.ok) {
-          const saveImageData = await saveImageResponse.json()
-          console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
-        } else {
-          console.warn('⚠️ Failed to save image permanently, using temporary URL')
-          // Fallback to temporary URL if permanent save fails
+        // Check if this is already a permanent Supabase URL or a temporary DALL-E URL
+        const isPermanentUrl = generatedImage.includes('supabase') || generatedImage.includes('storage.googleapis.com')
+        
+        if (isPermanentUrl) {
+          // Image is already permanent, just save the URL
+          console.log('✅ Using existing permanent image URL:', generatedImage)
           await supabaseClient
             .from('images')
             .insert({
               org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
               post_id: insertedPackage.id,
-              url: generatedImage
+              url: generatedImage,
+              prompt: `AI generated image for: ${title}`
             })
+        } else {
+          // Image is temporary (DALL-E), save it permanently
+          console.log('🔄 Converting temporary image to permanent storage...')
+          const saveImageResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/save-image`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageUrl: generatedImage,
+              postId: insertedPackage.id,
+              orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+              prompt: `AI generated image for: ${title}`
+            })
+          })
+
+          if (saveImageResponse.ok) {
+            const saveImageData = await saveImageResponse.json()
+            console.log('✅ Image saved permanently:', saveImageData.permanentUrl)
+          } else {
+            console.warn('⚠️ Failed to save image permanently, using temporary URL')
+            // Fallback to temporary URL if permanent save fails
+            await supabaseClient
+              .from('images')
+              .insert({
+                org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+                post_id: insertedPackage.id,
+                url: generatedImage,
+                prompt: `AI generated image for: ${title}`
+              })
+          }
         }
       } catch (imageError) {
-        console.error('❌ Error saving image permanently:', imageError)
+        console.error('❌ Error saving image:', imageError)
         // Fallback to temporary URL
         await supabaseClient
           .from('images')
           .insert({
             org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
             post_id: insertedPackage.id,
-            url: generatedImage
+            url: generatedImage,
+            prompt: `AI generated image for: ${title}`
           })
       }
     }
