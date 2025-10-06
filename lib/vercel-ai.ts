@@ -9,6 +9,11 @@ interface BlogPostData {
   suggestions: string[]
 }
 
+// Load environment variables explicitly for development
+if (process.env.NODE_ENV === 'development') {
+  require('dotenv').config({ path: '.env.local' });
+}
+
 interface SocialPostsData {
   facebook: string
   instagram: string
