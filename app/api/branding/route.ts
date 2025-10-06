@@ -1,0 +1,107 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase'
+import { BrandingSettings } from '@/types/index'
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const orgId = searchParams.get('orgId')
+
+    if (!orgId) {
+      return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 })
+    }
+
+    const { data: branding, error } = await (supabaseAdmin as any)
+      .from('branding_settings')
+      .select('*')
+      .eq('organization_id', orgId)
+      .single()
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching branding settings:', error)
+      return NextResponse.json({ error: 'Failed to fetch branding settings' }, { status: 500 })
+    }
+
+    // If no branding settings exist, return default values
+    if (!branding) {
+      return NextResponse.json({
+        id: null,
+        organization_id: orgId,
+        logo_url: null,
+        logo_position: 'bottom-right',
+        logo_opacity: 0.7,
+        logo_size: 0.1,
+        enabled: true
+      })
+    }
+
+    return NextResponse.json(branding)
+  } catch (error) {
+    console.error('Error in branding GET:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { organization_id, logo_url, logo_position, logo_opacity, logo_size, enabled } = body
+
+    if (!organization_id) {
+      return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 })
+    }
+
+    // Check if branding settings already exist
+    const { data: existing } = await (supabaseAdmin as any)
+      .from('branding_settings')
+      .select('id')
+      .eq('organization_id', organization_id)
+      .single()
+
+    let result
+    if (existing) {
+      // Update existing settings
+      const { data, error } = await (supabaseAdmin as any)
+        .from('branding_settings')
+        .update({
+          logo_url,
+          logo_position: logo_position || 'bottom-right',
+          logo_opacity: logo_opacity || 0.7,
+          logo_size: logo_size || 0.1,
+          enabled: enabled !== undefined ? enabled : true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('organization_id', organization_id)
+        .select()
+        .single()
+
+      result = { data, error }
+    } else {
+      // Create new settings
+      const { data, error } = await (supabaseAdmin as any)
+        .from('branding_settings')
+        .insert({
+          organization_id,
+          logo_url,
+          logo_position: logo_position || 'bottom-right',
+          logo_opacity: logo_opacity || 0.7,
+          logo_size: logo_size || 0.1,
+          enabled: enabled !== undefined ? enabled : true
+        })
+        .select()
+        .single()
+
+      result = { data, error }
+    }
+
+    if (result.error) {
+      console.error('Error saving branding settings:', result.error)
+      return NextResponse.json({ error: 'Failed to save branding settings' }, { status: 500 })
+    }
+
+    return NextResponse.json(result.data)
+  } catch (error) {
+    console.error('Error in branding POST:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

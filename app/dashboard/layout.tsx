@@ -483,6 +483,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📈</span>
                         <span className="font-semibold">Analytics</span>
                       </Link>
+                      <Link href="/dashboard/admin/branding" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🎨</span>
+                        <span className="font-semibold">Branding</span>
+                      </Link>
                     </>
                   )}
                 </div>

@@ -106,6 +106,18 @@ export interface OrganizationUsage {
   updated_at: string
 }
 
+export interface BrandingSettings {
+  id: string
+  organization_id: string
+  logo_url?: string
+  logo_position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+  logo_opacity: number
+  logo_size: number
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface Client {
   id: string
   org_id: string
