@@ -154,7 +154,7 @@ export async function generateVercelImage(prompt: string) {
     
     console.log('🚀 Using Vercel AI Gateway for image generation')
     
-    // Use Vercel's image generation models
+    // Try Vercel's image generation model
     const response = await fetch('https://ai-gateway.vercel.sh/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -162,7 +162,7 @@ export async function generateVercelImage(prompt: string) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview', // Google's image generation model via Vercel
+        model: 'vercel/v0-1.0-md',
         prompt: enhancedPrompt,
         n: 1,
         size: '1024x1024',
@@ -174,11 +174,49 @@ export async function generateVercelImage(prompt: string) {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('❌ Vercel Gateway image generation failed:', response.status, errorText)
+      
+      // Try alternative approach - use text-to-image via chat completion
+      console.log('🔄 Trying alternative Vercel approach...')
+      
+      const altResponse = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${gatewayApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'vercel/v0-1.0-md',
+          messages: [
+            {
+              role: 'user',
+              content: `Generate an image for: ${enhancedPrompt}`
+            }
+          ],
+          max_tokens: 1000
+        })
+      })
+      
+      if (altResponse.ok) {
+        const altData = await altResponse.json()
+        const imageUrl = altData.choices?.[0]?.message?.content || ''
+        
+        if (imageUrl) {
+          console.log('✅ Alternative Vercel image generation successful')
+          return {
+            success: true,
+            imageUrl,
+            enhancedPrompt,
+            enhanced: true,
+            provider: 'vercel-gateway-alt'
+          }
+        }
+      }
+      
       throw new Error(`Vercel Gateway image generation failed: ${response.statusText} - ${errorText}`)
     }
 
     const imageData = await response.json()
-    const imageUrl = imageData.data?.[0]?.url
+    const imageUrl = imageData.data?.[0]?.url || imageData.url
 
     if (!imageUrl) {
       throw new Error('No image URL returned from Vercel Gateway generation')

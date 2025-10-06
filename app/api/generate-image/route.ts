@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateImage } from '@/lib/ai'
 import { generateVercelImage } from '@/lib/vercel-ai'
 
 export async function POST(request: NextRequest) {
