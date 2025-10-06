@@ -16,7 +16,7 @@ export default function HomePage() {
   useEffect(() => {
     const getUser = async () => {
       try {
-      const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUser({
           id: user.id,
@@ -458,31 +458,32 @@ export default function HomePage() {
         </div>
 
         {/* Footer */}
-        <footer className="bg-gradient-to-r from-gray-900/50 to-gray-800/50 backdrop-blur-md border-t border-gray-700/30 py-12">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              {/* Logo & Description */}
-              <div className="col-span-1 md:col-span-2">
-                <div className="flex items-center mb-4">
-                  <Logo className="h-8 w-8 mr-3" />
-                  <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+        <footer className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-800 border-t border-purple-500/20">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%239C92AC\" fill-opacity=\"0.05\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"2\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+          
+          <div className="relative container mx-auto px-6 py-16">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-12">
+              {/* Brand Section */}
+              <div className="lg:col-span-1">
+                <div className="flex items-center mb-6">
+                  <Logo className="h-10 w-10 mr-4" />
+                  <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400">
                     Timeline Alchemy
                   </span>
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed mb-4">
+                <p className="text-gray-300 text-base leading-relaxed mb-6 max-w-md">
                   Transform your content creation with AI-powered social media management. 
                   Create, schedule, and publish across all platforms with divine precision.
                 </p>
                 <div className="flex space-x-4">
-                  <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
-                    <span className="sr-only">Twitter</span>
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <a href="#" className="group p-3 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:scale-105">
+                    <svg className="h-5 w-5 text-gray-300 group-hover:text-purple-400 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
                   </a>
-                  <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
-                    <span className="sr-only">LinkedIn</span>
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <a href="#" className="group p-3 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-xl border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:scale-105">
+                    <svg className="h-5 w-5 text-gray-300 group-hover:text-blue-400 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                     </svg>
                   </a>
@@ -491,30 +492,75 @@ export default function HomePage() {
 
               {/* Quick Links */}
               <div>
-                <h3 className="text-white font-semibold mb-4">Quick Links</h3>
-                <ul className="space-y-2">
-                  <li><a href="/auth/signup" className="text-gray-300 hover:text-purple-400 transition-colors text-sm">Get Started</a></li>
-                  <li><a href="/portfolio" className="text-gray-300 hover:text-purple-400 transition-colors text-sm">Portfolio</a></li>
-                  <li><a href="/auth/signin" className="text-gray-300 hover:text-purple-400 transition-colors text-sm">Sign In</a></li>
-                  <li><a href="/dashboard" className="text-gray-300 hover:text-purple-400 transition-colors text-sm">Dashboard</a></li>
+                <h3 className="text-white font-bold text-lg mb-6 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+                  Quick Links
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a href="/auth/signup" className="group flex items-center text-gray-300 hover:text-purple-400 transition-colors duration-300">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                      Get Started
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/portfolio" className="group flex items-center text-gray-300 hover:text-purple-400 transition-colors duration-300">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                      Portfolio
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/auth/signin" className="group flex items-center text-gray-300 hover:text-purple-400 transition-colors duration-300">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                      Sign In
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/dashboard" className="group flex items-center text-gray-300 hover:text-purple-400 transition-colors duration-300">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                      Dashboard
+                    </a>
+                  </li>
                 </ul>
               </div>
 
               {/* Legal */}
               <div>
-                <h3 className="text-white font-semibold mb-4">Legal</h3>
-                <ul className="space-y-2">
-                  <li><a href="/privacy-policy" className="text-gray-300 hover:text-purple-400 transition-colors text-sm">Privacy Policy</a></li>
-                  <li><a href="/terms-of-service" className="text-gray-300 hover:text-purple-400 transition-colors text-sm">Terms of Service</a></li>
-                  <li><a href="/cookie-policy" className="text-gray-300 hover:text-purple-400 transition-colors text-sm">Cookie Policy</a></li>
+                <h3 className="text-white font-bold text-lg mb-6 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+                  Legal
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a href="/privacy-policy" className="group flex items-center text-gray-300 hover:text-purple-400 transition-colors duration-300">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                      Privacy Policy
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/terms-of-service" className="group flex items-center text-gray-300 hover:text-purple-400 transition-colors duration-300">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                      Terms of Service
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/cookie-policy" className="group flex items-center text-gray-300 hover:text-purple-400 transition-colors duration-300">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-3 group-hover:bg-pink-400 transition-colors"></span>
+                      Cookie Policy
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>
 
-            <div className="border-t border-gray-700/30 mt-8 pt-8 text-center">
-              <p className="text-gray-400 text-sm">
-                © 2024 Timeline Alchemy. All rights reserved. Crafted with divine precision.
-              </p>
+            {/* Bottom Section */}
+            <div className="border-t border-gradient-to-r from-purple-500/20 via-pink-500/20 to-purple-500/20 pt-8">
+              <div className="flex flex-col md:flex-row justify-between items-center">
+                <p className="text-gray-400 text-sm mb-4 md:mb-0">
+                  © 2024 Timeline Alchemy. All rights reserved.
+                </p>
+                <p className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 text-sm font-medium">
+                  ✨ Crafted with divine precision ✨
+                </p>
+              </div>
           </div>
         </div>
       </footer>

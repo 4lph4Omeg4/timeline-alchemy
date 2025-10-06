@@ -27,10 +27,30 @@ export default function BrandingPage() {
       if (response.ok) {
         const data = await response.json()
         setBranding(data)
+      } else {
+        // Initialize with default values if no branding settings exist
+        setBranding({
+          org_id: 'admin-org',
+          logo_url: null,
+          logo_position: 'bottom-right',
+          logo_opacity: 0.7,
+          logo_size: 0.1,
+          enabled: false,
+          updated_at: new Date().toISOString()
+        })
       }
     } catch (error) {
       console.error('Error fetching branding settings:', error)
-      toast.error('Failed to load branding settings')
+      // Initialize with default values on error
+      setBranding({
+        org_id: 'admin-org',
+        logo_url: null,
+        logo_position: 'bottom-right',
+        logo_opacity: 0.7,
+        logo_size: 0.1,
+        enabled: false,
+        updated_at: new Date().toISOString()
+      })
     } finally {
       setLoading(false)
     }
@@ -62,6 +82,23 @@ export default function BrandingPage() {
         setBranding(prev => prev ? { ...prev, logo_url: data.url } : null)
         toast.success('Logo uploaded successfully!')
         setSelectedFile(null)
+        
+        // Auto-save the logo URL to branding settings
+        try {
+          await fetch('/api/branding', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              ...branding,
+              logo_url: data.url,
+              org_id: 'admin-org'
+            })
+          })
+        } catch (error) {
+          console.error('Error saving logo URL:', error)
+        }
       } else {
         const error = await response.json()
         toast.error(error.error || 'Failed to upload logo')
@@ -71,6 +108,42 @@ export default function BrandingPage() {
       toast.error('Failed to upload logo')
     } finally {
       setUploading(false)
+    }
+  }
+
+  const handleSwitchChange = async (checked: boolean) => {
+    if (!branding) return
+    
+    // Update local state immediately
+    setBranding(prev => prev ? { ...prev, enabled: checked } : null)
+    
+    // Auto-save the change
+    try {
+      const response = await fetch('/api/branding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...branding,
+          enabled: checked,
+          org_id: 'admin-org'
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Watermark setting updated!')
+      } else {
+        // Revert the change if save failed
+        setBranding(prev => prev ? { ...prev, enabled: !checked } : null)
+        const error = await response.json()
+        toast.error(error.error || 'Failed to update setting')
+      }
+    } catch (error) {
+      // Revert the change if save failed
+      setBranding(prev => prev ? { ...prev, enabled: !checked } : null)
+      console.error('Error updating switch:', error)
+      toast.error('Failed to update setting')
     }
   }
 
@@ -202,9 +275,7 @@ export default function BrandingPage() {
                 <Switch
                   id="enabled"
                   checked={branding?.enabled || false}
-                  onCheckedChange={(checked) =>
-                    setBranding(prev => prev ? { ...prev, enabled: checked } : null)
-                  }
+                  onCheckedChange={handleSwitchChange}
                 />
               </div>
 

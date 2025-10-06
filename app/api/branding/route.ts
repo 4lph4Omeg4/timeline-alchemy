@@ -45,9 +45,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { organization_id, logo_url, logo_position, logo_opacity, logo_size, enabled } = body
+    const { organization_id, org_id, logo_url, logo_position, logo_opacity, logo_size, enabled } = body
+    
+    // Support both org_id and organization_id for compatibility
+    const orgId = organization_id || org_id
 
-    if (!organization_id) {
+    if (!orgId) {
       return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 })
     }
 
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await (supabaseAdmin as any)
       .from('branding_settings')
       .select('id')
-      .eq('organization_id', organization_id)
+      .eq('organization_id', orgId)
       .single()
 
     let result
@@ -71,7 +74,7 @@ export async function POST(request: NextRequest) {
           enabled: enabled !== undefined ? enabled : true,
           updated_at: new Date().toISOString()
         })
-        .eq('organization_id', organization_id)
+        .eq('organization_id', orgId)
         .select()
         .single()
 
@@ -81,7 +84,7 @@ export async function POST(request: NextRequest) {
       const { data, error } = await (supabaseAdmin as any)
         .from('branding_settings')
         .insert({
-          organization_id,
+          organization_id: orgId,
           logo_url,
           logo_position: logo_position || 'bottom-right',
           logo_opacity: logo_opacity || 0.7,
