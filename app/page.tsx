@@ -198,15 +198,15 @@ export default function HomePage() {
                 <ul className="text-left text-gray-300 space-y-2 mb-8">
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    5 Content Packages
+                    2 Content Packages
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    10 Custom Posts
+                    5 Custom Content
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    2 Bulk Generations
+                    1 Bulk Generation
                   </li>
                 </ul>
                 <Button 
@@ -222,20 +222,20 @@ export default function HomePage() {
             <div className="bg-gradient-to-br from-blue-900/40 to-blue-800/40 backdrop-blur-md rounded-2xl border border-blue-500/20 p-8 shadow-xl hover:shadow-blue-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
               <div className="text-center">
                 <h4 className="text-xl font-bold text-white mb-2">Basic</h4>
-                <div className="text-3xl font-bold text-blue-300 mb-4">€29</div>
+                <div className="text-3xl font-bold text-blue-300 mb-4">€49</div>
                 <p className="text-gray-400 text-sm mb-6">per month</p>
                 <ul className="text-left text-gray-300 space-y-2 mb-8">
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    20 Content Packages
+                    4 Content Packages
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    50 Custom Posts
+                    Basic Scheduling
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    10 Bulk Generations
+                    Standard Support
                   </li>
                 </ul>
                 <Button 
@@ -251,20 +251,24 @@ export default function HomePage() {
             <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/40 backdrop-blur-md rounded-2xl border border-purple-500/20 p-8 shadow-xl hover:shadow-purple-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
               <div className="text-center">
                 <h4 className="text-xl font-bold text-white mb-2">Initiate</h4>
-                <div className="text-3xl font-bold text-purple-300 mb-4">€79</div>
+                <div className="text-3xl font-bold text-purple-300 mb-4">€99</div>
                 <p className="text-gray-400 text-sm mb-6">per month</p>
                 <ul className="text-left text-gray-300 space-y-2 mb-8">
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    50 Content Packages
+                    8 Content Packages
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    100 Custom Posts
+                    10 Custom Content
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    25 Bulk Generations
+                    Advanced Scheduling
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Priority Support
                   </li>
                 </ul>
                 <Button 
@@ -285,15 +289,19 @@ export default function HomePage() {
                 <ul className="text-left text-gray-300 space-y-2 mb-8">
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    Unlimited Content Packages
+                    12 Content Packages
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    Unlimited Custom Posts
+                    Unlimited Custom Content
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span>
-                    Unlimited Bulk Generations
+                    Advanced Analytics
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Priority Support
                   </li>
                 </ul>
                 <Button 
