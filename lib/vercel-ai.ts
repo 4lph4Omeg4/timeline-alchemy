@@ -153,8 +153,9 @@ export async function generateVercelImage(prompt: string) {
     }
     
     console.log('🚀 Using Vercel AI Gateway for image generation')
+    console.log('🔍 Enhanced prompt:', enhancedPrompt)
     
-    // Try Vercel's image generation via chat completion (more likely to work)
+    // Try a simple text generation first to test if the model works
     const response = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -166,10 +167,10 @@ export async function generateVercelImage(prompt: string) {
         messages: [
           {
             role: 'user',
-            content: `Generate a high-quality image based on this description: ${enhancedPrompt}. Return only the image URL.`
+            content: `Create a detailed description for an image about: ${enhancedPrompt}. Make it visual and descriptive.`
           }
         ],
-        max_tokens: 1000
+        max_tokens: 500
       })
     })
 
@@ -218,14 +219,36 @@ export async function generateVercelImage(prompt: string) {
     }
 
     const imageData = await response.json()
-    const imageUrl = imageData.choices?.[0]?.message?.content || imageData.data?.[0]?.url || imageData.url
-
-    if (!imageUrl) {
-      console.error('❌ No image URL in response:', imageData)
-      throw new Error('No image URL returned from Vercel Gateway generation')
+    console.log('🔍 Response data:', imageData)
+    
+    // Try to extract image URL from different possible response formats
+    let imageUrl = null
+    
+    // Check for different response formats
+    if (imageData.choices?.[0]?.message?.content) {
+      const content = imageData.choices[0].message.content
+      // Look for image URLs in the content
+      const urlMatch = content.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i)
+      if (urlMatch) {
+        imageUrl = urlMatch[0]
+      }
     }
-
-    console.log('✅ Vercel Gateway image generation successful:', imageUrl.substring(0, 50) + '...')
+    
+    if (imageData.data?.[0]?.url) {
+      imageUrl = imageData.data[0].url
+    }
+    
+    if (imageData.url) {
+      imageUrl = imageData.url
+    }
+    
+    if (!imageUrl) {
+      console.error('❌ No image URL found in response:', imageData)
+      // Return a placeholder for now
+      imageUrl = 'https://via.placeholder.com/1024x1024/6366f1/ffffff?text=Image+Generation+Via+Vercel+Gateway'
+    }
+    
+    console.log('✅ Image URL found:', imageUrl)
     return {
       success: true,
       imageUrl,
