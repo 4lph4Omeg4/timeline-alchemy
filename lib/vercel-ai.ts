@@ -159,9 +159,6 @@ export async function generateVercelImage(prompt: string) {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash-image-preview',
-        providerOptions: {
-          google: { responseModalities: ['TEXT', 'IMAGE'] }
-        },
         messages: [
           {
             role: 'user',
