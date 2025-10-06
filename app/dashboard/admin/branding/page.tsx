@@ -84,11 +84,16 @@ export default function BrandingPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(branding)
+        body: JSON.stringify({
+          ...branding,
+          org_id: 'admin-org'
+        })
       })
 
       if (response.ok) {
         toast.success('Branding settings saved successfully!')
+        // Refresh the settings to get the latest data
+        await fetchBrandingSettings()
       } else {
         const error = await response.json()
         toast.error(error.error || 'Failed to save settings')
@@ -116,8 +121,10 @@ export default function BrandingPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Branding Settings</h1>
-          <p className="text-gray-600">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            🎨 Branding Settings
+          </h1>
+          <p className="text-lg text-gray-600">
             Configure your organization's branding that will appear as watermarks on generated images.
           </p>
         </div>
