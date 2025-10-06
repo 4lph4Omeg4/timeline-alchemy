@@ -14,45 +14,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if AI Gateway is available for enhanced image generation
-    const useVercelGateway = process.env.AI_GATEWAY_API_KEY
-    
-    if (useVercelGateway) {
-      console.log('🎨 Using Vercel AI Gateway for enhanced image generation')
-      try {
-        const vercelResponse = await generateVercelImage(prompt)
-        
-        if (vercelResponse.success) {
-          return NextResponse.json({
-            imageUrl: vercelResponse.imageUrl,
-            metadata: {
-              provider: 'vercel-enhanced',
-              enhancedPrompt: vercelResponse.enhancedPrompt,
-              enhancementTokens: 0,
-            gateway: true,
-              improved: true
-            }
-          })
-        }
-      } catch (vercelError) {
-        console.warn('⚠️ Vercel Gateway image generation failed, falling back:', vercelError)
-      }
-    }
-
-    // Fallback to original implementation with enhanced prompt
-    console.log('📡 Using direct OpenAI API for image generation')
+    // Use Vercel AI Gateway for image generation
+    console.log('🚀 Using Vercel AI Gateway for image generation')
     const improvedPrompt = `${prompt}. Professional photography, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality. NO TEXT, NO WORDS, NO LETTERS, NO WRITING, NO TYPEFACE, NO FONTS.`
+
+    const vercelResponse = await generateVercelImage(improvedPrompt)
     
-    const imageUrl = await generateImage(improvedPrompt)
-    
-    return NextResponse.json({ 
-      imageUrl,
-      metadata: {
-        provider: 'openai-direct',
-        enhancedPrompt: improvedPrompt,
-        fallback: useVercelGateway
-      }
-    })
+    if (vercelResponse.success) {
+      return NextResponse.json({
+        imageUrl: vercelResponse.imageUrl,
+        metadata: {
+          provider: 'vercel-gateway',
+          enhancedPrompt: vercelResponse.enhancedPrompt,
+          enhanced: true
+        }
+      })
+    } else {
+      throw new Error('Vercel Gateway image generation failed')
+    }
   } catch (error) {
     console.error('Error generating image:', error)
     return NextResponse.json(

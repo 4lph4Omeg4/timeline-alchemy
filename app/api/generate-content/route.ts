@@ -25,72 +25,60 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if AI Gateway is available and use it for better quality
-    const useVercelGateway = process.env.AI_GATEWAY_API_KEY
+    // Use Vercel AI Gateway exclusively
+    const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
     
-    if (useVercelGateway) {
-      console.log('🚀 Using Vercel AI Gateway for enhanced generation')
-      try {
-        const vercelResponse = await generateVercelContent(body.prompt, body.type as 'blog' | 'social', body.tone || 'professional')
+    if (!gatewayApiKey) {
+      return NextResponse.json(
+        { error: 'AI Gateway API key not configured' },
+        { status: 500 }
+      )
+    }
+    
+    console.log('🚀 Using Vercel AI Gateway for content generation')
+    const vercelResponse = await generateVercelContent(body.prompt, body.type as 'blog' | 'social', body.tone || 'professional')
+    
+    if (vercelResponse.success) {
+      // Check if it's blog content (has content property) or social content
+      if ('content' in vercelResponse) {
+        // Auto-detect category based on content
+        const detectedCategory = detectCategory(vercelResponse.title || body.prompt, vercelResponse.content || '')
+        const categoryInfo = getCategoryInfo(detectedCategory)
         
-        if (vercelResponse.success) {
-          // Check if it's blog content (has content property) or social content
-          if ('content' in vercelResponse) {
-            // Auto-detect category based on content
-            const detectedCategory = detectCategory(vercelResponse.title || body.prompt, vercelResponse.content || '')
-            const categoryInfo = getCategoryInfo(detectedCategory)
-            
-            return NextResponse.json({
-              content: vercelResponse.content || '',
-              title: vercelResponse.title || '',
-              excerpt: vercelResponse.excerpt || '',
-              hashtags: vercelResponse.hashtags,
-              suggestions: vercelResponse.suggestions,
-              category: categoryInfo.id,
-              metadata: {
-                provider: 'vercel-ai-gateway',
-                enhanced: true,
-                detectedCategory: categoryInfo.label
-              }
-            })
-          } else if ('socialPosts' in vercelResponse) {
-            // For social content, we'll return it in the social format
-            return NextResponse.json({
-              content: `Social media content generated for multiple platforms`,
-              title: `${body.prompt} - Social Media Content`,
-              excerpt: 'Multi-platform social media content',
-              hashtags: [],
-              suggestions: ['Customize for each specific platform', 'Add visual content', 'Schedule optimal posting times'],
-              metadata: {
-                provider: 'vercel-ai-gateway',
-                socialPosts: vercelResponse.socialPosts,
-                enhanced: true
-              }
-            })
+        return NextResponse.json({
+          content: vercelResponse.content || '',
+          title: vercelResponse.title || '',
+          excerpt: vercelResponse.excerpt || '',
+          hashtags: vercelResponse.hashtags,
+          suggestions: vercelResponse.suggestions,
+          category: categoryInfo.id,
+          metadata: {
+            provider: 'vercel-ai-gateway',
+            enhanced: true,
+            detectedCategory: categoryInfo.label
           }
-        }
-      } catch (vercelError) {
-        console.warn('⚠️ Vercel Gateway failed, falling back to direct OpenAI:', vercelError)
+        })
+      } else if ('socialPosts' in vercelResponse) {
+        // For social content, we'll return it in the social format
+        return NextResponse.json({
+          content: `Social media content generated for multiple platforms`,
+          title: `${body.prompt} - Social Media Content`,
+          excerpt: 'Multi-platform social media content',
+          hashtags: [],
+          suggestions: ['Customize for each specific platform', 'Add visual content', 'Schedule optimal posting times'],
+          metadata: {
+            provider: 'vercel-ai-gateway',
+            socialPosts: vercelResponse.socialPosts,
+            enhanced: true
+          }
+        })
       }
     }
-
-    // Fallback to original implementation
-    console.log('📡 Using direct OpenAI API')
-    const response = await generateContent(body)
     
-    // Auto-detect category for fallback response too
-    const detectedCategory = detectCategory(response.title || body.prompt, response.content || '')
-    const categoryInfo = getCategoryInfo(detectedCategory)
-    
-    return NextResponse.json({
-      ...response,
-      category: categoryInfo.id,
-      metadata: {
-        provider: 'openai-direct',
-        fallback: useVercelGateway, // Indicate this was a fallback
-        detectedCategory: categoryInfo.label
-      }
-    })
+    return NextResponse.json(
+      { error: 'Vercel Gateway content generation failed' },
+      { status: 500 }
+    )
   } catch (error) {
     console.error('Error generating content:', error)
     return NextResponse.json(

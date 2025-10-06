@@ -1,178 +1,76 @@
 import { NextResponse } from 'next/server'
-import { getOpenAI } from '@/lib/ai'
+import { generateVercelContent } from '@/lib/vercel-ai'
 
 export async function POST(req: Request) {
   try {
     const { title, content, platforms } = await req.json()
 
-    const openai = getOpenAI()
+    // Use Vercel AI Gateway exclusively
+    const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
     
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a social media expert. Create platform-specific posts based ONLY on the content provided. Do not add unrelated concepts or random terms.`
-        },
-        {
-          role: 'user',
-          content: `Create UNIQUE, platform-specific social media posts for this blog content. Each post must be DIFFERENT and tailored to its platform's audience and format.
+    if (!gatewayApiKey) {
+      return NextResponse.json(
+        { error: 'AI Gateway API key not configured' },
+        { status: 500 }
+      )
+    }
+    
+    console.log('🚀 Using Vercel AI Gateway for social posts generation')
+    
+    // Create a comprehensive prompt for social media generation
+    const socialPrompt = `Create COMPLETELY UNIQUE social media posts for each platform. Each platform gets a DIFFERENT approach.
 
 Title: ${title}
 
 Content: ${content}
 
-CRITICAL REQUIREMENTS:
-- Each post must be UNIQUE and DIFFERENT from the others
-- Do NOT repeat the title in every post
-- Do NOT copy the article text verbatim
-- Create engaging, platform-specific content that captures the essence
-- Use platform-appropriate tone and style
-- Include relevant hashtags for each platform
+CRITICAL RULES:
+- NEVER include the title in any post
+- NEVER copy text from the article
+- Each post must be COMPLETELY DIFFERENT
+- Create engaging hooks and insights
+- Use platform-specific language and tone
 
-PLATFORM GUIDELINES:
-Facebook: Conversational, community-focused, 2-3 sentences (max 1000 chars), engaging questions or insights
-Instagram: Visual storytelling, emoji-rich, 2-3 sentences (max 500 chars), lifestyle-focused with 5-10 hashtags
-Twitter: Concise, punchy, engaging (max 280 chars), trending topics, 2-3 short hashtags
-LinkedIn: Professional insights, business value, 2-3 sentences (max 1500 chars), thought leadership tone
-Discord: Community-focused, casual gaming/tech tone, engaging for discussions
-Reddit: Discussion-provoking, authentic, community-specific language, no corporate speak
-Telegram: Channel-friendly, informative updates, 2-3 sentences with emojis
+Facebook: Community discussion starter, ask engaging questions
+Instagram: Visual storytelling with emojis, lifestyle angle
+Twitter: Punchy one-liner or question, trending style
+LinkedIn: Professional insight, business value proposition
+Discord: Gaming/tech community discussion starter
+Reddit: Authentic community discussion, no corporate speak
+Telegram: Informative update with emojis
 
 OUTPUT FORMAT:
 Facebook:
-[Unique Facebook post here]
+[Unique discussion starter here]
 
 Instagram:
-[Unique Instagram post here]
+[Unique visual story here]
 
 Twitter:
-[Unique Twitter post here]
+[Unique punchy post here]
 
 LinkedIn:
-[Unique LinkedIn post here]
+[Unique professional insight here]
 
 Discord:
-[Unique Discord post here]
+[Unique community post here]
 
 Reddit:
-[Unique Reddit post here]
+[Unique discussion starter here]
 
 Telegram:
-[Unique Telegram post here]
+[Unique informative update here]
 
-Each post must be ready to publish and completely different from the others.`
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    })
+Each post must be ready to publish and completely different.`
 
-    const response = completion.choices[0]?.message?.content || ''
-    console.log('Raw social posts response:', response) // Debug logging
+    const vercelResponse = await generateVercelContent(socialPrompt, 'social', 'professional')
     
-    // Parse the response to extract platform-specific posts
-    const socialPosts: any = {}
-    
-    // Better parsing - look for platform headers with colon
-    const lines = response.split('\n')
-    let currentPlatform = ''
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim()
-      
-      // Check for platform headers
-      if (trimmedLine.toLowerCase().startsWith('facebook:')) {
-        currentPlatform = 'facebook'
-        const content = trimmedLine.substring(9).trim()
-        if (content) socialPosts.facebook = content
-      } else if (trimmedLine.toLowerCase().startsWith('instagram:')) {
-        currentPlatform = 'instagram'
-        const content = trimmedLine.substring(10).trim()
-        if (content) socialPosts.instagram = content
-      } else if (trimmedLine.toLowerCase().startsWith('twitter:')) {
-        currentPlatform = 'twitter'
-        const content = trimmedLine.substring(8).trim()
-        if (content) socialPosts.twitter = content
-      } else if (trimmedLine.toLowerCase().startsWith('linkedin:')) {
-        currentPlatform = 'linkedin'
-        const content = trimmedLine.substring(10).trim()
-        if (content) socialPosts.linkedin = content
-      } else if (trimmedLine.toLowerCase().startsWith('discord:')) {
-        currentPlatform = 'discord'
-        const content = trimmedLine.substring(8).trim()
-        if (content) socialPosts.discord = content
-      } else if (trimmedLine.toLowerCase().startsWith('reddit:')) {
-        currentPlatform = 'reddit'
-        const content = trimmedLine.substring(7).trim()
-        if (content) socialPosts.reddit = content
-      } else if (trimmedLine.toLowerCase().startsWith('telegram:')) {
-        currentPlatform = 'telegram'
-        const content = trimmedLine.substring(9).trim()
-        if (content) socialPosts.telegram = content
-      } else if (currentPlatform && trimmedLine && !trimmedLine.includes(':')) {
-        // Add content to current platform
-        if (!socialPosts[currentPlatform]) {
-          socialPosts[currentPlatform] = trimmedLine
-        } else {
-          socialPosts[currentPlatform] += '\n' + trimmedLine
-        }
-      }
+    if (vercelResponse.success && 'socialPosts' in vercelResponse) {
+      console.log('✅ Vercel Gateway social posts generation successful')
+      return NextResponse.json({ socialPosts: vercelResponse.socialPosts })
+    } else {
+      throw new Error('Vercel Gateway social posts generation failed')
     }
-
-    // Ensure all platforms have content - fill missing ones
-    const requiredPlatforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
-    
-    for (const platform of requiredPlatforms) {
-      if (!socialPosts[platform]) {
-        switch (platform) {
-          case 'facebook':
-            socialPosts.facebook = `Check out this amazing content: ${title}\n\n${content.substring(0, 800)}...\n\n#Content #Inspiration #AI #Digital #Innovation`
-            break
-          case 'instagram':
-            socialPosts.instagram = `✨ ${title} ✨\n\n${content.substring(0, 400)}...\n\n#AI #Content #Inspiration #Digital #Innovation #Trending`
-            break
-          case 'twitter':
-            const shortContent = content.substring(0, 150).replace(/\n/g, ' ').trim()
-            const twitterPost = `${title}\n\n${shortContent}...\n\n#AI #Content`
-            socialPosts.twitter = twitterPost.length > 280 ? `${title}\n\n${shortContent.substring(0, 200)}...\n\n#AI` : twitterPost
-            break
-          case 'linkedin':
-            socialPosts.linkedin = `Professional insight: ${title}\n\n${content.substring(0, 1200)}...\n\n#Professional #AI #Content #Business #Innovation #Leadership`
-            break
-          case 'discord':
-            socialPosts.discord = `${title} 🎮\n\n${content.substring(0, 120)}...\n\n#AI #Community #Tech`
-            break
-          case 'reddit':
-            socialPosts.reddit = `${title} 🤖\n\n${content.substring(0, 120)}...\n\n#AI #Discussion #Tech`
-            break
-        }
-      }
-    }
-
-    // Post-processing: Ensure Twitter posts are under 280 characters
-    if (socialPosts.twitter && socialPosts.twitter.length > 280) {
-      // Create a very short Twitter post
-      const shortTitle = title.length > 50 ? title.substring(0, 50) + '...' : title
-      const shortContent = content.substring(0, 150).replace(/\n/g, ' ').trim()
-      const hashtags = '#AI #Content'
-      
-      // Calculate available space for content
-      const availableSpace = 280 - shortTitle.length - hashtags.length - 10 // 10 for spacing
-      const finalContent = shortContent.length > availableSpace ? 
-        shortContent.substring(0, availableSpace) + '...' : 
-        shortContent
-      
-      socialPosts.twitter = `${shortTitle}\n\n${finalContent}\n\n${hashtags}`
-      
-      // Final safety check - if still too long, make it even shorter
-      if (socialPosts.twitter.length > 280) {
-        socialPosts.twitter = `${shortTitle}\n\n${shortContent.substring(0, 100)}...\n\n#AI`
-      }
-    }
-
-    console.log('Final social posts:', socialPosts) // Debug logging
-    return NextResponse.json({ socialPosts })
   } catch (error) {
     console.error('API error generating social posts:', error)
     return NextResponse.json({ error: 'Failed to generate social posts' }, { status: 500 })

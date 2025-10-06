@@ -145,85 +145,52 @@ export async function generateVercelImage(prompt: string) {
     
     console.log('🎨 Using original prompt:', enhancedPrompt)
     
-    // Check if Gateway is available
+    // Use Vercel AI Gateway for image generation
     const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
     
-    if (gatewayApiKey) {
-      console.log('🚀 Using Vercel AI Gateway for image generation')
-      // Use Gateway URL for image generation
-      const response = await fetch('https://ai-gateway.vercel.sh/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${gatewayApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: enhancedPrompt,
-          n: 1,
-          size: '1024x1024',
-          quality: 'standard',
-          style: 'vivid'
-        })
+    if (!gatewayApiKey) {
+      throw new Error('AI Gateway API key not configured')
+    }
+    
+    console.log('🚀 Using Vercel AI Gateway for image generation')
+    
+    // Use Vercel's image generation models
+    const response = await fetch('https://ai-gateway.vercel.sh/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${gatewayApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image-preview', // Google's image generation model via Vercel
+        prompt: enhancedPrompt,
+        n: 1,
+        size: '1024x1024',
+        quality: 'standard',
+        style: 'vivid'
       })
-      
-      if (!response.ok) {
-        throw new Error(`Gateway image generation failed: ${response.statusText}`)
-      }
-      
-      const imageData = await response.json()
-      const imageUrl = imageData.data?.[0]?.url
-      
-      if (!imageUrl) {
-        throw new Error('No image URL returned from Gateway generation')
-      }
-      
-      console.log('✅ Gateway image generation successful')
-      return {
-        success: true,
-        imageUrl,
-        enhancedPrompt,
-        enhanced: true,
-        provider: 'vercel-gateway'
-      }
-    } else {
-      console.log('📡 Using direct OpenAI API for image generation')
-      // Generate image using OpenAI API
-      const response = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: enhancedPrompt,
-          n: 1,
-          size: '1024x1024',
-          quality: 'standard',
-          style: 'vivid'
-        })
-      })
+    })
 
-      if (!response.ok) {
-        throw new Error(`Image generation failed: ${response.statusText}`)
-      }
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ Vercel Gateway image generation failed:', response.status, errorText)
+      throw new Error(`Vercel Gateway image generation failed: ${response.statusText} - ${errorText}`)
+    }
 
-      const imageData = await response.json()
-      const imageUrl = imageData.data?.[0]?.url
+    const imageData = await response.json()
+    const imageUrl = imageData.data?.[0]?.url
 
-      if (!imageUrl) {
-        throw new Error('No image URL returned from generation')
-      }
+    if (!imageUrl) {
+      throw new Error('No image URL returned from Vercel Gateway generation')
+    }
 
-      console.log('✅ Direct image generation successful')
-      return {
-        success: true,
-        imageUrl,
-        enhancedPrompt,
-        enhanced: true,
-        provider: 'openai-direct'
-      }
+    console.log('✅ Vercel Gateway image generation successful:', imageUrl.substring(0, 50) + '...')
+    return {
+      success: true,
+      imageUrl,
+      enhancedPrompt,
+      enhanced: true,
+      provider: 'vercel-gateway'
     }
   } catch (error) {
     console.error('❌ Enhanced image generation error:', error)
@@ -253,12 +220,12 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
     // Use Gateway API key
     headers['Authorization'] = `Bearer ${gatewayApiKey}`
     
-    // Prefix model name with provider (required by Gateway)
-    if (model === 'gpt-4') {
-      model = 'openai/gpt-4'
-    } else if (model === 'gpt-3.5-turbo') {
-      model = 'openai/gpt-3.5-turbo'
-    }
+           // Prefix model name with provider (required by Gateway)
+           if (model === 'gpt-4') {
+             model = 'openai/gpt-5-mini' // Use faster GPT-5 Mini
+           } else if (model === 'gpt-3.5-turbo') {
+             model = 'openai/gpt-5-mini' // Use faster GPT-5 Mini
+           }
     
     console.log('🔍 Gateway Configuration:', {
       url: apiUrl.substring(0, 50) + '...',
