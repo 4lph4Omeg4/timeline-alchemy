@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { PlanType } from '@/types/index'
 
 // Server-side Stripe instance (only use in API routes)
 export const getStripe = () => {
@@ -15,50 +16,83 @@ export const getStripe = () => {
 export const STRIPE_PLANS = {
   basic: {
     name: 'Basic',
-    price: 129,
+    price: 49, // €49.00
     features: [
-      '1 organization',
-      '4x Blog + crossplatform social links (set per week)',
+      '4 content packages',
       'Basic scheduling',
+      'Standard support',
     ],
     limits: {
-      postsPerMonth: 16, // 4 per week
-      organizations: 1,
-      socialAccounts: 5,
+      contentPackages: 4,
+      customContent: 0,
+      bulkGeneration: 0,
+      customIntegrations: false,
+      whiteLabel: false,
+      prioritySupport: false,
+      advancedAnalytics: false,
     },
   },
-  pro: {
-    name: 'Pro',
-    price: 249,
+  initiate: {
+    name: 'Initiate',
+    price: 99, // €99.00
     features: [
-      '1 organization',
-      '8x Blog + crossplatform social links (2x set per week)',
+      '8 content packages',
+      '10 custom content generations',
       'Advanced scheduling',
-      'Analytics dashboard',
+      'Priority support',
     ],
     limits: {
-      postsPerMonth: 32, // 8 per week
-      organizations: 1,
-      socialAccounts: 10,
+      contentPackages: 8,
+      customContent: 10,
+      bulkGeneration: 0,
+      customIntegrations: false,
+      whiteLabel: false,
+      prioritySupport: true,
+      advancedAnalytics: false,
     },
   },
-  enterprise: {
-    name: 'Enterprise',
-    price: 499,
+  transcendant: {
+    name: 'Transcendant',
+    price: 199, // €199.00
     features: [
-      'Unlimited AI posts',
+      '12 content packages',
+      'Unlimited custom content',
+      'Advanced analytics',
       'Priority support',
-      'Custom integrations',
     ],
     limits: {
-      postsPerMonth: -1, // unlimited
-      organizations: -1, // unlimited
-      socialAccounts: -1, // unlimited
+      contentPackages: 12,
+      customContent: -1, // unlimited
+      bulkGeneration: 0,
+      customIntegrations: false,
+      whiteLabel: false,
+      prioritySupport: true,
+      advancedAnalytics: true,
+    },
+  },
+  universal: {
+    name: 'Universal',
+    price: 499, // €499.00
+    features: [
+      'Unlimited content packages',
+      'Unlimited custom content',
+      'Unlimited bulk generation',
+      'Custom integrations',
+      'White-label options',
+    ],
+    limits: {
+      contentPackages: -1, // unlimited
+      customContent: -1, // unlimited
+      bulkGeneration: -1, // unlimited
+      customIntegrations: true,
+      whiteLabel: true,
+      prioritySupport: true,
+      advancedAnalytics: true,
     },
   },
 } as const
 
-export type PlanType = keyof typeof STRIPE_PLANS
+export type StripePlanType = keyof typeof STRIPE_PLANS
 
 export async function createStripeCustomer(email: string, name: string) {
   const stripe = getStripe()
@@ -102,4 +136,25 @@ export async function createCheckoutSession(
     success_url: successUrl,
     cancel_url: cancelUrl,
   })
+}
+
+// Helper function to get plan limits
+export function getPlanLimits(plan: PlanType) {
+  return STRIPE_PLANS[plan]?.limits || STRIPE_PLANS.basic.limits
+}
+
+// Helper function to check if user can perform action
+export function canPerformAction(plan: PlanType, action: 'contentPackage' | 'customContent' | 'bulkGeneration', currentUsage: number) {
+  const limits = getPlanLimits(plan)
+  
+  switch (action) {
+    case 'contentPackage':
+      return limits.contentPackages === -1 || currentUsage < limits.contentPackages
+    case 'customContent':
+      return limits.customContent === -1 || currentUsage < limits.customContent
+    case 'bulkGeneration':
+      return limits.bulkGeneration === -1 || currentUsage < limits.bulkGeneration
+    default:
+      return false
+  }
 }

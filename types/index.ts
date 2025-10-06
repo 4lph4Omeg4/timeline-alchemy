@@ -6,10 +6,12 @@ export interface User {
   created_at: string
 }
 
+export type PlanType = 'basic' | 'initiate' | 'transcendant' | 'universal'
+
 export interface Organization {
   id: string
   name: string
-  plan: 'basic' | 'pro' | 'enterprise'
+  plan: PlanType
   stripe_customer_id?: string
   created_at: string
   updated_at: string
@@ -69,8 +71,34 @@ export interface Subscription {
   org_id: string
   stripe_customer_id: string
   stripe_subscription_id: string
-  plan: 'basic' | 'pro' | 'enterprise'
+  plan: PlanType
   status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing'
+  created_at: string
+  updated_at: string
+}
+
+export interface PlanFeatures {
+  id: string
+  plan_name: PlanType
+  content_packages_limit?: number // NULL means unlimited
+  custom_content_limit?: number // NULL means unlimited
+  bulk_generation_limit?: number // NULL means unlimited
+  custom_integrations: boolean
+  white_label: boolean
+  priority_support: boolean
+  advanced_analytics: boolean
+  price_monthly: number // Price in cents
+  created_at: string
+  updated_at: string
+}
+
+export interface OrganizationUsage {
+  id: string
+  org_id: string
+  content_packages_used: number
+  custom_content_used: number
+  bulk_generation_used: number
+  reset_date: string
   created_at: string
   updated_at: string
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { incrementUsage } from '@/lib/subscription-limits'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,6 +42,52 @@ export async function POST(request: NextRequest) {
         persistSession: false
       }
     })
+
+    // Get user's organization to check limits
+    const { data: orgMembers } = await supabaseClient
+      .from('org_members')
+      .select('org_id, role')
+      .eq('user_id', userId)
+
+    if (!orgMembers || orgMembers.length === 0) {
+      return NextResponse.json(
+        { error: 'No organization found for user' },
+        { status: 400 }
+      )
+    }
+
+    // Find the user's personal organization (not Admin Organization)
+    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+    if (!userOrgId) {
+      userOrgId = orgMembers[0].org_id
+    }
+
+    // Check subscription limits before creating package
+    try {
+      const limitCheck = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/check-subscription-limits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orgId: userOrgId,
+          action: 'contentPackage',
+          count: 1
+        }),
+      })
+
+      const limitResult = await limitCheck.json()
+      
+      if (!limitResult.allowed) {
+        return NextResponse.json(
+          { error: limitResult.reason || 'Plan limit reached' },
+          { status: 403 }
+        )
+      }
+    } catch (error) {
+      console.error('Error checking subscription limits:', error)
+      // Continue without limit check if it fails
+    }
 
     // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Mimic the working content generator
     console.log('🔍 Using admin organization for this admin-only package...')
@@ -183,6 +230,15 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('✅ Admin package created successfully:', insertedPackage?.id)
+
+    // Increment usage counter for successful package creation
+    try {
+      await incrementUsage(userOrgId, 'contentPackage')
+      console.log(`📊 Incremented content package usage for org: ${userOrgId}`)
+    } catch (usageError) {
+      console.error('❌ Failed to increment usage:', usageError)
+      // Don't fail the request if usage increment fails
+    }
 
     return NextResponse.json({
       success: true,

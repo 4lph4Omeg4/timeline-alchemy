@@ -280,62 +280,107 @@ export default function HomePage() {
             <div className="absolute -top-4 -left-4 -right-4 -bottom-4 bg-gradient-to-r from-yellow-600/20 via-yellow-500/20 to-yellow-600/20 rounded-3xl blur-2xl"></div>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {/* Basic Plan */}
             <Card className="bg-gradient-to-br from-slate-800/50 to-gray-800/50 backdrop-blur-md border-slate-500/30 shadow-xl hover:shadow-slate-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
               <CardHeader className="pb-6">
-                <CardTitle className="text-white text-2xl font-bold group-hover:text-slate-200 transition-colors duration-300">
-                  🌟 Divine Basic
+                <CardTitle className="text-white text-xl font-bold group-hover:text-slate-200 transition-colors duration-300">
+                  🌟 Basic
                 </CardTitle>
-                <div className="text-4xl font-black text-yellow-400 mb-2">€129<span className="text-lg text-gray-300 font-normal">/month</span></div>
-                <p className="text-gray-300 text-sm">Perfect for divine beginners</p>
+                <div className="text-3xl font-black text-yellow-400 mb-2">€49<span className="text-sm text-gray-300 font-normal">/month</span></div>
+                <p className="text-gray-300 text-sm">Perfect for beginners</p>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-3 text-left text-gray-200">
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>1 divine organization</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>4x Heavenly Blog + cross-platform social links</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>Basic celestial scheduling</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>Divine content templates</li>
+                <ul className="space-y-2 text-left text-gray-200 text-sm">
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>4 content packages</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Basic scheduling</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Standard support</li>
                 </ul>
+                <Button 
+                  className="w-full mt-4 bg-gradient-to-r from-slate-600 to-gray-600 hover:from-slate-500 hover:to-gray-500"
+                  onClick={handleSignUp}
+                >
+                  Get Started
+                </Button>
               </CardContent>
             </Card>
 
-            {/* Pro Plan - Featured */}
-            <Card className="bg-gradient-to-br from-purple-800/60 to-pink-800/60 backdrop-blur-md border-purple-400/50 shadow-2xl hover:shadow-purple-500/50 transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 group relative">
-              <CardHeader className="pb-6 pt-8">
-                <CardTitle className="text-white text-2xl font-bold group-hover:text-purple-200 transition-colors duration-300">
-                  👑 Divine Pro
-                </CardTitle>
-                <div className="text-4xl font-black text-yellow-400 mb-2">€249<span className="text-lg text-gray-300 font-normal">/month</span></div>
-                <p className="text-purple-200 text-sm">For enlightened creators</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 text-left text-gray-200">
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>1 divine organization</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>8x Heavenly Blog + cross-platform social links</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>Advanced celestial scheduling</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>Divine analytics dashboard</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>Priority divine support</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Enterprise Plan */}
+            {/* Initiate Plan */}
             <Card className="bg-gradient-to-br from-blue-800/50 to-purple-800/50 backdrop-blur-md border-blue-500/30 shadow-xl hover:shadow-blue-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
               <CardHeader className="pb-6">
-                <CardTitle className="text-white text-2xl font-bold group-hover:text-blue-200 transition-colors duration-300">
-                  🚀 Divine Enterprise
+                <CardTitle className="text-white text-xl font-bold group-hover:text-blue-200 transition-colors duration-300">
+                  🧠 Initiate
                 </CardTitle>
-                <div className="text-4xl font-black text-yellow-400 mb-2">€499<span className="text-lg text-gray-300 font-normal">/month</span></div>
-                <p className="text-blue-200 text-sm">For cosmic-scale operations</p>
+                <div className="text-3xl font-black text-yellow-400 mb-2">€99<span className="text-sm text-gray-300 font-normal">/month</span></div>
+                <p className="text-blue-200 text-sm">For growing creators</p>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-3 text-left text-gray-200">
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>Unlimited divine AI posts</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>Priority cosmic support</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>Custom divine integrations</li>
-                  <li className="flex items-center"><span className="text-green-400 mr-3">✨</span>White-label divine branding</li>
+                <ul className="space-y-2 text-left text-gray-200 text-sm">
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>8 content packages</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>10 custom content generations</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Advanced scheduling</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Priority support</li>
                 </ul>
+                <Button 
+                  className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+                  onClick={handleSignUp}
+                >
+                  Get Started
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Transcendant Plan - Featured */}
+            <Card className="bg-gradient-to-br from-purple-800/60 to-pink-800/60 backdrop-blur-md border-purple-400/50 shadow-2xl hover:shadow-purple-500/50 transition-all duration-500 transform hover:scale-110 hover:-translate-y-3 group relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 rounded-full text-xs font-bold">
+                Most Popular
+              </div>
+              <CardHeader className="pb-6 pt-8">
+                <CardTitle className="text-white text-xl font-bold group-hover:text-purple-200 transition-colors duration-300">
+                  ⚡ Transcendant
+                </CardTitle>
+                <div className="text-3xl font-black text-yellow-400 mb-2">€199<span className="text-sm text-gray-300 font-normal">/month</span></div>
+                <p className="text-purple-200 text-sm">For serious creators</p>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-left text-gray-200 text-sm">
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>12 content packages</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Unlimited custom content</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Advanced analytics</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Priority support</li>
+                </ul>
+                <Button 
+                  className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                  onClick={handleSignUp}
+                >
+                  Get Started
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Universal Plan */}
+            <Card className="bg-gradient-to-br from-yellow-800/50 to-orange-800/50 backdrop-blur-md border-yellow-500/30 shadow-xl hover:shadow-yellow-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
+              <CardHeader className="pb-6">
+                <CardTitle className="text-white text-xl font-bold group-hover:text-yellow-200 transition-colors duration-300">
+                  🌍 Universal
+                </CardTitle>
+                <div className="text-3xl font-black text-yellow-400 mb-2">€499<span className="text-sm text-gray-300 font-normal">/month</span></div>
+                <p className="text-yellow-200 text-sm">For enterprises</p>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-left text-gray-200 text-sm">
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Unlimited content packages</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Unlimited custom content</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Unlimited bulk generation</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>Custom integrations</li>
+                  <li className="flex items-center"><span className="text-green-400 mr-2">✨</span>White-label options</li>
+                </ul>
+                <Button 
+                  className="w-full mt-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500"
+                  onClick={handleSignUp}
+                >
+                  Contact Sales
+                </Button>
               </CardContent>
             </Card>
           </div>

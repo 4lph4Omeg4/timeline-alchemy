@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { STRIPE_PLANS, PlanType } from '@/lib/stripe'
-import { Subscription } from '@/types/index'
+import { STRIPE_PLANS, StripePlanType } from '@/lib/stripe'
+import { Subscription, PlanType } from '@/types/index'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
@@ -123,8 +123,9 @@ export default function BillingPage() {
       // You'll need to replace these with your actual Stripe price IDs
       const priceIds: Record<PlanType, string> = {
         basic: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID || 'price_basic',
-        pro: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_pro',
-        enterprise: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID || 'price_enterprise',
+        initiate: process.env.NEXT_PUBLIC_STRIPE_INITIATE_PRICE_ID || 'price_initiate',
+        transcendant: process.env.NEXT_PUBLIC_STRIPE_TRANSCENDANT_PRICE_ID || 'price_transcendant',
+        universal: process.env.NEXT_PUBLIC_STRIPE_UNIVERSAL_PRICE_ID || 'price_universal',
       }
 
       const response = await fetch('/api/stripe/create-checkout-session', {
@@ -314,10 +315,10 @@ export default function BillingPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-white">
-                  {STRIPE_PLANS[subscription.plan].name}
+                  {STRIPE_PLANS[subscription.plan as StripePlanType]?.name || subscription.plan}
                 </h3>
                 <p className="text-gray-300">
-                  ${STRIPE_PLANS[subscription.plan].price}/month
+                  €{STRIPE_PLANS[subscription.plan as StripePlanType]?.price || 'N/A'}/month
                 </p>
                 <p className={`text-sm ${
                   subscription.status === 'active' ? 'text-green-400' :
@@ -365,26 +366,22 @@ export default function BillingPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Object.entries(STRIPE_PLANS).map(([planKey, plan]) => {
               const isCurrentPlan = subscription?.plan === planKey
-              const isUpgrade = !subscription || (
-                planKey === 'pro' && subscription.plan === 'basic'
-              ) || (
-                planKey === 'enterprise' && subscription.plan !== 'enterprise'
-              )
+              const planType = planKey as PlanType
 
               return (
                 <div
                   key={planKey}
                   className={`border rounded-lg p-6 bg-gray-700 ${
-                    planKey === 'basic' ? 'border-yellow-400 border-2' : 'border-gray-600'
+                    planKey === 'transcendant' ? 'border-purple-400 border-2' : 'border-gray-600'
                   }`}
                 >
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
                     <div className="text-3xl font-bold text-yellow-400 mt-2">
-                      ${plan.price}
+                      €{plan.price}
                       <span className="text-lg text-gray-400">/month</span>
                     </div>
                   </div>
@@ -411,7 +408,7 @@ export default function BillingPage() {
                       ) : (
                         <Button
                           className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-                          onClick={() => handleChangePlan(planKey as PlanType)}
+                          onClick={() => handleChangePlan(planType)}
                           disabled={processing === planKey}
                         >
                           {processing === planKey ? 'Processing...' : 
@@ -421,7 +418,7 @@ export default function BillingPage() {
                     ) : (
                       <Button
                         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-                        onClick={() => handleSubscribe(planKey as PlanType)}
+                        onClick={() => handleSubscribe(planType)}
                         disabled={processing === planKey}
                       >
                         {processing === planKey ? 'Processing...' : 'Subscribe'}
@@ -445,33 +442,33 @@ export default function BillingPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-400">16</div>
-                <div className="text-sm text-gray-300">AI Posts Generated</div>
-                <div className="text-xs text-gray-400">
-                  {subscription ? 
-                    `${STRIPE_PLANS[subscription.plan].limits.postsPerMonth === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan].limits.postsPerMonth} limit` :
-                    '16 limit'
-                  }
-                </div>
-              </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-400">1</div>
-              <div className="text-sm text-gray-300">Organizations</div>
+              <div className="text-2xl font-bold text-yellow-400">4</div>
+              <div className="text-sm text-gray-300">Content Packages</div>
               <div className="text-xs text-gray-400">
                 {subscription ? 
-                  `${STRIPE_PLANS[subscription.plan].limits.organizations === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan].limits.organizations} limit` :
-                  '1 limit'
+                  `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.contentPackages === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.contentPackages || 0} limit` :
+                  '4 limit'
                 }
               </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-400">2</div>
-              <div className="text-sm text-gray-300">Social Accounts</div>
+              <div className="text-sm text-gray-300">Custom Content</div>
               <div className="text-xs text-gray-400">
                 {subscription ? 
-                  `${STRIPE_PLANS[subscription.plan].limits.socialAccounts === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan].limits.socialAccounts} limit` :
-                  '2 limit'
+                  `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.customContent === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.customContent || 0} limit` :
+                  '0 limit'
+                }
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-400">0</div>
+              <div className="text-sm text-gray-300">Bulk Generations</div>
+              <div className="text-xs text-gray-400">
+                {subscription ? 
+                  `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.bulkGeneration === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.bulkGeneration || 0} limit` :
+                  '0 limit'
                 }
               </div>
             </div>

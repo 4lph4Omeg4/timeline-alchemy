@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateBulkContent, validateTrendData, BulkContentResult } from '@/lib/bulk-content-generator'
+import { incrementUsage } from '@/lib/subscription-limits'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,12 +27,41 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
     
+    // Get current user and organization
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({
+        success: false,
+        error: 'Authentication required'
+      }, { status: 401 })
+    }
+
+    // Get user's organization
+    const { data: orgMembers } = await supabase
+      .from('org_members')
+      .select('org_id, role')
+      .eq('user_id', user.id)
+
+    if (!orgMembers || orgMembers.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'No organization found'
+      }, { status: 400 })
+    }
+
+    // Find the user's personal organization (not Admin Organization)
+    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+    if (!userOrgId) {
+      userOrgId = orgMembers[0].org_id
+    }
+    
     // Set defaults
     const contentType = body.contentType || 'blog'
     const language = body.language || 'nl'
     const customPrompt = body.customPrompt || ''
     
     console.log(`📊 Processing ${body.items.length} trend items for ${contentType} content in ${language}`)
+    console.log(`🏢 Organization: ${userOrgId}`)
     
     // Check for OpenAI API key
     if (!process.env.OPENAI_API_KEY) {
@@ -68,6 +99,17 @@ export async function POST(req: NextRequest) {
       total: bulkResult.summary.totalProcessed,
       failed: bulkResult.summary.failed
     })
+
+    // Increment usage counter for successful bulk generation
+    if (bulkResult.success && bulkResult.summary.successful > 0) {
+      try {
+        await incrementUsage(userOrgId, 'bulkGeneration')
+        console.log(`📊 Incremented bulk generation usage for org: ${userOrgId}`)
+      } catch (usageError) {
+        console.error('❌ Failed to increment usage:', usageError)
+        // Don't fail the request if usage increment fails
+      }
+    }
     
     return NextResponse.json({
       success: bulkResult.success,
@@ -79,7 +121,8 @@ export async function POST(req: NextRequest) {
         language,
         processingTime: duration,
         timestamp: new Date().toISOString(),
-        provider: 'openai-gpt-4'
+        provider: 'openai-gpt-4',
+        orgId: userOrgId
       }
     })
     
