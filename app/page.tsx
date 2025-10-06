@@ -186,7 +186,7 @@ export default function HomePage() {
               onClick={() => router.push('/portfolio')} 
               className="text-xl px-12 py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 hover:from-blue-500 hover:via-purple-500 hover:to-blue-500 text-white font-bold shadow-2xl hover:shadow-blue-500/50 transition-all duration-500 transform hover:scale-110 hover:-translate-y-2 border border-blue-400/50"
             >
-              🌟 Bekijk Content Previews 🌟
+              🌟 View Content Previews 🌟
             </Button>
           </div>
           

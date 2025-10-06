@@ -218,7 +218,7 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
     // Use Vercel's automatic token (no manual token needed)
     headers['Authorization'] = `Bearer ${process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN}`
     headers['X-Vercel-AI-Gateway'] = 'true'
-    headers['X-Vercel-Project-Id'] = process.env.VERCEL_PROJECT_ID
+    headers['X-Vercel-Project-Id'] = process.env.VERCEL_PROJECT_ID || ''
     
     console.log('🔍 Vercel Gateway Configuration:', {
       projectId: process.env.VERCEL_PROJECT_ID,
