@@ -329,7 +329,7 @@ export default function BulkContentGenerator() {
               imagePrompt += `Style: Serene meditation scene, peaceful lotus position, soft golden light, floating consciousness symbols, zen garden elements, warm amber and deep purple colors, ethereal atmosphere. NO TEXT, NO WORDS, NO LETTERS.`
             } else if (titleWords.includes('brain') || titleWords.includes('neural')) {
               imagePrompt += `Style: Neural network visualization, glowing brain synapses, interconnected neurons, electric blue and purple pathways, scientific yet mystical, digital consciousness awakening. NO TEXT, NO WORDS, NO LETTERS.`
-          } else {
+            } else {
               imagePrompt += `Style: Consciousness expansion visualization, ascending energy spirals, enlightenment symbols, warm golden light radiating outward, peaceful awakening scene, deep purple and gold tones. NO TEXT, NO WORDS, NO LETTERS.`
             }
           } 
