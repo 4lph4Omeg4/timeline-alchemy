@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateVercelImage } from '@/lib/vercel-ai'
+import { supabaseAdmin } from '@/lib/supabase'
+import { addWatermarkToImageServer } from '@/lib/watermark'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { prompt } = body
+    const { prompt, orgId } = body
     
     if (!prompt) {
       return NextResponse.json(
@@ -20,12 +22,33 @@ export async function POST(request: NextRequest) {
     const vercelResponse = await generateVercelImage(improvedPrompt)
     
     if (vercelResponse.success) {
+      let finalImageUrl = vercelResponse.imageUrl
+
+      // Add watermark if organization has branding settings
+      if (orgId) {
+        try {
+          const { data: branding } = await supabaseAdmin
+            .from('branding_settings')
+            .select('*')
+            .eq('organization_id', orgId)
+            .single()
+
+          if (branding) {
+            finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
+          }
+        } catch (error) {
+          console.error('Error applying watermark:', error)
+          // Continue with original image if watermarking fails
+        }
+      }
+
       return NextResponse.json({
-        imageUrl: vercelResponse.imageUrl,
+        imageUrl: finalImageUrl,
         metadata: {
           provider: 'vercel-gateway',
           enhancedPrompt: vercelResponse.enhancedPrompt,
-          enhanced: true
+          enhanced: true,
+          watermarked: !!orgId
         }
       })
     } else {
