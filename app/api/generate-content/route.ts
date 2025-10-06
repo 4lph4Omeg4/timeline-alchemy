@@ -6,7 +6,16 @@ import { detectCategory, getCategoryInfo } from '@/lib/category-detector'
 
 export async function POST(request: NextRequest) {
   try {
-    const body: AIGenerateRequest = await request.json()
+    let body: AIGenerateRequest
+    try {
+      body = await request.json()
+    } catch (jsonError) {
+      console.error('❌ JSON parsing error:', jsonError)
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body', details: jsonError instanceof Error ? jsonError.message : 'Unknown JSON error' },
+        { status: 400 }
+      )
+    }
     
     // Validate required fields
     if (!body.prompt || !body.type) {

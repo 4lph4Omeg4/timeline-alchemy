@@ -168,7 +168,7 @@ async function generateTrendContent(
     trend: trendName,
     contentType,
     language,
-    hasGateway: !!(process.env.AI_GATEWAY_URL && process.env.AI_GATEWAY_TOKEN),
+    hasGateway: !!process.env.AI_GATEWAY_API_KEY,
     itemFields: {
       title: item.title,
       summary: item.summary,
@@ -214,26 +214,33 @@ Title Here
 WRITE WITH GODLIKE AUTHORITY. BE PROFOUND, COMPLETE, AND IMMUTABLE. DIVINE WISDOM DEMANDS 900+ WORDS.`
 
   // Use Vercel AI Gateway if available, otherwise fallback to OpenAI
-  const gatewayUrl = process.env.AI_GATEWAY_URL
-  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
+  const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
   
   let apiUrl: string
   let headers: Record<string, string>
   
-  // For now, let's use OpenAI directly to avoid gateway issues
-  // TODO: Fix Vercel AI Gateway configuration
-  console.log('📡 Using direct OpenAI API for bulk content generation')
-  apiUrl = 'https://api.openai.com/v1/chat/completions'
-  headers = {
-    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    'Content-Type': 'application/json'
+  if (gatewayApiKey) {
+    console.log('🚀 Using Vercel AI Gateway for bulk content generation')
+    // Use the Gateway URL directly as base URL
+    apiUrl = 'https://ai-gateway.vercel.sh/v1/chat/completions'
+    headers = {
+      'Authorization': `Bearer ${gatewayApiKey}`,
+      'Content-Type': 'application/json'
+    }
+  } else {
+    console.log('📡 Using direct OpenAI API for bulk content generation')
+    apiUrl = 'https://api.openai.com/v1/chat/completions'
+    headers = {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json'
+    }
   }
 
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: 'gpt-4', // Using OpenAI directly
+      model: gatewayApiKey ? 'gpt-3.5-turbo' : 'gpt-4', // Use gpt-3.5-turbo for Gateway, gpt-4 for direct API
       messages: [
         {
           role: 'system',
