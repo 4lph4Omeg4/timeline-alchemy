@@ -198,7 +198,7 @@ export default function BulkContentGenerator() {
       }
 
       if (limitResult.warning) {
-        toast.warning(limitResult.warning)
+        toast.error(limitResult.warning)
       }
     } catch (error) {
       console.error('Error checking subscription limits:', error)

@@ -119,7 +119,7 @@ export interface Database {
         Row: {
           id: string
           name: string
-          plan: 'basic' | 'pro' | 'enterprise'
+          plan: 'basic' | 'initiate' | 'transcendant' | 'universal'
           stripe_customer_id: string | null
           created_at: string
           updated_at: string
@@ -127,7 +127,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          plan?: 'basic' | 'pro' | 'enterprise'
+          plan?: 'basic' | 'initiate' | 'transcendant' | 'universal'
           stripe_customer_id?: string | null
           created_at?: string
           updated_at?: string
@@ -135,7 +135,7 @@ export interface Database {
         Update: {
           id?: string
           name?: string
-          plan?: 'basic' | 'pro' | 'enterprise'
+          plan?: 'basic' | 'initiate' | 'transcendant' | 'universal'
           stripe_customer_id?: string | null
           created_at?: string
           updated_at?: string
@@ -246,7 +246,7 @@ export interface Database {
           org_id: string
           stripe_customer_id: string
           stripe_subscription_id: string
-          plan: 'basic' | 'pro' | 'enterprise'
+          plan: 'basic' | 'initiate' | 'transcendant' | 'universal'
           status: 'active' | 'canceled' | 'past_due' | 'unpaid'
           created_at: string
           updated_at: string
@@ -256,7 +256,7 @@ export interface Database {
           org_id: string
           stripe_customer_id: string
           stripe_subscription_id: string
-          plan: 'basic' | 'pro' | 'enterprise'
+          plan: 'basic' | 'initiate' | 'transcendant' | 'universal'
           status: 'active' | 'canceled' | 'past_due' | 'unpaid'
           created_at?: string
           updated_at?: string
@@ -266,7 +266,7 @@ export interface Database {
           org_id?: string
           stripe_customer_id?: string
           stripe_subscription_id?: string
-          plan?: 'basic' | 'pro' | 'enterprise'
+          plan?: 'basic' | 'initiate' | 'transcendant' | 'universal'
           status?: 'active' | 'canceled' | 'past_due' | 'unpaid'
           created_at?: string
           updated_at?: string

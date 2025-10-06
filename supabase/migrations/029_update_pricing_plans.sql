@@ -1,15 +1,14 @@
 -- Update pricing plans to new structure
 -- This migration updates the pricing plans from old structure to new one
 
--- First, update the organizations table to use new plan names
+-- First, drop existing constraints
 ALTER TABLE organizations 
 DROP CONSTRAINT IF EXISTS organizations_plan_check;
 
-ALTER TABLE organizations 
-ADD CONSTRAINT organizations_plan_check 
-CHECK (plan IN ('basic', 'initiate', 'transcendant', 'universal'));
+ALTER TABLE subscriptions 
+DROP CONSTRAINT IF EXISTS subscriptions_plan_check;
 
--- Update existing organizations to new plan names
+-- Update existing organizations to new plan names BEFORE adding constraint
 UPDATE organizations 
 SET plan = CASE 
   WHEN plan = 'basic' THEN 'basic'
@@ -18,15 +17,7 @@ SET plan = CASE
   ELSE 'basic'
 END;
 
--- Update subscriptions table to use new plan names
-ALTER TABLE subscriptions 
-DROP CONSTRAINT IF EXISTS subscriptions_plan_check;
-
-ALTER TABLE subscriptions 
-ADD CONSTRAINT subscriptions_plan_check 
-CHECK (plan IN ('basic', 'initiate', 'transcendant', 'universal'));
-
--- Update existing subscriptions to new plan names
+-- Update existing subscriptions to new plan names BEFORE adding constraint
 UPDATE subscriptions 
 SET plan = CASE 
   WHEN plan = 'basic' THEN 'basic'
@@ -34,6 +25,15 @@ SET plan = CASE
   WHEN plan = 'enterprise' THEN 'universal'
   ELSE 'basic'
 END;
+
+-- Now add the new constraints after data is updated
+ALTER TABLE organizations 
+ADD CONSTRAINT organizations_plan_check 
+CHECK (plan IN ('basic', 'initiate', 'transcendant', 'universal'));
+
+ALTER TABLE subscriptions 
+ADD CONSTRAINT subscriptions_plan_check 
+CHECK (plan IN ('basic', 'initiate', 'transcendant', 'universal'));
 
 -- Create a new table for plan limits and features
 CREATE TABLE IF NOT EXISTS plan_features (

@@ -20,7 +20,7 @@ export async function checkPlanLimits(orgId: string, action: 'contentPackage' | 
       return { allowed: false, reason: 'Organization not found' }
     }
 
-    const plan = org.plan as PlanType
+    const plan = (org as { plan: string }).plan as PlanType
 
     // Get plan features from database
     const { data: planFeatures, error: featuresError } = await supabaseAdmin
@@ -45,16 +45,16 @@ export async function checkPlanLimits(orgId: string, action: 'contentPackage' | 
 
     switch (action) {
       case 'contentPackage':
-        currentUsage = usage?.content_packages_used || 0
-        limit = planFeatures.content_packages_limit
+        currentUsage = (usage as any)?.content_packages_used || 0
+        limit = (planFeatures as any).content_packages_limit
         break
       case 'customContent':
-        currentUsage = usage?.custom_content_used || 0
-        limit = planFeatures.custom_content_limit
+        currentUsage = (usage as any)?.custom_content_used || 0
+        limit = (planFeatures as any).custom_content_limit
         break
       case 'bulkGeneration':
-        currentUsage = usage?.bulk_generation_used || 0
-        limit = planFeatures.bulk_generation_limit
+        currentUsage = (usage as any)?.bulk_generation_used || 0
+        limit = (planFeatures as any).bulk_generation_limit
         break
     }
 
@@ -79,7 +79,7 @@ export async function incrementUsage(orgId: string, action: 'contentPackage' | '
     const { error } = await supabaseAdmin.rpc('increment_usage', {
       org_id_param: orgId,
       usage_type: action
-    })
+    } as any)
 
     if (error) {
       console.error('Error incrementing usage:', error)
@@ -112,7 +112,7 @@ export async function getOrganizationUsage(orgId: string): Promise<{
       throw new Error('Organization not found')
     }
 
-    const plan = org.plan as PlanType
+    const plan = (org as { plan: string }).plan as PlanType
 
     // Get plan features
     const { data: planFeatures, error: featuresError } = await supabaseAdmin
@@ -134,16 +134,16 @@ export async function getOrganizationUsage(orgId: string): Promise<{
 
     return {
       contentPackages: {
-        used: usage?.content_packages_used || 0,
-        limit: planFeatures.content_packages_limit
+        used: (usage as any)?.content_packages_used || 0,
+        limit: (planFeatures as any).content_packages_limit
       },
       customContent: {
-        used: usage?.custom_content_used || 0,
-        limit: planFeatures.custom_content_limit
+        used: (usage as any)?.custom_content_used || 0,
+        limit: (planFeatures as any).custom_content_limit
       },
       bulkGeneration: {
-        used: usage?.bulk_generation_used || 0,
-        limit: planFeatures.bulk_generation_limit
+        used: (usage as any)?.bulk_generation_used || 0,
+        limit: (planFeatures as any).bulk_generation_limit
       },
       plan
     }

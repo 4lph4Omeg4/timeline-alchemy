@@ -412,8 +412,9 @@ export default function OrganizationsPage() {
                         <Badge 
                           variant="secondary" 
                           className={`font-medium ${
-                            org.plan === 'enterprise' ? 'bg-purple-700 text-purple-200' :
-                            org.plan === 'pro' ? 'bg-blue-700 text-blue-200' :
+                            org.plan === 'universal' ? 'bg-purple-700 text-purple-200' :
+                            org.plan === 'transcendant' ? 'bg-pink-700 text-pink-200' :
+                            org.plan === 'initiate' ? 'bg-blue-700 text-blue-200' :
                             'bg-gray-700 text-gray-200'
                           }`}
                         >

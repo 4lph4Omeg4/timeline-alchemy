@@ -77,7 +77,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         .from('organizations')
         .insert({
           name: 'Admin Organization',
-          plan: 'enterprise'
+          plan: 'universal'
         })
         .select()
         .single()
@@ -111,7 +111,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           org_id: newOrg.id,
           stripe_customer_id: 'admin-' + newOrg.id,
           stripe_subscription_id: 'admin-sub-' + newOrg.id,
-          plan: 'enterprise',
+          plan: 'universal',
           status: 'active'
         })
 

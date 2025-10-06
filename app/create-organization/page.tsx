@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function CreateOrganizationPage() {
   const [name, setName] = useState('')
-  const [plan, setPlan] = useState<'basic' | 'pro' | 'enterprise'>('basic')
+  const [plan, setPlan] = useState<'basic' | 'initiate' | 'transcendant' | 'universal'>('basic')
   const [isCreating, setIsCreating] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         .from('organizations')
         .insert({
           name: 'Admin Organization',
-          plan: 'enterprise'
+          plan: 'universal'
         })
         .select('id')
         .single()
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         org_id: adminOrgId,
         stripe_customer_id: 'admin-' + adminOrgId,
         stripe_subscription_id: 'admin-sub-' + adminOrgId,
-        plan: 'enterprise',
+        plan: 'universal',
         status: 'active'
       }, { 
         onConflict: 'org_id',
