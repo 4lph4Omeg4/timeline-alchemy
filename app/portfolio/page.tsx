@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader } from '@/components/Loader'
 import { Modal } from '@/components/ui/modal'
+import ContentProtection from '@/components/ContentProtection'
 import { CONTENT_CATEGORIES, getAllCategories, getCategoryInfo, type CategoryId } from '@/lib/category-detector'
 import { BlogPost } from '@/types/index'
 import Link from 'next/link'
@@ -133,7 +134,10 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 protected-content">
+      {/* Content Protection */}
+      <ContentProtection />
+      
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-800/20 to-pink-800/20 backdrop-blur-md border-b border-purple-500/30">
         <div className="container mx-auto px-4 py-8">
