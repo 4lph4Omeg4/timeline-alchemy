@@ -154,8 +154,8 @@ export async function generateVercelImage(prompt: string) {
     
     console.log('🚀 Using Vercel AI Gateway for image generation')
     
-    // Try Vercel's image generation model
-    const response = await fetch('https://ai-gateway.vercel.sh/v1/images/generations', {
+    // Try Vercel's image generation via chat completion (more likely to work)
+    const response = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${gatewayApiKey}`,
@@ -163,11 +163,13 @@ export async function generateVercelImage(prompt: string) {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash-image-preview',
-        prompt: enhancedPrompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'standard',
-        style: 'vivid'
+        messages: [
+          {
+            role: 'user',
+            content: `Generate a high-quality image based on this description: ${enhancedPrompt}. Return only the image URL.`
+          }
+        ],
+        max_tokens: 1000
       })
     })
 
@@ -216,9 +218,10 @@ export async function generateVercelImage(prompt: string) {
     }
 
     const imageData = await response.json()
-    const imageUrl = imageData.data?.[0]?.url || imageData.url
+    const imageUrl = imageData.choices?.[0]?.message?.content || imageData.data?.[0]?.url || imageData.url
 
     if (!imageUrl) {
+      console.error('❌ No image URL in response:', imageData)
       throw new Error('No image URL returned from Vercel Gateway generation')
     }
 
