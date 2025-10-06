@@ -8,52 +8,45 @@ export async function POST(req: Request) {
     console.log('🚀 Using Vercel AI Gateway for social posts generation')
     
     // Create a comprehensive prompt for social media generation
-    const socialPrompt = `Create COMPLETELY UNIQUE social media posts for each platform. Each platform gets a DIFFERENT approach.
+    const socialPrompt = `Create engaging, platform-specific social media posts based on this content. Each post must be unique and tailored to its platform.
 
 Title: ${title}
 
 Content: ${content}
 
-CRITICAL RULES:
-- NEVER include the title in any post
-- NEVER copy text from the article
-- NEVER include "photo ideas" or "visual elements"
-- Each post must be COMPLETELY DIFFERENT
-- Create engaging hooks and insights
-- Use platform-specific language and tone
-- Write actual social media content, not descriptions
+Create posts for these platforms:
 
-Facebook: Community discussion starter, ask engaging questions
-Instagram: Visual storytelling with emojis, lifestyle angle
-Twitter: Punchy one-liner or question, trending style
-LinkedIn: Professional insight, business value proposition
-Discord: Gaming/tech community discussion starter
-Reddit: Authentic community discussion, no corporate speak
-Telegram: Informative update with emojis
+Facebook: Engaging community post, 2-3 sentences, ask a question or share insight
+Instagram: Visual storytelling with emojis, 2-3 sentences, lifestyle-focused
+Twitter: Concise and punchy, under 280 characters, trending style
+LinkedIn: Professional insight, 2-3 sentences, business value
+Discord: Community-focused, casual tone, engaging for discussions
+Reddit: Authentic discussion starter, no corporate speak
+Telegram: Informative update, 2-3 sentences with emojis
 
 OUTPUT FORMAT:
 Facebook:
-[Unique discussion starter here]
+[Post content]
 
 Instagram:
-[Unique visual story here]
+[Post content]
 
 Twitter:
-[Unique punchy post here]
+[Post content]
 
 LinkedIn:
-[Unique professional insight here]
+[Post content]
 
 Discord:
-[Unique community post here]
+[Post content]
 
 Reddit:
-[Unique discussion starter here]
+[Post content]
 
 Telegram:
-[Unique informative update here]
+[Post content]
 
-Each post must be ready to publish and completely different.`
+Each post should be engaging and platform-appropriate.`
 
     // Use direct Gateway call for better control
     const gatewayApiKey = process.env.AI_GATEWAY_API_KEY

@@ -137,20 +137,24 @@ Write in a ${tone} tone and make it engaging for its specific platform.`
   }
 }
 
-// Enhanced image generation using Vercel AI SDK approach
+// Enhanced image generation with prompt optimization
 export async function generateVercelImage(prompt: string) {
   try {
+    // Use the original prompt directly - no cosmic enhancement
     const enhancedPrompt = prompt
+    
     console.log('🎨 Using original prompt:', enhancedPrompt)
     
+    // Use Vercel AI Gateway for image generation
     const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
+    
     if (!gatewayApiKey) {
       throw new Error('AI Gateway API key not configured')
     }
     
     console.log('🚀 Using Vercel AI Gateway for image generation')
     
-    // Use the correct Vercel AI Gateway approach for image generation
+    // Use Google Gemini image model that was working before
     const response = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -162,10 +166,10 @@ export async function generateVercelImage(prompt: string) {
         messages: [
           {
             role: 'user',
-            content: enhancedPrompt
+            content: `Generate an image URL for this description: ${enhancedPrompt}. Return ONLY the image URL, nothing else.`
           }
         ],
-        max_tokens: 1000
+        max_tokens: 500
       })
     })
 
@@ -175,30 +179,32 @@ export async function generateVercelImage(prompt: string) {
       throw new Error(`Vercel Gateway image generation failed: ${response.statusText} - ${errorText}`)
     }
 
-    const result = await response.json()
-    console.log('🔍 Response data:', result)
+    const imageData = await response.json()
+    console.log('🔍 Response data:', imageData)
     
-    // Extract image from files array (Vercel AI SDK approach)
+    // Try to extract image URL from different possible response formats
     let imageUrl = null
     
-    if (result.files && result.files.length > 0) {
-      const imageFile = result.files.find((f: any) => f.mediaType?.startsWith('image/'))
-      if (imageFile && imageFile.url) {
-        imageUrl = imageFile.url
-      }
-    }
-    
-    // Fallback: check for image in content
-    if (!imageUrl && result.choices?.[0]?.message?.content) {
-      const content = result.choices[0].message.content
+    // Check for different response formats
+    if (imageData.choices?.[0]?.message?.content) {
+      const content = imageData.choices[0].message.content
+      // Look for image URLs in the content
       const urlMatch = content.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i)
       if (urlMatch) {
         imageUrl = urlMatch[0]
       }
     }
     
+    if (imageData.data?.[0]?.url) {
+      imageUrl = imageData.data[0].url
+    }
+    
+    if (imageData.url) {
+      imageUrl = imageData.url
+    }
+    
     if (!imageUrl) {
-      console.error('❌ No image URL found in response:', result)
+      console.error('❌ No image URL found in response:', imageData)
       throw new Error('No image URL returned from Google Gemini image generation')
     }
     
