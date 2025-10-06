@@ -162,7 +162,7 @@ export default function HomePage() {
                 preload="metadata"
               >
                 <source 
-                  src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/video/e6c0db74-03ee-4bb3-b08d-d94512efab91/video-promo-portfolio/timeline-alchemy.mp4" 
+                  src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/video/e6c0db74-03ee-4bb3-b08d-d94512efab91/video-promo-portfolio/timeline-alchemy%20(1).mp4" 
                   type="video/mp4" 
                 />
                 Your browser does not support the video tag.
