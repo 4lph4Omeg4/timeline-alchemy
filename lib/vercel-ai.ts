@@ -21,17 +21,15 @@ interface SocialPostsData {
 
 // Check if Vercel AI Gateway is configured
 function isGatewayEnabled(): boolean {
-  // Check for AI Gateway specific environment variables
-  const hasGatewayUrl = process.env.AI_GATEWAY_URL
-  const hasGatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
+  // Check for AI Gateway API key (official method)
+  const hasGatewayApiKey = process.env.AI_GATEWAY_API_KEY
   
   console.log('🔍 Gateway Check:', {
-    hasGatewayUrl: !!hasGatewayUrl,
-    hasGatewayToken: !!hasGatewayToken,
-    gatewayUrl: hasGatewayUrl ? hasGatewayUrl.substring(0, 30) + '...' : 'Not set'
+    hasGatewayApiKey: !!hasGatewayApiKey,
+    apiKey: hasGatewayApiKey ? hasGatewayApiKey.substring(0, 10) + '...' : 'Not set'
   })
   
-  return !!(hasGatewayUrl && hasGatewayToken)
+  return !!hasGatewayApiKey
 }
 
 // Enhanced content generation with Gateway optimization
@@ -185,8 +183,7 @@ export async function generateVercelImage(prompt: string) {
 // Unified OpenAI API call with Gateway routing
 async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: number = 1000): Promise<string> {
   // Check for AI Gateway environment variables
-  const gatewayUrl = process.env.AI_GATEWAY_URL
-  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
+  const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
   
   let apiUrl = 'https://api.openai.com/v1/chat/completions'
   let apiKey = process.env.OPENAI_API_KEY
@@ -195,39 +192,32 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
     'Authorization': `Bearer ${apiKey}`
   }
 
-  // Use Vercel AI Gateway if configured
-  if (gatewayUrl && gatewayToken) {
-    console.log('🚀 Using Vercel AI Gateway')
+  // Use Vercel AI Gateway if configured (according to official docs)
+  if (gatewayApiKey) {
+    console.log('🚀 Using Vercel AI Gateway (official method)')
     
-    // Use the configured Gateway URL directly
-    apiUrl = `${gatewayUrl}/chat/completions`
+    // Use official Gateway base URL
+    apiUrl = 'https://ai-gateway.vercel.sh/v1/chat/completions'
     
-    // Use Gateway token
-    headers['Authorization'] = `Bearer ${gatewayToken}`
-    headers['X-Vercel-AI-Gateway'] = 'true'
+    // Use Gateway API key
+    headers['Authorization'] = `Bearer ${gatewayApiKey}`
     
-    // Use gpt-3.5-turbo for Gateway (gpt-4 not available)
+    // Prefix model name with provider (required by Gateway)
     if (model === 'gpt-4') {
-      model = 'gpt-3.5-turbo'
-      console.log('🔄 Switched to gpt-3.5-turbo for Gateway compatibility')
-    }
-    
-    // Ensure minimum tokens for Gateway
-    if (maxTokens < 16) {
-      maxTokens = 16
-      console.log('🔄 Adjusted max_tokens to minimum 16 for Gateway')
+      model = 'openai/gpt-4'
+    } else if (model === 'gpt-3.5-turbo') {
+      model = 'openai/gpt-3.5-turbo'
     }
     
     console.log('🔍 Gateway Configuration:', {
       url: apiUrl.substring(0, 50) + '...',
-      hasToken: !!gatewayToken,
+      hasApiKey: !!gatewayApiKey,
       model
     })
   } else {
     console.log('📡 Using direct OpenAI API (Gateway not configured)')
     console.log('🔍 Fallback reason:', {
-      hasGatewayUrl: !!gatewayUrl,
-      hasGatewayToken: !!gatewayToken
+      hasGatewayApiKey: !!gatewayApiKey
     })
   }
 
