@@ -5,16 +5,6 @@ export async function POST(req: Request) {
   try {
     const { title, content, platforms } = await req.json()
 
-    // Use Vercel AI Gateway exclusively
-    const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
-    
-    if (!gatewayApiKey) {
-      return NextResponse.json(
-        { error: 'AI Gateway API key not configured' },
-        { status: 500 }
-      )
-    }
-    
     console.log('🚀 Using Vercel AI Gateway for social posts generation')
     
     // Create a comprehensive prompt for social media generation

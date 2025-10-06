@@ -162,7 +162,7 @@ export async function generateVercelImage(prompt: string) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'vercel/v0-1.0-md',
+        model: 'google/gemini-2.5-flash-image-preview',
         prompt: enhancedPrompt,
         n: 1,
         size: '1024x1024',
@@ -185,7 +185,7 @@ export async function generateVercelImage(prompt: string) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'vercel/v0-1.0-md',
+          model: 'google/gemini-2.5-flash-image-preview',
           messages: [
             {
               role: 'user',
