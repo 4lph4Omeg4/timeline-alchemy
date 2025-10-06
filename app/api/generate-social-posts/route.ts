@@ -17,9 +17,11 @@ Content: ${content}
 CRITICAL RULES:
 - NEVER include the title in any post
 - NEVER copy text from the article
+- NEVER include "photo ideas" or "visual elements"
 - Each post must be COMPLETELY DIFFERENT
 - Create engaging hooks and insights
 - Use platform-specific language and tone
+- Write actual social media content, not descriptions
 
 Facebook: Community discussion starter, ask engaging questions
 Instagram: Visual storytelling with emojis, lifestyle angle
