@@ -21,19 +21,17 @@ interface SocialPostsData {
 
 // Check if Vercel AI Gateway is configured
 function isGatewayEnabled(): boolean {
-  // Vercel AI Gateway uses project linking, so we check for Vercel environment
-  const isVercel = process.env.VERCEL && process.env.VERCEL_ENV
-  const hasProjectId = process.env.VERCEL_PROJECT_ID
-  const hasToken = process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN
+  // Check for AI Gateway specific environment variables
+  const hasGatewayUrl = process.env.AI_GATEWAY_URL
+  const hasGatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
   
   console.log('🔍 Gateway Check:', {
-    isVercel: !!isVercel,
-    hasProjectId: !!hasProjectId,
-    hasToken: !!hasToken,
-    environment: process.env.VERCEL_ENV
+    hasGatewayUrl: !!hasGatewayUrl,
+    hasGatewayToken: !!hasGatewayToken,
+    gatewayUrl: hasGatewayUrl ? hasGatewayUrl.substring(0, 30) + '...' : 'Not set'
   })
   
-  return !!(isVercel && hasProjectId && hasToken)
+  return !!(hasGatewayUrl && hasGatewayToken)
 }
 
 // Enhanced content generation with Gateway optimization
@@ -186,9 +184,9 @@ export async function generateVercelImage(prompt: string) {
 
 // Unified OpenAI API call with Gateway routing
 async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: number = 1000): Promise<string> {
-  // Check if we're running on Vercel with AI Gateway linked
-  const isVercelEnvironment = process.env.VERCEL && process.env.VERCEL_ENV
-  const hasProjectId = process.env.VERCEL_PROJECT_ID
+  // Check for AI Gateway environment variables
+  const gatewayUrl = process.env.AI_GATEWAY_URL
+  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
   
   let apiUrl = 'https://api.openai.com/v1/chat/completions'
   let apiKey = process.env.OPENAI_API_KEY
@@ -197,30 +195,39 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
     'Authorization': `Bearer ${apiKey}`
   }
 
-  // Use Vercel AI Gateway if project is linked
-  if (isVercelEnvironment && hasProjectId && (process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN)) {
-    console.log('🚀 Using Vercel AI Gateway (project-linked)')
+  // Use Vercel AI Gateway if configured
+  if (gatewayUrl && gatewayToken) {
+    console.log('🚀 Using Vercel AI Gateway')
     
-    // Vercel AI Gateway uses the project's automatic token management
-    // The token is automatically refreshed every 12 hours by Vercel
-    apiUrl = `https://api.vercel.com/v1/ai/gateway/${process.env.VERCEL_PROJECT_ID}/chat/completions`
+    // Use the configured Gateway URL directly
+    apiUrl = `${gatewayUrl}/chat/completions`
     
-    // Use Vercel's automatic token (no manual token needed)
-    headers['Authorization'] = `Bearer ${process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN}`
+    // Use Gateway token
+    headers['Authorization'] = `Bearer ${gatewayToken}`
     headers['X-Vercel-AI-Gateway'] = 'true'
-    headers['X-Vercel-Project-Id'] = process.env.VERCEL_PROJECT_ID || ''
     
-    console.log('🔍 Vercel Gateway Configuration:', {
-      projectId: process.env.VERCEL_PROJECT_ID,
-      environment: process.env.VERCEL_ENV,
-      hasVercelToken: !!(process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN)
+    // Use gpt-3.5-turbo for Gateway (gpt-4 not available)
+    if (model === 'gpt-4') {
+      model = 'gpt-3.5-turbo'
+      console.log('🔄 Switched to gpt-3.5-turbo for Gateway compatibility')
+    }
+    
+    // Ensure minimum tokens for Gateway
+    if (maxTokens < 16) {
+      maxTokens = 16
+      console.log('🔄 Adjusted max_tokens to minimum 16 for Gateway')
+    }
+    
+    console.log('🔍 Gateway Configuration:', {
+      url: apiUrl.substring(0, 50) + '...',
+      hasToken: !!gatewayToken,
+      model
     })
   } else {
-    console.log('📡 Using direct OpenAI API (Gateway not available)')
+    console.log('📡 Using direct OpenAI API (Gateway not configured)')
     console.log('🔍 Fallback reason:', {
-      isVercelEnvironment,
-      hasProjectId,
-      hasVercelToken: !!(process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN)
+      hasGatewayUrl: !!gatewayUrl,
+      hasGatewayToken: !!gatewayToken
     })
   }
 
@@ -251,9 +258,7 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
       statusText: response.statusText,
       error: errorText,
       url: apiUrl.substring(0, 50) + '...',
-      isVercelEnvironment,
-      hasProjectId,
-      usingGateway: apiUrl.includes('vercel.com')
+      usingGateway: apiUrl.includes('vercel.com') || apiUrl.includes('gateway')
     })
     
     // Check for quota limit specifically
