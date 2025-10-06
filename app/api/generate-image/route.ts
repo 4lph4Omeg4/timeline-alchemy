@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Fallback to original implementation with enhanced prompt
     console.log('📡 Using direct OpenAI API for image generation')
-    const improvedPrompt = `${prompt}. Professional photography, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality`
+    const improvedPrompt = `${prompt}. Professional photography, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality. NO TEXT, NO WORDS, NO LETTERS, NO WRITING, NO TYPEFACE, NO FONTS.`
     
     const imageUrl = await generateImage(improvedPrompt)
     

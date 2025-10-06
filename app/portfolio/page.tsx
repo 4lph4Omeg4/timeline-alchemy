@@ -142,7 +142,7 @@ export default function PortfolioPage() {
               Content Previews
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
-              Ontdek onze collectie van gepubliceerde content, georganiseerd per categorie
+              Discover our collection of published content, organized by category
             </p>
             <div className="flex justify-center">
               <Link href="/">
@@ -150,7 +150,7 @@ export default function PortfolioPage() {
                   variant="outline"
                   className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300 px-8 py-3 text-lg"
                 >
-                  ← Terug naar Home
+                  ← Back to Home
                 </Button>
               </Link>
             </div>
