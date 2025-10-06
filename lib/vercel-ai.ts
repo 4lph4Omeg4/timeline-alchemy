@@ -95,13 +95,13 @@ async function generateSocialContent(prompt: string, tone: string) {
     const platformPrompt = `Create a ${platform}-optimized social media post about: ${prompt}
 
 Platform Guidelines:
-- Facebook: Conversational, community-focused, 1-2 sentences
-- Instagram: Visual, hashtag-friendly, 1-2 sentences with emojis
+- Facebook: Conversational, community-focused, 1-2 sentences, max 200 characters
+- Instagram: Visual, hashtag-friendly, 1-2 sentences with emojis, max 150 characters
 - Twitter: Concise, engaging, under 280 characters
-- LinkedIn: Professional, thought-provoking, 1-2 sentences
-- Discord: Community-focused, casual, engaging
-- Reddit: Discussion-provoking, authentic tone
-- Telegram: Channel-friendly, informative with emojis
+- LinkedIn: Professional, thought-provoking, 1-2 sentences, max 300 characters
+- Discord: Community-focused, casual, engaging, max 200 characters
+- Reddit: Discussion-provoking, authentic tone, max 250 characters
+- Telegram: Channel-friendly, informative with emojis, max 200 characters
 
 Write in a ${tone} tone and make it engaging for its specific platform.`
 
@@ -126,31 +126,10 @@ Write in a ${tone} tone and make it engaging for its specific platform.`
 // Enhanced image generation with prompt optimization
 export async function generateVercelImage(prompt: string) {
   try {
-    // Generate enhanced prompt via AI
-    const promptEnhancement = await callOpenAI(`
-Transform this prompt into a DALL-E 3 optimized image description:
-
-Original prompt: ${prompt}
-
-Requirements:
-- Add cosmic, ethereal, mystical elements
-- Include warm golden light and magical atmosphere
-- Include celestial vibes and otherworldly beauty
-- Add dreamlike quality with glowing effects
-- Include cosmic dust and stardust particles
-- Add aurora-like colors and mystical energy
-- Make it enchanting and transcendent
-- Include divine light and heavenly glow
-- Add fantastical, surreal, mesmerizing elements
-- Use professional photography with high resolution
-- Use cinematic lighting and warm color palette
-- Include magical realism and spiritual energy
-
-Return only the enhanced prompt, no explanations.`, 'gpt-4', 500)
-
-    const enhancedPrompt = promptEnhancement || prompt
+    // Use the original prompt directly - no cosmic enhancement
+    const enhancedPrompt = prompt
     
-    console.log('🎨 Enhanced prompt:', enhancedPrompt)
+    console.log('🎨 Using original prompt:', enhancedPrompt)
     
     // Generate image using OpenAI API
     const response = await fetch('https://api.openai.com/v1/images/generations', {
