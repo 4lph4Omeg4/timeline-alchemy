@@ -66,8 +66,8 @@ Content Requirements:
 - Use double line breaks (\n\n) between paragraphs
 - Focus on practical insights and actionable advice`
 
-  const gatewayUrl = process.env.AI_GATEWAY_URL
-  const model = gatewayUrl ? 'openai/gpt-5' : 'gpt-4' // Use openai/gpt-5 for gateway, gpt-4 for direct API
+  const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
+  const model = gatewayApiKey ? 'openai/gpt-3.5-turbo' : 'gpt-4' // Use openai/gpt-3.5-turbo for gateway, gpt-4 for direct API
   const content = await callOpenAI(enhancedPrompt, model, 1500)
   
   // Parse the structured response
@@ -118,7 +118,9 @@ Platform Guidelines:
 Write in a ${tone} tone and make it engaging for its specific platform.`
 
     try {
-      const content = await callOpenAI(platformPrompt, 'gpt-4', 300)
+      const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
+      const model = gatewayApiKey ? 'openai/gpt-3.5-turbo' : 'gpt-4'
+      const content = await callOpenAI(platformPrompt, model, 300)
       socialPosts[platform] = content.trim()
     } catch (error) {
       console.error(`Error generating ${platform} content:`, error)

@@ -25,22 +25,21 @@ export async function GET(request: NextRequest) {
       try {
         console.log('🧪 Testing Gateway connectivity...')
         
-        const testResponse = await fetch(`${gatewayUrl.replace(/\/$/, '')}/v1/chat/completions`, {
+        const testResponse = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${gatewayToken}`,
-            'X-Vercel-AI-Gateway': 'true'
+            'Authorization': `Bearer ${gatewayToken}`
           },
           body: JSON.stringify({
-            model: 'gpt-4',
+            model: 'openai/gpt-3.5-turbo',
             messages: [
               {
                 role: 'user',
                 content: 'Test message - respond with "Gateway working"'
               }
             ],
-            max_tokens: 10
+            max_tokens: 50
           })
         })
 
