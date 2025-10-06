@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Fallback to original implementation with enhanced prompt
     console.log('📡 Using direct OpenAI API for image generation')
-    const improvedPrompt = `${prompt}. Cosmic, ethereal, mystical, warm golden light, magical atmosphere, fantasy elements, celestial vibes, otherworldly beauty, dreamlike quality, glowing effects, cosmic dust, stardust particles, aurora-like colors, mystical energy, enchanting, transcendent, divine light, heavenly glow, fantastical, surreal, mesmerizing, captivating, professional photography, high resolution, cinematic lighting, warm color palette, golden hour, magical realism, spiritual energy, cosmic wonder, ethereal glow, mystical aura, enchanting atmosphere, otherworldly, celestial beauty, divine inspiration, magical realism, warm and inviting, cosmically beautiful, fantastically stunning`
+    const improvedPrompt = `${prompt}. Professional photography, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality`
     
     const imageUrl = await generateImage(improvedPrompt)
     
