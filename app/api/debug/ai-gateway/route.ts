@@ -136,7 +136,11 @@ export async function GET(request: NextRequest) {
         gateway: gatewayTest,
         openai: openaiTest
       },
-      recommendations: []
+      recommendations: [] as Array<{
+        type: string;
+        message: string;
+        priority: string;
+      }>
     }
 
     // Add recommendations based on test results
