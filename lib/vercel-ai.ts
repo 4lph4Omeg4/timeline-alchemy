@@ -22,7 +22,18 @@ interface SocialPostsData {
 // Check if Vercel AI Gateway is configured
 function isGatewayEnabled(): boolean {
   // Vercel AI Gateway uses project linking, so we check for Vercel environment
-  return !!(process.env.VERCEL && process.env.VERCEL_ENV && process.env.VERCEL_PROJECT_ID)
+  const isVercel = process.env.VERCEL && process.env.VERCEL_ENV
+  const hasProjectId = process.env.VERCEL_PROJECT_ID
+  const hasToken = process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN
+  
+  console.log('🔍 Gateway Check:', {
+    isVercel: !!isVercel,
+    hasProjectId: !!hasProjectId,
+    hasToken: !!hasToken,
+    environment: process.env.VERCEL_ENV
+  })
+  
+  return !!(isVercel && hasProjectId && hasToken)
 }
 
 // Enhanced content generation with Gateway optimization
@@ -187,7 +198,7 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
   }
 
   // Use Vercel AI Gateway if project is linked
-  if (isVercelEnvironment && hasProjectId) {
+  if (isVercelEnvironment && hasProjectId && (process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN)) {
     console.log('🚀 Using Vercel AI Gateway (project-linked)')
     
     // Vercel AI Gateway uses the project's automatic token management
@@ -205,7 +216,12 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
       hasVercelToken: !!(process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN)
     })
   } else {
-    console.log('📡 Using direct OpenAI API (not on Vercel or project not linked)')
+    console.log('📡 Using direct OpenAI API (Gateway not available)')
+    console.log('🔍 Fallback reason:', {
+      isVercelEnvironment,
+      hasProjectId,
+      hasVercelToken: !!(process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN)
+    })
   }
 
   const response = await fetch(apiUrl, {
@@ -236,8 +252,15 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
       error: errorText,
       url: apiUrl.substring(0, 50) + '...',
       isVercelEnvironment,
-      hasProjectId
+      hasProjectId,
+      usingGateway: apiUrl.includes('vercel.com')
     })
+    
+    // Check for quota limit specifically
+    if (response.status === 429 || errorText.includes('quota') || errorText.includes('billing')) {
+      throw new Error(`QUOTA LIMIT REACHED: ${errorText.includes('quota') ? 'OpenAI API quota exceeded' : 'API quota exceeded'}. Please check your billing and try again later.`)
+    }
+    
     throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
