@@ -32,6 +32,17 @@ export default function HomePage() {
       } finally {
         setLoading(false)
       }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUser({
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.name || user.email?.split('@')[0],
+          avatar_url: user.user_metadata?.avatar_url,
+          created_at: user.created_at,
+        })
+      }
+      setLoading(false)
     }
 
     getUser()
@@ -72,6 +83,8 @@ export default function HomePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-400"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     )
   }
