@@ -177,6 +177,136 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Pricing Plans Section */}
+        <div className="text-center mb-20">
+          <div className="relative mb-12">
+            <h3 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-blue-300 mb-4">
+              Choose Your Divine Path
+            </h3>
+            <p className="text-lg text-gray-300 font-light">
+              Select the plan that aligns with your creative journey
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+            {/* Trial Plan */}
+            <div className="bg-gradient-to-br from-gray-900/40 to-gray-800/40 backdrop-blur-md rounded-2xl border border-gray-500/20 p-8 shadow-xl hover:shadow-gray-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="text-center">
+                <h4 className="text-xl font-bold text-white mb-2">Trial</h4>
+                <div className="text-3xl font-bold text-gray-300 mb-4">Free</div>
+                <p className="text-gray-400 text-sm mb-6">2 weeks to explore</p>
+                <ul className="text-left text-gray-300 space-y-2 mb-8">
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    5 Content Packages
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    10 Custom Posts
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    2 Bulk Generations
+                  </li>
+                </ul>
+                <Button 
+                  onClick={handleSignUp}
+                  className="w-full bg-gray-600 hover:bg-gray-500 text-white"
+                >
+                  Start Trial
+                </Button>
+              </div>
+            </div>
+
+            {/* Basic Plan */}
+            <div className="bg-gradient-to-br from-blue-900/40 to-blue-800/40 backdrop-blur-md rounded-2xl border border-blue-500/20 p-8 shadow-xl hover:shadow-blue-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="text-center">
+                <h4 className="text-xl font-bold text-white mb-2">Basic</h4>
+                <div className="text-3xl font-bold text-blue-300 mb-4">€29</div>
+                <p className="text-gray-400 text-sm mb-6">per month</p>
+                <ul className="text-left text-gray-300 space-y-2 mb-8">
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    20 Content Packages
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    50 Custom Posts
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    10 Bulk Generations
+                  </li>
+                </ul>
+                <Button 
+                  onClick={() => router.push('/auth/signup')}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+                >
+                  Choose Basic
+                </Button>
+              </div>
+            </div>
+
+            {/* Initiate Plan */}
+            <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/40 backdrop-blur-md rounded-2xl border border-purple-500/20 p-8 shadow-xl hover:shadow-purple-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="text-center">
+                <h4 className="text-xl font-bold text-white mb-2">Initiate</h4>
+                <div className="text-3xl font-bold text-purple-300 mb-4">€79</div>
+                <p className="text-gray-400 text-sm mb-6">per month</p>
+                <ul className="text-left text-gray-300 space-y-2 mb-8">
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    50 Content Packages
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    100 Custom Posts
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    25 Bulk Generations
+                  </li>
+                </ul>
+                <Button 
+                  onClick={() => router.push('/auth/signup')}
+                  className="w-full bg-purple-600 hover:bg-purple-500 text-white"
+                >
+                  Choose Initiate
+                </Button>
+              </div>
+            </div>
+
+            {/* Transcendant Plan */}
+            <div className="bg-gradient-to-br from-pink-900/40 to-pink-800/40 backdrop-blur-md rounded-2xl border border-pink-500/20 p-8 shadow-xl hover:shadow-pink-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
+              <div className="text-center">
+                <h4 className="text-xl font-bold text-white mb-2">Transcendant</h4>
+                <div className="text-3xl font-bold text-pink-300 mb-4">€199</div>
+                <p className="text-gray-400 text-sm mb-6">per month</p>
+                <ul className="text-left text-gray-300 space-y-2 mb-8">
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Unlimited Content Packages
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Unlimited Custom Posts
+                  </li>
+                  <li className="flex items-center">
+                    <span className="text-green-400 mr-2">✓</span>
+                    Unlimited Bulk Generations
+                  </li>
+                </ul>
+                <Button 
+                  onClick={() => router.push('/auth/signup')}
+                  className="w-full bg-pink-600 hover:bg-pink-500 text-white"
+                >
+                  Choose Transcendant
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Platform Logos Section */}
         <div className="text-center mb-20">
           <div className="relative mb-12">
@@ -189,7 +319,7 @@ export default function HomePage() {
           </div>
           
           {/* Platform Logos Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-3 gap-6 max-w-4xl mx-auto">
             {/* X (Twitter) */}
             <div className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-gray-900/20 to-black/20 backdrop-blur-md rounded-xl border border-gray-500/20 shadow-lg hover:shadow-gray-500/30 transition-all duration-300 transform hover:scale-105 group">
               <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-2 shadow-md group-hover:shadow-gray-400/50 transition-all duration-300">
@@ -268,7 +398,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <span className="text-white font-medium text-xs group-hover:text-blue-200 transition-colors duration-300">WordPress</span>
-            </div>
+          </div>
 
             {/* Telegram */}
             <div className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-900/20 to-cyan-800/20 backdrop-blur-md rounded-xl border border-blue-500/20 shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:scale-105 group">
