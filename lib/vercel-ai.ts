@@ -21,7 +21,8 @@ interface SocialPostsData {
 
 // Check if Vercel AI Gateway is configured
 function isGatewayEnabled(): boolean {
-  return !!(process.env.AI_GATEWAY_URL && process.env.AI_GATEWAY_TOKEN)
+  // Vercel AI Gateway uses project linking, so we check for Vercel environment
+  return !!(process.env.VERCEL && process.env.VERCEL_ENV && process.env.VERCEL_PROJECT_ID)
 }
 
 // Enhanced content generation with Gateway optimization
@@ -195,8 +196,9 @@ Return only the enhanced prompt, no explanations.`, 'gpt-4', 500)
 
 // Unified OpenAI API call with Gateway routing
 async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: number = 1000): Promise<string> {
-  const gatewayUrl = process.env.AI_GATEWAY_URL
-  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
+  // Check if we're running on Vercel with AI Gateway linked
+  const isVercelEnvironment = process.env.VERCEL && process.env.VERCEL_ENV
+  const hasProjectId = process.env.VERCEL_PROJECT_ID
   
   let apiUrl = 'https://api.openai.com/v1/chat/completions'
   let apiKey = process.env.OPENAI_API_KEY
@@ -205,14 +207,26 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
     'Authorization': `Bearer ${apiKey}`
   }
 
-  // Use Gateway if available
-  if (gatewayUrl && gatewayToken) {
-    console.log('🚀 Using Vercel AI Gateway')
-    apiUrl = `${gatewayUrl.replace(/\/$/, '')}/v1/chat/completions`
-    headers['Authorization'] = `Bearer ${gatewayToken}`
+  // Use Vercel AI Gateway if project is linked
+  if (isVercelEnvironment && hasProjectId) {
+    console.log('🚀 Using Vercel AI Gateway (project-linked)')
+    
+    // Vercel AI Gateway uses the project's automatic token management
+    // The token is automatically refreshed every 12 hours by Vercel
+    apiUrl = `https://api.vercel.com/v1/ai/gateway/${process.env.VERCEL_PROJECT_ID}/chat/completions`
+    
+    // Use Vercel's automatic token (no manual token needed)
+    headers['Authorization'] = `Bearer ${process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN}`
     headers['X-Vercel-AI-Gateway'] = 'true'
+    headers['X-Vercel-Project-Id'] = process.env.VERCEL_PROJECT_ID
+    
+    console.log('🔍 Vercel Gateway Configuration:', {
+      projectId: process.env.VERCEL_PROJECT_ID,
+      environment: process.env.VERCEL_ENV,
+      hasVercelToken: !!(process.env.VERCEL_TOKEN || process.env.VERCEL_API_TOKEN)
+    })
   } else {
-    console.log('📡 Using direct OpenAI API')
+    console.log('📡 Using direct OpenAI API (not on Vercel or project not linked)')
   }
 
   const response = await fetch(apiUrl, {
@@ -237,6 +251,14 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
 
   if (!response.ok) {
     const errorText = await response.text()
+    console.error('❌ API Error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorText,
+      url: apiUrl.substring(0, 50) + '...',
+      isVercelEnvironment,
+      hasProjectId
+    })
     throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
