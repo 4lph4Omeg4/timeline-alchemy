@@ -7,7 +7,10 @@ import { User } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/Logo'
+<<<<<<< HEAD
 import Head from 'next/head'
+=======
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
@@ -16,6 +19,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const getUser = async () => {
+<<<<<<< HEAD
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUser({
@@ -27,6 +31,24 @@ export default function HomePage() {
         })
       }
       setLoading(false)
+=======
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          setUser({
+            id: user.id,
+            email: user.email || '',
+            name: user.user_metadata?.name || user.email?.split('@')[0],
+            avatar_url: user.user_metadata?.avatar_url,
+            created_at: user.created_at,
+          })
+        }
+      } catch (error) {
+        console.error('Error getting user:', error)
+      } finally {
+        setLoading(false)
+      }
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
     }
 
     getUser()
@@ -65,8 +87,13 @@ export default function HomePage() {
 
   if (loading) {
     return (
+<<<<<<< HEAD
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+=======
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-400"></div>
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
       </div>
     )
   }
@@ -96,6 +123,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
+<<<<<<< HEAD
       {/* Divine Background Effects - MUCH DARKER */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/10 to-black"></div>
       <div className="absolute inset-0 bg-gradient-to-r from-purple-600/3 via-purple-500/5 to-purple-600/3 animate-pulse"></div>
@@ -106,6 +134,8 @@ export default function HomePage() {
       <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-purple-400/20 to-pink-400/25 rounded-full blur-xl animate-bounce delay-1000"></div>
       <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-r from-purple-500/20 to-purple-600/25 rounded-full blur-xl animate-bounce delay-2000"></div>
 
+=======
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
       {/* Header */}
       <header className="bg-black/98 backdrop-blur-md shadow-2xl border-b border-purple-500/20 relative z-10">
         <div className="container mx-auto px-4 py-4">
@@ -133,6 +163,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <main className="container mx-auto px-4 py-20 relative z-10">
         <div className="text-center mb-20">
+<<<<<<< HEAD
           {/* Divine Title */}
           <div className="relative mb-8">
             <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-6 leading-tight">
@@ -146,6 +177,15 @@ export default function HomePage() {
           </div>
           
           {/* Heavenly Subtitle */}
+=======
+          <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-6 leading-tight">
+            Create content with{' '}
+            <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 bg-clip-text text-transparent animate-pulse">
+              ✨ AI Magic ✨
+            </span>
+          </h1>
+          
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
           <p className="text-2xl md:text-3xl text-gray-100 mb-12 max-w-4xl mx-auto leading-relaxed font-light">
             Timeline Alchemy transforms your creative vision into{' '}
             <span className="text-purple-300 font-semibold">heavenly content</span> that captivates audiences across{' '}
@@ -167,12 +207,19 @@ export default function HomePage() {
                 />
                 Your browser does not support the video tag.
               </video>
+<<<<<<< HEAD
               {/* Divine Glow Effect */}
               <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-3xl blur-2xl -z-10"></div>
             </div>
           </div>
           
           {/* Divine CTA */}
+=======
+            </div>
+          </div>
+          
+          {/* CTA */}
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
           <div className="flex justify-center space-x-6 mb-16">
             <Button 
               size="lg" 
@@ -189,6 +236,7 @@ export default function HomePage() {
               🌟 View Content Previews 🌟
             </Button>
           </div>
+<<<<<<< HEAD
           
           {/* Divine Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -384,6 +432,8 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
+=======
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
         </div>
 
         {/* Platform Logos Section */}
@@ -395,20 +445,33 @@ export default function HomePage() {
             <p className="text-lg text-gray-300 font-light">
               Seamlessly publish to your favorite social media platforms
             </p>
+<<<<<<< HEAD
             {/* Divine Glow */}
             <div className="absolute -top-4 -left-4 -right-4 -bottom-4 bg-gradient-to-r from-purple-600/10 via-pink-600/10 to-blue-600/10 rounded-3xl blur-2xl"></div>
+=======
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
           </div>
           
           {/* Platform Logos Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 max-w-6xl mx-auto">
+<<<<<<< HEAD
             {/* Twitter/X */}
             <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-900/20 to-blue-800/20 backdrop-blur-md rounded-2xl border border-blue-500/20 shadow-xl hover:shadow-blue-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-blue-400/50 transition-all duration-300">
+=======
+            {/* X (Twitter) - Black Background */}
+            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-900/20 to-black/20 backdrop-blur-md rounded-2xl border border-gray-500/20 shadow-xl hover:shadow-gray-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-black to-gray-800 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-gray-400/50 transition-all duration-300">
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
                 <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
               </div>
+<<<<<<< HEAD
               <span className="text-white font-semibold text-sm group-hover:text-blue-200 transition-colors duration-300">X (Twitter)</span>
+=======
+              <span className="text-white font-semibold text-sm group-hover:text-gray-200 transition-colors duration-300">X (Twitter)</span>
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
             </div>
 
             {/* LinkedIn */}
@@ -451,6 +514,7 @@ export default function HomePage() {
               <span className="text-white font-semibold text-sm group-hover:text-red-200 transition-colors duration-300">YouTube</span>
             </div>
 
+<<<<<<< HEAD
             {/* TikTok */}
             <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-900/20 to-black/20 backdrop-blur-md rounded-2xl border border-gray-500/20 shadow-xl hover:shadow-gray-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
               <div className="w-16 h-16 bg-gradient-to-br from-gray-800 to-black rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-gray-400/50 transition-all duration-300">
@@ -459,10 +523,41 @@ export default function HomePage() {
                 </svg>
               </div>
               <span className="text-white font-semibold text-sm group-hover:text-gray-200 transition-colors duration-300">TikTok</span>
+=======
+            {/* Discord */}
+            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-indigo-900/20 to-purple-800/20 backdrop-blur-md rounded-2xl border border-indigo-500/20 shadow-xl hover:shadow-indigo-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-indigo-400/50 transition-all duration-300">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                </svg>
+              </div>
+              <span className="text-white font-semibold text-sm group-hover:text-indigo-200 transition-colors duration-300">Discord</span>
+            </div>
+
+            {/* Reddit */}
+            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-900/20 to-red-800/20 backdrop-blur-md rounded-2xl border border-orange-500/20 shadow-xl hover:shadow-orange-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-orange-400/50 transition-all duration-300">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-5.247a1.25 1.25 0 0 1 2.277-.657l.01.02 1.068 2.16zm-9.02 0c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056L4.744 0a1.25 1.25 0 0 1 2.277-.657l.01.02 1.068 2.16zm4.01 6.5c-2.485 0-4.5 2.015-4.5 4.5s2.015 4.5 4.5 4.5 4.5-2.015 4.5-4.5-2.015-4.5-4.5-4.5zm0 1.5c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3z"/>
+                </svg>
+              </div>
+              <span className="text-white font-semibold text-sm group-hover:text-orange-200 transition-colors duration-300">Reddit</span>
+            </div>
+
+            {/* WordPress */}
+            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-900/20 to-gray-800/20 backdrop-blur-md rounded-2xl border border-blue-500/20 shadow-xl hover:shadow-blue-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 group">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-gray-700 rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-blue-400/50 transition-all duration-300">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M21.469 6.825c.84 1.537 1.318 3.3 1.318 5.175 0 3.979-2.156 7.456-5.363 9.325l3.295-9.527c.615-1.54.82-2.771.82-3.864 0-.405-.026-.78-.07-1.11m-7.981.105c.647-.03 1.232-.105 1.232-.105.582-.075.514-.93-.067-.899 0 0-1.755.135-2.88.135-1.064 0-2.85-.15-2.85-.15-.584-.03-.661.855-.075.885 0 0 .54.061 1.125.105l1.68 4.605-2.37-6.72L8.1 6.9c.648-.03 1.234-.1 1.234-.1.585-.075.516-.93-.065-.896 0 0-1.746.138-2.874.138-.2 0-.438-.008-.69-.015C4.911 3.15 3.8 4.4 3.8 6.9c0 .405.026.78.07 1.11.51-1.5 1.51-2.78 2.77-3.72-.9-1.065-2.01-1.8-3.27-2.13-.405-.075-.81-.12-1.215-.12-2.16 0-4.05 1.2-5.1 3-1.05-1.8-2.94-3-5.1-3-.405 0-.81.045-1.215.12-1.26.33-2.37 1.065-3.27 2.13 1.26.94 2.26 2.22 2.77 3.72.044-.33.07-.705.07-1.11 0-2.5-1.11-3.75-2.49-3.75-.2 0-.438.008-.69.015C1.35 1.5 0 3.6 0 6.9c0 3.3 1.8 6.075 4.5 7.8 2.7 1.725 6.3 2.25 9.9 1.5.9-.225 1.8-.525 2.7-.9 2.7-1.2 4.5-3.975 4.5-7.8 0-3.3-1.8-6.075-4.5-7.8-2.7-1.725-6.3-2.25-9.9-1.5z"/>
+                </svg>
+              </div>
+              <span className="text-white font-semibold text-sm group-hover:text-blue-200 transition-colors duration-300">WordPress</span>
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
             </div>
           </div>
         </div>
       </main>
+<<<<<<< HEAD
 
       {/* Divine Footer */}
       <footer className="bg-black text-gray-200 py-16 mt-20 border-t border-purple-500/20 relative overflow-hidden">
@@ -517,6 +612,8 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+=======
+>>>>>>> ba70b11 (Added Content Protection Component and Styles)
     </div>
   )
 }

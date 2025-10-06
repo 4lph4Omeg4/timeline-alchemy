@@ -189,6 +189,7 @@ export default function BillingPage() {
   const handleManageSubscription = async () => {
     setProcessing('manage')
     try {
+      // Try the API first, but fallback to direct billing link
       const response = await fetch('/api/stripe/customer-portal', {
         method: 'POST',
         headers: {
@@ -198,8 +199,11 @@ export default function BillingPage() {
 
       const { url, error } = await response.json()
 
-      if (error) {
-        toast.error(error)
+      if (error || !url) {
+        // Fallback to direct billing link
+        console.log('API failed, using direct billing link')
+        window.open('https://billing.stripe.com/p/login/eVqfZj1tyaVQgkH1CteAg00', '_blank')
+        toast.success('Opening billing portal...')
         return
       }
 
@@ -207,7 +211,9 @@ export default function BillingPage() {
       window.location.href = url
     } catch (error) {
       console.error('Error creating customer portal session:', error)
-      toast.error('Failed to open customer portal')
+      // Fallback to direct billing link
+      window.open('https://billing.stripe.com/p/login/eVqfZj1tyaVQgkH1CteAg00', '_blank')
+      toast.success('Opening billing portal...')
     } finally {
       setProcessing(null)
     }
@@ -382,6 +388,13 @@ export default function BillingPage() {
                 >
                   {processing === 'manage' ? 'Opening...' : 'Manage Billing'}
                 </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.open('https://billing.stripe.com/p/login/eVqfZj1tyaVQgkH1CteAg00', '_blank')}
+                  className="text-blue-400 border-blue-400 hover:bg-blue-400/20"
+                >
+                  Direct Billing Portal
+                </Button>
                 {subscription.status === 'active' && (
                   <Button 
                     variant="destructive" 
@@ -516,20 +529,63 @@ export default function BillingPage() {
         </CardContent>
       </Card>
 
-      {/* Billing History */}
+      {/* Billing Portal Info */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-white">Billing History</CardTitle>
+          <CardTitle className="text-white">💳 Billing Portal Access</CardTitle>
           <CardDescription className="text-gray-300">
-            View your past invoices and payments
+            Manage your subscription, payment methods, and billing information
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <p className="text-gray-400 mb-4">No billing history yet</p>
-            <p className="text-sm text-gray-500">
-              Your invoices and payment history will appear here
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-white font-semibold mb-3">What you can do:</h4>
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li className="flex items-center">
+                  <span className="text-green-400 mr-2">✓</span>
+                  Change your subscription plan
+                </li>
+                <li className="flex items-center">
+                  <span className="text-green-400 mr-2">✓</span>
+                  Update payment methods
+                </li>
+                <li className="flex items-center">
+                  <span className="text-green-400 mr-2">✓</span>
+                  View billing history & invoices
+                </li>
+                <li className="flex items-center">
+                  <span className="text-green-400 mr-2">✓</span>
+                  Download receipts
+                </li>
+                <li className="flex items-center">
+                  <span className="text-green-400 mr-2">✓</span>
+                  Cancel subscription
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-3">Quick Access:</h4>
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleManageSubscription}
+                  disabled={processing === 'manage'}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                >
+                  {processing === 'manage' ? 'Opening...' : '🚀 Open Billing Portal'}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => window.open('https://billing.stripe.com/p/login/eVqfZj1tyaVQgkH1CteAg00', '_blank')}
+                  className="w-full text-blue-400 border-blue-400 hover:bg-blue-400/20"
+                >
+                  🔗 Direct Link (New Tab)
+                </Button>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Use your email address to log in to the billing portal
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
