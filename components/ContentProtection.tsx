@@ -66,8 +66,8 @@ export default function ContentProtection() {
     // Disable text selection via CSS
     document.body.style.userSelect = 'none'
     document.body.style.webkitUserSelect = 'none'
-    document.body.style.mozUserSelect = 'none'
-    document.body.style.msUserSelect = 'none'
+    ;(document.body.style as any).mozUserSelect = 'none'
+    ;(document.body.style as any).msUserSelect = 'none'
 
     // Disable image dragging
     const images = document.querySelectorAll('img')
@@ -128,8 +128,8 @@ export default function ContentProtection() {
       // Restore text selection
       document.body.style.userSelect = 'auto'
       document.body.style.webkitUserSelect = 'auto'
-      document.body.style.mozUserSelect = 'auto'
-      document.body.style.msUserSelect = 'auto'
+      ;(document.body.style as any).mozUserSelect = 'auto'
+      ;(document.body.style as any).msUserSelect = 'auto'
       
       observer.disconnect()
     }
