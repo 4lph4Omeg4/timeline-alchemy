@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if AI Gateway is available for enhanced image generation
-    const useVercelGateway = process.env.AI_GATEWAY_URL && (process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY)
+    const useVercelGateway = process.env.AI_GATEWAY_API_KEY
     
     if (useVercelGateway) {
       console.log('🎨 Using Vercel AI Gateway for enhanced image generation')

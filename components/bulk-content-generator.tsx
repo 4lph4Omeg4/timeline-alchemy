@@ -265,7 +265,7 @@ export default function BulkContentGenerator() {
           } else {
             console.error('❌ Social posts failed for', post.title, 'Status:', socialResponse.status)
             // Create platform-optimized fallback social posts if API fails
-            const shortTitle = post.title.length > 50 ? post.title.substring(0, 47) + '...' : post.title
+            const shortTitle = post.title.length > 80 ? post.title.substring(0, 77) + '...' : post.title
             
             post.socialPosts = {
               twitter: `🚀 ${shortTitle}\n\n${post.content.substring(0, 150)}...\n\n#AI #Content #Innovation`,
