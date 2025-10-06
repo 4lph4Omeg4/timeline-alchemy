@@ -6,7 +6,7 @@ export interface User {
   created_at: string
 }
 
-export type PlanType = 'basic' | 'initiate' | 'transcendant' | 'universal'
+export type PlanType = 'trial' | 'basic' | 'initiate' | 'transcendant' | 'universal'
 
 export interface Organization {
   id: string
@@ -73,6 +73,9 @@ export interface Subscription {
   stripe_subscription_id: string
   plan: PlanType
   status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing'
+  trial_start_date?: string
+  trial_end_date?: string
+  is_trial?: boolean
   created_at: string
   updated_at: string
 }

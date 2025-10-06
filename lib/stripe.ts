@@ -14,6 +14,25 @@ export const getStripe = () => {
 
 // Client-safe Stripe plans configuration
 export const STRIPE_PLANS = {
+  trial: {
+    name: 'Trial',
+    price: 0, // Free trial
+    features: [
+      '2 content packages',
+      '5 custom content generations',
+      '1 bulk generation',
+      '14-day free trial',
+    ],
+    limits: {
+      contentPackages: 2,
+      customContent: 5,
+      bulkGeneration: 1,
+      customIntegrations: false,
+      whiteLabel: false,
+      prioritySupport: false,
+      advancedAnalytics: false,
+    },
+  },
   basic: {
     name: 'Basic',
     price: 49, // €49.00

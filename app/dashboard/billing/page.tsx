@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 
 export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [trialStatus, setTrialStatus] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState<string | null>(null)
   const router = useRouter()
@@ -44,6 +45,13 @@ export default function BillingPage() {
 
         if (sub) {
           setSubscription(sub)
+          
+          // Get trial status
+          const trialResponse = await fetch(`/api/trial/status?orgId=${userOrgId}`)
+          if (trialResponse.ok) {
+            const trialData = await trialResponse.json()
+            setTrialStatus(trialData)
+          }
         }
       } catch (error) {
         console.error('Error fetching subscription:', error)
@@ -102,6 +110,13 @@ export default function BillingPage() {
 
       if (sub) {
         setSubscription(sub)
+        
+        // Get trial status
+        const trialResponse = await fetch(`/api/trial/status?orgId=${userOrgId}`)
+        if (trialResponse.ok) {
+          const trialData = await trialResponse.json()
+          setTrialStatus(trialData)
+        }
       }
     } catch (error) {
       console.error('Error fetching subscription:', error)
@@ -122,6 +137,7 @@ export default function BillingPage() {
 
       // You'll need to replace these with your actual Stripe price IDs
       const priceIds: Record<PlanType, string> = {
+        trial: 'trial_free', // Trial is free, no Stripe price needed
         basic: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID || 'price_basic',
         initiate: process.env.NEXT_PUBLIC_STRIPE_INITIATE_PRICE_ID || 'price_initiate',
         transcendant: process.env.NEXT_PUBLIC_STRIPE_TRANSCENDANT_PRICE_ID || 'price_transcendant',
@@ -333,6 +349,30 @@ export default function BillingPage() {
                     </span>
                   )}
                 </p>
+                
+                {/* Trial Status */}
+                {trialStatus && trialStatus.isTrial && (
+                  <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-blue-200 font-semibold">🎉 Free Trial Active</h4>
+                        <p className="text-blue-300 text-sm">
+                          {trialStatus.daysRemaining > 0 
+                            ? `${trialStatus.daysRemaining} days remaining`
+                            : 'Trial expired'
+                          }
+                        </p>
+                      </div>
+                      {trialStatus.daysRemaining > 0 && (
+                        <div className="text-right">
+                          <div className="text-xs text-blue-400">
+                            Trial ends: {subscription.trial_end_date ? new Date(subscription.trial_end_date).toLocaleDateString() : 'N/A'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex space-x-2">
                 <Button 

@@ -7,20 +7,19 @@ export async function checkPlanLimits(orgId: string, action: 'contentPackage' | 
   reason?: string
   currentUsage?: number
   limit?: number
+  warning?: string
 }> {
   try {
-    // Get organization plan
-    const { data: org, error: orgError } = await supabaseAdmin
-      .from('organizations')
-      .select('plan')
-      .eq('id', orgId)
-      .single()
+    // Get effective plan (trial or actual plan)
+    const { data: effectivePlan, error: planError } = await supabaseAdmin
+      .rpc('get_effective_plan', { org_id_param: orgId } as any)
 
-    if (orgError || !org) {
-      return { allowed: false, reason: 'Organization not found' }
+    if (planError) {
+      console.error('Error getting effective plan:', planError)
+      return { allowed: false, reason: 'Failed to get plan information' }
     }
 
-    const plan = (org as { plan: string }).plan as PlanType
+    const plan = effectivePlan as PlanType
 
     // Get plan features from database
     const { data: planFeatures, error: featuresError } = await supabaseAdmin
@@ -61,12 +60,38 @@ export async function checkPlanLimits(orgId: string, action: 'contentPackage' | 
     // Check if unlimited (NULL limit) or under limit
     const allowed = limit === null || currentUsage < limit
 
+    // Check if trial is expired
+    const { data: isTrialExpired, error: expiredError } = await supabaseAdmin
+      .rpc('is_trial_expired', { org_id_param: orgId } as any)
+
+    if (expiredError) {
+      console.error('Error checking trial expiration:', expiredError)
+    }
+
+    // If trial is expired, don't allow any actions
+    if (isTrialExpired && plan === 'trial') {
+      return { 
+        allowed: false, 
+        reason: 'Trial has expired. Please subscribe to continue using the service.',
+        currentUsage,
+        limit: limit || -1
+      }
+    }
+
+    // Add warning if approaching limit
+    let warning = undefined
+    if (limit !== null && currentUsage >= limit * 0.8) {
+      warning = `You're approaching your ${action} limit (${currentUsage}/${limit})`
+    }
+
     return {
       allowed,
-      reason: allowed ? undefined : `Plan limit reached. Current: ${currentUsage}, Limit: ${limit}`,
+      reason: allowed ? undefined : `Plan limit reached for ${action}`,
       currentUsage,
-      limit: limit || -1
+      limit: limit || -1,
+      warning
     }
+
   } catch (error) {
     console.error('Error checking plan limits:', error)
     return { allowed: false, reason: 'Error checking limits' }
