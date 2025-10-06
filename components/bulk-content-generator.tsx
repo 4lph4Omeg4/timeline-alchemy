@@ -409,12 +409,16 @@ export default function BulkContentGenerator() {
           if (imageResponse.ok) {
             const imageData = await imageResponse.json()
             console.log('🌟 Cosmic image generated for', post.title)
+            console.log('🔍 Image data received:', imageData)
             
             // Store temporary image URL - will be saved permanently after post creation
             post.generatedImage = imageData.imageUrl
             console.log('🌟 Image generated, will be saved permanently after post creation')
+            console.log('🔍 Generated image URL:', imageData.imageUrl)
           } else {
             console.error('❌ Image generation failed for', post.title, 'Status:', imageResponse.status)
+            const errorText = await imageResponse.text()
+            console.error('❌ Image generation error:', errorText)
           }
         } catch (imageError) {
           console.error('❌ Image generation error:', imageError)

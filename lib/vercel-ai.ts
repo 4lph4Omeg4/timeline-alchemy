@@ -167,7 +167,7 @@ export async function generateVercelImage(prompt: string) {
         messages: [
           {
             role: 'user',
-            content: `Create a detailed description for an image about: ${enhancedPrompt}. Make it visual and descriptive.`
+            content: `Generate an image URL for this description: ${enhancedPrompt}. Return ONLY the image URL, nothing else.`
           }
         ],
         max_tokens: 500
@@ -244,8 +244,7 @@ export async function generateVercelImage(prompt: string) {
     
     if (!imageUrl) {
       console.error('❌ No image URL found in response:', imageData)
-      // Return a placeholder for now
-      imageUrl = 'https://via.placeholder.com/1024x1024/6366f1/ffffff?text=Image+Generation+Via+Vercel+Gateway'
+      throw new Error('No image URL returned from Google Gemini image generation')
     }
     
     console.log('✅ Image URL found:', imageUrl)
