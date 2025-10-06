@@ -16,46 +16,52 @@ export async function POST(req: Request) {
         },
         {
           role: 'user',
-          content: `Create social media posts for this blog content:
+          content: `Create UNIQUE, platform-specific social media posts for this blog content. Each post must be DIFFERENT and tailored to its platform's audience and format.
 
 Title: ${title}
 
 Content: ${content}
 
-Create posts for ALL platforms: Facebook, Instagram, Twitter, LinkedIn, Discord, Reddit, Telegram
+CRITICAL REQUIREMENTS:
+- Each post must be UNIQUE and DIFFERENT from the others
+- Do NOT repeat the title in every post
+- Do NOT copy the article text verbatim
+- Create engaging, platform-specific content that captures the essence
+- Use platform-appropriate tone and style
+- Include relevant hashtags for each platform
 
-IMPORTANT OUTPUT FORMAT:
+PLATFORM GUIDELINES:
+Facebook: Conversational, community-focused, 2-3 sentences (max 1000 chars), engaging questions or insights
+Instagram: Visual storytelling, emoji-rich, 2-3 sentences (max 500 chars), lifestyle-focused with 5-10 hashtags
+Twitter: Concise, punchy, engaging (max 280 chars), trending topics, 2-3 short hashtags
+LinkedIn: Professional insights, business value, 2-3 sentences (max 1500 chars), thought leadership tone
+Discord: Community-focused, casual gaming/tech tone, engaging for discussions
+Reddit: Discussion-provoking, authentic, community-specific language, no corporate speak
+Telegram: Channel-friendly, informative updates, 2-3 sentences with emojis
+
+OUTPUT FORMAT:
 Facebook:
-[Post content here]
+[Unique Facebook post here]
 
 Instagram:
-[Post content here]
+[Unique Instagram post here]
 
 Twitter:
-[Post content here]
+[Unique Twitter post here]
 
 LinkedIn:
-[Post content here]
+[Unique LinkedIn post here]
 
 Discord:
-[Post content here]
+[Unique Discord post here]
 
 Reddit:
-[Post content here]
+[Unique Reddit post here]
 
 Telegram:
-[Post content here]
+[Unique Telegram post here]
 
-Requirements:
-- Facebook: Engaging, conversational tone, 2-3 paragraphs (up to 1000 characters), include relevant hashtags
-- Instagram: Visual, emoji-rich, 2-3 sentences (up to 500 characters), include 5-10 relevant hashtags
-- Twitter: CRITICAL - Must be under 280 characters total, concise and punchy, include 2-3 short hashtags
-- LinkedIn: Professional, business-focused, 2-3 paragraphs (up to 1500 characters), include 3-5 relevant hashtags
-- Discord: Community-focused, casual, engaging for gaming/tech communities
-- Reddit: Discussion-provoking, authentic, community-specific language
-- Telegram: Channel-friendly, informative, engaging for community updates, 2-3 sentences with emojis
-
-CRITICAL: Each post must be ready to copy-paste and publish immediately. Include relevant hashtags for each platform. Make content engaging and platform-specific.`
+Each post must be ready to publish and completely different from the others.`
         }
       ],
       temperature: 0.7,
