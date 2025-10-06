@@ -314,34 +314,91 @@ export default function BulkContentGenerator() {
           console.log('🔧 Telegram post added as fallback')
         }
         
-        // 🌟 TOPIC-SPECIFIC IMAGE GENERATION
+        // 🌟 DYNAMIC CATEGORY-SPECIFIC IMAGE GENERATION
         try {
           // Create relevant image prompt based on content and category
           const category = post.category || 'Consciousness & Awakening'
           const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
+          const titleWords = post.title.toLowerCase()
           
           let imagePrompt = `Professional illustration for article: "${post.title}". `
           
-          // Category-specific styling
+          // 🧠 CONSCIOUSNESS & AWAKENING - Mind expansion, enlightenment, meditation
           if (category.includes('Consciousness') || category.includes('Awakening')) {
-            imagePrompt += `Style: Meditative mind visualization, brain networks, enlightenment symbols, peaceful spiritual imagery, warm golden light, consciousness awakening.`
-          } else if (category.includes('AI') || category.includes('Technology')) {
-            imagePrompt += `Style: Modern tech illustration, AI brain, digital networks, futuristic technology, clean minimalist design, blue-silver color scheme.`
-          } else if (category.includes('Crypto') || category.includes('Decentralized')) {
-            imagePrompt += `Style: Blockchain visualization, digital currency symbols, decentralized networks, modern fintech design, geometric patterns.`
-          } else if (category.includes('Ancient') || category.includes('Wisdom')) {
-            imagePrompt += `Style: Ancient wisdom symbols, historical artifacts, mystical elements, earthy tones, sacred geometry, timeless beauty.`
-          } else if (category.includes('Lifestyle') || category.includes('New Earth')) {
-            imagePrompt += `Style: Sustainable living, earth elements, wellness lifestyle, natural harmony, green earth tones, healing symbols.`
-          } else if (category.includes('Mythology') || category.includes('Archetypes')) {
-            imagePrompt += `Style: Mythological symbols, ancient archetypes, legendary creatures, symbolic imagery, mystical artistic portrayal.`
-          } else if (category.includes('Global') || category.includes('Culture')) {
-            imagePrompt += `Style: Global culture blend, world unity symbols, cultural diversity, contemporary social movements, earth-connected imagery.`
-          } else {
-            imagePrompt += `Style: Professional illustration, relevant symbolic imagery, clean modern design, appropriate color scheme.`
+            if (titleWords.includes('meditation') || titleWords.includes('mindfulness')) {
+              imagePrompt += `Style: Serene meditation scene, peaceful lotus position, soft golden light, floating consciousness symbols, zen garden elements, warm amber and deep purple colors, ethereal atmosphere.`
+            } else if (titleWords.includes('brain') || titleWords.includes('neural')) {
+              imagePrompt += `Style: Neural network visualization, glowing brain synapses, interconnected neurons, electric blue and purple pathways, scientific yet mystical, digital consciousness awakening.`
+            } else {
+              imagePrompt += `Style: Consciousness expansion visualization, ascending energy spirals, enlightenment symbols, warm golden light radiating outward, peaceful awakening scene, deep purple and gold tones.`
+            }
+          } 
+          // 🤖 AI & CONSCIOUS TECHNOLOGY - Futuristic, digital, tech-forward
+          else if (category.includes('AI') || category.includes('Technology')) {
+            if (titleWords.includes('quantum') || titleWords.includes('computing')) {
+              imagePrompt += `Style: Quantum computing visualization, crystalline structures, holographic data streams, electric blue and silver colors, futuristic laboratory setting, advanced technology.`
+            } else if (titleWords.includes('robot') || titleWords.includes('android')) {
+              imagePrompt += `Style: Conscious AI being, humanoid robot with glowing eyes, digital consciousness emerging, sleek metallic design, blue and white lighting, futuristic workshop.`
+            } else {
+              imagePrompt += `Style: AI consciousness visualization, digital brain networks, holographic interfaces, clean minimalist tech design, electric blue and silver color scheme, futuristic atmosphere.`
+            }
+          } 
+          // 💰 CRYPTO & DECENTRALIZED SOVEREIGNTY - Blockchain, freedom, digital gold
+          else if (category.includes('Crypto') || category.includes('Decentralized')) {
+            if (titleWords.includes('bitcoin') || titleWords.includes('crypto')) {
+              imagePrompt += `Style: Digital currency visualization, golden Bitcoin symbols, blockchain network connections, decentralized nodes, warm gold and orange colors, financial freedom theme.`
+            } else if (titleWords.includes('defi') || titleWords.includes('web3')) {
+              imagePrompt += `Style: DeFi ecosystem visualization, interconnected financial protocols, digital vaults, bright green and gold colors, decentralized finance network.`
+            } else {
+              imagePrompt += `Style: Decentralized sovereignty visualization, blockchain network, digital freedom symbols, warm gold and deep blue colors, financial independence theme.`
+            }
+          } 
+          // 🏛️ ANCIENT WISDOM & MYSTERIES - Historical, mystical, sacred
+          else if (category.includes('Ancient') || category.includes('Wisdom')) {
+            if (titleWords.includes('pyramid') || titleWords.includes('egypt')) {
+              imagePrompt += `Style: Ancient Egyptian wisdom, pyramid silhouettes, hieroglyphic symbols, golden desert sands, mystical artifacts, warm amber and deep brown tones.`
+            } else if (titleWords.includes('temple') || titleWords.includes('sacred')) {
+              imagePrompt += `Style: Sacred temple architecture, ancient stone structures, mystical symbols, ethereal lighting, earthy brown and golden colors, timeless wisdom.`
+            } else {
+              imagePrompt += `Style: Ancient wisdom visualization, historical artifacts, mystical symbols, sacred geometry, earthy tones with golden accents, timeless knowledge.`
+            }
+          } 
+          // 🌱 DIVINE LIFESTYLE & NEW EARTH - Sustainable, harmonious, natural
+          else if (category.includes('Lifestyle') || category.includes('New Earth')) {
+            if (titleWords.includes('sustainable') || titleWords.includes('eco')) {
+              imagePrompt += `Style: Sustainable living scene, green earth elements, renewable energy symbols, natural harmony, fresh green and earth tones, environmental consciousness.`
+            } else if (titleWords.includes('wellness') || titleWords.includes('healing')) {
+              imagePrompt += `Style: Wellness and healing visualization, natural elements, healing crystals, peaceful nature scene, soft green and blue colors, holistic health.`
+            } else {
+              imagePrompt += `Style: Divine lifestyle visualization, harmonious living, natural elements, earth-connected imagery, fresh green and warm earth tones, sustainable future.`
+            }
+          } 
+          // ⚡ MYTHOLOGY & ARCHETYPES - Legendary, symbolic, mystical
+          else if (category.includes('Mythology') || category.includes('Archetypes')) {
+            if (titleWords.includes('dragon') || titleWords.includes('mythical')) {
+              imagePrompt += `Style: Mythological dragon, ancient legends, mystical creatures, symbolic imagery, deep purple and gold colors, legendary storytelling.`
+            } else if (titleWords.includes('gods') || titleWords.includes('deities')) {
+              imagePrompt += `Style: Ancient deities visualization, mythological symbols, divine archetypes, ethereal lighting, rich purple and golden tones, sacred mythology.`
+            } else {
+              imagePrompt += `Style: Mythological archetypes, ancient symbols, legendary imagery, mystical atmosphere, deep purple and gold colors, timeless stories.`
+            }
+          } 
+          // 🌍 GLOBAL SHIFTS & CONSCIOUS CULTURE - Worldwide, cultural, transformative
+          else if (category.includes('Global') || category.includes('Culture')) {
+            if (titleWords.includes('unity') || titleWords.includes('together')) {
+              imagePrompt += `Style: Global unity visualization, world connection symbols, cultural diversity, rainbow colors blending, worldwide harmony, interconnected humanity.`
+            } else if (titleWords.includes('movement') || titleWords.includes('change')) {
+              imagePrompt += `Style: Social movement visualization, transformative energy, cultural shift symbols, dynamic colors, global change, progressive movement.`
+            } else {
+              imagePrompt += `Style: Global consciousness visualization, world culture blend, transformative symbols, vibrant multicultural colors, worldwide awakening.`
+            }
+          } 
+          // Default fallback
+          else {
+            imagePrompt += `Style: Professional illustration, relevant symbolic imagery, clean modern design, appropriate color scheme, high-quality visual storytelling.`
           }
           
-          imagePrompt += ` Theme: ${topicTags}. High quality, professional article illustration.`
+          imagePrompt += ` Theme: ${topicTags}. High quality, professional article illustration, detailed and engaging.`
           
           const imageResponse = await fetch('/api/generate-image', {
             method: 'POST',
