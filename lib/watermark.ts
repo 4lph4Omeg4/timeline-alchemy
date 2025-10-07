@@ -123,8 +123,8 @@ export async function addWatermarkToImage(imageUrl: string, branding: BrandingSe
 
 // Server-side watermark function (for API routes)
 export async function addWatermarkToImageServer(imageUrl: string, branding: BrandingSettings | null, orgId: string): Promise<string> {
-  if (!branding?.enabled || !branding.logo_url) {
-    console.log('🔄 Watermark skipped - branding not enabled or no logo URL')
+  if (!branding?.logo_url) {
+    console.log('🔄 Watermark skipped - no logo URL available')
     return imageUrl
   }
 

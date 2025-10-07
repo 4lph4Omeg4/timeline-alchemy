@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
               .eq('organization_id', orgId)
               .single()
 
-            if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
+            if (branding && (branding as { logo_url: string }).logo_url) {
               try {
                 imageUrl = await addWatermarkToImageServer(imageUrl, branding, orgId)
                 watermarked = true
@@ -313,7 +313,7 @@ async function fallbackToDallE(prompt: string, orgId?: string) {
             .eq('organization_id', orgId)
             .single()
 
-          if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
+          if (branding && (branding as { logo_url: string }).logo_url) {
             try {
               imageUrl = await addWatermarkToImageServer(imageUrl, branding, orgId)
               watermarked = true

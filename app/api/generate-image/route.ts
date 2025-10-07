@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
               .eq('organization_id', orgId)
               .single()
 
-            if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
+            if (branding && (branding as { logo_url: string }).logo_url) {
               console.log('🔄 Applying custom watermark...')
               try {
                 finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
