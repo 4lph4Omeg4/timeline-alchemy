@@ -451,6 +451,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🔑</span>
                     <span className="font-semibold">Token Status</span>
                   </Link>
+                  <Link href="/dashboard/bulk-content" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                    <div className="flex items-center">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">⚡</span>
+                      <span className="font-semibold">Bulk Content</span>
+                    </div>
+                    <span className="text-xs text-yellow-300 ml-8 mt-1 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
+                  </Link>
+                  <Link href="/dashboard/admin/branding" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                    <div className="flex items-center">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🎨</span>
+                      <span className="font-semibold">Branding</span>
+                    </div>
+                    <span className="text-xs text-yellow-300 ml-8 mt-1 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
+                  </Link>
                   <Link href="/dashboard/billing" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💳</span>
                     <span className="font-semibold">Billing</span>
@@ -459,10 +473,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <>
                       <div className="border-t border-purple-500/30 my-4"></div>
                       <div className="text-xs text-purple-300 font-bold uppercase tracking-wider mb-2 px-3">✨ Admin Realm ✨</div>
-                      <Link href="/dashboard/bulk-content" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">⚡</span>
-                        <span className="font-semibold">Bulk Content</span>
-                      </Link>
                       <Link href="/dashboard/organizations" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🏢</span>
                         <span className="font-semibold">Organizations</span>
@@ -483,9 +493,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📈</span>
                         <span className="font-semibold">Analytics</span>
                       </Link>
-                      <Link href="/dashboard/admin/branding" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🎨</span>
-                        <span className="font-semibold">Branding</span>
+                      <Link href="/dashboard/admin/watermark" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💧</span>
+                        <span className="font-semibold">Bulk Watermark</span>
                       </Link>
                     </>
                   )}

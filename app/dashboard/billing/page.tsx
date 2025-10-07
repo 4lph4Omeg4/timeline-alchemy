@@ -410,6 +410,28 @@ export default function BillingPage() {
         </Card>
       )}
 
+      {/* Trial Information Banner */}
+      <Card className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border-blue-500/30">
+        <CardContent className="pt-6">
+          <div className="flex items-start space-x-4">
+            <div className="text-4xl">🎉</div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-white mb-2">Start with a Free Trial!</h3>
+              <p className="text-blue-200 mb-3">
+                Every new member begins with a <span className="font-semibold text-yellow-300">2-week free trial period</span>. 
+                Explore the platform with 2 content packages, 5 custom content generations, and 1 bulk generation to experience what Timeline Alchemy can do for you.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <span className="bg-blue-500/20 text-blue-200 text-xs px-3 py-1 rounded-full">✓ 2 Content Packages</span>
+                <span className="bg-blue-500/20 text-blue-200 text-xs px-3 py-1 rounded-full">✓ 5 Custom Generations</span>
+                <span className="bg-blue-500/20 text-blue-200 text-xs px-3 py-1 rounded-full">✓ 1 Bulk Generation</span>
+                <span className="bg-blue-500/20 text-blue-200 text-xs px-3 py-1 rounded-full">✓ 14 Days Free</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Available Plans */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
@@ -420,7 +442,7 @@ export default function BillingPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Object.entries(STRIPE_PLANS).map(([planKey, plan]) => {
+            {Object.entries(STRIPE_PLANS).filter(([planKey]) => planKey !== 'trial').map(([planKey, plan]) => {
               const isCurrentPlan = subscription?.plan === planKey
               const planType = planKey as PlanType
 
