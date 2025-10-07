@@ -128,8 +128,8 @@ export default function HomePage() {
               <video
                 autoPlay
                 loop
-                muted
                 playsInline
+                controls
                 className="w-full h-auto"
               >
                 <source src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/video/e6c0db74-03ee-4bb3-b08d-d94512efab91/video-promo-portfolio/timeline-alchemy%20(1).mp4" type="video/mp4" />
