@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
               // Update database with new watermarked URL
               const { error: updateError } = await supabaseAdmin
                 .from('images')
-                .update({ url: watermarkedUrl })
+                .update({ url: watermarkedUrl } as any)
                 .eq('id', imageId)
 
               if (updateError) {
