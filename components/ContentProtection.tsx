@@ -76,42 +76,8 @@ export default function ContentProtection() {
       img.style.pointerEvents = 'none'
     })
 
-    // Add watermark overlay to images
-    const addWatermarkToImages = () => {
-      const images = document.querySelectorAll('img')
-      images.forEach(img => {
-        if (!img.parentElement?.classList.contains('watermarked')) {
-          const wrapper = document.createElement('div')
-          wrapper.className = 'watermarked relative inline-block'
-          wrapper.style.position = 'relative'
-          
-          const watermark = document.createElement('div')
-          watermark.className = 'absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded'
-          watermark.textContent = 'Timeline Alchemy'
-          watermark.style.fontSize = '10px'
-          watermark.style.opacity = '0.7'
-          watermark.style.pointerEvents = 'none'
-          watermark.style.zIndex = '10'
-          
-          img.parentNode?.insertBefore(wrapper, img)
-          wrapper.appendChild(img)
-          wrapper.appendChild(watermark)
-        }
-      })
-    }
-
-    // Apply watermark to existing images
-    addWatermarkToImages()
-
-    // Watch for new images (in case of dynamic loading)
-    const observer = new MutationObserver(() => {
-      addWatermarkToImages()
-    })
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    })
+    // Note: Watermarks are applied server-side during image generation
+    // No need for client-side overlay watermarks
 
     // Console warning
     console.clear()
@@ -130,8 +96,6 @@ export default function ContentProtection() {
       document.body.style.webkitUserSelect = 'auto'
       ;(document.body.style as any).mozUserSelect = 'auto'
       ;(document.body.style as any).msUserSelect = 'auto'
-      
-      observer.disconnect()
     }
   }, [])
 
