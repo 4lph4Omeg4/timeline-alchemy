@@ -152,17 +152,13 @@ export async function generateVercelImage(prompt: string) {
     if (gatewayApiKey) {
       console.log('🚀 Attempting Vercel AI Gateway with Gemini 2.5 Flash Image')
       try {
-        // Use Vercel AI SDK with Gateway - Google provider through Vercel AI Gateway
+        // Use Vercel AI SDK with Gateway
         const { generateText } = await import('ai')
-        const { createGoogleGenerativeAI } = await import('@ai-sdk/google')
         
-        // Configure Google provider with Vercel AI Gateway credentials
-        const google = createGoogleGenerativeAI({
-          apiKey: gatewayApiKey,
-        })
-        
+        // For Vercel AI Gateway, use the model string directly
+        // The gateway will route it to the correct provider
         const result = await generateText({
-          model: google('gemini-2.5-flash-image-preview'),
+          model: 'google/gemini-2.5-flash-image-preview',
           providerOptions: {
             google: { responseModalities: ['TEXT', 'IMAGE'] },
           },
@@ -240,7 +236,12 @@ export async function generateVercelImage(prompt: string) {
           }
         }
       } catch (geminiError) {
-        console.log('⚠️ Gemini SDK image generation failed:', geminiError)
+        console.error('⚠️ Gemini SDK image generation failed:', geminiError)
+        console.error('Error details:', {
+          message: geminiError instanceof Error ? geminiError.message : 'Unknown error',
+          stack: geminiError instanceof Error ? geminiError.stack : undefined,
+          gatewayApiKey: gatewayApiKey ? 'Present' : 'Missing'
+        })
       }
     }
     
