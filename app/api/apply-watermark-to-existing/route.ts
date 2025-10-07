@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { addWatermarkToImageServer } from '@/lib/watermark'
 
+// Add GET handler for debugging
+export async function GET(request: NextRequest) {
+  return NextResponse.json({ 
+    message: 'This endpoint only accepts POST requests',
+    method: 'POST',
+    endpoint: '/api/apply-watermark-to-existing'
+  }, { status: 200 })
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🎨 Starting bulk watermark application to existing images...')
