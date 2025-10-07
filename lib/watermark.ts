@@ -1,5 +1,6 @@
 import { BrandingSettings } from '@/types/index'
 import { supabaseAdmin } from '@/lib/supabase'
+import sharp from 'sharp'
 
 export async function addWatermarkToImage(imageUrl: string, branding: BrandingSettings | null): Promise<string> {
   if (!branding?.enabled || !branding.logo_url) {
@@ -123,17 +124,140 @@ export async function addWatermarkToImage(imageUrl: string, branding: BrandingSe
 // Server-side watermark function (for API routes)
 export async function addWatermarkToImageServer(imageUrl: string, branding: BrandingSettings | null, orgId: string): Promise<string> {
   if (!branding?.enabled || !branding.logo_url) {
+    console.log('🔄 Watermark skipped - branding not enabled or no logo URL')
     return imageUrl
   }
 
   try {
-    // For server-side, we'll use a different approach
-    // We'll create a simple overlay using CSS positioning in the frontend
-    // or use a server-side image processing library like Sharp
+    const fs = await import('fs')
+    const path = await import('path')
     
-    // For now, return the original image URL
-    // The watermark will be applied on the frontend when displaying the image
-    return imageUrl
+    console.log('🔄 Adding watermark to image:', imageUrl)
+    console.log('🔄 Branding settings:', branding)
+    console.log('🔄 Organization ID:', orgId)
+
+    // Read the main image from URL (Supabase or external)
+    let mainImageBuffer: Buffer
+    
+    const response = await fetch(imageUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`)
+    }
+    const arrayBuffer = await response.arrayBuffer()
+    mainImageBuffer = Buffer.from(arrayBuffer)
+
+    // Read the logo
+    let logoBuffer: Buffer
+    if (branding.logo_url.startsWith('/')) {
+      // Local logo
+      const logopath = path.join(process.cwd(), 'public', branding.logo_url)
+      logoBuffer = fs.readFileSync(logopath)
+    } else {
+      // External logo URL
+      const logoResponse = await fetch(branding.logo_url)
+      if (!logoResponse.ok) {
+        throw new Error(`Failed to fetch logo: ${logoResponse.status}`)
+      }
+      const logoArrayBuffer = await logoResponse.arrayBuffer()
+      logoBuffer = Buffer.from(logoArrayBuffer)
+    }
+
+    // Get main image metadata
+    const mainImage = sharp(mainImageBuffer)
+    const mainMetadata = await mainImage.metadata()
+    const mainWidth = mainMetadata.width!
+    const mainHeight = mainMetadata.height!
+
+    // Get logo metadata
+    const logoImage = sharp(logoBuffer)
+    const logoMetadata = await logoImage.metadata()
+    const logoWidth = logoMetadata.width!
+    const logoHeight = logoMetadata.height!
+
+    // Calculate logo size and position
+    const logoSize = Math.min(mainWidth, mainHeight) * branding.logo_size
+    const scaledLogoWidth = Math.round(logoSize)
+    const scaledLogoHeight = Math.round((logoHeight / logoWidth) * logoSize)
+
+    // Calculate position based on branding settings
+    let x = 0
+    let y = 0
+    
+    switch (branding.logo_position) {
+      case 'top-left':
+        x = 20
+        y = 20
+        break
+      case 'top-right':
+        x = mainWidth - scaledLogoWidth - 20
+        y = 20
+        break
+      case 'bottom-left':
+        x = 20
+        y = mainHeight - scaledLogoHeight - 20
+        break
+      case 'bottom-right':
+        x = mainWidth - scaledLogoWidth - 20
+        y = mainHeight - scaledLogoHeight - 20
+        break
+    }
+
+    // Resize logo
+    const resizedLogo = await logoImage
+      .resize(scaledLogoWidth, scaledLogoHeight)
+      .png()
+      .toBuffer()
+
+    // Apply opacity to the logo
+    const logoWithOpacity = await sharp(resizedLogo)
+      .composite([{
+        input: Buffer.from(`<svg width="${scaledLogoWidth}" height="${scaledLogoHeight}">
+          <rect width="100%" height="100%" fill="white" opacity="${branding.logo_opacity}"/>
+        </svg>`),
+        blend: 'multiply'
+      }])
+      .png()
+      .toBuffer()
+
+    // Composite the watermark onto the main image
+    const watermarkedImage = await mainImage
+      .composite([{
+        input: logoWithOpacity,
+        left: Math.round(x),
+        top: Math.round(y),
+        blend: 'over'
+      }])
+      .png()
+      .toBuffer()
+
+    // Upload watermarked image to Supabase Storage
+    const timestamp = Date.now()
+    const filename = `watermarked/${orgId}-${timestamp}.png`
+    
+    console.log('🔄 Uploading watermarked image to Supabase Storage...')
+    
+    const { supabaseAdmin } = await import('./supabase')
+    
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+      .from('blog-images')
+      .upload(filename, watermarkedImage, {
+        contentType: 'image/png',
+        upsert: false
+      })
+
+    if (uploadError) {
+      console.error('❌ Supabase upload error:', uploadError)
+      throw new Error(`Failed to upload watermarked image: ${uploadError.message}`)
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from('blog-images')
+      .getPublicUrl(filename)
+    
+    console.log('✅ Watermark added successfully:', publicUrl)
+    
+    return publicUrl
   } catch (error) {
     console.error('Error adding server-side watermark:', error)
     return imageUrl

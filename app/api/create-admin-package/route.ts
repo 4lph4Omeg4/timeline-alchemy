@@ -43,11 +43,24 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Get user's organization to check limits
-    const { data: orgMembers } = await supabaseClient
-      .from('org_members')
-      .select('org_id, role')
-      .eq('user_id', userId)
+    // Use Admin Organization directly (simplified for single-user setup)
+    const { data: adminOrg } = await supabaseClient
+      .from('organizations')
+      .select('id, name')
+      .eq('name', 'Admin Organization')
+      .single()
+
+    if (!adminOrg) {
+      return NextResponse.json({
+        error: 'Admin organization not found'
+      }, { status: 500 })
+    }
+
+    const userOrgId = adminOrg.id
+    console.log('🏢 Using Admin Organization:', userOrgId)
+
+    // Skip org_members lookup
+    const orgMembers = [{ org_id: userOrgId, role: 'admin' }]
 
     if (!orgMembers || orgMembers.length === 0) {
       return NextResponse.json(
@@ -56,38 +69,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find the user's personal organization (not Admin Organization)
-    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
-    if (!userOrgId) {
-      userOrgId = orgMembers[0].org_id
-    }
+    // userOrgId is already set above (Admin Organization)
+    console.log('🔍 Checking limits for org:', userOrgId)
 
-    // Check subscription limits before creating package
-    try {
-      const limitCheck = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/check-subscription-limits`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orgId: userOrgId,
-          action: 'contentPackage',
-          count: 1
-        }),
-      })
-
-      const limitResult = await limitCheck.json()
-      
-      if (!limitResult.allowed) {
-        return NextResponse.json(
-          { error: limitResult.reason || 'Plan limit reached' },
-          { status: 403 }
-        )
-      }
-    } catch (error) {
-      console.error('Error checking subscription limits:', error)
-      // Continue without limit check if it fails
+    // Check subscription limits directly (no fetch needed)
+    const { checkPlanLimits } = await import('@/lib/subscription-limits')
+    const limitResult = await checkPlanLimits(userOrgId, 'contentPackage')
+    
+    console.log('🔍 Limit check result:', limitResult)
+    
+    if (!limitResult.allowed) {
+      console.log('❌ Limit check failed:', limitResult.reason)
+      return NextResponse.json(
+        { error: limitResult.reason || 'Plan limit reached' },
+        { status: 403 }
+      )
     }
+    
+    console.log('✅ Limit check passed - Admin Organization has unlimited access')
 
     // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Mimic the working content generator
     console.log('🔍 Using admin organization for this admin-only package...')
@@ -146,7 +145,8 @@ export async function POST(request: NextRequest) {
       console.log('🔍 Image URL:', generatedImage)
       console.log('🔍 Post ID:', insertedPackage.id)
       try {
-        // Download the image from DALL-E URL
+        // Download the image from URL (Supabase or external)
+        console.log('🔄 Downloading image from URL...')
         const imageResponse = await fetch(generatedImage)
         if (!imageResponse.ok) {
           throw new Error(`Failed to download image: ${imageResponse.status}`)

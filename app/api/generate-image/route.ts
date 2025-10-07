@@ -17,24 +17,75 @@ export async function POST(request: NextRequest) {
 
     // Use Vercel AI Gateway for image generation
     console.log('🚀 Using Vercel AI Gateway for image generation')
-    const improvedPrompt = `${prompt}. Professional photography, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality. NO TEXT, NO WORDS, NO LETTERS, NO WRITING, NO TYPEFACE, NO FONTS.`
+    const improvedPrompt = `${prompt}. Professional photography, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality.`
 
     const vercelResponse = await generateVercelImage(improvedPrompt)
     
     if (vercelResponse.success) {
       let finalImageUrl = vercelResponse.imageUrl
 
-      // Add watermark if organization has branding settings
+      // Add watermark based on plan type
+      let watermarked = false
       if (orgId) {
         try {
-          const { data: branding } = await supabaseAdmin
-            .from('branding_settings')
-            .select('*')
-            .eq('organization_id', orgId)
+          console.log('🔍 Checking plan for orgId:', orgId)
+          
+          // Get organization plan
+          const { data: org } = await supabaseAdmin
+            .from('organizations')
+            .select('plan')
+            .eq('id', orgId)
             .single()
 
-          if (branding) {
-            finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
+          console.log('🔍 Organization plan:', org?.plan)
+
+          // For all plans except Universal, use Admin Organization's branding
+          const needsAdminWatermark = org?.plan && org.plan.toLowerCase() !== 'universal'
+          
+          if (needsAdminWatermark) {
+            console.log('🔄 Using Admin Organization watermark for', org.plan, 'plan')
+            
+            // Get Admin Organization's branding settings
+            const { data: adminOrg } = await supabaseAdmin
+              .from('organizations')
+              .select('id')
+              .eq('name', 'Admin Organization')
+              .single()
+
+            if (adminOrg) {
+              const { data: adminBranding } = await supabaseAdmin
+                .from('branding_settings')
+                .select('*')
+                .eq('organization_id', adminOrg.id)
+                .single()
+
+              if (adminBranding && adminBranding.enabled && adminBranding.logo_url) {
+                console.log('🔄 Applying Admin watermark...')
+                finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, adminBranding, orgId)
+                watermarked = true
+                console.log('✅ Admin watermark applied successfully')
+              } else {
+                console.log('⚠️ Admin branding not configured')
+              }
+            }
+          } else if (org?.plan === 'universal') {
+            console.log('🔄 Universal plan - checking custom branding...')
+            
+            // Universal plan can use their own branding
+            const { data: branding } = await supabaseAdmin
+              .from('branding_settings')
+              .select('*')
+              .eq('organization_id', orgId)
+              .single()
+
+            if (branding && branding.enabled && branding.logo_url) {
+              console.log('🔄 Applying custom watermark...')
+              finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
+              watermarked = true
+              console.log('✅ Custom watermark applied successfully')
+            } else {
+              console.log('⚠️ No custom branding configured for Universal plan')
+            }
           }
         } catch (error) {
           console.error('Error applying watermark:', error)
@@ -48,7 +99,7 @@ export async function POST(request: NextRequest) {
           provider: 'vercel-gateway',
           enhancedPrompt: vercelResponse.enhancedPrompt,
           enhanced: true,
-          watermarked: !!orgId
+          watermarked: watermarked
         }
       })
     } else {

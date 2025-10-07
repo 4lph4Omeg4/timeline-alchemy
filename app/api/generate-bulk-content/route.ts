@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateBulkContent, validateTrendData, BulkContentResult } from '@/lib/bulk-content-generator'
 import { incrementUsage } from '@/lib/subscription-limits'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,32 +27,33 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
     
-    // Get current user and organization
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    // Use the admin organization directly (simplified for single-user setup)
+    const { data: adminOrg } = await supabaseAdmin
+      .from('organizations')
+      .select('id, name')
+      .eq('name', 'Admin Organization')
+      .single()
+
+    if (!adminOrg) {
       return NextResponse.json({
         success: false,
-        error: 'Authentication required'
-      }, { status: 401 })
+        error: 'Admin organization not found'
+      }, { status: 500 })
     }
 
-    // Get user's organization
-    const { data: orgMembers } = await supabase
-      .from('org_members')
-      .select('org_id, role')
-      .eq('user_id', user.id)
+    const userOrgId = adminOrg.id
+    console.log('🏢 Using Admin Organization:', userOrgId)
 
-    if (!orgMembers || orgMembers.length === 0) {
+    // Check subscription limits BEFORE generating
+    const { checkPlanLimits } = await import('@/lib/subscription-limits')
+    const limitCheck = await checkPlanLimits(userOrgId, 'bulkGeneration')
+    
+    if (!limitCheck.allowed) {
+      console.log('❌ Bulk generation blocked - plan limit reached')
       return NextResponse.json({
         success: false,
-        error: 'No organization found'
-      }, { status: 400 })
-    }
-
-    // Find the user's personal organization (not Admin Organization)
-    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
-    if (!userOrgId) {
-      userOrgId = orgMembers[0].org_id
+        error: limitCheck.reason || 'Plan limit reached'
+      }, { status: 403 })
     }
     
     // Set defaults
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
     
     console.log(`📊 Processing ${body.items.length} trend items for ${contentType} content in ${language}`)
     console.log(`🏢 Organization: ${userOrgId}`)
+    console.log(`✅ Limit check passed - proceeding with generation`)
     
     // Check for OpenAI API key
     if (!process.env.OPENAI_API_KEY) {

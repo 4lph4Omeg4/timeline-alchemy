@@ -5,25 +5,56 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { supabase } from '@/lib/supabase'
 import { BrandingSettings } from '@/types/index'
 import { toast } from 'react-hot-toast'
 
 export default function BrandingPage() {
   const [branding, setBranding] = useState<BrandingSettings | null>(null)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [adminOrgId, setAdminOrgId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchBrandingSettings()
+    fetchAdminOrg()
   }, [])
 
-  const fetchBrandingSettings = async () => {
+  useEffect(() => {
+    if (adminOrgId) {
+      fetchBrandingSettings()
+    }
+  }, [adminOrgId])
+
+  const fetchAdminOrg = async () => {
     try {
-      const response = await fetch('/api/branding?orgId=admin-org')
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('name', 'Admin Organization')
+        .single()
+
+      if (error) {
+        console.error('Error fetching admin org:', error)
+        toast.error('Failed to fetch organization')
+        return
+      }
+
+      if (data) {
+        setAdminOrgId(data.id)
+      }
+    } catch (error) {
+      console.error('Error fetching admin org:', error)
+      toast.error('Failed to fetch organization')
+    }
+  }
+
+  const fetchBrandingSettings = async () => {
+    if (!adminOrgId) return
+
+    try {
+      const response = await fetch(`/api/branding?orgId=${adminOrgId}`)
       if (response.ok) {
         const data = await response.json()
         setBranding(data)
@@ -31,7 +62,7 @@ export default function BrandingPage() {
         // Initialize with default values if no branding settings exist
         setBranding({
           id: '',
-          organization_id: 'admin-org',
+          organization_id: adminOrgId,
           logo_url: undefined,
           logo_position: 'bottom-right',
           logo_opacity: 0.7,
@@ -46,7 +77,7 @@ export default function BrandingPage() {
       // Initialize with default values on error
       setBranding({
         id: '',
-        organization_id: 'admin-org',
+        organization_id: adminOrgId,
         logo_url: undefined,
         logo_position: 'bottom-right',
         logo_opacity: 0.7,
@@ -60,21 +91,21 @@ export default function BrandingPage() {
     }
   }
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (file) {
       setSelectedFile(file)
     }
   }
 
   const uploadLogo = async () => {
-    if (!selectedFile) return
+    if (!selectedFile || !adminOrgId) return
 
     setUploading(true)
     try {
       const formData = new FormData()
       formData.append('logo', selectedFile)
-      formData.append('orgId', 'admin-org')
+      formData.append('orgId', adminOrgId)
 
       const response = await fetch('/api/branding/upload-logo', {
         method: 'POST',
@@ -97,7 +128,7 @@ export default function BrandingPage() {
             body: JSON.stringify({
               ...branding,
               logo_url: data.url,
-              organization_id: 'admin-org'
+              organization_id: adminOrgId
             })
           })
         } catch (error) {
@@ -115,8 +146,44 @@ export default function BrandingPage() {
     }
   }
 
+  const handlePositionChange = async (position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
+    if (!branding || !adminOrgId) return
+    
+    // Update local state immediately
+    setBranding(prev => prev ? { ...prev, logo_position: position } : null)
+    
+    // Auto-save the change
+    try {
+      const response = await fetch('/api/branding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...branding,
+          logo_position: position,
+          organization_id: adminOrgId
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Position updated!')
+      } else {
+        // Revert the change if save failed
+        setBranding(prev => prev ? { ...prev, logo_position: branding.logo_position } : null)
+        const error = await response.json()
+        toast.error(error.error || 'Failed to update position')
+      }
+    } catch (error) {
+      // Revert the change if save failed
+      setBranding(prev => prev ? { ...prev, logo_position: branding.logo_position } : null)
+      console.error('Error updating position:', error)
+      toast.error('Failed to update position')
+    }
+  }
+
   const handleSwitchChange = async (checked: boolean) => {
-    if (!branding) return
+    if (!branding || !adminOrgId) return
     
     // Update local state immediately
     setBranding(prev => prev ? { ...prev, enabled: checked } : null)
@@ -131,7 +198,7 @@ export default function BrandingPage() {
         body: JSON.stringify({
           ...branding,
           enabled: checked,
-          organization_id: 'admin-org'
+          organization_id: adminOrgId
         })
       })
 
@@ -151,249 +218,140 @@ export default function BrandingPage() {
     }
   }
 
-  const saveSettings = async () => {
-    if (!branding) return
-
-    setSaving(true)
-    try {
-      const response = await fetch('/api/branding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...branding,
-          organization_id: 'admin-org'
-        })
-      })
-
-      if (response.ok) {
-        toast.success('Branding settings saved successfully!')
-        // Refresh the settings to get the latest data
-        await fetchBrandingSettings()
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to save settings')
-      }
-    } catch (error) {
-      console.error('Error saving settings:', error)
-      toast.error('Failed to save settings')
-    } finally {
-      setSaving(false)
-    }
-  }
-
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      </div>
+    )
+  }
+
+  if (!branding || !adminOrgId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-400">Failed to load branding settings</p>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            🎨 Branding Settings
-          </h1>
-          <p className="text-lg text-gray-600">
-            Configure your organization's branding that will appear as watermarks on generated images.
-          </p>
-        </div>
+    <div className="container mx-auto p-6 max-w-4xl">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-2">
+          🎨 Branding Settings
+        </h1>
+        <p className="text-gray-400">Customize your watermark logo for generated images</p>
+      </div>
 
-        <div className="grid gap-6">
-          {/* Logo Upload Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Logo Upload</CardTitle>
-              <CardDescription>
-                Upload your organization's logo to be used as a watermark on generated images.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="logo">Logo File</Label>
-                <Input
-                  id="logo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="mt-1"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Supported formats: PNG, JPG, SVG. Max size: 5MB
-                </p>
-              </div>
-
-              {selectedFile && (
-                <div className="flex items-center gap-4">
-                  <Button
-                    onClick={uploadLogo}
-                    disabled={uploading}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {uploading ? 'Uploading...' : 'Upload Logo'}
-                  </Button>
-                  <span className="text-sm text-gray-600">
-                    Selected: {selectedFile.name}
-                  </span>
+      <div className="grid gap-6">
+        {/* Logo Upload */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Logo Upload</CardTitle>
+            <CardDescription>Upload your logo to be used as a watermark</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {branding.logo_url && (
+              <div className="mb-4">
+                <Label>Current Logo</Label>
+                <div className="mt-2 p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-md rounded-lg border border-purple-500/20">
+                  <img src={branding.logo_url} alt="Logo" className="max-h-32 mx-auto" />
                 </div>
-              )}
-
-              {branding?.logo_url && (
-                <div className="mt-4">
-                  <Label>Current Logo Preview</Label>
-                  <div className="mt-2 p-4 border rounded-lg bg-gray-50">
-                    <img
-                      src={branding.logo_url}
-                      alt="Current logo"
-                      className="max-h-20 max-w-32 object-contain"
-                    />
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Watermark Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Watermark Settings</CardTitle>
-              <CardDescription>
-                Configure how your logo appears as a watermark on generated images.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="enabled">Enable Watermark</Label>
-                  <p className="text-sm text-gray-500">
-                    Show your logo as a watermark on generated images
-                  </p>
-                </div>
-                <Switch
-                  id="enabled"
-                  checked={branding?.enabled || false}
-                  onCheckedChange={handleSwitchChange}
-                />
               </div>
+            )}
 
-              <div>
-                <Label htmlFor="position">Logo Position</Label>
-                <Select
-                  value={branding?.logo_position || 'bottom-right'}
-                  onValueChange={(value: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') =>
-                    setBranding(prev => prev ? { ...prev, logo_position: value } : null)
-                  }
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="top-left">Top Left</SelectItem>
-                    <SelectItem value="top-right">Top Right</SelectItem>
-                    <SelectItem value="bottom-left">Bottom Left</SelectItem>
-                    <SelectItem value="bottom-right">Bottom Right</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="logo-upload">Choose Logo</Label>
+              <Input
+                id="logo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="mt-2"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="opacity">Logo Opacity</Label>
-                <Input
-                  id="opacity"
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.1"
-                  value={branding?.logo_opacity || 0.7}
-                  onChange={(e) =>
-                    setBranding(prev => prev ? { ...prev, logo_opacity: parseFloat(e.target.value) } : null)
-                  }
-                  className="mt-1"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Current: {Math.round((branding?.logo_opacity || 0.7) * 100)}%
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="size">Logo Size</Label>
-                <Input
-                  id="size"
-                  type="range"
-                  min="0.05"
-                  max="0.3"
-                  step="0.05"
-                  value={branding?.logo_size || 0.1}
-                  onChange={(e) =>
-                    setBranding(prev => prev ? { ...prev, logo_size: parseFloat(e.target.value) } : null)
-                  }
-                  className="mt-1"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Current: {Math.round((branding?.logo_size || 0.1) * 100)}% of image
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Preview Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Preview</CardTitle>
-              <CardDescription>
-                See how your watermark will appear on generated images.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative bg-gray-100 rounded-lg p-8 min-h-64 flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <div className="text-6xl mb-4">🖼️</div>
-                  <p>Generated image preview will appear here</p>
-                  <p className="text-sm">Your watermark will be applied automatically</p>
-                </div>
-                
-                {branding?.enabled && branding?.logo_url && (
-                  <div
-                    className={`absolute ${
-                      branding.logo_position === 'top-left' ? 'top-4 left-4' :
-                      branding.logo_position === 'top-right' ? 'top-4 right-4' :
-                      branding.logo_position === 'bottom-left' ? 'bottom-4 left-4' :
-                      'bottom-4 right-4'
-                    }`}
-                    style={{
-                      opacity: branding.logo_opacity,
-                      transform: `scale(${branding.logo_size * 10})`
-                    }}
-                  >
-                    <img
-                      src={branding.logo_url}
-                      alt="Watermark preview"
-                      className="h-8 w-8 object-contain"
-                    />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Save Button */}
-          <div className="flex justify-end">
             <Button
-              onClick={saveSettings}
-              disabled={saving}
-              className="bg-green-600 hover:bg-green-700 px-8"
+              onClick={uploadLogo}
+              disabled={!selectedFile || uploading}
+              className="w-full"
             >
-              {saving ? 'Saving...' : 'Save Settings'}
+              {uploading ? 'Uploading...' : 'Upload Logo'}
             </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+
+        {/* Logo Position */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Logo Position</CardTitle>
+            <CardDescription>Choose where the logo appears on images</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                variant={branding.logo_position === 'top-left' ? 'default' : 'outline'}
+                onClick={() => handlePositionChange('top-left')}
+                className="h-20"
+              >
+                <div className="text-center">
+                  <div className="text-sm font-semibold">Top Left</div>
+                  <div className="text-xs text-gray-500">↖</div>
+                </div>
+              </Button>
+              <Button
+                variant={branding.logo_position === 'top-right' ? 'default' : 'outline'}
+                onClick={() => handlePositionChange('top-right')}
+                className="h-20"
+              >
+                <div className="text-center">
+                  <div className="text-sm font-semibold">Top Right</div>
+                  <div className="text-xs text-gray-500">↗</div>
+                </div>
+              </Button>
+              <Button
+                variant={branding.logo_position === 'bottom-left' ? 'default' : 'outline'}
+                onClick={() => handlePositionChange('bottom-left')}
+                className="h-20"
+              >
+                <div className="text-center">
+                  <div className="text-sm font-semibold">Bottom Left</div>
+                  <div className="text-xs text-gray-500">↙</div>
+                </div>
+              </Button>
+              <Button
+                variant={branding.logo_position === 'bottom-right' ? 'default' : 'outline'}
+                onClick={() => handlePositionChange('bottom-right')}
+                className="h-20"
+              >
+                <div className="text-center">
+                  <div className="text-sm font-semibold">Bottom Right</div>
+                  <div className="text-xs text-gray-500">↘</div>
+                </div>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Enable/Disable Watermark */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Watermark Status</CardTitle>
+            <CardDescription>Enable or disable the watermark on generated images</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="watermark-enabled" className="text-base">
+                Watermark {branding.enabled ? 'Enabled' : 'Disabled'}
+              </Label>
+              <Switch
+                id="watermark-enabled"
+                checked={branding.enabled}
+                onCheckedChange={handleSwitchChange}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

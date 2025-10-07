@@ -174,37 +174,7 @@ export default function BulkContentGenerator() {
       return
     }
 
-    // Check subscription limits before starting
-    try {
-      const parsedData = JSON.parse(jsonInput)
-      const items = Array.isArray(parsedData) ? parsedData : parsedData.items
-      
-      const limitCheck = await fetch('/api/check-subscription-limits', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'bulkGeneration',
-          count: items.length
-        }),
-      })
-
-      const limitResult = await limitCheck.json()
-      
-      if (!limitResult.allowed) {
-        toast.error(limitResult.reason || 'Plan limit reached')
-        return
-      }
-
-      if (limitResult.warning) {
-        toast.error(limitResult.warning)
-      }
-    } catch (error) {
-      console.error('Error checking subscription limits:', error)
-      toast.error('Failed to check subscription limits')
-      return
-    }
+    // Skip client-side limit check - server will handle it
 
     setIsGenerating(true)
     setGeneratedPosts([])

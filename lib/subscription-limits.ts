@@ -10,6 +10,18 @@ export async function checkPlanLimits(orgId: string, action: 'contentPackage' | 
   warning?: string
 }> {
   try {
+    // Check if this is the admin organization - always allow
+    const { data: org, error: orgCheckError } = await supabaseAdmin
+      .from('organizations')
+      .select('name, plan')
+      .eq('id', orgId)
+      .single()
+
+    if (!orgCheckError && org?.name === 'Admin Organization') {
+      console.log('✅ Admin Organization - bypassing limits')
+      return { allowed: true, currentUsage: 0, limit: -1 }
+    }
+
     // Get effective plan (trial or actual plan)
     const { data: effectivePlan, error: planError } = await supabaseAdmin
       .rpc('get_effective_plan', { org_id_param: orgId } as any)

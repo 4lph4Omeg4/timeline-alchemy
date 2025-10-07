@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AIGenerateRequest } from '@/types/index'
 import toast from 'react-hot-toast'
+import { useEffect } from 'react'
 
 export default function ContentEditorPage() {
   const [title, setTitle] = useState('')
@@ -22,7 +23,37 @@ export default function ContentEditorPage() {
   const [contentLoading, setContentLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [userOrgId, setUserOrgId] = useState<string | null>(null)
   const router = useRouter()
+
+  // Get user's organization ID
+  useEffect(() => {
+    const fetchUserOrg = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        // Get user's organizations
+        const { data: orgMembers } = await supabase
+          .from('org_members')
+          .select('org_id, role')
+          .eq('user_id', user.id)
+
+        if (orgMembers && orgMembers.length > 0) {
+          // Find the user's personal organization (not Admin Organization)
+          let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+          if (!userOrgId) {
+            userOrgId = orgMembers[0].org_id
+          }
+          setUserOrgId(userOrgId)
+        }
+      } catch (error) {
+        console.error('Error fetching user organization:', error)
+      }
+    }
+
+    fetchUserOrg()
+  }, [])
 
   const handleGenerateContent = async () => {
     if (!prompt.trim()) {
@@ -63,7 +94,7 @@ export default function ContentEditorPage() {
         fetch('/api/generate-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt }),
+          body: JSON.stringify({ prompt, orgId: userOrgId }),
         }),
       ])
 
@@ -112,7 +143,7 @@ export default function ContentEditorPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: title }),
+        body: JSON.stringify({ prompt: title, orgId: userOrgId }),
       })
 
       if (!response.ok) {

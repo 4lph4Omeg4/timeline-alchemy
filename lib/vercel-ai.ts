@@ -137,75 +137,160 @@ Write in a ${tone} tone and make it engaging for its specific platform.`
   }
 }
 
-// Enhanced image generation with prompt optimization
+// Enhanced image generation with DALL-E 3 fallback
 export async function generateVercelImage(prompt: string) {
   try {
-    // Use the original prompt directly - no cosmic enhancement
+    // Use the original prompt directly
     const enhancedPrompt = prompt
     
     console.log('🎨 Using original prompt:', enhancedPrompt)
     
-    // Use Vercel AI Gateway for image generation
+    // Try Vercel AI Gateway first, fallback to DALL-E 3
     const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
     
-    if (!gatewayApiKey) {
-      throw new Error('AI Gateway API key not configured')
+    if (gatewayApiKey) {
+      console.log('🚀 Attempting Vercel AI Gateway with Gemini 2.5 Flash Image')
+      try {
+        // Use Vercel AI SDK approach for Gemini 2.5 Flash Image
+        const { generateText } = await import('ai')
+        
+        const result = await generateText({
+          model: 'google/gemini-2.5-flash-image-preview',
+          providerOptions: {
+            google: { responseModalities: ['TEXT', 'IMAGE'] },
+          },
+          prompt: `Generate an image: ${enhancedPrompt}`,
+        })
+
+        console.log('🔍 Gemini Response:', result)
+
+        // Check for generated images in result.files
+        if (result.files && result.files.length > 0) {
+          const imageFiles = result.files.filter((f) =>
+            f.mediaType?.startsWith('image/'),
+          )
+
+          if (imageFiles.length > 0) {
+            // Upload image directly to Supabase Storage
+            const imageFile = imageFiles[0]
+            const extension = imageFile.mediaType?.split('/')[1] || 'png'
+            const timestamp = Date.now()
+            const filename = `gemini-generated/${timestamp}.${extension}`
+            
+            console.log('🔄 Uploading Gemini image to Supabase Storage...')
+            
+            // Import Supabase client
+            const { supabaseAdmin } = await import('./supabase')
+            
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+              .from('blog-images')
+              .upload(filename, imageFile.uint8Array, {
+                contentType: imageFile.mediaType || 'image/png',
+                upsert: false
+              })
+
+            if (uploadError) {
+              console.error('❌ Supabase upload error:', uploadError)
+              throw new Error(`Failed to upload image: ${uploadError.message}`)
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabaseAdmin.storage
+              .from('blog-images')
+              .getPublicUrl(filename)
+            
+            console.log('✅ Gemini image uploaded to Supabase:', publicUrl)
+            
+            return {
+              success: true,
+              imageUrl: publicUrl,
+              enhancedPrompt,
+              enhanced: true,
+              provider: 'vercel-gateway-gemini-sdk'
+            }
+          }
+        }
+
+        // Check if there's text content that might contain image URLs
+        if (result.text) {
+          console.log('🔍 Gemini text response:', result.text)
+          const urlMatch = result.text.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i)
+          if (urlMatch) {
+            const imageUrl = urlMatch[0]
+            console.log('✅ Found image URL in Gemini text:', imageUrl)
+            return {
+              success: true,
+              imageUrl,
+              enhancedPrompt,
+              enhanced: true,
+              provider: 'vercel-gateway-gemini-sdk'
+            }
+          }
+        }
+      } catch (geminiError) {
+        console.log('⚠️ Gemini SDK image generation failed:', geminiError)
+      }
     }
     
-    console.log('🚀 Using Vercel AI Gateway for image generation')
+    // Fallback to DALL-E 3
+    console.log('🚀 Using DALL-E 3 for image generation')
+    const openaiKey = process.env.OPENAI_API_KEY
     
-    // Use Google Gemini image model that was working before
-    const response = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
+    if (!openaiKey) {
+      throw new Error('OpenAI API key not configured')
+    }
+    
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${gatewayApiKey}`,
+        'Authorization': `Bearer ${openaiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: `Generate an image URL for this description: ${enhancedPrompt}. Return ONLY the image URL, nothing else.`
-          }
-        ],
-        max_tokens: 500
+        model: 'dall-e-3',
+        prompt: enhancedPrompt,
+        n: 1,
+        size: '1024x1024',
+        quality: 'standard',
+        response_format: 'url'
       })
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('❌ Vercel Gateway image generation failed:', response.status, errorText)
-      throw new Error(`Vercel Gateway image generation failed: ${response.statusText} - ${errorText}`)
+      console.error('❌ DALL-E image generation failed:', response.status, errorText)
+      
+      // Check if it's a billing limit error
+      if (errorText.includes('billing_hard_limit_reached') || errorText.includes('billing')) {
+        console.log('💰 DALL-E billing limit reached, using placeholder image')
+        // Return a placeholder image URL
+        return {
+          success: true,
+          imageUrl: 'https://via.placeholder.com/1024x1024/4F46E5/FFFFFF?text=Image+Generation+Unavailable',
+          enhancedPrompt,
+          enhanced: false,
+          provider: 'placeholder-billing-limit'
+        }
+      }
+      
+      throw new Error(`DALL-E image generation failed: ${response.statusText} - ${errorText}`)
     }
 
     const imageData = await response.json()
-    console.log('🔍 Response data:', imageData)
+    console.log('🔍 DALL-E Response data:', imageData)
     
-    // Try to extract image URL from different possible response formats
+    // DALL-E returns images in data[0].url format
     let imageUrl = null
-    
-    // Check for different response formats
-    if (imageData.choices?.[0]?.message?.content) {
-      const content = imageData.choices[0].message.content
-      // Look for image URLs in the content
-      const urlMatch = content.match(/https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp)/i)
-      if (urlMatch) {
-        imageUrl = urlMatch[0]
-      }
-    }
     
     if (imageData.data?.[0]?.url) {
       imageUrl = imageData.data[0].url
-    }
-    
-    if (imageData.url) {
-      imageUrl = imageData.url
+      console.log('✅ Found DALL-E image URL:', imageUrl)
     }
     
     if (!imageUrl) {
-      console.error('❌ No image URL found in response:', imageData)
-      throw new Error('No image URL returned from Google Gemini image generation')
+      console.error('❌ No image URL found in DALL-E response:', imageData)
+      throw new Error('No image URL returned from DALL-E')
     }
     
     console.log('✅ Image URL found:', imageUrl)
@@ -214,7 +299,7 @@ export async function generateVercelImage(prompt: string) {
       imageUrl,
       enhancedPrompt,
       enhanced: true,
-      provider: 'vercel-gateway'
+      provider: 'dall-e-3-fallback'
     }
   } catch (error) {
     console.error('❌ Enhanced image generation error:', error)
