@@ -82,31 +82,19 @@ export async function POST(request: NextRequest) {
             const watermarkedUrl = await addWatermarkToImageServer(imageUrl, branding, imageOrgId)
 
             if (watermarkedUrl && watermarkedUrl !== imageUrl) {
-              // Update database with new watermarked URL using rpc to bypass type issues
+              // Update database with new watermarked URL
               try {
-                const { error: updateError } = await supabaseAdmin.rpc('update_image_url', {
-                  image_id: imageId,
-                  new_url: watermarkedUrl
-                })
-
-                if (updateError) {
-                  // If RPC doesn't exist, fall back to direct SQL
-                  const { error: directError } = await supabaseAdmin
-                    .from('images')
-                    .update({ url: watermarkedUrl })
-                    .eq('id', imageId)
-                    .select()
-                  
-                  if (directError) {
-                    console.error(`   ❌ Failed to update database:`, directError)
-                    failed++
-                    results.push({ id: imageId, status: 'failed', error: 'Database update failed' })
-                  } else {
-                    console.log(`   ✅ Watermarked successfully`)
-                    console.log(`   New URL: ${watermarkedUrl}`)
-                    processed++
-                    results.push({ id: imageId, status: 'processed', newUrl: watermarkedUrl })
-                  }
+                // Use select() after update to help TypeScript with type inference
+                const updateResult = await supabaseAdmin
+                  .from('images')
+                  .update({ url: watermarkedUrl })
+                  .eq('id', imageId)
+                  .select()
+                
+                if (updateResult.error) {
+                  console.error(`   ❌ Failed to update database:`, updateResult.error)
+                  failed++
+                  results.push({ id: imageId, status: 'failed', error: 'Database update failed' })
                 } else {
                   console.log(`   ✅ Watermarked successfully`)
                   console.log(`   New URL: ${watermarkedUrl}`)
