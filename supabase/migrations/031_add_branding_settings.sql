@@ -22,7 +22,7 @@ CREATE POLICY "Users can view their organization's branding settings" ON brandin
       SELECT 1 FROM organizations 
       WHERE organizations.id = branding_settings.organization_id 
       AND organizations.id IN (
-        SELECT organization_id FROM user_organizations 
+        SELECT org_id FROM org_members 
         WHERE user_id = auth.uid()
       )
     )
@@ -35,7 +35,7 @@ CREATE POLICY "Users can update their organization's branding settings" ON brand
       SELECT 1 FROM organizations 
       WHERE organizations.id = branding_settings.organization_id 
       AND organizations.id IN (
-        SELECT organization_id FROM user_organizations 
+        SELECT org_id FROM org_members 
         WHERE user_id = auth.uid()
       )
     )

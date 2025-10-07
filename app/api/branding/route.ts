@@ -45,24 +45,34 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('📦 Branding POST request body:', JSON.stringify(body, null, 2))
+    
     const { organization_id, org_id, logo_url, logo_position, logo_opacity, logo_size, enabled } = body
     
     // Support both org_id and organization_id for compatibility
     const orgId = organization_id || org_id
+
+    console.log('🔑 Resolved orgId:', orgId)
 
     if (!orgId) {
       return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 })
     }
 
     // Check if branding settings already exist
-    const { data: existing } = await (supabaseAdmin as any)
+    const { data: existing, error: checkError } = await (supabaseAdmin as any)
       .from('branding_settings')
       .select('id')
       .eq('organization_id', orgId)
       .single()
+    
+    // Log any error during check (but don't fail if it's just "not found")
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Error checking existing branding:', checkError)
+    }
 
     let result
     if (existing) {
+      console.log('✏️ Updating existing branding settings for org:', orgId)
       // Update existing settings
       const { data, error } = await (supabaseAdmin as any)
         .from('branding_settings')
@@ -78,8 +88,10 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
 
+      console.log('✅ Update result:', { data, error })
       result = { data, error }
     } else {
+      console.log('➕ Creating new branding settings for org:', orgId)
       // Create new settings
       const { data, error } = await (supabaseAdmin as any)
         .from('branding_settings')
@@ -94,14 +106,19 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
 
+      console.log('✅ Insert result:', { data, error })
       result = { data, error }
     }
 
     if (result.error) {
-      console.error('Error saving branding settings:', result.error)
-      return NextResponse.json({ error: 'Failed to save branding settings' }, { status: 500 })
+      console.error('❌ Error saving branding settings:', result.error)
+      return NextResponse.json({ 
+        error: 'Failed to save branding settings', 
+        details: result.error.message 
+      }, { status: 500 })
     }
 
+    console.log('🎉 Branding settings saved successfully!')
     return NextResponse.json(result.data)
   } catch (error) {
     console.error('Error in branding POST:', error)
