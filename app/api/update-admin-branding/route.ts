@@ -24,13 +24,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin Organization not found' }, { status: 404 })
     }
 
-    console.log('🏢 Admin Organization ID:', adminOrg.id)
+    const adminOrgId = (adminOrg as { id: string }).id
+    console.log('🏢 Admin Organization ID:', adminOrgId)
 
     // Update or insert branding settings for Admin Organization
     const { data: brandingData, error: brandingError } = await supabaseAdmin
       .from('branding_settings')
       .upsert({
-        organization_id: adminOrg.id,
+        organization_id: adminOrgId,
         logo_url,
         logo_position,
         logo_opacity,
