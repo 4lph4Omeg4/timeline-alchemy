@@ -8,31 +8,68 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 export default function BulkContentPage() {
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [hasAccess, setHasAccess] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [userPlan, setUserPlan] = useState<string>('')
   const router = useRouter()
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
+    const checkAccess = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         
-        if (!user?.email?.includes('sh4m4ni4k@sh4m4ni4k.nl')) {
-          // Redirect non-admin users
+        if (!user) {
           router.push('/dashboard')
           return
         }
+
+        // Check if admin
+        const isAdmin = user.email?.includes('sh4m4ni4k@sh4m4ni4k.nl')
         
-        setIsAdmin(true)
+        if (!isAdmin) {
+          // For non-admin users, check their plan
+          const { data: orgMembers } = await supabase
+            .from('org_members')
+            .select('org_id')
+            .eq('user_id', user.id)
+
+          if (orgMembers && orgMembers.length > 0) {
+            const orgId = orgMembers[0].org_id
+
+            // Get subscription/plan
+            const { data: subscription } = await (supabase as any)
+              .from('subscriptions')
+              .select('plan')
+              .eq('org_id', orgId)
+              .single()
+
+            if (subscription) {
+              setUserPlan(subscription.plan)
+              
+              // Trial and Universal plans have access to bulk content
+              // Trial gets 1 bulk generation, Universal gets unlimited
+              if (subscription.plan === 'trial' || subscription.plan === 'universal') {
+                setHasAccess(true)
+              } else {
+                setHasAccess(false)
+              }
+            } else {
+              setHasAccess(false)
+            }
+          }
+        } else {
+          // Admin always has access
+          setHasAccess(true)
+        }
       } catch (error) {
-        console.error('Error checking admin status:', error)
-        router.push('/dashboard')
+        console.error('Error checking access:', error)
+        setHasAccess(false)
       } finally {
         setLoading(false)
       }
     }
 
-    checkAdminStatus()
+    checkAccess()
   }, [router])
 
   if (loading) {
@@ -48,15 +85,37 @@ export default function BulkContentPage() {
     )
   }
 
-  if (!isAdmin) {
+  if (!hasAccess) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center space-y-4">
-            <Shield className="h-12 w-12 text-red-400 mx-auto" />
-            <h2 className="text-2xl font-bold text-white">Admin Access Required</h2>
-            <p className="text-gray-300">This feature is only available for administrators.</p>
-          </div>
+          <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30 max-w-2xl">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <Shield className="h-16 w-16 text-red-400 mx-auto" />
+                <h2 className="text-2xl font-bold text-white">Bulk Content Unavailable</h2>
+                <p className="text-gray-300">
+                  Bulk Content Generation is available for Trial and Universal plans.
+                </p>
+                <div className="mt-4 space-y-2">
+                  <p className="text-purple-300 font-semibold">Current Plan: {userPlan || 'Unknown'}</p>
+                  <p className="text-purple-300 font-semibold">Upgrade to Universal to unlock:</p>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    <li>✓ Unlimited bulk content generations</li>
+                    <li>✓ Custom branding & watermarks</li>
+                    <li>✓ Unlimited content packages</li>
+                    <li>✓ Priority support</li>
+                  </ul>
+                  <button
+                    onClick={() => router.push('/dashboard/billing')}
+                    className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-500 hover:to-pink-500 transition-all"
+                  >
+                    View Plans & Upgrade
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )

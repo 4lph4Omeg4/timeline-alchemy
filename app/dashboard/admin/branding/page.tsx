@@ -9,6 +9,8 @@ import { Switch } from '@/components/ui/switch'
 import { supabase } from '@/lib/supabase'
 import { BrandingSettings } from '@/types/index'
 import { toast } from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
+import { Shield } from 'lucide-react'
 
 export default function BrandingPage() {
   const [branding, setBranding] = useState<BrandingSettings | null>(null)
@@ -16,9 +18,12 @@ export default function BrandingPage() {
   const [uploading, setUploading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [adminOrgId, setAdminOrgId] = useState<string | null>(null)
+  const [hasAccess, setHasAccess] = useState(false)
+  const [userPlan, setUserPlan] = useState<string>('')
+  const router = useRouter()
 
   useEffect(() => {
-    fetchAdminOrg()
+    checkAccessAndFetchOrg()
   }, [])
 
   useEffect(() => {
@@ -27,26 +32,74 @@ export default function BrandingPage() {
     }
   }, [adminOrgId])
 
-  const fetchAdminOrg = async () => {
+  const checkAccessAndFetchOrg = async () => {
     try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .select('id')
-        .eq('name', 'Admin Organization')
-        .single()
-
-      if (error) {
-        console.error('Error fetching admin org:', error)
-        toast.error('Failed to fetch organization')
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/dashboard')
         return
       }
 
-      if (data) {
-        setAdminOrgId(data.id)
+      // Check if admin
+      const isAdmin = user.email?.includes('sh4m4ni4k@sh4m4ni4k.nl')
+      
+      if (isAdmin) {
+        // Admin always has access - fetch Admin Organization
+        const { data, error } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('name', 'Admin Organization')
+          .single()
+
+        if (error) {
+          console.error('Error fetching admin org:', error)
+          toast.error('Failed to fetch organization')
+          return
+        }
+
+        if (data) {
+          setAdminOrgId(data.id)
+          setHasAccess(true)
+          setUserPlan('admin')
+        }
+      } else {
+        // For non-admin users, check their plan
+        const { data: orgMembers } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+
+        if (orgMembers && orgMembers.length > 0) {
+          const orgId = orgMembers[0].org_id
+
+          // Get subscription/plan
+          const { data: subscription } = await (supabase as any)
+            .from('subscriptions')
+            .select('plan')
+            .eq('org_id', orgId)
+            .single()
+
+          if (subscription) {
+            setUserPlan(subscription.plan)
+            
+            // Only Universal plan can customize branding
+            if (subscription.plan === 'universal') {
+              setHasAccess(true)
+              setAdminOrgId(orgId)
+            } else {
+              setHasAccess(false)
+            }
+          } else {
+            setHasAccess(false)
+          }
+        }
       }
     } catch (error) {
-      console.error('Error fetching admin org:', error)
-      toast.error('Failed to fetch organization')
+      console.error('Error checking access:', error)
+      setHasAccess(false)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -222,6 +275,45 @@ export default function BrandingPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      </div>
+    )
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30 max-w-2xl">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <Shield className="h-16 w-16 text-yellow-400 mx-auto" />
+              <h2 className="text-2xl font-bold text-white">Custom Branding - Universal Only</h2>
+              <p className="text-gray-300">
+                Custom branding and watermarks are exclusive to the Universal plan.
+              </p>
+              <div className="mt-4 space-y-2">
+                <p className="text-purple-300 font-semibold">Current Plan: {userPlan || 'Unknown'}</p>
+                <p className="text-gray-400 text-sm mt-4">
+                  {userPlan === 'trial' && '🎉 You are on a trial. Trial users receive the Timeline Alchemy watermark on all generated images.'}
+                  {(userPlan === 'basic' || userPlan === 'initiate' || userPlan === 'transcendant') && 'Your plan includes the Timeline Alchemy watermark on all generated images.'}
+                </p>
+                <p className="text-purple-300 font-semibold mt-6">Upgrade to Universal to unlock:</p>
+                <ul className="text-sm text-gray-300 space-y-1">
+                  <li>✓ Custom logo watermarks</li>
+                  <li>✓ Adjustable watermark position & opacity</li>
+                  <li>✓ Unlimited bulk content generations</li>
+                  <li>✓ Unlimited content packages</li>
+                  <li>✓ Priority support</li>
+                </ul>
+                <button
+                  onClick={() => router.push('/dashboard/billing')}
+                  className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-500 hover:to-pink-500 transition-all"
+                >
+                  Upgrade to Universal
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
