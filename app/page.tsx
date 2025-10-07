@@ -15,20 +15,20 @@ export default function HomePage() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          setUser({
-            id: user.id,
-            email: user.email || '',
-            name: user.user_metadata?.name || user.email?.split('@')[0],
-            avatar_url: user.user_metadata?.avatar_url,
-            created_at: user.created_at,
-          })
-        }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUser({
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.name || user.email?.split('@')[0],
+          avatar_url: user.user_metadata?.avatar_url,
+          created_at: user.created_at,
+        })
+      }
       } catch (error) {
         console.error('Error getting user:', error)
       } finally {
-        setLoading(false)
+      setLoading(false)
       }
     }
 
@@ -100,43 +100,44 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black">
       {/* Hero Section with Video */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-blue-900/20"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent"></div>
-        
-        {/* Video Background */}
-        <div className="absolute inset-0 w-full h-full overflow-hidden opacity-30">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          >
-            <source src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/video/e6c0db74-03ee-4bb3-b08d-d94512efab91/video-promo-portfolio/timeline-alchemy%20(1).mp4" type="video/mp4" />
-          </video>
-        </div>
+      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-black via-purple-950 to-black">
+        <div className="container mx-auto px-4 py-20">
+          {/* Hero Text Above Video */}
+          <div className="text-center mb-12">
+            <div className="mb-8 flex justify-center">
+              <Logo size="xl" showText={false} />
+            </div>
+            
+            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-6 animate-pulse">
+              Timeline Alchemy
+            </h1>
+            
+            <p className="text-2xl md:text-3xl text-gray-200 mb-6 font-light">
+              Transform Your Content Strategy with AI Magic
+            </p>
+            
+            <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed">
+              Generate stunning blog posts, social media content, and images across multiple platforms. 
+              Powered by cutting-edge AI, designed for creators who demand excellence.
+            </p>
+          </div>
 
-        {/* Hero Content */}
-        <div className="relative z-10 container mx-auto px-4 py-20 text-center">
-          <div className="mb-8 flex justify-center">
-            <Logo size="xl" showText={false} />
+          {/* Video Showcase */}
+          <div className="max-w-5xl mx-auto mb-12">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-purple-500/50 border-4 border-purple-500/30">
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-auto"
+              >
+                <source src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/video/e6c0db74-03ee-4bb3-b08d-d94512efab91/video-promo-portfolio/timeline-alchemy%20(1).mp4" type="video/mp4" />
+              </video>
+            </div>
           </div>
           
-          <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-6 animate-pulse">
-            Timeline Alchemy
-          </h1>
-          
-          <p className="text-2xl md:text-3xl text-gray-200 mb-8 font-light">
-            Transform Your Content Strategy with AI Magic
-          </p>
-          
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Generate stunning blog posts, social media content, and images across 9+ platforms. 
-            Powered by cutting-edge AI, designed for creators who demand excellence.
-          </p>
-          
+          {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <Button 
               onClick={handleSignUp}
@@ -369,8 +370,8 @@ export default function HomePage() {
               Connect with your audience across 9 powerful platforms
             </p>
           </div>
-
-          <div className="grid grid-cols-3 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          
+          <div className="grid grid-cols-3 gap-6 max-w-5xl mx-auto">
             {/* Twitter/X */}
             <div className="flex flex-col items-center justify-center p-6 bg-black rounded-2xl border border-gray-700 hover:border-purple-500 transition-all duration-300 hover:scale-110">
               <div className="w-20 h-20 bg-black rounded-xl flex items-center justify-center mb-3">
@@ -389,8 +390,8 @@ export default function HomePage() {
                 </svg>
               </div>
               <span className="text-white font-semibold">Facebook</span>
-            </div>
-
+          </div>
+          
             {/* Instagram */}
             <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 rounded-2xl border border-pink-500 hover:border-pink-400 transition-all duration-300 hover:scale-110">
               <div className="w-20 h-20 flex items-center justify-center mb-3">
@@ -427,9 +428,9 @@ export default function HomePage() {
                 <svg className="w-12 h-12" viewBox="0 0 24 24" fill="white">
                   <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
                 </svg>
-              </div>
+          </div>
               <span className="text-white font-semibold">Discord</span>
-            </div>
+        </div>
 
             {/* Reddit */}
             <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-600 to-orange-800 rounded-2xl border border-orange-500 hover:border-orange-400 transition-all duration-300 hover:scale-110">
@@ -439,7 +440,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <span className="text-white font-semibold">Reddit</span>
-            </div>
+                </div>
 
             {/* Telegram */}
             <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl border border-blue-400 hover:border-blue-300 transition-all duration-300 hover:scale-110">
@@ -449,56 +450,16 @@ export default function HomePage() {
                 </svg>
               </div>
               <span className="text-white font-semibold">Telegram</span>
-            </div>
+                </div>
 
             {/* WordPress */}
             <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-800 to-blue-950 rounded-2xl border border-blue-600 hover:border-blue-400 transition-all duration-300 hover:scale-110">
               <div className="w-20 h-20 flex items-center justify-center mb-3">
-                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="white">
-                  <path d="M21.469 0.527c-2.781-0.703-5.297-0.703-8.078 0-2.781 0.703-4.922 2.844-5.625 5.625-0.703 2.781-0.703 5.297 0 8.078 0.703 2.781 2.844 4.922 5.625 5.625 2.781 0.703 5.297 0.703 8.078 0 2.781-0.703 4.922-2.844 5.625-5.625 0.703-2.781 0.703-5.297 0-8.078-0.703-2.781-2.844-4.922-5.625-5.625zM12 3.012c4.969 0 8.988 4.019 8.988 8.988s-4.019 8.988-8.988 8.988-8.988-4.019-8.988-8.988 4.019-8.988 8.988-8.988zM12 2.109c-5.453 0-9.891 4.437-9.891 9.891s4.437 9.891 9.891 9.891c5.453 0 9.891-4.437 9.891-9.891s-4.437-9.891-9.891-9.891v0zM6.891 12l3.281 9.031c-1.703-0.516-3.141-1.641-4.078-3.188l0.797-5.844zM12 12.984l-2.484 6.891c0.797 0.234 1.641 0.375 2.484 0.375s1.688-0.141 2.484-0.375l-2.484-6.891zM17.109 12l-0.797 5.844c-0.938 1.547-2.375 2.672-4.078 3.188l3.281-9.031 1.594 0z"/>
+                <svg className="w-14 h-14" viewBox="0 0 122.52 122.523" fill="white">
+                  <g><path d="m8.708 61.26c0 20.802 12.089 38.779 29.619 47.298l-25.069-68.686c-2.916 6.536-4.55 13.769-4.55 21.388z"/><path d="m96.74 58.608c0-6.495-2.333-10.993-4.334-14.494-2.664-4.329-5.161-7.995-5.161-12.324 0-4.831 3.664-9.328 8.825-9.328 0.233 0 0.454 0.029 0.681 0.042-9.35-8.566-21.807-13.796-35.489-13.796-18.36 0-34.513 9.42-43.91 23.688 1.233 0.037 2.395 0.063 3.382 0.063 5.497 0 14.006-0.667 14.006-0.667 2.833-0.167 3.167 3.994 0.337 4.329 0 0-2.847 0.335-6.015 0.501l19.138 56.925 11.501-34.493-8.188-22.434c-2.83-0.166-5.511-0.501-5.511-0.501-2.832-0.166-2.5-4.496 0.332-4.329 0 0 8.679 0.667 13.843 0.667 5.496 0 14.006-0.667 14.006-0.667 2.835-0.167 3.168 3.994 0.337 4.329 0 0-2.853 0.335-6.015 0.501l18.992 56.494 5.242-17.517c2.272-7.269 4.001-12.49 4.001-16.989z"/><path d="m62.184 65.857-15.768 45.819c4.708 1.384 9.687 2.141 14.846 2.141 6.12 0 11.989-1.058 17.452-2.979-0.141-0.225-0.269-0.464-0.374-0.724z"/><path d="m107.376 36.046c0.226 1.674 0.354 3.471 0.354 5.404 0 5.333-0.996 11.328-3.996 18.824l-16.053 46.413c15.624-9.111 26.133-26.038 26.133-45.426 0.001-9.137-2.333-17.729-6.438-25.215z"/><path d="m61.262 0c-33.779 0-61.262 27.481-61.262 61.26 0 33.783 27.483 61.263 61.262 61.263 33.778 0 61.265-27.48 61.265-61.263-0.001-33.779-27.487-61.26-61.265-61.26zm0 119.715c-32.23 0-58.453-26.223-58.453-58.455 0-32.23 26.222-58.451 58.453-58.451 32.229 0 58.45 26.221 58.45 58.451 0 32.232-26.221 58.455-58.45 58.455z"/></g>
                 </svg>
               </div>
               <span className="text-white font-semibold">WordPress</span>
-            </div>
-
-            {/* TikTok */}
-            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-gray-700 hover:border-gray-500 transition-all duration-300 hover:scale-110">
-              <div className="w-20 h-20 flex items-center justify-center mb-3">
-                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="white">
-                  <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-                </svg>
-              </div>
-              <span className="text-white font-semibold">TikTok</span>
-            </div>
-
-            {/* Medium */}
-            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-green-700 to-green-900 rounded-2xl border border-green-600 hover:border-green-400 transition-all duration-300 hover:scale-110">
-              <div className="w-20 h-20 flex items-center justify-center mb-3">
-                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="white">
-                  <path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/>
-                </svg>
-              </div>
-              <span className="text-white font-semibold">Medium</span>
-            </div>
-
-            {/* Substack */}
-            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-700 to-orange-900 rounded-2xl border border-orange-600 hover:border-orange-400 transition-all duration-300 hover:scale-110">
-              <div className="w-20 h-20 flex items-center justify-center mb-3">
-                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="white">
-                  <path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24L12 18.11 22.54 24V10.812H1.46zM22.54 0H1.46v2.836h21.08V0z"/>
-                </svg>
-              </div>
-              <span className="text-white font-semibold">Substack</span>
-            </div>
-
-            {/* Ghost */}
-            <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-800 to-gray-950 rounded-2xl border border-gray-600 hover:border-gray-400 transition-all duration-300 hover:scale-110">
-              <div className="w-20 h-20 flex items-center justify-center mb-3">
-                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm.256 2.313c6.447.765 5.859 8.26 5.859 8.26l-3.026-2.227c-1.888 2.129-5.078 2.63-6.917 2.63-2.228 0-3.49-.54-3.49-.54s2.114 3.452 6.246 3.452c3.962 0 6.883-2.328 6.883-2.328l1.275 7.309s-3.672 1.575-7.086 1.575c-9.143 0-9.398-9.246-9.398-9.246C2.602 5.274 7.901 2.832 12.256 2.313z"/>
-                </svg>
-              </div>
-              <span className="text-white font-semibold">Ghost</span>
             </div>
           </div>
         </div>
