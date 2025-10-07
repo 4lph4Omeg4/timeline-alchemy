@@ -359,12 +359,11 @@ export default function ContentPackagePage() {
       // Fetch ratings for this post
       await fetchRatings(postData.id, user.id)
 
-      // Try to fetch associated images - allow access to user's org images OR admin package images
+      // Try to fetch associated images - allow access to admin package images or user's org images
       const { data: images } = await supabase
         .from('images')
         .select('*')
         .eq('post_id', params.id)
-        .or(`org_id.eq.${orgMember.org_id},and(post_id.eq.${params.id})`)
 
       console.log('Fetched images for post:', images)
 

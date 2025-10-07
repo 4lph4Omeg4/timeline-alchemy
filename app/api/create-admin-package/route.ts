@@ -145,52 +145,16 @@ export async function POST(request: NextRequest) {
       console.log('🔍 Image URL:', generatedImage)
       console.log('🔍 Post ID:', insertedPackage.id)
       try {
-        // Download the image from URL (Supabase or external)
-        console.log('🔄 Downloading image from URL...')
-        const imageResponse = await fetch(generatedImage)
-        if (!imageResponse.ok) {
-          throw new Error(`Failed to download image: ${imageResponse.status}`)
-        }
-
-        const imageBlob = await imageResponse.blob()
-        const arrayBuffer = await imageBlob.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-        console.log('🔄 Image downloaded, size:', buffer.length)
-
-        // Generate unique filename
-        const timestamp = Date.now()
-        const filename = `e6c0db74-03ee-4bb3-b08d-d94512efab91/${insertedPackage.id}-${timestamp}.png`
-        console.log('🔄 Uploading to filename:', filename)
-
-        // Upload to Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabaseClient.storage
-          .from('blog-images')
-          .upload(filename, buffer, {
-            contentType: 'image/png',
-            upsert: false
-          })
-
-        if (uploadError) {
-          console.error('❌ Upload error:', uploadError)
-          throw new Error(`Failed to upload image: ${uploadError.message}`)
-        }
-
-        console.log('✅ Upload successful:', uploadData)
-
-        // Get public URL
-        const { data: { publicUrl } } = supabaseClient.storage
-          .from('blog-images')
-          .getPublicUrl(filename)
-
-        console.log('✅ Public URL:', publicUrl)
-
+        // Since Gemini images are already uploaded to Supabase Storage, just save the URL directly
+        console.log('🔄 Saving Gemini image URL directly to database...')
+        
         // Save to images table
         const { error: dbError } = await supabaseClient
           .from('images')
           .insert({
             org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
             post_id: insertedPackage.id,
-            url: publicUrl,
+            url: generatedImage,
             prompt: `AI generated image for: ${title}`
           })
 
@@ -199,7 +163,7 @@ export async function POST(request: NextRequest) {
           throw new Error(`Failed to save image to database: ${dbError.message}`)
         }
 
-        console.log('✅ Image saved permanently to database:', publicUrl)
+        console.log('✅ Image URL saved to database:', generatedImage)
         
       } catch (imageError) {
         console.error('❌ Error saving image permanently:', imageError)
