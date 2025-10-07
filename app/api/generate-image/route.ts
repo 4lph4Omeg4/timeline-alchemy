@@ -61,9 +61,14 @@ export async function POST(request: NextRequest) {
 
               if (adminBranding && (adminBranding as { enabled: boolean }).enabled && (adminBranding as { logo_url: string }).logo_url) {
                 console.log('🔄 Applying Admin watermark...')
-                finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, adminBranding, orgId)
-                watermarked = true
-                console.log('✅ Admin watermark applied successfully')
+                try {
+                  finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, adminBranding, orgId)
+                  watermarked = true
+                  console.log('✅ Admin watermark applied successfully')
+                } catch (watermarkError) {
+                  console.error('❌ Watermark failed:', watermarkError)
+                  console.log('⚠️ Using original image without watermark')
+                }
               } else {
                 console.log('⚠️ Admin branding not configured')
               }
@@ -80,9 +85,14 @@ export async function POST(request: NextRequest) {
 
             if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
               console.log('🔄 Applying custom watermark...')
-              finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
-              watermarked = true
-              console.log('✅ Custom watermark applied successfully')
+              try {
+                finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
+                watermarked = true
+                console.log('✅ Custom watermark applied successfully')
+              } catch (watermarkError) {
+                console.error('❌ Watermark failed:', watermarkError)
+                console.log('⚠️ Using original image without watermark')
+              }
             } else {
               console.log('⚠️ No custom branding configured for Universal plan')
             }

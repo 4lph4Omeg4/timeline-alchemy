@@ -54,8 +54,13 @@ export async function POST(request: NextRequest) {
                 .single()
 
               if (adminBranding && (adminBranding as { enabled: boolean }).enabled && (adminBranding as { logo_url: string }).logo_url) {
-                imageUrl = await addWatermarkToImageServer(imageUrl, adminBranding, orgId)
-                watermarked = true
+                try {
+                  imageUrl = await addWatermarkToImageServer(imageUrl, adminBranding, orgId)
+                  watermarked = true
+                } catch (watermarkError) {
+                  console.error('❌ Watermark failed:', watermarkError)
+                  console.log('⚠️ Using original image without watermark')
+                }
               }
             }
           } else if (org && (org as { plan: string }).plan === 'universal') {
@@ -67,8 +72,13 @@ export async function POST(request: NextRequest) {
               .single()
 
             if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
-              imageUrl = await addWatermarkToImageServer(imageUrl, branding, orgId)
-              watermarked = true
+              try {
+                imageUrl = await addWatermarkToImageServer(imageUrl, branding, orgId)
+                watermarked = true
+              } catch (watermarkError) {
+                console.error('❌ Watermark failed:', watermarkError)
+                console.log('⚠️ Using original image without watermark')
+              }
             }
           }
         } catch (error) {
@@ -286,8 +296,13 @@ async function fallbackToDallE(prompt: string, orgId?: string) {
               .single()
 
             if (adminBranding && (adminBranding as { enabled: boolean }).enabled && (adminBranding as { logo_url: string }).logo_url) {
-              imageUrl = await addWatermarkToImageServer(imageUrl, adminBranding, orgId)
-              watermarked = true
+              try {
+                imageUrl = await addWatermarkToImageServer(imageUrl, adminBranding, orgId)
+                watermarked = true
+              } catch (watermarkError) {
+                console.error('❌ Watermark failed:', watermarkError)
+                console.log('⚠️ Using original image without watermark')
+              }
             }
           }
         } else if (org && (org as { plan: string }).plan === 'universal') {
@@ -299,8 +314,13 @@ async function fallbackToDallE(prompt: string, orgId?: string) {
             .single()
 
           if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
-            imageUrl = await addWatermarkToImageServer(imageUrl, branding, orgId)
-            watermarked = true
+            try {
+              imageUrl = await addWatermarkToImageServer(imageUrl, branding, orgId)
+              watermarked = true
+            } catch (watermarkError) {
+              console.error('❌ Watermark failed:', watermarkError)
+              console.log('⚠️ Using original image without watermark')
+            }
           }
         }
       } catch (error) {
