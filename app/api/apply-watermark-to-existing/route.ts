@@ -87,8 +87,9 @@ export async function POST(request: NextRequest) {
               let updateSuccess = false
               
               try {
-                // @ts-ignore - Supabase types are too strict, we know this works at runtime
-                const { error: updateError } = await supabaseAdmin
+                // Cast the entire client to bypass TypeScript's overly strict type checking
+                const client: any = supabaseAdmin
+                const { error: updateError } = await client
                   .from('images')
                   .update({ url: watermarkedUrl })
                   .eq('id', imageId)
