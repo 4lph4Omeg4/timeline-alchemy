@@ -137,6 +137,7 @@ Write in a ${tone} tone and make it engaging for its specific platform.`
   }
 }
 
+
 // Enhanced image generation with DALL-E 3 fallback
 export async function generateVercelImage(prompt: string) {
   try {
@@ -209,7 +210,11 @@ export async function generateVercelImage(prompt: string) {
               enhanced: true,
               provider: 'vercel-gateway-gemini-sdk'
             }
+          } else {
+            console.log('⚠️ No image files found in Gemini response')
           }
+        } else {
+          console.log('⚠️ No files found in Gemini response')
         }
 
         // Check if there's text content that might contain image URLs
@@ -263,15 +268,8 @@ export async function generateVercelImage(prompt: string) {
       
       // Check if it's a billing limit error
       if (errorText.includes('billing_hard_limit_reached') || errorText.includes('billing')) {
-        console.log('💰 DALL-E billing limit reached, using placeholder image')
-        // Return a placeholder image URL
-        return {
-          success: true,
-          imageUrl: 'https://via.placeholder.com/1024x1024/4F46E5/FFFFFF?text=Image+Generation+Unavailable',
-          enhancedPrompt,
-          enhanced: false,
-          provider: 'placeholder-billing-limit'
-        }
+        console.log('💰 DALL-E billing limit reached')
+        throw new Error('DALL-E billing limit reached - please check your OpenAI account')
       }
       
       throw new Error(`DALL-E image generation failed: ${response.statusText} - ${errorText}`)
