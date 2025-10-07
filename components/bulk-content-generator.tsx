@@ -407,7 +407,7 @@ export default function BulkContentGenerator() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               prompt: imagePrompt,
-              orgId: 'admin-org' // Use admin organization for branding
+              orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91' // Admin Organization UUID
             })
           })
           
