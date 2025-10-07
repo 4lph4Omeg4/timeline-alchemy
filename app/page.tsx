@@ -561,9 +561,9 @@ export default function HomePage() {
                   ✨ Crafted with divine precision ✨
                 </p>
               </div>
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
       </main>
     </div>
   )

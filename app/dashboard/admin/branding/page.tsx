@@ -30,12 +30,14 @@ export default function BrandingPage() {
       } else {
         // Initialize with default values if no branding settings exist
         setBranding({
-          org_id: 'admin-org',
-          logo_url: null,
+          id: '',
+          organization_id: 'admin-org',
+          logo_url: undefined,
           logo_position: 'bottom-right',
           logo_opacity: 0.7,
           logo_size: 0.1,
           enabled: false,
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
       }
@@ -43,12 +45,14 @@ export default function BrandingPage() {
       console.error('Error fetching branding settings:', error)
       // Initialize with default values on error
       setBranding({
-        org_id: 'admin-org',
-        logo_url: null,
+        id: '',
+        organization_id: 'admin-org',
+        logo_url: undefined,
         logo_position: 'bottom-right',
         logo_opacity: 0.7,
         logo_size: 0.1,
         enabled: false,
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
     } finally {
@@ -93,7 +97,7 @@ export default function BrandingPage() {
             body: JSON.stringify({
               ...branding,
               logo_url: data.url,
-              org_id: 'admin-org'
+              organization_id: 'admin-org'
             })
           })
         } catch (error) {
@@ -127,7 +131,7 @@ export default function BrandingPage() {
         body: JSON.stringify({
           ...branding,
           enabled: checked,
-          org_id: 'admin-org'
+          organization_id: 'admin-org'
         })
       })
 
@@ -159,7 +163,7 @@ export default function BrandingPage() {
         },
         body: JSON.stringify({
           ...branding,
-          org_id: 'admin-org'
+          organization_id: 'admin-org'
         })
       })
 
