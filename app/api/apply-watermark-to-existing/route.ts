@@ -82,22 +82,41 @@ export async function POST(request: NextRequest) {
             const watermarkedUrl = await addWatermarkToImageServer(imageUrl, branding, imageOrgId)
 
             if (watermarkedUrl && watermarkedUrl !== imageUrl) {
-              // Update database with new watermarked URL
-              const updateData = { url: watermarkedUrl }
-              const { error: updateError } = await (supabaseAdmin
-                .from('images')
-                .update(updateData as any)
-                .eq('id', imageId) as any)
+              // Update database with new watermarked URL using rpc to bypass type issues
+              try {
+                const { error: updateError } = await supabaseAdmin.rpc('update_image_url', {
+                  image_id: imageId,
+                  new_url: watermarkedUrl
+                })
 
-              if (updateError) {
-                console.error(`   ❌ Failed to update database:`, updateError)
+                if (updateError) {
+                  // If RPC doesn't exist, fall back to direct SQL
+                  const { error: directError } = await supabaseAdmin
+                    .from('images')
+                    .update({ url: watermarkedUrl })
+                    .eq('id', imageId)
+                    .select()
+                  
+                  if (directError) {
+                    console.error(`   ❌ Failed to update database:`, directError)
+                    failed++
+                    results.push({ id: imageId, status: 'failed', error: 'Database update failed' })
+                  } else {
+                    console.log(`   ✅ Watermarked successfully`)
+                    console.log(`   New URL: ${watermarkedUrl}`)
+                    processed++
+                    results.push({ id: imageId, status: 'processed', newUrl: watermarkedUrl })
+                  }
+                } else {
+                  console.log(`   ✅ Watermarked successfully`)
+                  console.log(`   New URL: ${watermarkedUrl}`)
+                  processed++
+                  results.push({ id: imageId, status: 'processed', newUrl: watermarkedUrl })
+                }
+              } catch (e) {
+                console.error(`   ❌ Update error:`, e)
                 failed++
-                results.push({ id: imageId, status: 'failed', error: 'Database update failed' })
-              } else {
-                console.log(`   ✅ Watermarked successfully`)
-                console.log(`   New URL: ${watermarkedUrl}`)
-                processed++
-                results.push({ id: imageId, status: 'processed', newUrl: watermarkedUrl })
+                results.push({ id: imageId, status: 'failed', error: 'Update failed' })
               }
             } else {
               console.log(`   ⚠️  Watermark failed or URL unchanged`)
