@@ -83,10 +83,11 @@ export async function POST(request: NextRequest) {
 
             if (watermarkedUrl && watermarkedUrl !== imageUrl) {
               // Update database with new watermarked URL
-              const { error: updateError } = await supabaseAdmin
+              const updateData = { url: watermarkedUrl }
+              const { error: updateError } = await (supabaseAdmin
                 .from('images')
-                .update({ url: watermarkedUrl } as any)
-                .eq('id', imageId)
+                .update(updateData as any)
+                .eq('id', imageId) as any)
 
               if (updateError) {
                 console.error(`   ❌ Failed to update database:`, updateError)
