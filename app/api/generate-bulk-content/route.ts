@@ -28,20 +28,20 @@ export async function POST(req: NextRequest) {
     }
     
     // Use the admin organization directly (simplified for single-user setup)
-    const { data: adminOrg } = await supabaseAdmin
+    const { data: adminOrg, error: orgError } = await supabaseAdmin
       .from('organizations')
       .select('id, name')
       .eq('name', 'Admin Organization')
       .single()
 
-    if (!adminOrg) {
+    if (orgError || !adminOrg) {
       return NextResponse.json({
         success: false,
         error: 'Admin organization not found'
       }, { status: 500 })
     }
 
-    const userOrgId = adminOrg.id
+    const userOrgId = (adminOrg as { id: string }).id
     console.log('🏢 Using Admin Organization:', userOrgId)
 
     // Check subscription limits BEFORE generating

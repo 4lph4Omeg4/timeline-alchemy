@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
             .single()
 
           // For all plans except Universal, use Admin Organization's branding
-          const needsAdminWatermark = org?.plan && org.plan.toLowerCase() !== 'universal'
+          const needsAdminWatermark = org && (org as { plan: string }).plan && (org as { plan: string }).plan.toLowerCase() !== 'universal'
           
           if (needsAdminWatermark) {
             // Get Admin Organization's branding settings
@@ -50,15 +50,15 @@ export async function POST(request: NextRequest) {
               const { data: adminBranding } = await supabaseAdmin
                 .from('branding_settings')
                 .select('*')
-                .eq('organization_id', adminOrg.id)
+                .eq('organization_id', (adminOrg as { id: string }).id)
                 .single()
 
-              if (adminBranding && adminBranding.enabled && adminBranding.logo_url) {
+              if (adminBranding && (adminBranding as { enabled: boolean }).enabled && (adminBranding as { logo_url: string }).logo_url) {
                 imageUrl = await addWatermarkToImageServer(imageUrl, adminBranding, orgId)
                 watermarked = true
               }
             }
-          } else if (org?.plan === 'universal') {
+          } else if (org && (org as { plan: string }).plan === 'universal') {
             // Universal plan can use their own branding
             const { data: branding } = await supabaseAdmin
               .from('branding_settings')
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
               .eq('organization_id', orgId)
               .single()
 
-            if (branding && branding.enabled && branding.logo_url) {
+            if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
               imageUrl = await addWatermarkToImageServer(imageUrl, branding, orgId)
               watermarked = true
             }
@@ -268,7 +268,7 @@ async function fallbackToDallE(prompt: string, orgId?: string) {
           .single()
 
         // For all plans except Universal, use Admin Organization's branding
-        const needsAdminWatermark = org?.plan && org.plan.toLowerCase() !== 'universal'
+        const needsAdminWatermark = org && (org as { plan: string }).plan && (org as { plan: string }).plan.toLowerCase() !== 'universal'
         
         if (needsAdminWatermark) {
           // Get Admin Organization's branding settings
@@ -282,15 +282,15 @@ async function fallbackToDallE(prompt: string, orgId?: string) {
             const { data: adminBranding } = await supabaseAdmin
               .from('branding_settings')
               .select('*')
-              .eq('organization_id', adminOrg.id)
+              .eq('organization_id', (adminOrg as { id: string }).id)
               .single()
 
-            if (adminBranding && adminBranding.enabled && adminBranding.logo_url) {
+            if (adminBranding && (adminBranding as { enabled: boolean }).enabled && (adminBranding as { logo_url: string }).logo_url) {
               imageUrl = await addWatermarkToImageServer(imageUrl, adminBranding, orgId)
               watermarked = true
             }
           }
-        } else if (org?.plan === 'universal') {
+        } else if (org && (org as { plan: string }).plan === 'universal') {
           // Universal plan can use their own branding
           const { data: branding } = await supabaseAdmin
             .from('branding_settings')
@@ -298,7 +298,7 @@ async function fallbackToDallE(prompt: string, orgId?: string) {
             .eq('organization_id', orgId)
             .single()
 
-          if (branding && branding.enabled && branding.logo_url) {
+          if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
             imageUrl = await addWatermarkToImageServer(imageUrl, branding, orgId)
             watermarked = true
           }

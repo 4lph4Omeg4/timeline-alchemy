@@ -37,13 +37,13 @@ export async function POST(request: NextRequest) {
             .eq('id', orgId)
             .single()
 
-          console.log('🔍 Organization plan:', org?.plan)
+          console.log('🔍 Organization plan:', org ? (org as { plan: string }).plan : 'unknown')
 
           // For all plans except Universal, use Admin Organization's branding
-          const needsAdminWatermark = org?.plan && org.plan.toLowerCase() !== 'universal'
+          const needsAdminWatermark = org && (org as { plan: string }).plan && (org as { plan: string }).plan.toLowerCase() !== 'universal'
           
           if (needsAdminWatermark) {
-            console.log('🔄 Using Admin Organization watermark for', org.plan, 'plan')
+            console.log('🔄 Using Admin Organization watermark for', (org as { plan: string }).plan, 'plan')
             
             // Get Admin Organization's branding settings
             const { data: adminOrg } = await supabaseAdmin
@@ -56,10 +56,10 @@ export async function POST(request: NextRequest) {
               const { data: adminBranding } = await supabaseAdmin
                 .from('branding_settings')
                 .select('*')
-                .eq('organization_id', adminOrg.id)
+                .eq('organization_id', (adminOrg as { id: string }).id)
                 .single()
 
-              if (adminBranding && adminBranding.enabled && adminBranding.logo_url) {
+              if (adminBranding && (adminBranding as { enabled: boolean }).enabled && (adminBranding as { logo_url: string }).logo_url) {
                 console.log('🔄 Applying Admin watermark...')
                 finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, adminBranding, orgId)
                 watermarked = true
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
                 console.log('⚠️ Admin branding not configured')
               }
             }
-          } else if (org?.plan === 'universal') {
+          } else if (org && (org as { plan: string }).plan === 'universal') {
             console.log('🔄 Universal plan - checking custom branding...')
             
             // Universal plan can use their own branding
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
               .eq('organization_id', orgId)
               .single()
 
-            if (branding && branding.enabled && branding.logo_url) {
+            if (branding && (branding as { enabled: boolean }).enabled && (branding as { logo_url: string }).logo_url) {
               console.log('🔄 Applying custom watermark...')
               finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
               watermarked = true

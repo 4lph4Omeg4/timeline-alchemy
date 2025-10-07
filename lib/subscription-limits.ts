@@ -17,7 +17,7 @@ export async function checkPlanLimits(orgId: string, action: 'contentPackage' | 
       .eq('id', orgId)
       .single()
 
-    if (!orgCheckError && org?.name === 'Admin Organization') {
+    if (!orgCheckError && org && (org as { name: string }).name === 'Admin Organization') {
       console.log('✅ Admin Organization - bypassing limits')
       return { allowed: true, currentUsage: 0, limit: -1 }
     }
