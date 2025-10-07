@@ -426,6 +426,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </div>
                     <span className="text-xs text-blue-300 ml-8 mt-1 bg-blue-500/20 px-2 py-0.5 rounded-full w-fit">Trial</span>
                   </Link>
+                  <Link href="/dashboard/bulk-content" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                    <div className="flex items-center">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">⚡</span>
+                      <span className="font-semibold">Bulk Content</span>
+                    </div>
+                    <div className="flex gap-2 ml-8 mt-1">
+                      <span className="text-xs text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded-full w-fit">Trial</span>
+                      <span className="text-xs text-yellow-300 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
+                    </div>
+                  </Link>
                   <Link href="/dashboard/content/list" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📦</span>
                     <span className="font-semibold">Packages</span>
@@ -454,16 +464,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🔑</span>
                     <span className="font-semibold">Token Status</span>
                   </Link>
-                  <Link href="/dashboard/bulk-content" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <div className="flex items-center">
-                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">⚡</span>
-                      <span className="font-semibold">Bulk Content</span>
-                    </div>
-                    <div className="flex gap-2 ml-8 mt-1">
-                      <span className="text-xs text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded-full w-fit">Trial</span>
-                      <span className="text-xs text-yellow-300 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
-                    </div>
-                  </Link>
                   <Link href="/dashboard/admin/branding" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <div className="flex items-center">
                       <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🎨</span>
@@ -471,9 +471,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </div>
                     <span className="text-xs text-yellow-300 ml-8 mt-1 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
                   </Link>
-                  <Link href="/dashboard/billing" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💳</span>
-                    <span className="font-semibold">Billing</span>
+                  <Link href="/dashboard/billing" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                    <div className="flex items-center">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💳</span>
+                      <span className="font-semibold">Billing</span>
+                    </div>
+                    {/* Trial badge will be shown dynamically based on user's subscription status */}
                   </Link>
                   {isAdmin && (
                     <>
