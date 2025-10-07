@@ -28,16 +28,18 @@ export async function POST(request: NextRequest) {
     console.log('🏢 Admin Organization ID:', adminOrgId)
 
     // Update or insert branding settings for Admin Organization
+    const brandingSettings = {
+      organization_id: adminOrgId,
+      logo_url,
+      logo_position,
+      logo_opacity,
+      logo_size,
+      enabled: true
+    }
+
     const { data: brandingData, error: brandingError } = await supabaseAdmin
       .from('branding_settings')
-      .upsert({
-        organization_id: adminOrgId,
-        logo_url,
-        logo_position,
-        logo_opacity,
-        logo_size,
-        enabled: true
-      }, {
+      .upsert(brandingSettings as any, {
         onConflict: 'organization_id'
       })
       .select()
