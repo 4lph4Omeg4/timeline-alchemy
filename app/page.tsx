@@ -108,7 +108,7 @@ export default function HomePage() {
               <img 
                 src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
                 alt="Timeline Alchemy Logo" 
-                className="h-32 w-auto rounded-2xl shadow-2xl shadow-purple-500/50"
+                className="h-96 w-auto rounded-2xl shadow-2xl shadow-purple-500/50"
               />
             </div>
             
