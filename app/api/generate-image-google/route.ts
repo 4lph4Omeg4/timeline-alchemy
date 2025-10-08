@@ -119,11 +119,18 @@ async function generateImageWithGeminiSDK(prompt: string): Promise<string> {
   if (gatewayApiKey) {
     console.log('🚀 Attempting Vercel AI Gateway with Gemini 2.5 Flash Image SDK')
     try {
-      // Use Vercel AI SDK approach for Gemini 2.5 Flash Image
+      // Use Vercel AI SDK approach for Gemini 2.5 Flash Image with proper Gateway config
       const { generateText } = await import('ai')
+      const { google } = await import('@ai-sdk/google')
+      
+      // Configure Google provider with Gateway credentials
+      const googleProvider = google({
+        apiKey: gatewayApiKey,
+        baseURL: 'https://ai-gateway.vercel.sh'
+      })
       
       const result = await generateText({
-        model: 'google/gemini-2.5-flash-image-preview',
+        model: googleProvider('gemini-2.5-flash-image-preview'),
         providerOptions: {
           google: { responseModalities: ['TEXT', 'IMAGE'] },
         },
