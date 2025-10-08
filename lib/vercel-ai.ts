@@ -158,7 +158,7 @@ export async function generateVercelImage(prompt: string) {
         // For Vercel AI Gateway, use the model string directly
         // The gateway will route it to the correct provider
         const result = await generateText({
-          model: 'google/gemini-2.5-flash-image-preview',
+          model: 'google/gemini-2.5-flash-image',
           providerOptions: {
             google: { responseModalities: ['TEXT', 'IMAGE'] },
           },

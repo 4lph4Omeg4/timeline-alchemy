@@ -180,59 +180,59 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         if (clientsData) {
           setClients(clientsData)
         }
-        } else {
-          // For regular users: check if they have an organization, create one if not
-          const { data: orgs, error } = await (supabase as any)
-            .from('org_members')
-            .select('org_id, role, created_at')
-            .eq('user_id', user.id)
+      } else {
+        // For regular users: check if they have an organization, create one if not
+        const { data: orgs, error } = await (supabase as any)
+          .from('org_members')
+          .select('org_id, role, created_at')
+          .eq('user_id', user.id)
 
-          if (orgs && orgs.length > 0) {
-            // Fetch organization details for each org_id
-            const orgIds = orgs.map((org: any) => org.org_id)
-            const { data: orgDetails } = await (supabase as any)
-              .from('organizations')
-              .select('*')
-              .in('id', orgIds)
-            
-            if (orgDetails) {
-              setOrganizations(orgDetails)
-            }
-          } else {
+        if (orgs && orgs.length > 0) {
+          // Fetch organization details for each org_id
+          const orgIds = orgs.map((org: any) => org.org_id)
+          const { data: orgDetails } = await (supabase as any)
+            .from('organizations')
+            .select('*')
+            .in('id', orgIds)
+          
+          if (orgDetails) {
+            setOrganizations(orgDetails)
+          }
+        } else {
             // User doesn't have an organization yet - create one with trial
             console.log('No organization found for user. Creating organization with trial...')
-            
-            try {
-              // Create organization manually as fallback
-              const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
-              const { data: newOrg, error: orgError } = await (supabase as any)
-                .from('organizations')
-                .insert({
-                  name: userName + "'s Organization",
+          
+          try {
+            // Create organization manually as fallback
+            const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
+            const { data: newOrg, error: orgError } = await (supabase as any)
+              .from('organizations')
+              .insert({
+                name: userName + "'s Organization",
                   plan: 'trial'
+              })
+              .select()
+              .single()
+
+            if (newOrg && !orgError) {
+              // Add user as owner
+              const { error: memberError } = await (supabase as any)
+                .from('org_members')
+                .insert({
+                  org_id: newOrg.id,
+                  user_id: user.id,
+                  role: 'owner'
                 })
-                .select()
-                .single()
 
-              if (newOrg && !orgError) {
-                // Add user as owner
-                const { error: memberError } = await (supabase as any)
-                  .from('org_members')
-                  .insert({
-                    org_id: newOrg.id,
-                    user_id: user.id,
-                    role: 'owner'
-                  })
-
-                if (!memberError) {
+              if (!memberError) {
                   // Create trial subscription
                   const trialStart = new Date()
                   const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000) // 14 days
                   
-                  await (supabase as any)
-                    .from('subscriptions')
-                    .insert({
-                      org_id: newOrg.id,
+                await (supabase as any)
+                  .from('subscriptions')
+                  .insert({
+                    org_id: newOrg.id,
                       stripe_customer_id: 'trial-customer-' + newOrg.id,
                       stripe_subscription_id: 'trial-sub-' + newOrg.id,
                       plan: 'trial',
@@ -240,45 +240,45 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       is_trial: true,
                       trial_start_date: trialStart.toISOString(),
                       trial_end_date: trialEnd.toISOString()
-                    })
+                  })
 
-                  // Create default client
-                  await (supabase as any)
-                    .from('clients')
-                    .insert({
-                      org_id: newOrg.id,
-                      name: userName + "'s Client",
-                      contact_info: { email: user.email }
-                    })
+                // Create default client
+                await (supabase as any)
+                  .from('clients')
+                  .insert({
+                    org_id: newOrg.id,
+                    name: userName + "'s Client",
+                    contact_info: { email: user.email }
+                  })
 
                   console.log('Successfully created organization with trial:', newOrg)
-                  setOrganizations([newOrg])
+                setOrganizations([newOrg])
+              }
+            }
+          } catch (error) {
+              console.error('Failed to create organization with trial:', error)
+            // Try to fetch again after a delay in case the trigger eventually works
+            setTimeout(async () => {
+              const { data: retryOrgs } = await (supabase as any)
+                .from('org_members')
+                .select('org_id, role, created_at')
+                .eq('user_id', user.id)
+
+              if (retryOrgs && retryOrgs.length > 0) {
+                const orgIds = retryOrgs.map((org: any) => org.org_id)
+                const { data: orgDetails } = await (supabase as any)
+                  .from('organizations')
+                  .select('*')
+                  .in('id', orgIds)
+                
+                if (orgDetails) {
+                  setOrganizations(orgDetails)
                 }
               }
-            } catch (error) {
-              console.error('Failed to create organization with trial:', error)
-              // Try to fetch again after a delay in case the trigger eventually works
-              setTimeout(async () => {
-                const { data: retryOrgs } = await (supabase as any)
-                  .from('org_members')
-                  .select('org_id, role, created_at')
-                  .eq('user_id', user.id)
-
-                if (retryOrgs && retryOrgs.length > 0) {
-                  const orgIds = retryOrgs.map((org: any) => org.org_id)
-                  const { data: orgDetails } = await (supabase as any)
-                    .from('organizations')
-                    .select('*')
-                    .in('id', orgIds)
-                  
-                  if (orgDetails) {
-                    setOrganizations(orgDetails)
-                  }
-                }
-              }, 3000)
-            }
+            }, 3000)
           }
         }
+      }
 
       setLoading(false)
     }
@@ -421,8 +421,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Link>
                   <Link href="/dashboard/content" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <div className="flex items-center">
-                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📝</span>
-                      <span className="font-semibold">Content</span>
+                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📝</span>
+                    <span className="font-semibold">Content</span>
                     </div>
                     <span className="text-xs text-blue-300 ml-8 mt-1 bg-blue-500/20 px-2 py-0.5 rounded-full w-fit">Trial</span>
                   </Link>
@@ -473,8 +473,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Link>
                   <Link href="/dashboard/billing" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <div className="flex items-center">
-                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💳</span>
-                      <span className="font-semibold">Billing</span>
+                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💳</span>
+                    <span className="font-semibold">Billing</span>
                     </div>
                     {/* Trial badge will be shown dynamically based on user's subscription status */}
                   </Link>
