@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { addWatermarkToImageServer } from '@/lib/watermark'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // 60 seconds for image generation
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
