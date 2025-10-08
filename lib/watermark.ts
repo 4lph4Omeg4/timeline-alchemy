@@ -202,21 +202,31 @@ export async function addWatermarkToImageServer(imageUrl: string, branding: Bran
         break
     }
 
-    // Resize logo
+    // Resize logo while preserving transparency
     const resizedLogo = await logoImage
-      .resize(scaledLogoWidth, scaledLogoHeight)
+      .resize(scaledLogoWidth, scaledLogoHeight, {
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 } // Transparent background
+      })
+      .ensureAlpha() // Ensure alpha channel is preserved
       .png()
       .toBuffer()
 
-    // Apply opacity to the logo
+    // Apply opacity to the logo by modifying the alpha channel
     const logoWithOpacity = await sharp(resizedLogo)
       .composite([{
-        input: Buffer.from(`<svg width="${scaledLogoWidth}" height="${scaledLogoHeight}">
-          <rect width="100%" height="100%" fill="white" opacity="${branding.logo_opacity}"/>
-        </svg>`),
-        blend: 'multiply'
+        input: Buffer.from([
+          `<svg width="${scaledLogoWidth}" height="${scaledLogoHeight}">`,
+          `<rect width="100%" height="100%" fill="black" opacity="${1 - branding.logo_opacity}"/>`,
+          `</svg>`
+        ].join('')),
+        blend: 'dest-in' // This blend mode affects only the alpha channel
       }])
-      .png()
+      .png({ 
+        compressionLevel: 9,
+        // Force alpha channel
+        force: true 
+      })
       .toBuffer()
 
     // Composite the watermark onto the main image
@@ -225,7 +235,7 @@ export async function addWatermarkToImageServer(imageUrl: string, branding: Bran
         input: logoWithOpacity,
         left: Math.round(x),
         top: Math.round(y),
-        blend: 'over'
+        blend: 'over' // Standard alpha blending
       }])
       .png()
       .toBuffer()
