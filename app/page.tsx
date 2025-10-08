@@ -99,19 +99,44 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black">
-      {/* Hero Section with Video */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-black via-purple-950 to-black">
-        <div className="container mx-auto px-4 py-20">
-          {/* Hero Text Above Video */}
-          <div className="text-center mb-12">
-            <div className="mb-8 flex justify-center">
+      {/* Header with Logo and Auth Buttons */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/30">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo - Left */}
+            <div className="flex items-center">
               <img 
                 src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
                 alt="Timeline Alchemy Logo" 
-                className="h-96 w-auto rounded-2xl shadow-2xl shadow-purple-500/50"
+                className="h-16 w-auto rounded-lg shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300"
               />
             </div>
             
+            {/* Auth Buttons - Right */}
+            <div className="flex items-center gap-4">
+              <Button 
+                onClick={handleSignIn}
+                variant="ghost"
+                className="text-purple-300 hover:text-white hover:bg-purple-900/30"
+              >
+                Sign In
+              </Button>
+              <Button 
+                onClick={handleSignUp}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg shadow-purple-500/50"
+              >
+                🚀 Start Free Trial
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section with Video */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-black via-purple-950 to-black pt-24">
+        <div className="container mx-auto px-4 py-20">
+          {/* Hero Text Above Video */}
+          <div className="text-center mb-12">
             <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-6 animate-pulse">
               Timeline Alchemy
             </h1>
