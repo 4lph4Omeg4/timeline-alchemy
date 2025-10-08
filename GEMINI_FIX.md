@@ -28,16 +28,16 @@ const result = await generateText({
 ### Na (✅ Werkend)
 ```typescript
 const { generateText } = await import('ai')
-const { google } = await import('@ai-sdk/google')
+const { createGoogleGenerativeAI } = await import('@ai-sdk/google')
 
 // Configure Google provider with Gateway credentials
-const googleProvider = google({
+const google = createGoogleGenerativeAI({
   apiKey: gatewayApiKey,
-  baseURL: 'https://ai-gateway.vercel.sh'
+  baseURL: 'https://ai-gateway.vercel.sh/google-ai-studio/v1beta'
 })
 
 const result = await generateText({
-  model: googleProvider('gemini-2.5-flash-image-preview'),
+  model: google('gemini-2.5-flash-image-preview'),
   providerOptions: {
     google: { responseModalities: ['TEXT', 'IMAGE'] },
   },
@@ -48,14 +48,14 @@ const result = await generateText({
 ## Aanpassingen Gemaakt
 
 ### 1. `lib/vercel-ai.ts`
-- ✅ Toegevoegd: Import van `@ai-sdk/google`
-- ✅ Toegevoegd: Provider configuratie met `apiKey` en `baseURL`
-- ✅ Aangepast: Model parameter gebruikt nu de geconfigureerde provider
+- ✅ Toegevoegd: Import van `createGoogleGenerativeAI` van `@ai-sdk/google`
+- ✅ Toegevoegd: Provider configuratie met `apiKey` en `baseURL` (inclusief correcte endpoint path)
+- ✅ Aangepast: Model parameter gebruikt nu de geconfigureerde provider instance
 
 ### 2. `app/api/generate-image-google/route.ts`
-- ✅ Toegevoegd: Import van `@ai-sdk/google`
-- ✅ Toegevoegd: Provider configuratie met `apiKey` en `baseURL`
-- ✅ Aangepast: Model parameter gebruikt nu de geconfigureerde provider
+- ✅ Toegevoegd: Import van `createGoogleGenerativeAI` van `@ai-sdk/google`
+- ✅ Toegevoegd: Provider configuratie met `apiKey` en `baseURL` (inclusief correcte endpoint path)
+- ✅ Aangepast: Model parameter gebruikt nu de geconfigureerde provider instance
 
 ## Environment Variable Verificatie
 
@@ -158,9 +158,9 @@ Public URL returned to user ✅
 
 2. **Provider correct geconfigureerd?**
    ```typescript
-   const googleProvider = google({
+   const google = createGoogleGenerativeAI({
      apiKey: gatewayApiKey, // ✅ Moet present zijn
-     baseURL: 'https://ai-gateway.vercel.sh' // ✅ Moet correct zijn
+     baseURL: 'https://ai-gateway.vercel.sh/google-ai-studio/v1beta' // ✅ Moet correct pad hebben
    })
    ```
 
