@@ -146,25 +146,17 @@ export async function generateVercelImage(prompt: string) {
     
     console.log('🎨 Using original prompt:', enhancedPrompt)
     
-    // Try Vercel AI Gateway first, fallback to DALL-E 3
-    const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
+    // Try Google Gemini first, fallback to DALL-E 3
+    const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY
     
-    if (gatewayApiKey) {
-      console.log('🚀 Attempting Vercel AI Gateway with Gemini 2.5 Flash Image')
+    if (googleApiKey) {
+      console.log('🚀 Attempting Google Gemini 2.5 Flash Image generation')
       try {
-        // Use Vercel AI SDK with Gateway - proper configuration
+        // Use official Vercel AI SDK approach (as per Vercel docs)
         const { generateText } = await import('ai')
-        const { createGoogleGenerativeAI } = await import('@ai-sdk/google')
         
-        // Configure Google provider with Gateway credentials
-        const google = createGoogleGenerativeAI({
-          apiKey: gatewayApiKey,
-          baseURL: 'https://ai-gateway.vercel.sh/google-ai-studio/v1beta'
-        })
-        
-        // Use Gemini 2.5 Flash for image generation
         const result = await generateText({
-          model: google('gemini-2.5-flash-image-preview'),
+          model: 'google/gemini-2.5-flash-image-preview',
           providerOptions: {
             google: { responseModalities: ['TEXT', 'IMAGE'] },
           },

@@ -14,9 +14,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if we have AI Gateway credentials
-    if (!process.env.AI_GATEWAY_API_KEY) {
-      console.log('🔄 AI Gateway API Key not configured, falling back to DALL-E')
+    // Check if we have Google API credentials
+    const hasGoogleApi = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY
+    if (!hasGoogleApi) {
+      console.log('🔄 Google API Key not configured, falling back to DALL-E')
       return await fallbackToDallE(prompt, orgId)
     }
 
@@ -113,24 +114,17 @@ export async function POST(request: NextRequest) {
 }
 
 async function generateImageWithGeminiSDK(prompt: string): Promise<string> {
-  // Try Vercel AI Gateway with Gemini 2.5 Flash Image SDK first
-  const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
+  // Try Google Gemini with official Vercel AI SDK approach
+  const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY
   
-  if (gatewayApiKey) {
-    console.log('🚀 Attempting Vercel AI Gateway with Gemini 2.5 Flash Image SDK')
+  if (googleApiKey) {
+    console.log('🚀 Attempting Google Gemini 2.5 Flash Image generation')
     try {
-      // Use Vercel AI SDK approach for Gemini 2.5 Flash Image with proper Gateway config
+      // Use official Vercel AI SDK approach (as per Vercel docs)
       const { generateText } = await import('ai')
-      const { createGoogleGenerativeAI } = await import('@ai-sdk/google')
-      
-      // Configure Google provider with Gateway credentials
-      const google = createGoogleGenerativeAI({
-        apiKey: gatewayApiKey,
-        baseURL: 'https://ai-gateway.vercel.sh/google-ai-studio/v1beta'
-      })
       
       const result = await generateText({
-        model: google('gemini-2.5-flash-image-preview'),
+        model: 'google/gemini-2.5-flash-image-preview',
         providerOptions: {
           google: { responseModalities: ['TEXT', 'IMAGE'] },
         },
