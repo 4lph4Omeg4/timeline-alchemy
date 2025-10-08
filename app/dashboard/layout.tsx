@@ -370,19 +370,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-r from-purple-500/10 to-purple-600/15 rounded-full blur-xl animate-bounce delay-2000"></div>
 
         {/* Cosmic Header */}
-        <header className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 backdrop-blur-md shadow-2xl border-b border-purple-500/30 relative z-10">
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
-                <Link href="/dashboard" className="flex items-center group">
-                  <Logo size="md" showText={false} />
-                  <span className="ml-2 text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 group-hover:from-purple-300 group-hover:via-pink-300 group-hover:to-white transition-all duration-300">
-                    Timeline Alchemy
-                  </span>
-                </Link>
-              </div>
+        <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/30">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              {/* Logo - Left */}
+              <Link href="/dashboard" className="flex items-center">
+                <img 
+                  src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
+                  alt="Timeline Alchemy Logo" 
+                  className="h-16 w-auto rounded-lg shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300"
+                />
+              </Link>
 
-              <div className="flex items-center space-x-4">
+              {/* User Info & Buttons - Right */}
+              <div className="flex items-center gap-4">
                 <div className="text-sm text-purple-200">
                   <span className="font-semibold">{user?.name || user?.email}</span>
                   {isAdmin && (
@@ -405,7 +406,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* Cosmic Sidebar */}
-        <div className="flex">
+        <div className="flex pt-24">
           <aside className="w-64 bg-gradient-to-b from-purple-900/30 to-blue-900/30 backdrop-blur-md shadow-2xl min-h-screen border-r border-purple-500/30 relative z-10">
             <div className="p-6">
               {/* Navigation Links */}

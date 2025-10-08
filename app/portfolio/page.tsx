@@ -134,30 +134,48 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 protected-content">
+    <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black protected-content">
       {/* Content Protection */}
       <ContentProtection />
       
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-800/20 to-pink-800/20 backdrop-blur-md border-b border-purple-500/30">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-4">
-              Content Previews
-            </h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
-              Discover our collection of published content, organized by category
-            </p>
-            <div className="flex justify-center">
+      {/* Header with Logo */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/30">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo - Left */}
+            <Link href="/" className="flex items-center">
+              <img 
+                src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
+                alt="Timeline Alchemy Logo" 
+                className="h-16 w-auto rounded-lg shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300"
+              />
+            </Link>
+
+            {/* Back to Home Button - Right */}
+            <div className="flex items-center gap-4">
               <Link href="/">
                 <Button 
                   variant="outline"
-                  className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300 px-8 py-3 text-lg"
+                  className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300"
                 >
                   ← Back to Home
                 </Button>
               </Link>
             </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <div className="pt-32 pb-12 bg-gradient-to-r from-purple-800/20 to-pink-800/20">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 mb-4">
+              Content Previews
+            </h1>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Discover our collection of published content, organized by category
+            </p>
           </div>
         </div>
       </div>
