@@ -238,7 +238,7 @@ export async function generateVercelImage(prompt: string) {
         console.error('Error details:', {
           message: geminiError instanceof Error ? geminiError.message : 'Unknown error',
           stack: geminiError instanceof Error ? geminiError.stack : undefined,
-          gatewayApiKey: gatewayApiKey ? 'Present' : 'Missing'
+          googleApiKey: googleApiKey ? 'Present' : 'Missing'
         })
       }
     }
