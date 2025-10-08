@@ -105,7 +105,11 @@ export default function HomePage() {
           {/* Hero Text Above Video */}
           <div className="text-center mb-12">
             <div className="mb-8 flex justify-center">
-              <Logo size="xl" showText={false} />
+              <img 
+                src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
+                alt="Timeline Alchemy Logo" 
+                className="h-32 w-auto rounded-2xl shadow-2xl shadow-purple-500/50"
+              />
             </div>
             
             <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-6 animate-pulse">
@@ -471,8 +475,12 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             {/* Brand Column */}
             <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
-                <Logo size="md" showText={false} />
+              <div className="flex items-center gap-4 mb-6">
+                <img 
+                  src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
+                  alt="Timeline Alchemy Logo" 
+                  className="h-16 w-auto rounded-lg shadow-lg shadow-purple-500/30"
+                />
                 <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                   Timeline Alchemy
                 </span>
