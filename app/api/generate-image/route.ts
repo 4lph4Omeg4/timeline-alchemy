@@ -15,8 +15,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use Vercel AI Gateway for image generation
-    console.log('🚀 Using Vercel AI Gateway for image generation')
+    // Check if we have Google API or fallback to OpenAI
+    const hasGoogleApi = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY
+    
+    if (hasGoogleApi) {
+      console.log('🚀 Using Google Gemini for image generation')
+    } else {
+      console.log('🚀 Falling back to DALL-E for image generation')
+    }
+    
     const improvedPrompt = `${prompt}. Professional photography, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality.`
 
     const vercelResponse = await generateVercelImage(improvedPrompt)
