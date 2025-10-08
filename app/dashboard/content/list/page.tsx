@@ -266,9 +266,6 @@ export default function ContentListPage() {
             Explore categorized content and view packages across all domains of consciousness.
           </p>
         </div>
-        <Link href="/dashboard/content/new">
-          <Button>Create New Content</Button>
-        </Link>
       </div>
 
       {/* Main Layout: Sidebar + Content */}
