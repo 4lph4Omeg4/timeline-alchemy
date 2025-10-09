@@ -122,20 +122,20 @@ export default function SignInPage() {
               />
           </div>
           <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 font-bold">
-            Welcome back, Enlightened One
+            Welcome Back
           </CardTitle>
           <CardDescription className="text-purple-200">
-            Enter the cosmic realm of Timeline Alchemy
+            Sign in to Timeline Alchemy
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-3">
-              <Label htmlFor="email" className="text-purple-200 font-semibold">Cosmic Email Address</Label>
+              <Label htmlFor="email" className="text-purple-200 font-semibold">Email Address</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your cosmic email"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -143,11 +143,11 @@ export default function SignInPage() {
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="password" className="text-purple-200 font-semibold">Mystical Password</Label>
+              <Label htmlFor="password" className="text-purple-200 font-semibold">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your mystical password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -159,7 +159,7 @@ export default function SignInPage() {
               className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-500 hover:via-pink-500 hover:to-purple-500 text-white font-bold shadow-lg hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105" 
               disabled={loading}
             >
-              {loading ? '✨ Entering Cosmic Realm...' : '🌟 Enter Cosmic Realm'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
@@ -169,7 +169,7 @@ export default function SignInPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-gradient-to-br from-purple-900/40 to-blue-900/40 px-4 py-1 text-purple-300 font-semibold rounded-full border border-purple-500/30">
-                Or channel cosmic energy with
+                Or continue with
               </span>
             </div>
           </div>
@@ -202,12 +202,12 @@ export default function SignInPage() {
           </Button>
 
           <div className="text-center text-sm text-purple-200">
-            New to the cosmic realm?{' '}
+            Don't have an account?{' '}
             <button
               onClick={() => router.push('/auth/signup')}
               className="text-yellow-400 hover:text-yellow-300 hover:underline font-semibold transition-colors duration-300"
             >
-              Begin your cosmic journey
+              Sign up here
             </button>
           </div>
         </CardContent>

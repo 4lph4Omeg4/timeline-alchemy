@@ -156,20 +156,20 @@ export default function SignUpPage() {
               />
           </div>
           <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 font-bold">
-            Begin Your Cosmic Journey
+            Create Your Account
           </CardTitle>
           <CardDescription className="text-purple-200">
-            Join the mystical realm of Timeline Alchemy
+            Join Timeline Alchemy
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={handleSignUp} className="space-y-6">
             <div className="space-y-3">
-              <Label htmlFor="name" className="text-purple-200 font-semibold">Cosmic Name</Label>
+              <Label htmlFor="name" className="text-purple-200 font-semibold">Name</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Enter your cosmic name"
+                placeholder="Enter your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -177,11 +177,11 @@ export default function SignUpPage() {
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="email" className="text-purple-200 font-semibold">Cosmic Email Address</Label>
+              <Label htmlFor="email" className="text-purple-200 font-semibold">Email Address</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your cosmic email"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -189,11 +189,11 @@ export default function SignUpPage() {
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="password" className="text-purple-200 font-semibold">Mystical Password</Label>
+              <Label htmlFor="password" className="text-purple-200 font-semibold">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Create your mystical password (min 6 characters)"
+                placeholder="Create your password (min 6 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -201,11 +201,11 @@ export default function SignUpPage() {
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="confirmPassword" className="text-purple-200 font-semibold">Confirm Mystical Password</Label>
+              <Label htmlFor="confirmPassword" className="text-purple-200 font-semibold">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="Confirm your mystical password"
+                placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -217,7 +217,7 @@ export default function SignUpPage() {
               className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-500 hover:via-pink-500 hover:to-purple-500 text-white font-bold shadow-lg hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105" 
               disabled={loading}
             >
-              {loading ? '✨ Creating Cosmic Account...' : '🌟 Create Cosmic Account'}
+              {loading ? 'Creating account...' : 'Create Account'}
             </Button>
           </form>
 
@@ -227,7 +227,7 @@ export default function SignUpPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-gradient-to-br from-purple-900/40 to-blue-900/40 px-4 py-1 text-purple-300 font-semibold rounded-full border border-purple-500/30">
-                Or channel cosmic energy with
+                Or continue with
               </span>
             </div>
           </div>
@@ -256,16 +256,16 @@ export default function SignUpPage() {
                 fill="#EA4335"
               />
             </svg>
-            Google Cosmic Access
+            Sign up with Google
           </Button>
 
           <div className="text-center text-sm text-purple-200">
-            Already part of the cosmic realm?{' '}
+            Already have an account?{' '}
             <button
               onClick={() => router.push('/auth/signin')}
               className="text-yellow-400 hover:text-yellow-300 hover:underline font-semibold transition-colors duration-300"
             >
-              Enter cosmic realm
+              Sign in here
             </button>
           </div>
         </CardContent>
