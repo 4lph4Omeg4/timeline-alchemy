@@ -249,7 +249,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
             {/* Basic Plan */}
-            <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 border-2 border-gray-700 rounded-2xl p-8 hover:border-purple-500 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-105">
+            <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 border-2 border-gray-700 rounded-2xl p-8 transform scale-105 hover:border-purple-500 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-110">
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">Basic</h3>
                 <div className="text-5xl font-black text-purple-400 mb-2">€49</div>
