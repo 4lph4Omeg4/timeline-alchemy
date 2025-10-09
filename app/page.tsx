@@ -314,14 +314,9 @@ export default function HomePage() {
               </Button>
             </div>
 
-            {/* Transcendant Plan - FEATURED */}
+            {/* Transcendant Plan */}
             <div className="relative bg-gradient-to-br from-purple-600 to-pink-600 border-4 border-yellow-400 rounded-2xl p-8 transform scale-105 hover:scale-110 transition-all duration-300 shadow-2xl shadow-purple-500/50">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-yellow-400 text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg">
-                  ⭐ MOST POPULAR
-                </span>
-              </div>
-              <div className="text-center mb-6 mt-4">
+              <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold text-white mb-2">Transcendant</h3>
                 <div className="text-5xl font-black text-yellow-300 mb-2">€199</div>
                 <div className="text-purple-100 text-sm">/month</div>
