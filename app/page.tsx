@@ -141,13 +141,14 @@ export default function HomePage() {
               Timeline Alchemy
             </h1>
             
-            <p className="text-2xl md:text-3xl text-gray-200 mb-6 font-light">
-              Transform Your Content Strategy with AI Magic
+            <p className="text-lg text-gray-300 max-w-4xl mx-auto mb-6 leading-relaxed">
+              Generate stunning blog posts, social media content packages, for posting across multiple platforms. 
+              Powered by cutting-edge AI, designed for creators by others sharing creations. Rate content packages 
+              using the built-in "Resonance Rating"-system, or use it to find the good packages without effort.
             </p>
             
-            <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed">
-              Generate stunning blog posts, social media content, and images across multiple platforms. 
-              Powered by cutting-edge AI, designed for creators who demand excellence.
+            <p className="text-2xl md:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 font-bold mb-8">
+              Go from 'Timeline-Anxiety' to 'Timeline-Alchemy'
             </p>
           </div>
 
