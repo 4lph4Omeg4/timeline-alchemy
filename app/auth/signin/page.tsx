@@ -58,7 +58,7 @@ export default function SignInPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://timeline-alchemy.nl/auth/callback',
+          redirectTo: 'https://auth.timeline-alchemy.nl/callback',
         },
       })
 

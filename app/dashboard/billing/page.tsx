@@ -390,10 +390,10 @@ export default function BillingPage() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => window.open('https://billing.stripe.com/p/login/eVqfZj1tyaVQgkH1CteAg00', '_blank')}
-                  className="text-blue-400 border-blue-400 hover:bg-blue-400/20"
+                  onClick={() => window.open('https://pay.timeline-alchemy.nl', '_blank')}
+                  className="text-green-400 border-green-400 hover:bg-green-400/20"
                 >
-                  Direct Billing Portal
+                  View Plans & Upgrade
                 </Button>
                 {subscription.status === 'active' && (
                   <Button 
@@ -594,18 +594,18 @@ export default function BillingPage() {
                   disabled={processing === 'manage'}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
                 >
-                  {processing === 'manage' ? 'Opening...' : '🚀 Open Billing Portal'}
+                  {processing === 'manage' ? 'Opening...' : '🚀 Manage Current Subscription'}
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => window.open('https://billing.stripe.com/p/login/eVqfZj1tyaVQgkH1CteAg00', '_blank')}
-                  className="w-full text-blue-400 border-blue-400 hover:bg-blue-400/20"
+                  onClick={() => window.open('https://pay.timeline-alchemy.nl', '_blank')}
+                  className="w-full text-green-400 border-green-400 hover:bg-green-400/20"
                 >
-                  🔗 Direct Link (New Tab)
+                  ✨ View Plans & Upgrade
                 </Button>
               </div>
               <p className="text-xs text-gray-400 mt-2">
-                Use your email address to log in to the billing portal
+                Manage your existing subscription or browse available plans
               </p>
             </div>
           </div>
