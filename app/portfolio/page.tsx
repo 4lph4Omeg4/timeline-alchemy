@@ -296,34 +296,73 @@ export default function PortfolioPage() {
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
                         />
-                        {/* Post Title */}
-                        <h3 className="text-lg font-semibold text-white mt-3 mb-2">
-                          {post.title}
-                        </h3>
+                        {/* Resonance Rating */}
+                        <div className="flex items-center justify-center mt-3 mb-2">
+                          <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg px-4 py-2">
+                            <div className="text-xs text-purple-300 font-semibold mb-1 text-center">
+                              Resonance Rating
+                            </div>
+                            {post.average_rating ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="flex items-center">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <span 
+                                      key={star}
+                                      className={star <= Math.round(post.average_rating || 0) ? 'text-yellow-400' : 'text-gray-500'}
+                                    >
+                                      ⭐
+                                    </span>
+                                  ))}
+                                </div>
+                                <span className="text-white font-bold">{post.average_rating.toFixed(1)}</span>
+                                <span className="text-gray-400 text-xs">({post.rating_count || 0})</span>
+                              </div>
+                            ) : (
+                              <div className="text-gray-400 text-sm text-center">
+                                No ratings yet
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
                     
-                    {/* Post Title (if no image) */}
+                    {/* Resonance Rating (if no image) */}
                     {(!post.images || post.images.length === 0) && (
-                      <h3 className="text-lg font-semibold text-white mb-3">
-                        {post.title}
-                      </h3>
+                      <div className="flex items-center justify-center mb-3">
+                        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg px-4 py-2">
+                          <div className="text-xs text-purple-300 font-semibold mb-1 text-center">
+                            Resonance Rating
+                          </div>
+                          {post.average_rating ? (
+                            <div className="flex items-center space-x-2">
+                              <div className="flex items-center">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <span 
+                                    key={star}
+                                    className={star <= Math.round(post.average_rating || 0) ? 'text-yellow-400' : 'text-gray-500'}
+                                  >
+                                    ⭐
+                                  </span>
+                                ))}
+                              </div>
+                              <span className="text-white font-bold">{post.average_rating.toFixed(1)}</span>
+                              <span className="text-gray-400 text-xs">({post.rating_count || 0})</span>
+                            </div>
+                          ) : (
+                            <div className="text-gray-400 text-sm text-center">
+                              No ratings yet
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
                     
                     {/* Post Stats */}
                     <div className="flex items-center justify-between text-sm text-gray-400">
-                      <div className="flex items-center space-x-4">
-                        {post.average_rating && (
-                          <div className="flex items-center space-x-1">
-                            <span>⭐</span>
-                            <span>{post.average_rating.toFixed(1)}</span>
-                            <span>({post.rating_count})</span>
-                          </div>
-                        )}
-                        <div className="flex items-center space-x-1">
-                          <span>👁️</span>
-                          <span>Gepubliceerd</span>
-                        </div>
+                      <div className="flex items-center space-x-1">
+                        <span>👁️</span>
+                        <span>Gepubliceerd</span>
                       </div>
                       
                       {post.organizations && (
