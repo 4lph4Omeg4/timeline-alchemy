@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Logo } from '@/components/Logo'
 import toast from 'react-hot-toast'
 
 export default function SignInPage() {
@@ -58,7 +57,7 @@ export default function SignInPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://auth.timeline-alchemy.nl/callback',
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
@@ -116,7 +115,11 @@ export default function SignInPage() {
         <Card className="w-full max-w-md bg-gradient-to-br from-purple-900/40 to-blue-900/40 backdrop-blur-md border-purple-500/30 shadow-2xl relative z-10">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <Logo size="lg" showText={true} />
+              <img 
+                src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
+                alt="Timeline Alchemy Logo" 
+                className="h-24 w-auto rounded-lg shadow-lg shadow-purple-500/30"
+              />
           </div>
           <CardTitle className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200 font-bold">
             Welcome back, Enlightened One

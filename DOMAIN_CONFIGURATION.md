@@ -35,9 +35,11 @@ https://timeline-alchemy.nl
 #### 2. Redirect URLs (Add all of these)
 ```
 https://timeline-alchemy.nl/auth/callback
-https://auth.timeline-alchemy.nl/callback
+https://auth.timeline-alchemy.nl/auth/callback
 http://localhost:3000/auth/callback
 ```
+
+**Note**: The app uses `window.location.origin` for redirects, so it automatically works with any domain you deploy to.
 
 #### 3. Additional Redirect URLs
 ```
@@ -51,9 +53,12 @@ For each OAuth provider (Google, LinkedIn, Twitter, etc.), configure:
 
 **Authorized Redirect URIs**:
 ```
-https://auth.timeline-alchemy.nl/callback
 https://timeline-alchemy.nl/auth/callback
+https://auth.timeline-alchemy.nl/auth/callback
+http://localhost:3000/auth/callback
 ```
+
+**Important**: The app automatically redirects to `{current_domain}/auth/callback`, so as long as your domain is in this list, it will work!
 
 ---
 
@@ -79,10 +84,11 @@ Keep the default Stripe billing portal for managing existing subscriptions:
 
 ### ✅ Completed Integrations
 
-1. **Auth Domain** (`auth.timeline-alchemy.nl`)
-   - ✅ Updated OAuth callback in `app/auth/signin/page.tsx`
-   - ✅ Updated OAuth callback in `app/auth/signup/page.tsx`
+1. **Auth Domain** (Dynamic - works with any domain)
+   - ✅ OAuth redirect uses `window.location.origin` in `app/auth/signin/page.tsx`
+   - ✅ OAuth redirect uses `window.location.origin` in `app/auth/signup/page.tsx`
    - ✅ Callback handler ready in `app/auth/callback/page.tsx`
+   - ✅ Works with: `timeline-alchemy.nl`, `auth.timeline-alchemy.nl`, or `localhost`
 
 2. **Payment Domain** (`pay.timeline-alchemy.nl`)
    - ✅ Integrated in billing page quick access
@@ -90,10 +96,12 @@ Keep the default Stripe billing portal for managing existing subscriptions:
    - ✅ Separated from "Manage Current Subscription" action
 
 3. **UI Updates**
-   - ✅ Dashboard header with logo
-   - ✅ Sign In page header with logo
-   - ✅ Sign Up page header with logo  
-   - ✅ Portfolio page header with logo
+   - ✅ Dashboard header with new TA_2.jpg logo
+   - ✅ Sign In page header with new logo
+   - ✅ Sign In page card with new logo
+   - ✅ Sign Up page header with new logo
+   - ✅ Sign Up page card with new logo
+   - ✅ Portfolio page header with new logo
 
 ---
 
