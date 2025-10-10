@@ -4,13 +4,41 @@
   "framework": "nextjs",
   "installCommand": "npm install --legacy-peer-deps",
   "functions": {
+    "app/api/generate-bulk-content/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/watermark-bulk/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/apply-watermark-to-existing/route.ts": {
+      "maxDuration": 300
+    },
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
     }
   },
   "build": {
     "env": {
       "NODE_OPTIONS": "--max-old-space-size=4096"
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ]
 }
