@@ -4,17 +4,17 @@
   "framework": "nextjs",
   "installCommand": "npm install --legacy-peer-deps",
   "functions": {
-    "app/api/generate-bulk-content/route.ts": {
+    "app/api/admin/watermark-process/*.ts": {
       "maxDuration": 300
     },
-    "app/api/watermark-bulk/route.ts": {
+    "app/api/generate-bulk-content/*.ts": {
       "maxDuration": 300
     },
-    "app/api/apply-watermark-to-existing/route.ts": {
+    "app/api/watermark-bulk/*.ts": {
       "maxDuration": 300
     },
-    "app/api/**/*.ts": {
-      "maxDuration": 60
+    "app/api/apply-watermark-to-existing/*.ts": {
+      "maxDuration": 300
     }
   },
   "build": {

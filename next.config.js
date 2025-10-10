@@ -27,20 +27,12 @@ const nextConfig = {
     }
     return config
   },
-  // Skip debug routes in production builds
-  async rewrites() {
-    return {
-      beforeFiles: [
-        // Skip debug routes in production
-        ...(process.env.NODE_ENV === 'production' ? [
-          {
-            source: '/api/debug/:path*',
-            destination: '/404'
-          }
-        ] : [])
-      ]
-    }
-  },
+  // Disable rewrites temporarily to diagnose routing issues
+  // async rewrites() {
+  //   return {
+  //     beforeFiles: []
+  //   }
+  // },
 }
 
 module.exports = nextConfig
