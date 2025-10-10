@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { addWatermarkToImageServer } from '@/lib/watermark'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 300 // 5 minutes for bulk watermarking
+
 // Add GET handler for debugging
 export async function GET(request: NextRequest) {
   return NextResponse.json({ 
