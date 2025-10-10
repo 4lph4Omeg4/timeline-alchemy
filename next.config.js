@@ -4,9 +4,10 @@ const nextConfig = {
     domains: ['localhost', 'supabase.co', 'auth.timeline-alchemy.nl'],
   },
   // Optimize build performance
-  experimental: {
-    optimizeCss: true,
-  },
+  // Note: optimizeCss requires 'critters' package, disabled for now
+  // experimental: {
+  //   optimizeCss: true,
+  // },
   // Reduce build time by skipping type checking during build
   typescript: {
     ignoreBuildErrors: false,

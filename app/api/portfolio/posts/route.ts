@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { BlogPost } from '@/types/index'
 
+export const dynamic = 'force-dynamic'
+
 const supabaseUrl = 'https://kjjrzhicspmbiitayrco.supabase.co'
 
 interface DatabasePost {
