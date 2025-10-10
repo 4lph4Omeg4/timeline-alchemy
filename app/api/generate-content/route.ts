@@ -4,6 +4,9 @@ import { generateVercelContent } from '@/lib/vercel-ai'
 import { AIGenerateRequest } from '@/types/index'
 import { detectCategory, getCategoryInfo } from '@/lib/category-detector'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // 60 seconds for content generation
+
 export async function POST(request: NextRequest) {
   try {
     let body: AIGenerateRequest

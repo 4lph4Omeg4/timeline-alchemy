@@ -3,6 +3,9 @@ import { generateBulkContent, validateTrendData, BulkContentResult } from '@/lib
 import { incrementUsage } from '@/lib/subscription-limits'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 300 // 5 minutes (max for Pro plan)
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()

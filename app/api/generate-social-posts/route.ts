@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { generateVercelContent } from '@/lib/vercel-ai'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // 60 seconds for social posts generation
+
 export async function POST(req: Request) {
   try {
     const { title, content, platforms } = await req.json()
