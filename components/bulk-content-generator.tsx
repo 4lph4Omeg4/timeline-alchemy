@@ -402,12 +402,11 @@ export default function BulkContentGenerator() {
           
           imagePrompt += ` Theme: ${topicTags}. High quality, professional article illustration, detailed and engaging.`
           
-          const imageResponse = await fetch('/api/generate-image-google', {
+          const imageResponse = await fetch('/api/generate-vercel-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              prompt: imagePrompt,
-              orgId: 'e6c0db74-03ee-4bb3-b08d-d94512efab91' // Admin Organization UUID
+              prompt: imagePrompt
             })
           })
           
