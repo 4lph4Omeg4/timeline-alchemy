@@ -37,7 +37,7 @@ export default function BulkWatermarkPage() {
     try {
       toast.loading('Processing images...', { id: 'watermark-process' })
       
-      const response = await fetch('/api/watermark-bulk', {
+      const response = await fetch('/api/admin/watermark-process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
