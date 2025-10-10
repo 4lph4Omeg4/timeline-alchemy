@@ -15,14 +15,14 @@ interface DatabasePost {
   published_at?: string
   created_at: string
   updated_at: string
-  average_rating?: number
-  rating_count?: number
+  average_rating?: string | number | null
+  rating_count?: number | null
   organizations?: {
     id: string
     name: string
   } | null
   images?: Array<{
-    id: string
+    id?: string
     url: string
   }>
 }
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Starting portfolio API...')
 
-    // Query with images join
+    // Query with images join and ratings
     let query = supabaseAdmin
       .from('blog_posts')
       .select(`
@@ -53,8 +53,14 @@ export async function GET(request: NextRequest) {
         published_at, 
         created_at, 
         updated_at,
+        average_rating,
+        rating_count,
         images (
           url
+        ),
+        organizations (
+          id,
+          name
         )
       `)
       .eq('state', 'published')
@@ -115,9 +121,9 @@ export async function GET(request: NextRequest) {
           published_at: post.published_at,
           created_at: post.created_at,
           updated_at: post.updated_at,
-          average_rating: null,
-          rating_count: null,
-          organizations: null,
+          average_rating: post.average_rating ? parseFloat(post.average_rating) : null,
+          rating_count: post.rating_count || 0,
+          organizations: post.organizations || null,
           images: post.images || [],
           social_posts: socialPostsObj
         }
