@@ -1,0 +1,18 @@
+# Vercel ignore file
+# Force fresh deployment by ensuring cache is cleared
+
+# Development files
+*.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+
+# Documentation (optional - uncomment if you don't want to deploy docs)
+# *.md
+# !README.md
+

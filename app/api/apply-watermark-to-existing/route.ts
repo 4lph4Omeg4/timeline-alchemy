@@ -4,13 +4,16 @@ import { addWatermarkToImageServer } from '@/lib/watermark'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes for bulk watermarking
+export const runtime = 'nodejs' // Explicitly set runtime
 
 // Add GET handler for debugging
 export async function GET(request: NextRequest) {
   return NextResponse.json({ 
-    message: 'This endpoint only accepts POST requests',
+    message: 'Bulk Watermark API - Ready',
     method: 'POST',
-    endpoint: '/api/apply-watermark-to-existing'
+    endpoint: '/api/apply-watermark-to-existing',
+    status: 'active',
+    maxDuration: 300
   }, { status: 200 })
 }
 
