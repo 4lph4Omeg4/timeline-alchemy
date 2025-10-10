@@ -402,7 +402,7 @@ export default function BulkContentGenerator() {
           
           imagePrompt += ` Theme: ${topicTags}. High quality, professional article illustration, detailed and engaging.`
           
-          const imageResponse = await fetch('/api/generate-image', {
+          const imageResponse = await fetch('/api/generate-image-google', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
