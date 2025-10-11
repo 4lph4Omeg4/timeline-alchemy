@@ -128,7 +128,10 @@ export async function GET(request: NextRequest) {
           updated_at: post.updated_at,
           average_rating: post.average_rating ? parseFloat(post.average_rating) : null,
           rating_count: post.rating_count || 0,
-          organizations: post.organizations || null,
+          organizations: post.organizations ? {
+            ...post.organizations,
+            name: post.organizations.name === 'Admin Organization' ? 'Timeline Alchemy' : post.organizations.name
+          } : null,
           images: post.images || [],
           social_posts: socialPostsObj
         }
