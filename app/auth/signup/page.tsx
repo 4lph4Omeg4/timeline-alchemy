@@ -58,7 +58,7 @@ export default function SignUpPage() {
       if (!response.ok) {
         toast.error(data.error || 'Failed to create account')
       } else if (data.success) {
-        toast.success('Account, organization, and client created successfully! Please check your email to confirm your account.')
+        toast.success('Account, organization, and client created successfully! You can now sign in.')
         router.push('/auth/signin')
       } else {
         toast.error(data.error || 'Failed to create account')
