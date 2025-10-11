@@ -1,26 +1,12 @@
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { addWatermarkToImageServer } from '@/lib/watermark'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
-
-// Handle OPTIONS for CORS preflight
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: corsHeaders
-  })
-}
-
-// Incrementally add functionality - Step 2: Add Supabase + Watermark
-export async function POST() {
+// Use exact same pattern as generate-bulk-content (which works)
+export async function POST(req: NextRequest) {
   try {
     console.log('🎨 Watermark - Starting bulk application')
     
@@ -130,7 +116,7 @@ export async function POST() {
       }
     }
 
-    return new Response(JSON.stringify({
+    return NextResponse.json({
       success: true,
       message: 'Bulk watermark complete',
       stats: {
@@ -139,17 +125,11 @@ export async function POST() {
         skipped,
         failed
       }
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders
-      }
     })
     
   } catch (error) {
     console.error('❌ Error:', error)
-    return Response.json(
+    return NextResponse.json(
       { 
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -157,21 +137,5 @@ export async function POST() {
       { status: 500 }
     )
   }
-}
-
-export async function GET() {
-  return new Response(JSON.stringify({ 
-    success: true,
-    message: 'Watermark Simple API - Ready',
-    endpoint: '/api/watermark-simple',
-    version: '1.0.0',
-    methods: ['GET', 'POST', 'OPTIONS']
-  }), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      ...corsHeaders
-    }
-  })
 }
 
