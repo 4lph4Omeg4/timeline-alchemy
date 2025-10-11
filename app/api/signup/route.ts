@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { createStripeCustomer } from '@/lib/stripe'
 
 export async function POST(request: NextRequest) {
   try {
@@ -134,7 +135,18 @@ export async function POST(request: NextRequest) {
 
     console.log('User added as owner of their personal organization')
 
-    // Step 5: Create trial subscription for user's personal organization
+    // Step 5: Create Stripe customer
+    let stripeCustomerId = 'trial-customer-' + orgData.id // fallback
+    try {
+      const stripeCustomer = await createStripeCustomer(email, name)
+      stripeCustomerId = stripeCustomer.id
+      console.log('Stripe customer created:', stripeCustomerId)
+    } catch (stripeError) {
+      console.error('Error creating Stripe customer:', stripeError)
+      // Continue with fallback customer ID - don't fail signup
+    }
+
+    // Step 6: Create trial subscription for user's personal organization
     const trialStart = new Date()
     const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000) // 14 days
 
@@ -142,7 +154,7 @@ export async function POST(request: NextRequest) {
       .from('subscriptions')
       .insert({
         org_id: orgData.id,
-        stripe_customer_id: 'trial-customer-' + orgData.id,
+        stripe_customer_id: stripeCustomerId,
         stripe_subscription_id: 'trial-sub-' + orgData.id,
         plan: 'trial',
         status: 'active',
@@ -158,7 +170,7 @@ export async function POST(request: NextRequest) {
       console.log('Trial subscription created for user\'s personal organization')
     }
 
-    // Step 6: Create default client in user's personal organization
+    // Step 7: Create default client in user's personal organization
     const { error: clientError } = await (supabaseAdmin as any)
       .from('clients')
       .insert({
@@ -177,16 +189,19 @@ export async function POST(request: NextRequest) {
     console.log('Signup process completed successfully')
     console.log('Summary:')
     console.log('- User created:', userId)
+    console.log('- Stripe customer created:', stripeCustomerId)
     console.log('- Added as client to Admin Organization:', adminOrgId)
     console.log('- Personal organization created:', orgData.id)
     console.log('- User is owner of personal organization')
+    console.log('- Trial subscription with Stripe customer linked')
 
     return NextResponse.json({ 
       success: true,
       message: 'Account, organization, and client created successfully',
       userId: userId,
       personalOrganizationId: orgData.id,
-      adminOrganizationId: adminOrgId
+      adminOrganizationId: adminOrgId,
+      stripeCustomerId: stripeCustomerId
     })
 
   } catch (error) {
