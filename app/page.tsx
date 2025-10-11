@@ -105,11 +105,9 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             {/* Logo - Left */}
             <div className="flex items-center">
-              <img 
-                src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
-                alt="Timeline Alchemy Logo" 
-                className="h-16 w-auto rounded-lg shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300"
-              />
+              <div onClick={() => router.push('/')} className="cursor-pointer">
+                <Logo size="lg" showText={false} />
+              </div>
             </div>
             
             {/* Auth Buttons - Right */}
@@ -497,11 +495,7 @@ export default function HomePage() {
             {/* Brand Column */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-4 mb-6">
-                <img 
-                  src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
-                  alt="Timeline Alchemy Logo" 
-                  className="h-16 w-auto rounded-lg shadow-lg shadow-purple-500/30"
-                />
+                <Logo size="lg" showText={false} />
                 <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                   Timeline Alchemy
                 </span>
