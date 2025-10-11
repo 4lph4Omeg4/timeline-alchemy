@@ -4,6 +4,21 @@ import { addWatermarkToImageServer } from '@/lib/watermark'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders
+  })
+}
+
 // Incrementally add functionality - Step 2: Add Supabase + Watermark
 export async function POST() {
   try {
@@ -115,7 +130,7 @@ export async function POST() {
       }
     }
 
-    return Response.json({
+    return new Response(JSON.stringify({
       success: true,
       message: 'Bulk watermark complete',
       stats: {
@@ -123,6 +138,12 @@ export async function POST() {
         processed,
         skipped,
         failed
+      }
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders
       }
     })
     
@@ -139,11 +160,18 @@ export async function POST() {
 }
 
 export async function GET() {
-  return Response.json({ 
+  return new Response(JSON.stringify({ 
     success: true,
     message: 'Watermark Simple API - Ready',
     endpoint: '/api/watermark-simple',
-    version: '1.0.0'
+    version: '1.0.0',
+    methods: ['GET', 'POST', 'OPTIONS']
+  }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders
+    }
   })
 }
 
