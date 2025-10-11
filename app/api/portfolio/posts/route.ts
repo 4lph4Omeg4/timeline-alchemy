@@ -66,13 +66,16 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('state', 'published')
-      .order('published_at', { ascending: false })
-      .range(offset, offset + limit - 1)
 
-    // Filter by category if not 'all'
+    // Filter by category BEFORE limiting (important!)
     if (category !== 'all') {
       query = query.eq('category', category)
     }
+
+    // Apply ordering and limit AFTER filtering
+    query = query
+      .order('published_at', { ascending: false })
+      .range(offset, offset + limit - 1)
 
     console.log('🔍 Executing query...')
     const { data: posts, error } = await query

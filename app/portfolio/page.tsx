@@ -37,7 +37,7 @@ export default function PortfolioPage() {
       console.log('🔍 Fetching posts for category:', selectedCategory)
       console.log('🔍 API URL:', `/api/portfolio/posts?category=${selectedCategory}`)
 
-      const response = await fetch(`/api/portfolio/posts?category=${selectedCategory}`, {
+      const response = await fetch(`/api/portfolio/posts?category=${selectedCategory}&limit=1000`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
