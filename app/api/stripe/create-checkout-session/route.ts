@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       customerId = customer.id
     }
 
-    // Create checkout session
+    // Create checkout session with custom domain
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -90,6 +90,10 @@ export async function POST(request: NextRequest) {
       mode: 'subscription',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?canceled=true`,
+      // Use custom domain for checkout if available
+      ...(process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_DOMAIN && {
+        custom_domain: process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_DOMAIN,
+      }),
       metadata: {
         org_id: orgMember.org_id,
         user_id: user.id,

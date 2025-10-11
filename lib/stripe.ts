@@ -139,7 +139,8 @@ export async function createCheckoutSession(
   customerId: string,
   priceId: string,
   successUrl: string,
-  cancelUrl: string
+  cancelUrl: string,
+  customDomain?: string
 ) {
   const stripe = getStripe()
   return await stripe.checkout.sessions.create({
@@ -154,6 +155,10 @@ export async function createCheckoutSession(
     mode: 'subscription',
     success_url: successUrl,
     cancel_url: cancelUrl,
+    // Use custom domain if provided
+    ...(customDomain && {
+      custom_domain: customDomain,
+    }),
   })
 }
 
