@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { createStripeCustomer } from '@/lib/stripe'
+import { createStripeCustomer, getStripe } from '@/lib/stripe'
 
 export async function POST(request: NextRequest) {
   try {
@@ -137,16 +137,57 @@ export async function POST(request: NextRequest) {
 
     // Step 5: Create Stripe customer
     let stripeCustomerId = 'trial-customer-' + orgData.id // fallback
+    let stripeSubscriptionId = 'trial-sub-' + orgData.id // fallback
+    
     try {
       const stripeCustomer = await createStripeCustomer(email, name)
       stripeCustomerId = stripeCustomer.id
       console.log('Stripe customer created:', stripeCustomerId)
+
+      // Step 6: Create Stripe subscription with 14-day trial that converts to Basic plan
+      const stripe = getStripe()
+      const basicPriceId = process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
+      
+      if (!basicPriceId) {
+        console.warn('NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID not found, creating manual trial subscription')
+      } else {
+        try {
+          // Create subscription with trial period that auto-converts to Basic plan
+          const subscription = await stripe.subscriptions.create({
+            customer: stripeCustomerId,
+            items: [
+              {
+                price: basicPriceId,
+              },
+            ],
+            trial_period_days: 14, // 14-day trial
+            payment_behavior: 'default_incomplete', // Don't require payment method during trial
+            trial_settings: {
+              end_behavior: {
+                missing_payment_method: 'pause', // Pause subscription if no payment method after trial
+              },
+            },
+            metadata: {
+              org_id: orgData.id,
+              user_id: userId,
+              plan: 'basic',
+            },
+          })
+
+          stripeSubscriptionId = subscription.id
+          console.log('Stripe subscription created with 14-day trial:', stripeSubscriptionId)
+          console.log('Trial ends at:', new Date(subscription.trial_end! * 1000).toISOString())
+        } catch (subscriptionError) {
+          console.error('Error creating Stripe subscription:', subscriptionError)
+          // Continue with fallback
+        }
+      }
     } catch (stripeError) {
       console.error('Error creating Stripe customer:', stripeError)
       // Continue with fallback customer ID - don't fail signup
     }
 
-    // Step 6: Create trial subscription for user's personal organization
+    // Step 7: Create database subscription record
     const trialStart = new Date()
     const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000) // 14 days
 
@@ -155,9 +196,9 @@ export async function POST(request: NextRequest) {
       .insert({
         org_id: orgData.id,
         stripe_customer_id: stripeCustomerId,
-        stripe_subscription_id: 'trial-sub-' + orgData.id,
+        stripe_subscription_id: stripeSubscriptionId,
         plan: 'trial',
-        status: 'active',
+        status: 'trialing', // Changed from 'active' to 'trialing'
         is_trial: true,
         trial_start_date: trialStart.toISOString(),
         trial_end_date: trialEnd.toISOString()
@@ -167,10 +208,10 @@ export async function POST(request: NextRequest) {
       console.error('Error creating subscription:', subError)
       // Don't fail the whole signup for subscription errors
     } else {
-      console.log('Trial subscription created for user\'s personal organization')
+      console.log('Trial subscription record created in database')
     }
 
-    // Step 7: Create default client in user's personal organization
+    // Step 8: Create default client in user's personal organization
     const { error: clientError } = await (supabaseAdmin as any)
       .from('clients')
       .insert({
