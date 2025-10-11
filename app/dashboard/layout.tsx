@@ -181,7 +181,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           setClients(clientsData)
         }
       } else {
-        // For regular users: check if they have an organization, create one if not
+        // For regular users: fetch their organizations
         const { data: orgs, error } = await (supabase as any)
           .from('org_members')
           .select('org_id, role, created_at')
@@ -199,84 +199,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             setOrganizations(orgDetails)
           }
         } else {
-            // User doesn't have an organization yet - create one with trial
-            console.log('No organization found for user. Creating organization with trial...')
-          
-          try {
-            // Create organization manually as fallback
-            const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
-            const { data: newOrg, error: orgError } = await (supabase as any)
-              .from('organizations')
-              .insert({
-                name: userName + "'s Organization",
-                  plan: 'trial'
-              })
-              .select()
-              .single()
-
-            if (newOrg && !orgError) {
-              // Add user as owner
-              const { error: memberError } = await (supabase as any)
-                .from('org_members')
-                .insert({
-                  org_id: newOrg.id,
-                  user_id: user.id,
-                  role: 'owner'
-                })
-
-              if (!memberError) {
-                  // Create trial subscription
-                  const trialStart = new Date()
-                  const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000) // 14 days
-                  
-                await (supabase as any)
-                  .from('subscriptions')
-                  .insert({
-                    org_id: newOrg.id,
-                      stripe_customer_id: 'trial-customer-' + newOrg.id,
-                      stripe_subscription_id: 'trial-sub-' + newOrg.id,
-                      plan: 'trial',
-                      status: 'active',
-                      is_trial: true,
-                      trial_start_date: trialStart.toISOString(),
-                      trial_end_date: trialEnd.toISOString()
-                  })
-
-                // Create default client
-                await (supabase as any)
-                  .from('clients')
-                  .insert({
-                    org_id: newOrg.id,
-                    name: userName + "'s Client",
-                    contact_info: { email: user.email }
-                  })
-
-                  console.log('Successfully created organization with trial:', newOrg)
-                setOrganizations([newOrg])
-              }
-            }
-          } catch (error) {
-              console.error('Failed to create organization with trial:', error)
-            // Try to fetch again after a delay in case the trigger eventually works
-            setTimeout(async () => {
-              const { data: retryOrgs } = await (supabase as any)
-                .from('org_members')
-                .select('org_id, role, created_at')
-                .eq('user_id', user.id)
-
-              if (retryOrgs && retryOrgs.length > 0) {
-                const orgIds = retryOrgs.map((org: any) => org.org_id)
-                const { data: orgDetails } = await (supabase as any)
-                  .from('organizations')
-                  .select('*')
-                  .in('id', orgIds)
-                
-                if (orgDetails) {
-                  setOrganizations(orgDetails)
-                }
-              }
-            }, 3000)
-          }
+          // No organizations found - this shouldn't happen with new signup flow
+          // Redirect to create organization page as fallback
+          console.error('No organizations found for user. This user may have signed up before the new flow.')
+          router.push('/create-organization')
         }
       }
 

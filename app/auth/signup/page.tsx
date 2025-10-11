@@ -15,6 +15,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
+  const [organizationName, setOrganizationName] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -31,6 +32,11 @@ export default function SignUpPage() {
       return
     }
 
+    if (!organizationName.trim()) {
+      toast.error('Please enter an organization name')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -43,6 +49,7 @@ export default function SignUpPage() {
           email,
           password,
           name,
+          organizationName: organizationName.trim(),
         }),
       })
 
@@ -50,33 +57,11 @@ export default function SignUpPage() {
 
       if (!response.ok) {
         toast.error(data.error || 'Failed to create account')
-      } else if (data.redirectToSignup) {
-        // Fall back to regular signup
-        toast.loading('Creating account...')
-        const { error } = await (supabase as any).auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name,
-            },
-          },
-        })
-
-        if (error) {
-          toast.dismiss() // Dismiss the loading toast
-          toast.error(error.message)
-        } else {
-          toast.dismiss() // Dismiss the loading toast
-          toast.success('Account created successfully! Please check your email to confirm your account.')
-          
-          // Organization creation is handled in dashboard layout
-          
-          router.push('/auth/signin')
-        }
-      } else {
-        toast.success('Account and organization created successfully! Please check your email to confirm your account.')
+      } else if (data.success) {
+        toast.success('Account, organization, and client created successfully! Please check your email to confirm your account.')
         router.push('/auth/signin')
+      } else {
+        toast.error(data.error || 'Failed to create account')
       }
     } catch (error) {
       toast.error('An unexpected error occurred')
@@ -166,6 +151,18 @@ export default function SignUpPage() {
                 placeholder="Enter your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
+                className="bg-purple-800/30 border-purple-500/50 text-white placeholder-purple-300 focus:border-purple-400 focus:ring-purple-400/50"
+              />
+            </div>
+            <div className="space-y-3">
+              <Label htmlFor="organizationName" className="text-purple-200 font-semibold">Organization Name</Label>
+              <Input
+                id="organizationName"
+                type="text"
+                placeholder="e.g., My Company, Personal Brand"
+                value={organizationName}
+                onChange={(e) => setOrganizationName(e.target.value)}
                 required
                 className="bg-purple-800/30 border-purple-500/50 text-white placeholder-purple-300 focus:border-purple-400 focus:ring-purple-400/50"
               />
