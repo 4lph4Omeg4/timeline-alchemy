@@ -375,11 +375,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center justify-between">
               {/* Logo - Left */}
               <Link href="/dashboard" className="flex items-center">
-                <img 
-                  src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
-                  alt="Timeline Alchemy Logo" 
-                  className="h-16 w-auto rounded-lg shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300"
-                />
+                <Logo size="lg" showText={false} />
               </Link>
 
               {/* User Info & Buttons - Right */}

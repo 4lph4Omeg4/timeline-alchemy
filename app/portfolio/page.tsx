@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader } from '@/components/Loader'
 import { Modal } from '@/components/ui/modal'
 import ContentProtection from '@/components/ContentProtection'
+import { Logo } from '@/components/Logo'
 import { CONTENT_CATEGORIES, getAllCategories, getCategoryInfo, type CategoryId } from '@/lib/category-detector'
 import { BlogPost } from '@/types/index'
 import Link from 'next/link'
@@ -144,11 +145,7 @@ export default function PortfolioPage() {
           <div className="flex items-center justify-between">
             {/* Logo - Left */}
             <Link href="/" className="flex items-center">
-              <img 
-                src="https://kjjrzhicspmbiitayrco.supabase.co/storage/v1/object/public/images/TA_2.jpg" 
-                alt="Timeline Alchemy Logo" 
-                className="h-16 w-auto rounded-lg shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300"
-              />
+              <Logo size="lg" showText={false} />
             </Link>
 
             {/* Back to Home Button - Right */}
