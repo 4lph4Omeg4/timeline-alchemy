@@ -196,17 +196,17 @@ export default function ContentCreatorPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-8">
-        {/* Divine Header */}
+        {/* Header */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-200 via-purple-200 to-pink-200 text-transparent bg-clip-text">
-              Divine Content Creator
+              Content Creator
             </h1>
             <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
           </div>
           <p className="text-xl text-gray-300">
-            Craft legendary content with the power of divine AI assistance
+            Craft legendary content with the power of AI assistance
           </p>
         </div>
 
@@ -221,7 +221,7 @@ export default function ContentCreatorPage() {
                   <CardTitle className="text-white">AI Oracle</CardTitle>
                 </div>
                 <CardDescription className="text-gray-300">
-                  Whisper your vision, receive divine content
+                  Whisper your vision, receive quality content
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -244,7 +244,7 @@ export default function ContentCreatorPage() {
                   {contentLoading || imageLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Creating Divine Package...
+                      Creating Package...
                     </>
                   ) : (
                     <>
@@ -287,7 +287,7 @@ export default function ContentCreatorPage() {
                   )}
                 </div>
                 <CardDescription className="text-gray-300">
-                  Divine content ready for the world
+                  Content ready for the world
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -317,7 +317,7 @@ export default function ContentCreatorPage() {
                   <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                     <Wand2 className="w-16 h-16 text-purple-400/50" />
                     <p className="text-gray-400 text-lg">
-                      Enter your vision and let the divine AI create your content
+                      Enter your vision and let the AI create your content
                     </p>
                   </div>
                 )}
@@ -370,7 +370,7 @@ export default function ContentCreatorPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 text-pink-400" />
-                  <CardTitle className="text-white">Divine Imagery</CardTitle>
+                  <CardTitle className="text-white">Generated Imagery</CardTitle>
                 </div>
                 <Button
                   variant="outline"

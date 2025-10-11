@@ -17,7 +17,7 @@ const CONTENT_CATEGORIES = [
   { id: 'ancient_wisdom', label: 'Ancient Wisdom & Mysteries', emoji: '🏛️' },
   { id: 'ai_technology', label: 'AI & Conscious Technology', emoji: '🤖' },
   { id: 'crypto_decentralized', label: 'Crypto & Decentralized Sovereignty', emoji: '💰' },
-  { id: 'divine_lifestyle', label: 'Divine Lifestyle & New Earth', emoji: '🌱' },
+  { id: 'divine_lifestyle', label: 'Conscious Lifestyle & New Earth', emoji: '🌱' },
   { id: 'mythology_archetypes', label: 'Mythology & Archetypes', emoji: '⚡' },
   { id: 'global_shifts', label: 'Global Shifts & Conscious Culture', emoji: '🌍' }
 ] as const
@@ -261,7 +261,7 @@ export default function ContentListPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">🌟 Divine Content Library</h1>
+          <h1 className="text-3xl font-bold text-white">🌟 Content Library</h1>
           <p className="text-gray-300 mt-2">
             Explore categorized content and view packages across all domains of consciousness.
           </p>
@@ -278,7 +278,7 @@ export default function ContentListPage() {
                 🗂️ Categories
               </CardTitle>
               <CardDescription className="text-gray-300">
-                Filter content by divine domains
+                Filter content by domains
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
