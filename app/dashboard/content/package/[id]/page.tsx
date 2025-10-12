@@ -164,8 +164,9 @@ export default function ContentPackagePage() {
           scheduled_social_platforms: socialPlatformsScheduled,
           scheduled_social_content: socialPlatformsScheduled.reduce((acc, platform) => {
             let content = socialPosts[platform]
-            if (generatedContent?.image?.url) {
-              content = `${content}\n\n🖼️ Image: ${generatedContent.image.url}`
+            const activeImages = generatedContent?.images?.filter(img => img.is_active) || []
+            if (activeImages.length > 0) {
+              content = `${content}\n\n🖼️ Images: ${activeImages.map(img => img.url).join(', ')}`
             }
             acc[platform] = content
             return acc
@@ -217,10 +218,11 @@ export default function ContentPackagePage() {
           return
         }
 
-        // Include image URL in social post content if available
+        // Include image URLs in social post content if available
         let enhancedContent = postContent
-        if (generatedContent?.image?.url) {
-          enhancedContent = `${postContent}\n\n🖼️ Image: ${generatedContent.image.url}`
+        const activeImages = generatedContent?.images?.filter(img => img.is_active) || []
+        if (activeImages.length > 0) {
+          enhancedContent = `${postContent}\n\n🖼️ Images: ${activeImages.map(img => img.url).join(', ')}`
         }
 
         // Update the original post with individual social platform scheduling
