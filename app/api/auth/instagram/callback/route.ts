@@ -144,19 +144,21 @@ export async function GET(request: NextRequest) {
     // Calculate token expiration (Instagram tokens typically last 60 days)
     const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString() // 60 days
 
-    // Store connection in database
-    const accountId = `instagram_${instagramUserId}`
-    const accountName = `@${instagramUsername}`
+    // Store TEMPORARY user connection (needed to fetch Pages and Instagram accounts)
+    // This will be replaced by the Instagram Business Account connection after user selects
+    const accountId = `facebook_${instagramUserId}` // Facebook user ID for fetching pages
+    const accountName = instagramUsername
     
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({
         org_id: orgId,
-        platform: 'instagram',
+        platform: 'facebook', // Store as facebook temporarily to fetch pages
         account_id: accountId,
         account_name: accountName,
+        account_username: accountName,
         access_token,
-        refresh_token: null, // Instagram Basic Display API doesn't provide refresh tokens
+        refresh_token: null,
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
       }, {
@@ -170,9 +172,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Redirect directly to socials page with success message
+    // Redirect to page selector so user can choose which Instagram Business Account to use
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=instagram_connected&username=${instagramUsername}`
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials/select-page?platform=instagram`
     )
 
   } catch (error) {

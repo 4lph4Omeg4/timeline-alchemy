@@ -144,10 +144,11 @@ export async function GET(request: NextRequest) {
     // Calculate token expiration (Facebook tokens typically last 60 days)
     const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString() // 60 days
 
-    // Store connection in database
+    // Store TEMPORARY user connection (needed to fetch Pages)
+    // This will be replaced by the Page connection after user selects a page
     const accountId = `facebook_${facebookUserId}`
     const accountName = facebookUsername
-    const accountUsername = facebookUsername // Facebook doesn't have separate username
+    const accountUsername = facebookUsername
     
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
@@ -158,7 +159,7 @@ export async function GET(request: NextRequest) {
         account_name: accountName,
         account_username: accountUsername,
         access_token,
-        refresh_token: null, // Facebook Pages API doesn't provide refresh tokens
+        refresh_token: null,
         expires_at: expiresAt,
         updated_at: new Date().toISOString(),
       }, {
@@ -172,9 +173,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Redirect directly to socials page with success message
+    // Redirect to page selector so user can choose which Facebook Page to use
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=facebook_connected&username=${facebookUsername}`
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials/select-page?platform=facebook`
     )
 
   } catch (error) {
