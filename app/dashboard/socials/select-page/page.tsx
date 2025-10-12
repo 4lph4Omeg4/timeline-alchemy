@@ -56,7 +56,15 @@ export default function SelectPagePage() {
 
       const data = await response.json()
       
+      console.log('📘 Facebook Pages API response:', data)
+      
       if (data.success) {
+        console.log(`✅ Successfully fetched ${data.pages?.length || 0} pages`)
+        
+        if (data.debug) {
+          console.log('🔍 Debug info:', data.debug)
+        }
+        
         setPages(data.pages)
         
         // If filtering for Instagram, only show pages with Instagram Business Account
@@ -66,9 +74,16 @@ export default function SelectPagePage() {
           
           if (instagramPages.length === 0) {
             toast.error('No Instagram Business Accounts found. Connect your Instagram to a Facebook Page first.')
+            console.warn('⚠️ No Instagram Business Accounts found in pages:', data.pages)
           }
         }
+        
+        if (data.pages.length === 0) {
+          console.warn('⚠️ No pages returned from API')
+          toast.error('No Facebook Pages found. Make sure you are an admin of at least one Facebook Page.')
+        }
       } else {
+        console.error('❌ Failed to fetch pages:', data)
         throw new Error(data.error || 'Failed to fetch pages')
       }
     } catch (error: any) {

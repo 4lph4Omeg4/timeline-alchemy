@@ -68,24 +68,45 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch user's Facebook Pages
+    console.log('🔍 Fetching Facebook Pages for org:', orgMember.org_id)
+    console.log('🔑 Using access token (first 20 chars):', connection.access_token.substring(0, 20) + '...')
+    
     const pagesResponse = await fetch(
       `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,category,instagram_business_account{id,username}&access_token=${connection.access_token}`
     )
 
+    console.log('📘 Facebook Pages API response status:', pagesResponse.status)
+
     if (!pagesResponse.ok) {
       const errorData = await pagesResponse.json()
-      console.error('Failed to fetch Facebook Pages:', errorData)
+      console.error('❌ Failed to fetch Facebook Pages:', errorData)
       return NextResponse.json(
-        { success: false, error: 'Failed to fetch Facebook Pages' },
+        { 
+          success: false, 
+          error: 'Failed to fetch Facebook Pages', 
+          details: errorData 
+        },
         { status: 500 }
       )
     }
 
     const pagesData = await pagesResponse.json()
     
+    console.log('✅ Pages found:', pagesData.data?.length || 0)
+    if (pagesData.data && pagesData.data.length > 0) {
+      console.log('📋 Page names:', pagesData.data.map((p: any) => p.name).join(', '))
+    } else {
+      console.log('⚠️ No pages returned. Full response:', JSON.stringify(pagesData, null, 2))
+    }
+    
     return NextResponse.json({
       success: true,
-      pages: pagesData.data || []
+      pages: pagesData.data || [],
+      debug: {
+        orgId: orgMember.org_id,
+        connectionPlatform: connection.platform,
+        pagesCount: pagesData.data?.length || 0
+      }
     })
 
   } catch (error: any) {
