@@ -82,25 +82,58 @@ export default function ContentCreatorPage() {
       setContentLoading(false)
       toast.success('Content and social posts generated! Now generating 3 image styles...')
 
-      // After content is generated, generate 3 images with different styles
-      const imageResponse = await fetch('/api/generate-multi-images', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          title: title || prompt,
-          content: content || prompt
-        }),
-      })
+      // After content is generated, generate 3 images with different prompts and styles
+      const imageStyles = [
+        { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k' },
+        { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration' },
+        { name: 'minimalist', suffix: 'Minimalist design, clean composition, simple elegant aesthetic, modern minimalism, balanced negative space, sophisticated and refined' }
+      ]
 
-      if (imageResponse.ok) {
-        const imageData = await imageResponse.json()
-        if (imageData.success && imageData.images) {
-          setGeneratedImages(imageData.images)
-          toast.success(`Generated ${imageData.images.length} images in different styles! Choose your favorite.`)
+      const imagePrompts = [
+        `${title || prompt} - Main concept visualization`,
+        `${title || prompt} - Key theme representation`,
+        `${title || prompt} - Abstract interpretation`
+      ]
+
+      const generatedImagesArray = []
+
+      // Generate 3 images sequentially
+      for (let i = 0; i < 3; i++) {
+        try {
+          const fullPrompt = `${imagePrompts[i]}. ${imageStyles[i].suffix}`
+          
+          const imageResponse = await fetch('/api/generate-vercel-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: fullPrompt })
+          })
+
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json()
+            generatedImagesArray.push({
+              url: imageData.imageUrl,
+              prompt: imagePrompts[i],
+              style: imageStyles[i].name,
+              promptNumber: i + 1
+            })
+            console.log(`✅ Image ${i + 1}/3 generated (${imageStyles[i].name})`)
+          } else {
+            console.error(`❌ Image ${i + 1}/3 failed`)
+          }
+
+          // Small delay between generations
+          if (i < 2) {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
+        } catch (error) {
+          console.error(`❌ Error generating image ${i + 1}:`, error)
         }
+      }
+
+      if (generatedImagesArray.length > 0) {
+        setGeneratedImages(generatedImagesArray)
+        toast.success(`Generated ${generatedImagesArray.length} images in different styles! Choose your favorite.`)
       } else {
-        const imageError = await imageResponse.text()
-        console.error('Multi-image generation failed:', imageError)
         toast.error('Image generation failed')
       }
       
@@ -114,48 +147,88 @@ export default function ContentCreatorPage() {
   }
 
   const handleStyleChoice = async (style: string) => {
-    if (!currentPostId) {
-      toast.error('Please save the post first')
-      return
-    }
-
     setRegenerating(true)
     setChosenStyle(style)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        toast.error('Please sign in')
+      toast.loading('Regenerating images in your chosen style...', { id: 'regen' })
+
+      // Find the chosen image and the ones to regenerate
+      const chosenImage = generatedImages.find(img => img.style === style)
+      const imagesToRegenerate = generatedImages.filter(img => img.style !== style)
+
+      if (!chosenImage) {
+        toast.error('Style not found', { id: 'regen' })
         return
       }
 
-      const { data: orgMembers } = await supabase
-        .from('org_members')
-        .select('org_id, role')
-        .eq('user_id', user.id)
-
-      const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
-
-      toast.loading('Regenerating images in your chosen style...', { id: 'regen' })
-
-      const response = await fetch('/api/regenerate-images-style', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId: currentPostId,
-          chosenStyle: style,
-          orgId: userOrgId
-        }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setFinalImages(data.images)
-        toast.success(`All images regenerated in ${style} style!`, { id: 'regen' })
-      } else {
-        const errorData = await response.json()
-        toast.error(`Failed to regenerate: ${errorData.error}`, { id: 'regen' })
+      const imageStyles: Record<string, string> = {
+        photorealistic: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k',
+        digital_art: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration',
+        minimalist: 'Minimalist design, clean composition, simple elegant aesthetic, modern minimalism, balanced negative space, sophisticated and refined'
       }
+
+      const regeneratedArray = [chosenImage] // Start with chosen image
+
+      // Regenerate other 2 prompts in chosen style
+      for (const imageToRegen of imagesToRegenerate) {
+        try {
+          const fullPrompt = `${imageToRegen.prompt}. ${imageStyles[style]}`
+          
+          const imageResponse = await fetch('/api/generate-vercel-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: fullPrompt })
+          })
+
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json()
+            regeneratedArray.push({
+              url: imageData.imageUrl,
+              prompt: imageToRegen.prompt,
+              style: style,
+              promptNumber: imageToRegen.promptNumber
+            })
+            console.log(`✅ Regenerated prompt ${imageToRegen.promptNumber} in ${style} style`)
+          }
+
+          // Small delay
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        } catch (error) {
+          console.error(`❌ Error regenerating image:`, error)
+        }
+      }
+
+      setFinalImages(regeneratedArray)
+      
+      // Save to database if we have a post ID
+      if (currentPostId) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          const { data: orgMembers } = await supabase.from('org_members').select('org_id, role').eq('user_id', user!.id)
+          const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
+
+          // Save all final images to database
+          const imagesToSave = regeneratedArray.map((img, index) => ({
+            org_id: userOrgId,
+            post_id: currentPostId,
+            url: img.url,
+            prompt: img.prompt,
+            style: img.style,
+            variant_type: img.style === chosenImage.style ? 'original' : 'final',
+            is_active: true,
+            prompt_number: img.promptNumber,
+            style_group: crypto.randomUUID()
+          }))
+
+          await (supabase as any).from('images').insert(imagesToSave)
+          console.log(`✅ Saved ${imagesToSave.length} final images to database`)
+        } catch (dbError) {
+          console.error('Error saving images to database:', dbError)
+        }
+      }
+
+      toast.success(`All images regenerated in ${style} style!`, { id: 'regen' })
     } catch (error) {
       console.error('Error regenerating images:', error)
       toast.error('Failed to regenerate images', { id: 'regen' })
@@ -237,23 +310,27 @@ export default function ContentCreatorPage() {
       // Save multi-images if generated
       if (generatedImages.length > 0) {
         try {
-          // Now call multi-image API with postId to save them
-          const imageResponse = await fetch('/api/generate-multi-images', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title,
-              content,
-              orgId: userOrgId,
-              postId: postData.id
-            }),
-          })
+          // Save all generated images to database
+          const imagesToSave = generatedImages.map(img => ({
+            org_id: userOrgId,
+            post_id: postData.id,
+            url: img.url,
+            prompt: img.prompt,
+            style: img.style,
+            variant_type: 'original',
+            is_active: false, // Not active yet - user needs to choose style
+            prompt_number: img.promptNumber,
+            style_group: crypto.randomUUID()
+          }))
 
-          if (imageResponse.ok) {
-            toast.success('Post, social posts, and style preview images saved! Choose your preferred style.')
-          } else {
-            console.error('Failed to save images')
+          const { error: imgError } = await (supabase as any).from('images').insert(imagesToSave)
+
+          if (imgError) {
+            console.error('Failed to save images:', imgError)
             toast.error('Post saved but images failed to save')
+          } else {
+            console.log(`✅ Saved ${imagesToSave.length} style preview images`)
+            toast.success('Post, social posts, and style preview images saved! Choose your preferred style.')
           }
         } catch (error) {
           console.error('Error saving images:', error)

@@ -331,28 +331,60 @@ export default function BulkContentGenerator() {
           console.log('🔧 Telegram post added as fallback')
         }
         
-        // 🌟 MULTI-IMAGE GENERATION (3 images in different styles)
+        // 🌟 MULTI-IMAGE GENERATION (3 images in different styles using existing API)
         try {
           console.log(`🎨 Generating 3 images in different styles for: ${post.title}`)
           
-          const imageResponse = await fetch('/api/generate-multi-images', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              title: post.title,
-              content: post.content
-            })
-          })
-          
-          if (imageResponse.ok) {
-            const imageData = await imageResponse.json()
-            if (imageData.success && imageData.images) {
-              post.generatedImages = imageData.images
-              console.log(`✅ Generated ${imageData.images.length} images in different styles for ${post.title}`)
+          const imageStyles = [
+            { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k' },
+            { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration' },
+            { name: 'minimalist', suffix: 'Minimalist design, clean composition, simple elegant aesthetic, modern minimalism, balanced negative space, sophisticated and refined' }
+          ]
+
+          const imagePrompts = [
+            `${post.title} - Main concept visualization`,
+            `${post.title} - Key theme representation`,
+            `${post.title} - Abstract interpretation`
+          ]
+
+          const generatedImagesArray = []
+
+          // Generate 3 images sequentially using the working API
+          for (let imgIndex = 0; imgIndex < 3; imgIndex++) {
+            try {
+              const fullPrompt = `${imagePrompts[imgIndex]}. ${imageStyles[imgIndex].suffix}`
+              
+              const imageResponse = await fetch('/api/generate-vercel-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: fullPrompt })
+              })
+
+              if (imageResponse.ok) {
+                const imageData = await imageResponse.json()
+                generatedImagesArray.push({
+                  url: imageData.imageUrl,
+                  prompt: imagePrompts[imgIndex],
+                  style: imageStyles[imgIndex].name,
+                  promptNumber: imgIndex + 1
+                })
+                console.log(`✅ Image ${imgIndex + 1}/3 generated (${imageStyles[imgIndex].name}) for ${post.title}`)
+              }
+
+              // Small delay between images
+              if (imgIndex < 2) {
+                await new Promise(resolve => setTimeout(resolve, 1500))
+              }
+            } catch (imgError) {
+              console.error(`❌ Error generating image ${imgIndex + 1}:`, imgError)
             }
+          }
+
+          if (generatedImagesArray.length > 0) {
+            post.generatedImages = generatedImagesArray
+            console.log(`✅ Generated ${generatedImagesArray.length} images in different styles for ${post.title}`)
           } else {
-            console.error('❌ Multi-image generation failed for', post.title)
-            // Fallback to old single image method
+            // Fallback to single image if all 3 failed
             await generateSingleImageFallback(post)
           }
         } catch (imageError) {
