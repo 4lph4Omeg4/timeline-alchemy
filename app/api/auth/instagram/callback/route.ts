@@ -172,7 +172,62 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Redirect to page selector so user can choose which Instagram Business Account to use
+    // Try to fetch user's pages with Instagram accounts and auto-select first one
+    try {
+      const pagesResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,category,instagram_business_account{id,username}&access_token=${access_token}`
+      )
+      
+      if (pagesResponse.ok) {
+        const pagesData = await pagesResponse.json()
+        
+        console.log('📷 Found', pagesData.data?.length || 0, 'pages')
+        
+        // Filter for pages with Instagram Business Account
+        const instagramPages = pagesData.data?.filter((page: any) => page.instagram_business_account) || []
+        
+        console.log('📷 Found', instagramPages.length, 'pages with Instagram')
+        
+        if (instagramPages.length > 0) {
+          // Use first Instagram-connected page
+          const firstPage = instagramPages[0]
+          const igAccount = firstPage.instagram_business_account
+          
+          console.log('✅ Auto-selecting Instagram:', igAccount.username)
+          
+          // Store Instagram Business Account connection
+          await supabaseAdmin
+            .from('social_connections')
+            .upsert({
+              org_id: orgId,
+              platform: 'instagram',
+              account_id: `instagram_${igAccount.id}`,
+              account_name: igAccount.username,
+              account_username: igAccount.username,
+              access_token: firstPage.access_token, // Page token for posting
+              refresh_token: null,
+              expires_at: null,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'org_id,platform,account_id'
+            })
+          
+          return NextResponse.redirect(
+            `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=instagram_connected&username=${encodeURIComponent(igAccount.username)}`
+          )
+        } else {
+          // No Instagram accounts found
+          return NextResponse.redirect(
+            `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_instagram_accounts`
+          )
+        }
+      }
+    } catch (error) {
+      console.error('Failed to auto-fetch Instagram accounts:', error)
+      // Fall through to redirect to manual selector
+    }
+    
+    // Fallback: Redirect to page selector if auto-fetch failed
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials/select-page?platform=instagram`
     )

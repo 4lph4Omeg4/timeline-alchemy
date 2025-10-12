@@ -173,7 +173,50 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Redirect to page selector so user can choose which Facebook Page to use
+    // Try to fetch user's pages immediately and store first one
+    try {
+      const pagesResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,category,instagram_business_account{id,username}&access_token=${access_token}`
+      )
+      
+      if (pagesResponse.ok) {
+        const pagesData = await pagesResponse.json()
+        
+        console.log('📘 Found', pagesData.data?.length || 0, 'pages')
+        
+        if (pagesData.data && pagesData.data.length > 0) {
+          // Use first page as default
+          const firstPage = pagesData.data[0]
+          console.log('✅ Auto-selecting first page:', firstPage.name)
+          
+          // Update connection with page token and info
+          await supabaseAdmin
+            .from('social_connections')
+            .upsert({
+              org_id: orgId,
+              platform: 'facebook',
+              account_id: `facebook_page_${firstPage.id}`,
+              account_name: firstPage.name,
+              account_username: firstPage.name,
+              access_token: firstPage.access_token, // Use page token instead of user token
+              refresh_token: null,
+              expires_at: null, // Page tokens don't expire
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'org_id,platform,account_id'
+            })
+          
+          return NextResponse.redirect(
+            `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=facebook_connected&page=${encodeURIComponent(firstPage.name)}`
+          )
+        }
+      }
+    } catch (error) {
+      console.error('Failed to auto-fetch pages:', error)
+      // Fall through to redirect to manual selector
+    }
+    
+    // Fallback: Redirect to page selector if auto-fetch failed
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials/select-page?platform=facebook`
     )
