@@ -1,44 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
+// Server-side Supabase client
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
+
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError || !user) {
+    const body = await request.json()
+    const { platform, page, userId } = body
+
+    if (!platform || !page || !userId) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
+        { success: false, error: 'Missing required fields' },
+        { status: 400 }
       )
     }
 
     // Get user's organization
-    const { data: orgMember } = await supabase
+    const { data: orgMember } = await supabaseAdmin
       .from('organization_members')
       .select('org_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single()
 
     if (!orgMember) {
       return NextResponse.json(
         { success: false, error: 'No organization found' },
         { status: 404 }
-      )
-    }
-
-    const body = await request.json()
-    const { platform, page } = body
-
-    if (!platform || !page) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
       )
     }
 
@@ -70,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Upsert the connection
-    const { error: dbError } = await supabase
+    const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert(connectionData, {
         onConflict: 'org_id,platform,account_id'

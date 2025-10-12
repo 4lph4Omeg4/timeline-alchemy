@@ -26,14 +26,30 @@ export default function SelectPagePage() {
   const [loading, setLoading] = useState(true)
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchPages()
+    initializeAndFetchPages()
   }, [])
 
-  const fetchPages = async () => {
+  const initializeAndFetchPages = async () => {
+    // Get user ID from Supabase auth
+    const { createClient } = await import('@/lib/supabase-client')
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (user) {
+      setUserId(user.id)
+      await fetchPages(user.id)
+    } else {
+      toast.error('Not authenticated')
+      router.push('/auth/signin')
+    }
+  }
+
+  const fetchPages = async (userId: string) => {
     try {
-      const response = await fetch('/api/facebook/pages')
+      const response = await fetch(`/api/facebook/pages?user_id=${userId}`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch pages')
@@ -70,6 +86,11 @@ export default function SelectPagePage() {
       return
     }
 
+    if (!userId) {
+      toast.error('Not authenticated')
+      return
+    }
+
     setSaving(true)
     try {
       const selectedPage = pages.find(p => p.id === selectedPageId)
@@ -85,6 +106,7 @@ export default function SelectPagePage() {
         body: JSON.stringify({
           platform: platform || 'facebook',
           page: selectedPage,
+          userId: userId,
         }),
       })
 

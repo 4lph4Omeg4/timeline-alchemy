@@ -1,15 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
+// Server-side Supabase client
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
+
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    // Get user_id from query params (passed from frontend)
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('user_id')
     
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Missing user_id' },
+        { status: 400 }
+      )
+    }
+    
+    // Get user
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId)
     
     if (userError || !user) {
       return NextResponse.json(
@@ -19,10 +39,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's organization
-    const { data: orgMember } = await supabase
+    const { data: orgMember } = await supabaseAdmin
       .from('organization_members')
       .select('org_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single()
 
     if (!orgMember) {
@@ -33,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get Facebook connection (temporary user token)
-    const { data: connection } = await supabase
+    const { data: connection } = await supabaseAdmin
       .from('social_connections')
       .select('access_token, platform')
       .eq('org_id', orgMember.org_id)
