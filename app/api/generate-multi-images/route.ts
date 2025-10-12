@@ -20,15 +20,15 @@ export async function GET() {
 const IMAGE_STYLES = [
   {
     name: 'photorealistic',
-    suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k'
+    suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
   },
   {
     name: 'digital_art',
-    suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration'
+    suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
   },
   {
-    name: 'minimalist',
-    suffix: 'Minimalist design, clean composition, simple elegant aesthetic, modern minimalism, balanced negative space, sophisticated and refined'
+    name: 'cosmic',
+    suffix: 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
   }
 ]
 

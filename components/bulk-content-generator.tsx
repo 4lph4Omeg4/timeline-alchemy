@@ -336,9 +336,9 @@ export default function BulkContentGenerator() {
           console.log(`🎨 Generating 3 images in different styles for: ${post.title}`)
           
           const imageStyles = [
-            { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k' },
-            { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration' },
-            { name: 'minimalist', suffix: 'Minimalist design, clean composition, simple elegant aesthetic, modern minimalism, balanced negative space, sophisticated and refined' }
+            { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
+            { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
+            { name: 'cosmic', suffix: 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' }
           ]
 
           const imagePrompts = [
@@ -1003,15 +1003,17 @@ Metadata:
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             {post.generatedImages.map((image, imgIndex) => (
                               <div key={imgIndex} className="relative">
-                                <img 
-                                  src={image.url} 
-                                  alt={image.prompt || `Image ${imgIndex + 1} for ${post.title}`}
-                                  className="w-full h-40 object-cover rounded-lg border border-pink-500/30 shadow-lg"
-                                  onError={(e) => {
-                                    console.error('Image failed to load:', image.url)
-                                    e.currentTarget.style.display = 'none'
-                                  }}
-                                />
+                                <div className="w-full h-40 bg-black/30 rounded-lg border border-pink-500/30 shadow-lg overflow-hidden flex items-center justify-center">
+                                  <img 
+                                    src={image.url} 
+                                    alt={image.prompt || `Image ${imgIndex + 1} for ${post.title}`}
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => {
+                                      console.error('Image failed to load:', image.url)
+                                      e.currentTarget.style.display = 'none'
+                                    }}
+                                  />
+                                </div>
                                 <Badge className="absolute top-2 right-2 bg-pink-500/20 text-pink-300 text-xs">
                                   {image.style.replace('_', ' ')}
                                 </Badge>

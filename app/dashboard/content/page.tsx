@@ -84,9 +84,9 @@ export default function ContentCreatorPage() {
 
       // After content is generated, generate 3 images with different prompts and styles
       const imageStyles = [
-        { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k' },
-        { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration' },
-        { name: 'minimalist', suffix: 'Minimalist design, clean composition, simple elegant aesthetic, modern minimalism, balanced negative space, sophisticated and refined' }
+        { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
+        { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
+        { name: 'cosmic', suffix: 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' }
       ]
 
       const imagePrompts = [
@@ -163,9 +163,9 @@ export default function ContentCreatorPage() {
       }
 
       const imageStyles: Record<string, string> = {
-        photorealistic: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k',
-        digital_art: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration',
-        minimalist: 'Minimalist design, clean composition, simple elegant aesthetic, modern minimalism, balanced negative space, sophisticated and refined'
+        photorealistic: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
+        digital_art: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
+        cosmic: 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
       }
 
       const regeneratedArray = [chosenImage] // Start with chosen image
@@ -539,15 +539,17 @@ export default function ContentCreatorPage() {
                     onClick={() => handleStyleChoice(image.style)}
                   >
                     <div className="relative overflow-hidden rounded-lg border-2 border-pink-500/30 hover:border-pink-400 transition-all duration-300 hover:shadow-2xl hover:shadow-pink-500/50">
-                      <img 
-                        src={image.url} 
-                        alt={image.prompt} 
-                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          console.error('Image failed to load:', image.url)
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
+                      <div className="w-full h-64 bg-black/30 rounded-lg overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={image.url} 
+                          alt={image.prompt} 
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            console.error('Image failed to load:', image.url)
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="absolute bottom-0 left-0 right-0 p-4">
                           <p className="text-white font-bold text-lg capitalize">{image.style.replace('_', ' ')}</p>
@@ -589,11 +591,13 @@ export default function ContentCreatorPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {finalImages.map((image, index) => (
                   <div key={index} className="space-y-2">
-                    <img 
-                      src={image.url} 
-                      alt={`Final image ${index + 1}`}
-                      className="w-full h-64 object-cover rounded-lg border-2 border-green-500/30 shadow-xl"
-                    />
+                    <div className="w-full h-64 bg-black/30 rounded-lg border-2 border-green-500/30 shadow-xl overflow-hidden flex items-center justify-center">
+                      <img 
+                        src={image.url} 
+                        alt={`Final image ${index + 1}`}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                     <p className="text-sm text-gray-300 text-center">{image.prompt}</p>
                   </div>
                 ))}

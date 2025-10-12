@@ -319,11 +319,13 @@ export default function PortfolioPage() {
                     {/* Post Image */}
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
-                        <img 
-                          src={(getActiveImages(post)[0] || post.images[0]).url} 
-                          alt={post.title}
-                          className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
-                        />
+                        <div className="w-full h-48 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
+                          <img 
+                            src={(getActiveImages(post)[0] || post.images[0]).url} 
+                            alt={post.title}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
                         {/* Resonance Rating */}
                         <div className="flex items-center justify-center mt-3 mb-2">
                           <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg px-4 py-2">
@@ -417,11 +419,13 @@ export default function PortfolioPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {getActiveImages(selectedPost).map((image, index) => (
                         <div key={index} className="space-y-2">
-                          <img 
-                            src={image.url} 
-                            alt={image.prompt || selectedPost.title}
-                            className="w-full h-64 object-cover rounded-lg border border-purple-500/20"
-                          />
+                          <div className="w-full h-64 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
+                            <img 
+                              src={image.url} 
+                              alt={image.prompt || selectedPost.title}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
                           {image.style && (
                             <Badge variant="secondary" className="bg-purple-600/20 text-purple-200">
                               {image.style.replace('_', ' ')}
@@ -470,11 +474,13 @@ export default function PortfolioPage() {
                                 .filter(img => img.variant_type === 'original')
                                 .map((image, index) => (
                                   <div key={index} className="space-y-2">
-                                    <img 
-                                      src={image.url} 
-                                      alt={image.prompt || selectedPost.title}
-                                      className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
-                                    />
+                                    <div className="w-full h-48 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
+                                      <img 
+                                        src={image.url} 
+                                        alt={image.prompt || selectedPost.title}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
                                     <Badge variant="secondary" className="bg-purple-600/20 text-purple-200">
                                       {image.style?.replace('_', ' ')}
                                     </Badge>
@@ -493,11 +499,13 @@ export default function PortfolioPage() {
                                 .filter(img => img.variant_type === 'final')
                                 .map((image, index) => (
                                   <div key={index} className="space-y-2">
-                                    <img 
-                                      src={image.url} 
-                                      alt={image.prompt || selectedPost.title}
-                                      className="w-full h-48 object-cover rounded-lg border-2 border-green-500/30"
-                                    />
+                                    <div className="w-full h-48 bg-black/30 rounded-lg border-2 border-green-500/30 overflow-hidden flex items-center justify-center">
+                                      <img 
+                                        src={image.url} 
+                                        alt={image.prompt || selectedPost.title}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
                                     <Badge variant="secondary" className="bg-green-600/20 text-green-200">
                                       {image.style?.replace('_', ' ')} {image.is_active && '(Active)'}
                                     </Badge>

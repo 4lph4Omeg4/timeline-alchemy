@@ -684,11 +684,13 @@ export default function ContentPackagePage() {
                 .filter(img => img.is_active)
                 .map((image, index) => (
                   <div key={index} className="space-y-2">
-                    <img 
-                      src={image.url} 
-                      alt={image.prompt || 'Generated image'}
-                      className="w-full h-64 object-cover rounded-lg shadow-lg border-2 border-green-500/30"
-                    />
+                    <div className="w-full h-64 bg-black/30 rounded-lg shadow-lg border-2 border-green-500/30 overflow-hidden flex items-center justify-center">
+                      <img 
+                        src={image.url} 
+                        alt={image.prompt || 'Generated image'}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                     <div className="text-sm text-gray-400 space-y-1">
                       {image.prompt && (
                         <p className="text-center"><strong>Scene:</strong> {image.prompt}</p>
@@ -722,16 +724,18 @@ export default function ContentPackagePage() {
                         {generatedContent.images
                           .filter(img => img.variant_type === 'original')
                           .map((image, index) => (
-                            <div key={index} className="space-y-2">
-                              <img 
-                                src={image.url} 
-                                alt={image.prompt || 'Original variant'}
-                                className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
-                              />
-                              <Badge className="bg-purple-600/20 text-purple-200">
-                                {image.style?.replace('_', ' ')}
-                              </Badge>
-                            </div>
+                                  <div key={index} className="space-y-2">
+                                    <div className="w-full h-48 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
+                                      <img 
+                                        src={image.url} 
+                                        alt={image.prompt || 'Original variant'}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
+                                    <Badge className="bg-purple-600/20 text-purple-200">
+                                      {image.style?.replace('_', ' ')}
+                                    </Badge>
+                                  </div>
                           ))}
                       </div>
                     </div>
@@ -746,11 +750,13 @@ export default function ContentPackagePage() {
                           .filter(img => img.variant_type === 'final')
                           .map((image, index) => (
                             <div key={index} className="space-y-2">
-                              <img 
-                                src={image.url} 
-                                alt={image.prompt || 'Final image'}
-                                className="w-full h-48 object-cover rounded-lg border-2 border-green-500/30"
-                              />
+                              <div className="w-full h-48 bg-black/30 rounded-lg border-2 border-green-500/30 overflow-hidden flex items-center justify-center">
+                                <img 
+                                  src={image.url} 
+                                  alt={image.prompt || 'Final image'}
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
                               <Badge className="bg-green-600/20 text-green-200">
                                 {image.style?.replace('_', ' ')} {image.is_active && '(Active)'}
                               </Badge>
