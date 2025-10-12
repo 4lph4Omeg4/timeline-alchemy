@@ -118,7 +118,6 @@ const detectCategoryFromContent = (title: string, summary: string, tags: string[
 
 export default function BulkContentGenerator() {
   const [jsonInput, setJsonInput] = useState('')
-  const [contentType, setContentType] = useState<'blog' | 'social' | 'mixed'>('blog')
   const [language, setLanguage] = useState<'nl' | 'en'>('nl')
   const [isGenerating, setIsGenerating] = useState(false)
   const [parsedItemsCount, setParsedItemsCount] = useState(0)
@@ -174,16 +173,27 @@ export default function BulkContentGenerator() {
       return
     }
 
-    // Skip client-side limit check - server will handle it
+    // Parse and check item count
+    const parsedData = JSON.parse(jsonInput)
+    const items = Array.isArray(parsedData) ? parsedData : parsedData.items
+    
+    // Warn if more than 3 items
+    if (items.length > 3) {
+      const confirmed = confirm(
+        `⚠️ WARNING: You're trying to process ${items.length} items.\n\n` +
+        `For best results, we recommend processing MAX 3 items at a time.\n` +
+        `More items significantly increases the chance of errors and timeouts.\n\n` +
+        `Do you want to continue anyway?`
+      )
+      if (!confirmed) {
+        return
+      }
+    }
 
     setIsGenerating(true)
     setGeneratedPosts([])
 
     try {
-      const parsedData = JSON.parse(jsonInput)
-      
-      // Handle direct Grok format (array) or wrapped format ({items: array})
-      const items = Array.isArray(parsedData) ? parsedData : parsedData.items
       
       // Create abort controller for timeout
       const controller = new AbortController()
@@ -196,7 +206,7 @@ export default function BulkContentGenerator() {
         },
         body: JSON.stringify({
           items: items,
-          contentType,
+          contentType: 'blog', // Always generate complete blog packages
           language
         }),
         signal: controller.signal // Use abort signal for timeout
@@ -518,7 +528,7 @@ Metadata:
                 ...post.metadata,
                 bulkGenerated: true,
                 sourceType: 'bulk-generator',
-                contentType: contentType,
+                contentType: 'blog',
                 language: language,
                 autoSaved: true
               }
@@ -589,7 +599,7 @@ Metadata:
             ...post.metadata,
             bulkGenerated: true,
             sourceType: 'bulk-generator',
-            contentType: contentType,
+            contentType: 'blog',
             language: language
           }
         })
@@ -643,37 +653,102 @@ Metadata:
             <span>✨ Bulk Content Generator</span>
           </CardTitle>
           <CardDescription className="text-gray-200">
-            📅 Daily Grok Workflow: Paste trend data → Generate blog + social posts + cosmic images automatically
+            📦 Generate complete content packages: Each topic creates a blog post + social media posts + AI image automatically
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Configuration */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="contentType">Content Type</Label>
-              <Select value={contentType} onValueChange={(value: 'blog' | 'social' | 'mixed') => setContentType(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="blog">Blog Posts</SelectItem>
-                  <SelectItem value="social">Social Media</SelectItem>
-                  <SelectItem value="mixed">Mixed Content</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="language">Language</Label>
-              <Select value={language} onValueChange={(value: 'nl' | 'en') => setLanguage(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nl">Nederlands</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* AI Agent Instructions */}
+          <Alert className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-500/30">
+            <AlertDescription>
+              <div className="space-y-3">
+                <div className="font-bold text-blue-200 text-lg flex items-center gap-2">
+                  🤖 How to Use AI Agents (ChatGPT/Claude/Grok)
+                </div>
+                
+                <div className="text-sm text-gray-200 space-y-2">
+                  <div className="bg-black/30 p-3 rounded-lg border border-blue-500/20">
+                    <strong className="text-blue-300">Step 1: Prompt Your AI Agent</strong>
+                    <p className="mt-1 text-gray-300">Ask ChatGPT, Claude, or Grok to find trending topics. For best results, ask for <strong>cross-platform trends</strong> (topics trending on Twitter, Reddit, TikTok simultaneously = higher quality & better engagement).</p>
+                    <div className="mt-2 p-2 bg-black/50 rounded font-mono text-xs text-green-300 whitespace-pre-wrap">
+                      Example Prompt:<br/><br/>
+                      "Find 3 topics that are currently trending across multiple platforms (Twitter, Reddit, TikTok).
+                      Focus on: AI, consciousness, or technology.
+                      Return ONLY a JSON array with this exact format:
+                      
+                      [&#123;
+                        "title": "Topic name here",
+                        "summary": "2-3 sentence description",
+                        "tags": ["tag1", "tag2", "tag3"]
+                      &#125;]
+                      
+                      Important: Return ONLY the JSON array, no extra text."
+                    </div>
+                    <p className="mt-2 text-orange-300 text-xs font-semibold">💡 Cross-platform trends = consistent quality output!</p>
+                  </div>
+
+                  <div className="bg-black/30 p-3 rounded-lg border border-blue-500/20">
+                    <strong className="text-blue-300">Step 2: Copy the JSON Array</strong>
+                    <p className="mt-1 text-gray-300">The AI will respond with a JSON array. Look for the part that looks like this:</p>
+                    <div className="mt-2 p-2 bg-black/50 rounded font-mono text-xs text-green-300 whitespace-pre-wrap">
+[&#123;
+  "title": "AI Breakthrough in Quantum Computing",
+  "summary": "Scientists achieve quantum supremacy with new AI algorithms...",
+  "tags": ["AI", "Quantum", "Technology"]
+&#125;,
+&#123;
+  "title": "Consciousness Studies Gain Mainstream Recognition",
+  "summary": "Universities now offering degrees in consciousness research...",
+  "tags": ["Consciousness", "Science", "Education"]
+&#125;]
+                    </div>
+                    <p className="mt-2 text-yellow-300 text-xs font-semibold">⚠️ CRITICAL: Copy starting from the opening [ to closing ] - this complete array format is required!</p>
+                  </div>
+
+                  <div className="bg-black/30 p-3 rounded-lg border border-blue-500/20">
+                    <strong className="text-blue-300">Step 3: Copy & Paste</strong>
+                    <p className="mt-1 text-gray-300">Copy the JSON array from the AI's response and paste it in the text field below.</p>
+                  </div>
+
+                  <div className="bg-orange-900/30 p-3 rounded-lg border border-orange-500/30">
+                    <strong className="text-orange-300 text-base">💡 Pro Tips for Best Results:</strong>
+                    <ul className="mt-2 text-gray-200 space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400 font-bold">⚠️</span>
+                        <div>
+                          <strong className="text-orange-200">Start with MAX 3 items</strong> - Processing more than 3 items at once significantly increases the chance of errors and timeouts. You can always run multiple batches!
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-400">✓</span>
+                        <div>
+                          <strong className="text-orange-200">Use cross-platform trends</strong> - Topics trending on Twitter + Reddit + TikTok simultaneously have proven to generate higher quality content with better consistency
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-purple-400">📦</span>
+                        <div>
+                          <strong className="text-orange-200">Complete content packages</strong> - Each topic automatically generates: full blog post + optimized social media posts for all platforms + AI-generated image
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+
+          {/* Configuration - Language Only */}
+          <div className="w-full md:w-1/2">
+            <Label htmlFor="language">Language</Label>
+            <Select value={language} onValueChange={(value: 'nl' | 'en') => setLanguage(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nl">Nederlands</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* JSON Input */}
@@ -683,34 +758,21 @@ Metadata:
               id="jsonInput"
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
-              placeholder="Paste your Grok trends JSON data here..."
+              placeholder='Paste your JSON array here... Format: [{"title": "...", "summary": "...", "tags": ["..."]}]'
               rows={10}
-              className="font-mono text-sm"
+              className="font-mono text-sm bg-black/30 border-purple-500/30 text-white"
             />
             <div className="flex items-center gap-2 mt-2">
               <Button variant="outline" size="sm" onClick={parseSampleData}>
-                Load Grok Sample Data
+                Load Sample Data
               </Button>
               {parsedItemsCount > 0 && (
-                <Badge variant="secondary">
+                <Badge variant="secondary" className="bg-green-600">
                   <FileText className="h-3 w-3 mr-1" />
-                  {parsedItemsCount} items ready
+                  ✓ {parsedItemsCount} items ready
                 </Badge>
               )}
             </div>
-            
-            {/* Grok Workflow Instructions */}
-            <Alert className="bg-purple-900/20 border-purple-500/30">
-              <AlertDescription>
-                <div className="font-semibold text-purple-200 mb-2">📅 Daily Grok Workflow Instructions:</div>
-                <div className="text-sm text-gray-300 space-y-1">
-                  <div><strong>1. Copy Grok Response:</strong> Take the JSON array from Grok and paste it directly above</div>
-                  <div><strong>2. Select Content Type:</strong> Choose "Blog Posts" for complete package generation</div>
-                  <div><strong>3. Generate Complete Package:</strong> Each trend will create blog + social posts + cosmic image</div>
-                  <div><strong>4. Save Individual Posts:</strong> Use "Save" buttons to add to your content calendar</div>
-                </div>
-              </AlertDescription>
-            </Alert>
           </div>
 
           {/* Generate Button */}
@@ -728,7 +790,7 @@ Metadata:
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                🚀 Generate Complete Package ({parsedItemsCount} items)
+                🚀 Generate Complete Packages ({parsedItemsCount} {parsedItemsCount === 1 ? 'item' : 'items'})
               </>
             )}
           </Button>
