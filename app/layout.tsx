@@ -83,6 +83,33 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           }}
         />
         {/* End Google Tag Manager */}
+
+        {/* Facebook SDK */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+window.fbAsyncInit = function() {
+  FB.init({
+    appId      : '${process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || 'YOUR_APP_ID'}',
+    cookie     : true,
+    xfbml      : true,
+    version    : 'v18.0'
+  });
+  
+  FB.AppEvents.logPageView();
+};
+
+(function(d, s, id){
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "https://connect.facebook.net/en_US/sdk.js";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+`,
+          }}
+        />
+        {/* End Facebook SDK */}
       </head>
       <body className={inter.className}>
         {/* Google Tag Manager (noscript) */}
@@ -95,6 +122,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           />
         </noscript>
         {/* End Google Tag Manager (noscript) */}
+        
+        {/* Facebook SDK Root Element */}
+        <div id="fb-root"></div>
         
         {children}
         <Toaster position="top-right" />
