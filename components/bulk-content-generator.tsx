@@ -383,8 +383,10 @@ export default function BulkContentGenerator() {
           if (generatedImagesArray.length > 0) {
             post.generatedImages = generatedImagesArray
             console.log(`✅ Generated ${generatedImagesArray.length} images in different styles for ${post.title}`)
+            console.log('🔍 Generated images array:', JSON.stringify(generatedImagesArray, null, 2))
           } else {
             // Fallback to single image if all 3 failed
+            console.log('⚠️ No images generated, falling back to single image')
             await generateSingleImageFallback(post)
           }
         } catch (imageError) {
@@ -605,6 +607,12 @@ Metadata:
                 language: language,
                 autoSaved: true
               }
+            }, (key, value) => {
+              // Debug: Log what we're sending
+              if (key === 'generatedImages') {
+                console.log(`📸 Sending ${value?.length || 0} images for ${post.title}`)
+              }
+              return value
             })
           })
 

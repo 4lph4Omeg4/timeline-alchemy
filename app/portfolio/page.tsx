@@ -119,7 +119,18 @@ export default function PortfolioPage() {
   }
 
   const getActiveImages = (post: PortfolioPost) => {
-    return post.images?.filter(img => img.is_active && img.variant_type === 'final') || []
+    if (!post.images || post.images.length === 0) return []
+    
+    // Try to get active final images first (new format)
+    const activeImages = post.images.filter(img => img.is_active && img.variant_type === 'final')
+    if (activeImages.length > 0) return activeImages
+    
+    // Fallback: get active images without variant type check (transition format)
+    const activeAny = post.images.filter(img => img.is_active)
+    if (activeAny.length > 0) return activeAny
+    
+    // Fallback: get all images if no active flag (old format)
+    return post.images.slice(0, 3) // Max 3 images
   }
 
   const getAllStyleVariants = (post: PortfolioPost) => {

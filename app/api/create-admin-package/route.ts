@@ -160,18 +160,22 @@ export async function POST(request: NextRequest) {
         }))
         
         console.log(`🔄 Saving ${imagesToInsert.length} images to database...`)
+        console.log('🔍 Images to insert:', JSON.stringify(imagesToInsert, null, 2))
         
         // Save to images table
-        const { error: dbError } = await (supabaseClient as any)
+        const { data: insertedImages, error: dbError } = await (supabaseClient as any)
           .from('images')
           .insert(imagesToInsert)
+          .select()
 
         if (dbError) {
-          console.error('❌ Database error:', dbError)
-          throw new Error(`Failed to save images to database: ${dbError.message}`)
+          console.error('❌ Database error saving images:', dbError)
+          console.error('❌ Error details:', JSON.stringify(dbError, null, 2))
+          // Don't throw - continue even if images fail
+        } else {
+          console.log(`✅ ${imagesToInsert.length} images saved to database successfully`)
+          console.log('✅ Inserted images:', insertedImages)
         }
-
-        console.log(`✅ ${imagesToInsert.length} images saved to database successfully`)
         
       } catch (imageError) {
         console.error('❌ Error saving images permanently:', imageError)
