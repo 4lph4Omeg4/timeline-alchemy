@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
+
+// Server-side Supabase admin client
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,9 +24,17 @@ export async function GET(request: NextRequest) {
     const error = searchParams.get('error')
 
     if (error) {
+      const errorDescription = searchParams.get('error_description')
       console.error('YouTube OAuth error:', error)
+      console.error('Error description:', errorDescription)
+      console.error('Full search params:', Object.fromEntries(searchParams.entries()))
+      
+      const errorMessage = errorDescription 
+        ? `${error}: ${errorDescription}` 
+        : error
+      
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=${error}&details=oauth_error`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=${encodeURIComponent(errorMessage)}`
       )
     }
 
@@ -109,8 +129,16 @@ export async function GET(request: NextRequest) {
     const accountUsername = channel.snippet?.customUrl || `Channel ${channel.id}`
     const expiresAt = new Date(Date.now() + (expires_in * 1000)).toISOString()
 
+    console.log('Storing YouTube connection:', {
+      orgId,
+      accountId,
+      accountName,
+      accountUsername,
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken
+    })
+
     // Store the connection in the database
-    const supabaseAdmin = supabase
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({
@@ -126,11 +154,19 @@ export async function GET(request: NextRequest) {
       }, { onConflict: 'org_id,platform,account_id' })
 
     if (dbError) {
-      console.error('Database error:', dbError)
+      console.error('Database error storing YouTube connection:', dbError)
+      console.error('Attempted to store:', {
+        org_id: orgId,
+        platform: 'youtube',
+        account_id: accountId,
+        account_name: accountName
+      })
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=database_error&details=${encodeURIComponent(dbError.message)}`
       )
     }
+
+    console.log('YouTube connection stored successfully!')
 
     // Redirect back to socials page with success
     return NextResponse.redirect(
