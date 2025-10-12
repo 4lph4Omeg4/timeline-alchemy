@@ -231,7 +231,6 @@ export async function GET(request: NextRequest) {
             `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=facebook_connected&page=${encodeURIComponent(firstPage.name)}`
           )
         }
-      }
     } catch (error) {
       console.error('❌ Failed to auto-fetch pages:', error)
       // Redirect to socials with error
