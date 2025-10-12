@@ -505,7 +505,6 @@ export default function BulkContentGenerator() {
             const errorText = await imageResponse.text()
             console.error('❌ Image generation error:', errorText)
           }
-      }
     } catch (error) {
       console.error('❌ Fallback image generation error:', error)
     }
