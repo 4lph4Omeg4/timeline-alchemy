@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 
           console.log(`✅ Image ${i + 1}/3 generated successfully (${style.name})`)
         } else {
-          console.error(`❌ Failed to generate image ${i + 1}:`, vercelResponse.error)
+          console.error(`❌ Failed to generate image ${i + 1}`)
         }
 
         // Small delay between generations to avoid rate limits
