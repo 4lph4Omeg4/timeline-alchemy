@@ -11,6 +11,7 @@ export default function BulkContentPage() {
   const [hasAccess, setHasAccess] = useState(false)
   const [loading, setLoading] = useState(true)
   const [userPlan, setUserPlan] = useState<string>('')
+  const [usageInfo, setUsageInfo] = useState<{ used: number; limit: number } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -46,10 +47,36 @@ export default function BulkContentPage() {
             if (subscription) {
               setUserPlan(subscription.plan)
               
+              // Get plan limits and current usage
+              const { data: planFeatures } = await (supabase as any)
+                .from('plan_features')
+                .select('bulk_generation_limit')
+                .eq('plan_name', subscription.plan)
+                .single()
+              
+              const { data: usage } = await (supabase as any)
+                .from('organization_usage')
+                .select('bulk_generation_used')
+                .eq('org_id', orgId)
+                .single()
+              
+              const used = usage?.bulk_generation_used || 0
+              const limit = planFeatures?.bulk_generation_limit || 0
+              
+              setUsageInfo({ used, limit })
+              
               // Trial and Universal plans have access to bulk content
-              // Trial gets 1 bulk generation, Universal gets unlimited
-              if (subscription.plan === 'trial' || subscription.plan === 'universal') {
+              // BUT trial users must not exceed their limit
+              if (subscription.plan === 'universal') {
+                // Universal = unlimited
                 setHasAccess(true)
+              } else if (subscription.plan === 'trial') {
+                // Trial = 1 bulk generation
+                if (used < limit) {
+                  setHasAccess(true)
+                } else {
+                  setHasAccess(false)
+                }
               } else {
                 setHasAccess(false)
               }
@@ -93,9 +120,15 @@ export default function BulkContentPage() {
             <CardContent className="pt-6">
               <div className="text-center space-y-4">
                 <Shield className="h-16 w-16 text-red-400 mx-auto" />
-                <h2 className="text-2xl font-bold text-white">Bulk Content Unavailable</h2>
+                <h2 className="text-2xl font-bold text-white">
+                  {userPlan === 'trial' && usageInfo 
+                    ? 'Trial Limit Reached' 
+                    : 'Bulk Content Unavailable'}
+                </h2>
                 <p className="text-gray-300">
-                  Bulk Content Generation is available for Trial and Universal plans.
+                  {userPlan === 'trial' && usageInfo 
+                    ? `You've used your ${usageInfo.limit} bulk generation(s) for the trial period. Upgrade to Universal plan for unlimited bulk generations.`
+                    : 'Bulk Content Generation is available for Trial (1x) and Universal (unlimited) plans.'}
                 </p>
                 <div className="mt-4 space-y-2">
                   <p className="text-purple-300 font-semibold">Current Plan: {userPlan || 'Unknown'}</p>
@@ -131,6 +164,31 @@ export default function BulkContentPage() {
         <p className="text-gray-300 mt-2">
           Generate multiple blog posts from your Grok trends data automatically with Timeline Alchemy magic
         </p>
+        
+        {/* Usage Info for Trial Users */}
+        {userPlan === 'trial' && usageInfo && (
+          <div className="mt-4 p-4 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white font-semibold">Trial Usage</p>
+                <p className="text-gray-300 text-sm">
+                  {usageInfo.used} of {usageInfo.limit} bulk generation(s) used
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={`text-2xl font-bold ${usageInfo.used < usageInfo.limit ? 'text-green-400' : 'text-red-400'}`}>
+                  {usageInfo.limit - usageInfo.used}
+                </p>
+                <p className="text-gray-400 text-xs">remaining</p>
+              </div>
+            </div>
+            {usageInfo.used === usageInfo.limit - 1 && (
+              <p className="mt-2 text-sm text-yellow-300">
+                ⚠️ This is your last bulk generation. Upgrade to Universal for unlimited access.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Feature Cards */}
