@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { addWatermarkToImageServer } from '@/lib/watermark'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 180 // 3 minutes for generating 3 images
+export const maxDuration = 60 // 60 seconds (Vercel Hobby plan limit)
 
 // GET endpoint for route verification
 export async function GET() {
