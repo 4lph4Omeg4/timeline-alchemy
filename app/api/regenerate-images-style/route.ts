@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     console.log(`🎨 Regenerating images for post ${postId} in style: ${chosenStyle}`)
 
     // Get all original images for this post
-    const { data: originalImages, error: fetchError } = await supabaseAdmin
+    const { data: originalImages, error: fetchError } = await (supabaseAdmin as any)
       .from('images')
       .select('*')
       .eq('post_id', postId)
