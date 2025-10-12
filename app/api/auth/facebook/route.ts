@@ -16,12 +16,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Build Facebook OAuth URL with current valid scopes
-    // NOTE: Instagram requires a Facebook Page connected to an Instagram Business Account
+    // NOTE: Only using scopes that don't require app review
     const authParams = new URLSearchParams({
       client_id: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/facebook/callback`,
       state: state || '',
-      scope: 'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
+      scope: 'public_profile,pages_show_list,pages_read_engagement,pages_manage_posts',
       response_type: 'code',
     })
 
