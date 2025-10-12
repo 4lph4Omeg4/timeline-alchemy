@@ -14,7 +14,15 @@ import { BlogPost } from '@/types/index'
 import Link from 'next/link'
 
 interface PortfolioPost extends BlogPost {
-  images?: Array<{ url: string }>
+  images?: Array<{ 
+    id?: string
+    url: string 
+    prompt?: string
+    style?: string
+    variant_type?: string
+    is_active?: boolean
+    prompt_number?: number
+  }>
 }
 
 export default function PortfolioPage() {
@@ -24,6 +32,7 @@ export default function PortfolioPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedPost, setSelectedPost] = useState<PortfolioPost | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showAllStyles, setShowAllStyles] = useState(false)
 
   const categories = getAllCategories()
 
@@ -100,11 +109,21 @@ export default function PortfolioPage() {
   const openPostModal = (post: PortfolioPost) => {
     setSelectedPost(post)
     setIsModalOpen(true)
+    setShowAllStyles(false)
   }
 
   const closePostModal = () => {
     setSelectedPost(null)
     setIsModalOpen(false)
+    setShowAllStyles(false)
+  }
+
+  const getActiveImages = (post: PortfolioPost) => {
+    return post.images?.filter(img => img.is_active && img.variant_type === 'final') || []
+  }
+
+  const getAllStyleVariants = (post: PortfolioPost) => {
+    return post.images || []
   }
 
   const getSocialLinks = (post: PortfolioPost) => {
@@ -290,7 +309,7 @@ export default function PortfolioPage() {
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
                         <img 
-                          src={post.images[0].url} 
+                          src={(getActiveImages(post)[0] || post.images[0]).url} 
                           alt={post.title}
                           className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
                         />
@@ -378,22 +397,117 @@ export default function PortfolioPage() {
       >
         {selectedPost && (
           <div className="space-y-6">
-            {/* Post Image */}
+            {/* Active Images or All Style Variants */}
             {selectedPost.images && selectedPost.images.length > 0 && (
-              <div className="w-full">
-                <img 
-                  src={selectedPost.images[0].url} 
-                  alt={selectedPost.title}
-                  className="w-full h-160 object-cover rounded-lg border border-purple-500/20"
-                />
+              <div className="w-full space-y-4">
+                {!showAllStyles ? (
+                  <>
+                    {/* Show active images only */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {getActiveImages(selectedPost).map((image, index) => (
+                        <div key={index} className="space-y-2">
+                          <img 
+                            src={image.url} 
+                            alt={image.prompt || selectedPost.title}
+                            className="w-full h-64 object-cover rounded-lg border border-purple-500/20"
+                          />
+                          {image.style && (
+                            <Badge variant="secondary" className="bg-purple-600/20 text-purple-200">
+                              {image.style.replace('_', ' ')}
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {/* View All Styles Button */}
+                    {getAllStyleVariants(selectedPost).length > 3 && (
+                      <div className="text-center">
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowAllStyles(true)}
+                          className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+                        >
+                          🎨 View All Style Variants
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Show all style variants */}
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold text-white">🎨 All Style Variants</h3>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowAllStyles(false)}
+                          size="sm"
+                          className="border-purple-500/50 text-purple-300"
+                        >
+                          ← Back to Active Images
+                        </Button>
+                      </div>
+                      
+                      {/* Group by variant type */}
+                      <div className="space-y-4">
+                        {/* Original Variants */}
+                        {getAllStyleVariants(selectedPost).filter(img => img.variant_type === 'original').length > 0 && (
+                          <div>
+                            <h4 className="text-lg font-semibold text-purple-300 mb-3">Original Style Variants</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {getAllStyleVariants(selectedPost)
+                                .filter(img => img.variant_type === 'original')
+                                .map((image, index) => (
+                                  <div key={index} className="space-y-2">
+                                    <img 
+                                      src={image.url} 
+                                      alt={image.prompt || selectedPost.title}
+                                      className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
+                                    />
+                                    <Badge variant="secondary" className="bg-purple-600/20 text-purple-200">
+                                      {image.style?.replace('_', ' ')}
+                                    </Badge>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Final Images */}
+                        {getAllStyleVariants(selectedPost).filter(img => img.variant_type === 'final').length > 0 && (
+                          <div>
+                            <h4 className="text-lg font-semibold text-green-300 mb-3">✅ Final Images (Chosen Style)</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {getAllStyleVariants(selectedPost)
+                                .filter(img => img.variant_type === 'final')
+                                .map((image, index) => (
+                                  <div key={index} className="space-y-2">
+                                    <img 
+                                      src={image.url} 
+                                      alt={image.prompt || selectedPost.title}
+                                      className="w-full h-48 object-cover rounded-lg border-2 border-green-500/30"
+                                    />
+                                    <Badge variant="secondary" className="bg-green-600/20 text-green-200">
+                                      {image.style?.replace('_', ' ')} {image.is_active && '(Active)'}
+                                    </Badge>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+                
                 {/* Post Title */}
-                <h2 className="text-2xl font-bold text-white mt-4 mb-2">
+                <h2 className="text-2xl font-bold text-white mt-4">
                   {selectedPost.title}
                 </h2>
               </div>
             )}
             
-            {/* Post Title (if no image) */}
+            {/* Post Title (if no images) */}
             {(!selectedPost.images || selectedPost.images.length === 0) && (
               <h2 className="text-2xl font-bold text-white mb-4">
                 {selectedPost.title}

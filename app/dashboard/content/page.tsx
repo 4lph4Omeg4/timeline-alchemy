@@ -15,10 +15,19 @@ export default function ContentCreatorPage() {
   const [content, setContent] = useState('')
   const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
   const [prompt, setPrompt] = useState('')
-  const [generatedImageUrl, setGeneratedImageUrl] = useState('')
+  const [generatedImages, setGeneratedImages] = useState<Array<{
+    url: string
+    prompt: string
+    style: string
+    promptNumber: number
+  }>>([])
+  const [chosenStyle, setChosenStyle] = useState<string | null>(null)
+  const [finalImages, setFinalImages] = useState<Array<{url: string, prompt: string}>>([])
   const [contentLoading, setContentLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [currentPostId, setCurrentPostId] = useState<string | null>(null)
   const router = useRouter()
 
   const handleGenerateContent = async () => {
@@ -29,10 +38,13 @@ export default function ContentCreatorPage() {
 
     setContentLoading(true)
     setImageLoading(true)
+    setGeneratedImages([])
+    setChosenStyle(null)
+    setFinalImages([])
     
     try {
-      // Generate everything in parallel
-      const [contentResponse, socialResponse, imageResponse] = await Promise.all([
+      // First generate content and social posts
+      const [contentResponse, socialResponse] = await Promise.all([
         fetch('/api/generate-content', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -52,12 +64,6 @@ export default function ContentCreatorPage() {
             content: prompt,
             platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
           }),
-        }),
-        
-        fetch('/api/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt }),
         })
       ])
 
@@ -72,22 +78,88 @@ export default function ContentCreatorPage() {
         setSocialPosts(socialData.socialPosts)
       }
 
+      setContentLoading(false)
+      toast.success('Content and social posts generated! Now generating 3 image styles...')
+
+      // After content is generated, generate 3 images with different styles
+      const imageResponse = await fetch('/api/generate-multi-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: title || prompt,
+          content: content || prompt
+        }),
+      })
+
       if (imageResponse.ok) {
         const imageData = await imageResponse.json()
-        setGeneratedImageUrl(imageData.imageUrl)
+        if (imageData.success && imageData.images) {
+          setGeneratedImages(imageData.images)
+          toast.success(`Generated ${imageData.images.length} images in different styles! Choose your favorite.`)
+        }
       } else {
         const imageError = await imageResponse.text()
-        console.error('Image generation failed:', imageError)
+        console.error('Multi-image generation failed:', imageError)
         toast.error('Image generation failed')
       }
       
-      toast.success('Complete content package generated!')
     } catch (error) {
       console.error('Error generating content:', error)
       toast.error('Failed to generate content')
     } finally {
       setContentLoading(false)
       setImageLoading(false)
+    }
+  }
+
+  const handleStyleChoice = async (style: string) => {
+    if (!currentPostId) {
+      toast.error('Please save the post first')
+      return
+    }
+
+    setRegenerating(true)
+    setChosenStyle(style)
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast.error('Please sign in')
+        return
+      }
+
+      const { data: orgMembers } = await supabase
+        .from('org_members')
+        .select('org_id, role')
+        .eq('user_id', user.id)
+
+      const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
+
+      toast.loading('Regenerating images in your chosen style...', { id: 'regen' })
+
+      const response = await fetch('/api/regenerate-images-style', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: currentPostId,
+          chosenStyle: style,
+          orgId: userOrgId
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setFinalImages(data.images)
+        toast.success(`All images regenerated in ${style} style!`, { id: 'regen' })
+      } else {
+        const errorData = await response.json()
+        toast.error(`Failed to regenerate: ${errorData.error}`, { id: 'regen' })
+      }
+    } catch (error) {
+      console.error('Error regenerating images:', error)
+      toast.error('Failed to regenerate images', { id: 'regen' })
+    } finally {
+      setRegenerating(false)
     }
   }
 
@@ -137,6 +209,9 @@ export default function ContentCreatorPage() {
         return
       }
 
+      // Store post ID for later image regeneration
+      setCurrentPostId(postData.id)
+
       // Save social posts to separate table
       if (Object.keys(socialPosts).length > 0) {
         try {
@@ -158,28 +233,30 @@ export default function ContentCreatorPage() {
         }
       }
 
-      if (generatedImageUrl) {
-        // Save image permanently to Supabase Storage
+      // Save multi-images if generated
+      if (generatedImages.length > 0) {
         try {
-          const saveImageResponse = await fetch('/api/save-image', {
+          // Now call multi-image API with postId to save them
+          const imageResponse = await fetch('/api/generate-multi-images', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              imageUrl: generatedImageUrl,
-              postId: postData.id,
-              orgId: userOrgId
-            })
+              title,
+              content,
+              orgId: userOrgId,
+              postId: postData.id
+            }),
           })
 
-          if (saveImageResponse.ok) {
-            toast.success('Post, social posts, and image saved permanently!')
+          if (imageResponse.ok) {
+            toast.success('Post, social posts, and style preview images saved! Choose your preferred style.')
           } else {
-            console.error('Failed to save image permanently')
-            toast.error('Post saved but image failed to save permanently')
+            console.error('Failed to save images')
+            toast.error('Post saved but images failed to save')
           }
         } catch (error) {
-          console.error('Error saving image:', error)
-          toast.error('Post saved but image failed to save')
+          console.error('Error saving images:', error)
+          toast.error('Post saved but images failed to save')
         }
       } else {
         toast.success('Post and social posts saved successfully!')
@@ -363,39 +440,98 @@ export default function ContentCreatorPage() {
           </Card>
         )}
 
-        {/* Generated Image */}
-        {generatedImageUrl && (
+        {/* Style Selector - Original Images */}
+        {generatedImages.length > 0 && !chosenStyle && (
           <Card className="bg-gradient-to-br from-pink-900/50 to-purple-900/50 border-pink-500/30 backdrop-blur-sm shadow-2xl">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-pink-400" />
-                  <CardTitle className="text-white">Generated Imagery</CardTitle>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setGeneratedImageUrl('')}
-                  className="border-pink-500/50 text-pink-300 hover:bg-pink-500/20"
-                >
-                  Remove
-                </Button>
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-pink-400" />
+                <CardTitle className="text-white">🎨 Choose Your Preferred Style</CardTitle>
               </div>
               <CardDescription className="text-gray-300">
-                AI-crafted visual perfection
+                We generated 3 images in different styles. Click on your favorite to regenerate all images in that style.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center">
-                <img 
-                  src={generatedImageUrl} 
-                  alt="Generated content image" 
-                  className="max-w-full h-auto rounded-lg shadow-2xl border-2 border-pink-500/30"
-                  onError={(e) => {
-                    console.error('Image failed to load:', generatedImageUrl)
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {generatedImages.map((image, index) => (
+                  <div 
+                    key={index}
+                    className="group relative cursor-pointer"
+                    onClick={() => handleStyleChoice(image.style)}
+                  >
+                    <div className="relative overflow-hidden rounded-lg border-2 border-pink-500/30 hover:border-pink-400 transition-all duration-300 hover:shadow-2xl hover:shadow-pink-500/50">
+                      <img 
+                        src={image.url} 
+                        alt={image.prompt} 
+                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          console.error('Image failed to load:', image.url)
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="absolute bottom-0 left-0 right-0 p-4">
+                          <p className="text-white font-bold text-lg capitalize">{image.style.replace('_', ' ')}</p>
+                          <p className="text-gray-300 text-sm mt-1">{image.prompt}</p>
+                          <Button 
+                            className="mt-3 w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                            size="sm"
+                          >
+                            ✨ Choose This Style
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-center">
+                      <Badge variant="secondary" className="bg-pink-600/20 text-pink-200">
+                        Style {index + 1}: {image.style.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Final Images - After Style Choice */}
+        {finalImages.length > 0 && chosenStyle && (
+          <Card className="bg-gradient-to-br from-green-900/50 to-purple-900/50 border-green-500/30 backdrop-blur-sm shadow-2xl">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-green-400" />
+                <CardTitle className="text-white">✅ Final Images ({chosenStyle.replace('_', ' ')} style)</CardTitle>
+              </div>
+              <CardDescription className="text-gray-300">
+                All 3 images regenerated in your chosen style - ready to use!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {finalImages.map((image, index) => (
+                  <div key={index} className="space-y-2">
+                    <img 
+                      src={image.url} 
+                      alt={`Final image ${index + 1}`}
+                      className="w-full h-64 object-cover rounded-lg border-2 border-green-500/30 shadow-xl"
+                    />
+                    <p className="text-sm text-gray-300 text-center">{image.prompt}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Regenerating Indicator */}
+        {regenerating && (
+          <Card className="bg-gradient-to-br from-yellow-900/50 to-purple-900/50 border-yellow-500/30 backdrop-blur-sm shadow-2xl">
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-16 h-16 text-yellow-400 animate-spin" />
+                <p className="text-white text-xl font-semibold">Regenerating images in {chosenStyle?.replace('_', ' ')} style...</p>
+                <p className="text-gray-300">This may take a minute...</p>
               </div>
             </CardContent>
           </Card>

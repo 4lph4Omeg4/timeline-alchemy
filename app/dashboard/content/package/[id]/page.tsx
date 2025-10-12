@@ -55,10 +55,15 @@ interface GeneratedContent {
     excerpt: string
     tags: string[]
   }
-  image: {
+  images: Array<{
+    id?: string
     url: string
-    prompt: string
-  }
+    prompt?: string
+    style?: string
+    variant_type?: string
+    is_active?: boolean
+    prompt_number?: number
+  }>
   socialPosts: {
     facebook: string
     instagram: string
@@ -396,13 +401,7 @@ export default function ContentPackagePage() {
           excerpt: '',
           tags: ['AI Generated', 'Content Package']
         },
-        image: images && images.length > 0 ? {
-          url: images[0].url,
-          prompt: 'AI generated image for: ' + postData.title
-        } : {
-          url: '',
-          prompt: ''
-        },
+        images: images || [],
         socialPosts: (socialPosts || {}) as any
       }
 
@@ -646,26 +645,121 @@ export default function ContentPackagePage() {
         </CardContent>
       </Card>
 
-      {/* Generated Image */}
-      {generatedContent.image.url && (
+      {/* Generated Images - Multi-Style Gallery */}
+      {generatedContent.images && generatedContent.images.length > 0 && (
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader>
-            <CardTitle className="text-white">🖼️ Generated Image</CardTitle>
-            <CardDescription className="text-gray-300">
-              AI-generated image that complements your content
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-white">🖼️ Generated Images</CardTitle>
+                <CardDescription className="text-gray-300">
+                  {generatedContent.images.filter(img => img.is_active).length > 1 
+                    ? `${generatedContent.images.filter(img => img.is_active).length} AI-generated images in ${generatedContent.images.find(img => img.is_active)?.style?.replace('_', ' ') || 'selected'} style`
+                    : 'AI-generated image that complements your content'}
+                </CardDescription>
+              </div>
+              {generatedContent.images.length > 3 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const allStylesElement = document.getElementById('all-styles-section')
+                    if (allStylesElement) {
+                      allStylesElement.scrollIntoView({ behavior: 'smooth' })
+                    }
+                  }}
+                  className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+                >
+                  🎨 View All Styles
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <img 
-                src={generatedContent.image.url} 
-                alt={generatedContent.image.prompt}
-                className="w-full max-w-md mx-auto rounded-lg shadow-lg"
-              />
-              <p className="text-sm text-gray-400 text-center">
-                <strong>Prompt:</strong> {generatedContent.image.prompt}
-              </p>
+            {/* Active Images */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {generatedContent.images
+                .filter(img => img.is_active)
+                .map((image, index) => (
+                  <div key={index} className="space-y-2">
+                    <img 
+                      src={image.url} 
+                      alt={image.prompt || 'Generated image'}
+                      className="w-full h-64 object-cover rounded-lg shadow-lg border-2 border-green-500/30"
+                    />
+                    <div className="text-sm text-gray-400 space-y-1">
+                      {image.prompt && (
+                        <p className="text-center"><strong>Scene:</strong> {image.prompt}</p>
+                      )}
+                      {image.style && (
+                        <div className="flex justify-center">
+                          <Badge className="bg-green-600/20 text-green-200">
+                            ✅ {image.style.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
             </div>
+
+            {/* All Style Variants Section */}
+            {generatedContent.images.length > 3 && (
+              <div id="all-styles-section" className="mt-8 pt-8 border-t border-gray-700 space-y-4">
+                <h3 className="text-lg font-semibold text-white">🎨 All Style Variants</h3>
+                <p className="text-sm text-gray-400">
+                  View all the original style options and final images generated for this content
+                </p>
+                
+                <div className="space-y-6">
+                  {/* Original Style Variants */}
+                  {generatedContent.images.filter(img => img.variant_type === 'original').length > 0 && (
+                    <div>
+                      <h4 className="text-md font-semibold text-purple-300 mb-3">Original Style Variants</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {generatedContent.images
+                          .filter(img => img.variant_type === 'original')
+                          .map((image, index) => (
+                            <div key={index} className="space-y-2">
+                              <img 
+                                src={image.url} 
+                                alt={image.prompt || 'Original variant'}
+                                className="w-full h-48 object-cover rounded-lg border border-purple-500/20"
+                              />
+                              <Badge className="bg-purple-600/20 text-purple-200">
+                                {image.style?.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Final Images */}
+                  {generatedContent.images.filter(img => img.variant_type === 'final').length > 0 && (
+                    <div>
+                      <h4 className="text-md font-semibold text-green-300 mb-3">✅ Final Images (Chosen Style)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {generatedContent.images
+                          .filter(img => img.variant_type === 'final')
+                          .map((image, index) => (
+                            <div key={index} className="space-y-2">
+                              <img 
+                                src={image.url} 
+                                alt={image.prompt || 'Final image'}
+                                className="w-full h-48 object-cover rounded-lg border-2 border-green-500/30"
+                              />
+                              <Badge className="bg-green-600/20 text-green-200">
+                                {image.style?.replace('_', ' ')} {image.is_active && '(Active)'}
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -966,8 +1060,8 @@ export default function ContentPackagePage() {
                     <li>• Discord Post</li>
                     <li>• Reddit Post</li>
                     <li>• Telegram Post</li>
-                    {generatedContent?.image?.url && (
-                      <li>• Generated Image (included with all posts)</li>
+                    {generatedContent?.images && generatedContent.images.filter(img => img.is_active).length > 0 && (
+                      <li>• {generatedContent.images.filter(img => img.is_active).length} Generated Image(s) (included with all posts)</li>
                     )}
                   </ul>
                 </div>

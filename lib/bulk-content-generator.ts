@@ -20,7 +20,7 @@ interface BulkContentRequest {
   items: TrendItem[]
   contentType: 'blog' | 'social' | 'mixed'
   customPrompt?: string
-  language?: 'nl' | 'en'
+  language?: 'nl' | 'en' | 'auto'
 }
 
 export interface BulkContentResult {
@@ -179,7 +179,10 @@ async function generateTrendContent(
     }
   })
   
-  const languageInstruction = language === 'en' ? 'Write in English.' : 'Write in Dutch.'
+  const languageInstruction = 
+    language === 'en' ? 'Write in English.' : 
+    language === 'nl' ? 'Write in Dutch.' : 
+    'AUTOMATICALLY DETECT the language from the input (title, summary, tags) and write in that SAME language. Support any language: English, Dutch, French, German, Spanish, etc.'
   
   // DIVINE GENERATION: Create masterpiece content
   const userPrompt = `You are the GOD OF CONTENT CREATION. Create a DIVINE, ABSOLUTE MASTERPIECE blog post about: ${trendName}

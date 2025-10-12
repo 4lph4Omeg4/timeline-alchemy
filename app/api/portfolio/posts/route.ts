@@ -58,7 +58,13 @@ export async function GET(request: NextRequest) {
         average_rating,
         rating_count,
         images (
-          url
+          id,
+          url,
+          prompt,
+          style,
+          variant_type,
+          is_active,
+          prompt_number
         ),
         organizations (
           id,

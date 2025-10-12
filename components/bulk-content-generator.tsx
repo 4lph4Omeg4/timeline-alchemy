@@ -118,7 +118,7 @@ const detectCategoryFromContent = (title: string, summary: string, tags: string[
 
 export default function BulkContentGenerator() {
   const [jsonInput, setJsonInput] = useState('')
-  const [language, setLanguage] = useState<'nl' | 'en'>('nl')
+  const [language, setLanguage] = useState<'nl' | 'en' | 'auto'>('auto')
   const [isGenerating, setIsGenerating] = useState(false)
   const [parsedItemsCount, setParsedItemsCount] = useState(0)
   const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([])
@@ -667,10 +667,10 @@ Metadata:
                 
                 <div className="text-sm text-gray-200 space-y-2">
                   <div className="bg-black/30 p-3 rounded-lg border border-blue-500/20">
-                    <strong className="text-blue-300">Step 1: Prompt Your AI Agent</strong>
-                    <p className="mt-1 text-gray-300">Ask ChatGPT, Claude, or Grok to find trending topics. For best results, ask for <strong>cross-platform trends</strong> (topics trending on Twitter, Reddit, TikTok simultaneously = higher quality & better engagement).</p>
+                    <strong className="text-blue-300">Step 1: Prompt Your AI Agent (Any Language!)</strong>
+                    <p className="mt-1 text-gray-300">Ask ChatGPT, Claude, or Grok to find trending topics in <strong>any language</strong>. For best results, ask for <strong>cross-platform trends</strong> (topics trending on Twitter, Reddit, TikTok simultaneously = higher quality & better engagement).</p>
                     <div className="mt-2 p-2 bg-black/50 rounded font-mono text-xs text-green-300 whitespace-pre-wrap">
-                      Example Prompt:<br/><br/>
+                      Example Prompt (English):<br/><br/>
                       "Find 3 topics that are currently trending across multiple platforms (Twitter, Reddit, TikTok).
                       Focus on: AI, consciousness, or technology.
                       Return ONLY a JSON array with this exact format:
@@ -683,7 +683,10 @@ Metadata:
                       
                       Important: Return ONLY the JSON array, no extra text."
                     </div>
-                    <p className="mt-2 text-orange-300 text-xs font-semibold">💡 Cross-platform trends = consistent quality output!</p>
+                    <p className="mt-2 text-purple-300 text-xs">
+                      💡 You can ask in <strong>any language</strong> (French, Dutch, Spanish, German, etc.) - our AI will auto-detect and respond in the same language!
+                    </p>
+                    <p className="mt-1 text-orange-300 text-xs font-semibold">✨ Cross-platform trends = consistent quality output!</p>
                   </div>
 
                   <div className="bg-black/30 p-3 rounded-lg border border-blue-500/20">
@@ -730,6 +733,12 @@ Metadata:
                           <strong className="text-orange-200">Complete content packages</strong> - Each topic automatically generates: full blog post + optimized social media posts for all platforms + AI-generated image
                         </div>
                       </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400">🌍</span>
+                        <div>
+                          <strong className="text-orange-200">Multi-language support</strong> - Use Auto-detect (recommended) to generate content in French, Dutch, German, Spanish, or any other language based on your input
+                        </div>
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -740,15 +749,19 @@ Metadata:
           {/* Configuration - Language Only */}
           <div className="w-full md:w-1/2">
             <Label htmlFor="language">Language</Label>
-            <Select value={language} onValueChange={(value: 'nl' | 'en') => setLanguage(value)}>
+            <Select value={language} onValueChange={(value: 'nl' | 'en' | 'auto') => setLanguage(value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="nl">Nederlands</SelectItem>
-                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="auto">🌍 Auto-detect (Recommended)</SelectItem>
+                <SelectItem value="nl">🇳🇱 Nederlands</SelectItem>
+                <SelectItem value="en">🇬🇧 English</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-400 mt-1">
+              Auto-detect will match the language of your input (supports French, German, Spanish, etc.)
+            </p>
           </div>
 
           {/* JSON Input */}

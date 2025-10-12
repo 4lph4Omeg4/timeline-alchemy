@@ -61,10 +61,10 @@ export async function POST(req: NextRequest) {
     
     // Set defaults
     const contentType = body.contentType || 'blog'
-    const language = body.language || 'nl'
+    const language = body.language || 'auto'
     const customPrompt = body.customPrompt || ''
     
-    console.log(`📊 Processing ${body.items.length} trend items for ${contentType} content in ${language}`)
+    console.log(`📊 Processing ${body.items.length} trend items for ${contentType} content in ${language === 'auto' ? 'auto-detected language' : language}`)
     console.log(`🏢 Organization: ${userOrgId}`)
     console.log(`✅ Limit check passed - proceeding with generation`)
     
