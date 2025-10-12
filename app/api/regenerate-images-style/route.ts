@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const styleGroupId = crypto.randomUUID()
 
     // First, mark the chosen original image as active
-    await supabaseAdmin
+    await (supabaseAdmin as any)
       .from('images')
       .update({ is_active: true })
       .eq('id', chosenImage.id)
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Save regenerated image to database
-          const { data: newImage, error: insertError } = await supabaseAdmin
+          const { data: newImage, error: insertError } = await (supabaseAdmin as any)
             .from('images')
             .insert({
               post_id: postId,

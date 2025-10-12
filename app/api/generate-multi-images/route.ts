@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
           style_group: img.styleGroup
         }))
 
-        const { error: dbError } = await supabaseAdmin
+        const { error: dbError } = await (supabaseAdmin as any)
           .from('images')
           .insert(imagesToInsert)
 
