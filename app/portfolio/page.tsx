@@ -8,6 +8,7 @@ import { Loader } from '@/components/Loader'
 import { Modal } from '@/components/ui/modal'
 import ContentProtection from '@/components/ContentProtection'
 import { Logo } from '@/components/Logo'
+import { StarRating } from '@/components/ui/star-rating'
 import { CONTENT_CATEGORIES, getAllCategories, getCategoryInfo, type CategoryId } from '@/lib/category-detector'
 import { BlogPost } from '@/types/index'
 import Link from 'next/link'
@@ -300,17 +301,12 @@ export default function PortfolioPage() {
                               Resonance Rating
                             </div>
                             {post.average_rating ? (
-                              <div className="flex items-center space-x-2">
-                                <div className="flex items-center">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <span 
-                                      key={star}
-                                      className={star <= Math.round(post.average_rating || 0) ? 'text-yellow-400' : 'text-gray-500'}
-                                    >
-                                      ⭐
-                                    </span>
-                                  ))}
-                                </div>
+                              <div className="flex items-center justify-center space-x-2">
+                                <StarRating 
+                                  rating={post.average_rating} 
+                                  size="md"
+                                  showNumber={false}
+                                />
                                 <span className="text-white font-bold">{post.average_rating.toFixed(1)}</span>
                                 <span className="text-gray-400 text-xs">({post.rating_count || 0})</span>
                               </div>
@@ -332,17 +328,12 @@ export default function PortfolioPage() {
                             Resonance Rating
                           </div>
                           {post.average_rating ? (
-                            <div className="flex items-center space-x-2">
-                              <div className="flex items-center">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <span 
-                                    key={star}
-                                    className={star <= Math.round(post.average_rating || 0) ? 'text-yellow-400' : 'text-gray-500'}
-                                  >
-                                    ⭐
-                                  </span>
-                                ))}
-                              </div>
+                            <div className="flex items-center justify-center space-x-2">
+                              <StarRating 
+                                rating={post.average_rating} 
+                                size="md"
+                                showNumber={false}
+                              />
                               <span className="text-white font-bold">{post.average_rating.toFixed(1)}</span>
                               <span className="text-gray-400 text-xs">({post.rating_count || 0})</span>
                             </div>
