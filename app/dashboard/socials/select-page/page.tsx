@@ -34,8 +34,7 @@ export default function SelectPagePage() {
 
   const initializeAndFetchPages = async () => {
     // Get user ID from Supabase auth
-    const { createClient } = await import('@/lib/supabase-client')
-    const supabase = createClient()
+    const { supabase } = await import('@/lib/supabase')
     const { data: { user } } = await supabase.auth.getUser()
     
     if (user) {
