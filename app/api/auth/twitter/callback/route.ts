@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
 
     // Handle OAuth errors
     if (error) {
+      const errorDescription = searchParams.get('error_description')
       console.error('Twitter OAuth error:', error)
+      console.error('Error description:', errorDescription)
       console.error('Full search params:', Object.fromEntries(searchParams.entries()))
       
       // If it's an auth_required error, redirect to signin first
@@ -36,8 +38,13 @@ export async function GET(request: NextRequest) {
         )
       }
       
+      // Provide detailed error message
+      const errorMessage = errorDescription 
+        ? `${error}: ${errorDescription}` 
+        : error
+      
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=${encodeURIComponent(error)}`
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=${encodeURIComponent(errorMessage)}`
       )
     }
 
