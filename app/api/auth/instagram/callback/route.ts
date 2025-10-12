@@ -223,13 +223,17 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (error) {
-      console.error('Failed to auto-fetch Instagram accounts:', error)
-      // Fall through to redirect to manual selector
+      console.error('❌ Failed to auto-fetch Instagram accounts:', error)
+      // Redirect to socials with error
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=failed_to_fetch_instagram&details=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
+      )
     }
     
-    // Fallback: Redirect to page selector if auto-fetch failed
+    // Fallback: No Instagram pages found
+    console.warn('⚠️ No Instagram Business Accounts found for user')
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials/select-page?platform=instagram`
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_instagram_accounts&details=no_instagram_business_accounts_connected`
     )
 
   } catch (error) {

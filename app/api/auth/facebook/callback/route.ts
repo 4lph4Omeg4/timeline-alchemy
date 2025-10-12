@@ -212,13 +212,17 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (error) {
-      console.error('Failed to auto-fetch pages:', error)
-      // Fall through to redirect to manual selector
+      console.error('❌ Failed to auto-fetch pages:', error)
+      // Redirect to socials with error
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=failed_to_fetch_pages&details=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
+      )
     }
     
-    // Fallback: Redirect to page selector if auto-fetch failed
+    // Fallback: No pages found
+    console.warn('⚠️ No Facebook pages found for user')
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials/select-page?platform=facebook`
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_pages_found&details=no_facebook_pages_managed`
     )
 
   } catch (error) {
