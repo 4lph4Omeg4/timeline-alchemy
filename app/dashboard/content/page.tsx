@@ -63,7 +63,7 @@ export default function ContentCreatorPage() {
           body: JSON.stringify({
             title: prompt,
             content: prompt,
-            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit']
+            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'telegram']
           }),
         })
       ])

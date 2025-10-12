@@ -46,7 +46,12 @@ interface GeneratedPost {
   suggestions: string[]
   category: string
   socialPosts?: Record<string, string>
-  generatedImage?: string
+  generatedImages?: Array<{
+    url: string
+    prompt: string
+    style: string
+    promptNumber: number
+  }>
   metadata: {
     sourceTitle: string
     sourceUrl: string
@@ -266,7 +271,7 @@ export default function BulkContentGenerator() {
             body: JSON.stringify({
               title: post.title,
               content: post.content,
-              platforms: ['twitter', 'instagram', 'facebook', 'linkedin', 'discord', 'reddit']
+              platforms: ['twitter', 'instagram', 'facebook', 'linkedin', 'discord', 'reddit', 'telegram']
             })
           })
           
@@ -326,14 +331,75 @@ export default function BulkContentGenerator() {
           console.log('🔧 Telegram post added as fallback')
         }
         
-        // 🌟 DYNAMIC CATEGORY-SPECIFIC IMAGE GENERATION
+        // 🌟 MULTI-IMAGE GENERATION (3 images in different styles)
         try {
-          // Create relevant image prompt based on content and category
-          const category = post.category || 'Consciousness & Awakening'
-          const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
-          const titleWords = post.title.toLowerCase()
+          console.log(`🎨 Generating 3 images in different styles for: ${post.title}`)
           
-          let imagePrompt = `Professional illustration for article: "${post.title}". `
+          const imageResponse = await fetch('/api/generate-multi-images', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              title: post.title,
+              content: post.content
+            })
+          })
+          
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json()
+            if (imageData.success && imageData.images) {
+              post.generatedImages = imageData.images
+              console.log(`✅ Generated ${imageData.images.length} images in different styles for ${post.title}`)
+            }
+          } else {
+            console.error('❌ Multi-image generation failed for', post.title)
+            // Fallback to old single image method
+            await generateSingleImageFallback(post)
+          }
+        } catch (imageError) {
+          console.error('❌ Image generation error:', imageError)
+          // Fallback to old single image method
+          await generateSingleImageFallback(post)
+        }
+        
+        // Divine timing - respect the universe's rhythm
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Update UI immediately
+        setGeneratedPosts([...generatedPosts]) // Trigger re-render
+        
+        // Update loading toast
+        toast.loading(`🌟 Generating content ${i + 1}/${posts.length}...`, {
+          id: 'divine-generation'
+        })
+      }
+      
+      // Final update
+      setGeneratedPosts([...posts])
+      
+      // 🚀 AUTOMATICALLY SAVE ALL POSTS AS ADMIN PACKAGES
+      await saveAllPostsAsPackages(posts)
+      
+      toast.success('🎉 All content packages generated and automatically saved!', {
+        id: 'divine-generation'
+      })
+      
+    } catch (error) {
+      console.error('❌ Error generating social and image content:', error)
+      toast.error('Failed to generate some content', {
+        id: 'divine-generation'
+      })
+    }
+  }
+
+  // Fallback function for single image generation
+  const generateSingleImageFallback = async (post: GeneratedPost) => {
+    try {
+      // Create relevant image prompt based on content and category
+      const category = post.category || 'Consciousness & Awakening'
+      const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
+      const titleWords = post.title.toLowerCase()
+      
+      let imagePrompt = `Professional illustration for article: "${post.title}". `
           
           // 🧠 CONSCIOUSNESS & AWAKENING - Mind expansion, enlightenment, meditation
           if (category.includes('Consciousness') || category.includes('Awakening')) {
@@ -425,8 +491,13 @@ export default function BulkContentGenerator() {
             console.log('🌟 Cosmic image generated for', post.title)
             console.log('🔍 Image data received:', imageData)
             
-            // Store temporary image URL - will be saved permanently after post creation
-            post.generatedImage = imageData.imageUrl
+            // Store as single image array for fallback
+            post.generatedImages = [{
+              url: imageData.imageUrl,
+              prompt: imagePrompt,
+              style: 'photorealistic',
+              promptNumber: 1
+            }]
             console.log('🌟 Image generated, will be saved permanently after post creation')
             console.log('🔍 Generated image URL:', imageData.imageUrl)
           } else {
@@ -434,38 +505,9 @@ export default function BulkContentGenerator() {
             const errorText = await imageResponse.text()
             console.error('❌ Image generation error:', errorText)
           }
-        } catch (imageError) {
-          console.error('❌ Image generation error:', imageError)
-        }
-        
-        // Divine timing - respect the universe's rhythm (reduced for faster generation)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Update UI immediately
-        setGeneratedPosts([...generatedPosts]) // Trigger re-render
-        
-        // Update loading toast
-        toast.loading(`🌟 Generating divine content ${i + 1}/${posts.length}...`, {
-          id: 'divine-generation'
-        })
       }
-      
-      // Final update
-      setGeneratedPosts([...posts])
-      
-      // 🚀 AUTOMATICALLY SAVE ALL POSTS AS ADMIN PACKAGES
-      await saveAllPostsAsPackages(posts)
-      
-      // Replace loading toast with success
-      toast.success('🎉 All divine content generated and automatically saved as packages!', {
-        id: 'divine-generation'
-      })
     } catch (error) {
-      console.error('❌ Divine generation error:', error)
-      // Replace loading toast with error
-      toast.error('❌ Some divine content failed to generate', {
-        id: 'divine-generation'
-      })
+      console.error('❌ Fallback image generation error:', error)
     }
   }
 
@@ -523,7 +565,7 @@ Metadata:
               category: post.category,
               userId: userId,
               socialPosts: post.socialPosts || {},
-              generatedImage: post.generatedImage || null,
+              generatedImages: post.generatedImages || [],
               metadata: {
                 ...post.metadata,
                 bulkGenerated: true,
@@ -594,7 +636,7 @@ Metadata:
           category: post.category,
           userId: userId,
           socialPosts: post.socialPosts || {},
-          generatedImage: post.generatedImage || null,
+          generatedImages: post.generatedImages || [],
           metadata: {
             ...post.metadata,
             bulkGenerated: true,
@@ -912,26 +954,30 @@ Metadata:
                         </div>
                       </div>
                       
-                      {/* Generated Image */}
-                      {post.generatedImage && (
+                      {/* Generated Images (Multi-Style) */}
+                      {post.generatedImages && post.generatedImages.length > 0 && (
                         <div className="bg-pink-800/10 p-4 rounded-lg border border-pink-500/20">
                           <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
                             <Package className="h-4 w-4 text-pink-400" />
-                            Cosmic Image
+                            🎨 Generated Images ({post.generatedImages.length})
                           </h4>
-                          <div className="relative">
-                            <img 
-                              src={post.generatedImage} 
-                              alt={`Generated cosmic image for ${post.title}`}
-                              className="w-full max-w-md h-auto rounded-lg border border-pink-500/30 shadow-lg"
-                              onError={(e) => {
-                                console.error('Image failed to load:', post.generatedImage)
-                                e.currentTarget.style.display = 'none'
-                              }}
-                            />
-                            <Badge className="absolute top-2 right-2 bg-pink-500/20 text-pink-300">
-                              AI Cosmic
-                            </Badge>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {post.generatedImages.map((image, imgIndex) => (
+                              <div key={imgIndex} className="relative">
+                                <img 
+                                  src={image.url} 
+                                  alt={image.prompt || `Image ${imgIndex + 1} for ${post.title}`}
+                                  className="w-full h-40 object-cover rounded-lg border border-pink-500/30 shadow-lg"
+                                  onError={(e) => {
+                                    console.error('Image failed to load:', image.url)
+                                    e.currentTarget.style.display = 'none'
+                                  }}
+                                />
+                                <Badge className="absolute top-2 right-2 bg-pink-500/20 text-pink-300 text-xs">
+                                  {image.style.replace('_', ' ')}
+                                </Badge>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

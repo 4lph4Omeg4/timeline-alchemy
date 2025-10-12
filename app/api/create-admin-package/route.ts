@@ -5,11 +5,11 @@ import { incrementUsage } from '@/lib/subscription-limits'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { title, content, excerpt, hashtags, suggestions, userId, socialPosts, generatedImage, category } = body
+    const { title, content, excerpt, hashtags, suggestions, userId, socialPosts, generatedImages, category } = body
     
-    console.log('🔍 Debug - Received generatedImage:', generatedImage)
-    console.log('🔍 Debug - GeneratedImage type:', typeof generatedImage)
-    console.log('🔍 Debug - GeneratedImage length:', generatedImage?.length)
+    console.log('🔍 Debug - Received generatedImages:', generatedImages)
+    console.log('🔍 Debug - GeneratedImages is array:', Array.isArray(generatedImages))
+    console.log('🔍 Debug - GeneratedImages count:', generatedImages?.length)
 
     console.log('🔍 Create admin package request:', {
       title: title,
@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
       contentLength: content?.length || 0,
       hasSocialPosts: !!socialPosts,
       socialPostsKeys: socialPosts ? Object.keys(socialPosts) : [],
-      hasGeneratedImage: !!generatedImage,
+      hasGeneratedImages: !!generatedImages,
+      generatedImagesCount: generatedImages?.length || 0,
       userId: userId
     })
     
@@ -139,58 +140,44 @@ export async function POST(request: NextRequest) {
       console.log('⚠️ No social posts to save to separate table')
     }
 
-    // Save image permanently AFTER post creation (now we have the real postId)
-    if (generatedImage && insertedPackage?.id) {
-      console.log('🔄 Starting permanent image save process...')
-      console.log('🔍 Image URL:', generatedImage)
+    // Save images permanently AFTER post creation (now we have the real postId)
+    if (generatedImages && Array.isArray(generatedImages) && generatedImages.length > 0 && insertedPackage?.id) {
+      console.log(`🔄 Starting permanent save for ${generatedImages.length} images...`)
       console.log('🔍 Post ID:', insertedPackage.id)
+      
       try {
-        // Since Gemini images are already uploaded to Supabase Storage, just save the URL directly
-        console.log('🔄 Saving Gemini image URL directly to database...')
+        // Prepare images for database
+        const imagesToInsert = generatedImages.map((img: any, index: number) => ({
+          org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
+          post_id: insertedPackage.id,
+          url: img.url,
+          prompt: img.prompt || `AI generated image ${index + 1} for: ${title}`,
+          style: img.style || 'photorealistic',
+          variant_type: img.variantType || 'original',
+          is_active: img.isActive !== undefined ? img.isActive : false,
+          prompt_number: img.promptNumber || (index + 1),
+          style_group: img.styleGroup || crypto.randomUUID()
+        }))
+        
+        console.log(`🔄 Saving ${imagesToInsert.length} images to database...`)
         
         // Save to images table
-        const { error: dbError } = await supabaseClient
+        const { error: dbError } = await (supabaseClient as any)
           .from('images')
-          .insert({
-            org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
-            post_id: insertedPackage.id,
-            url: generatedImage,
-            prompt: `AI generated image for: ${title}`
-          })
+          .insert(imagesToInsert)
 
         if (dbError) {
           console.error('❌ Database error:', dbError)
-          throw new Error(`Failed to save image to database: ${dbError.message}`)
+          throw new Error(`Failed to save images to database: ${dbError.message}`)
         }
 
-        console.log('✅ Image URL saved to database:', generatedImage)
+        console.log(`✅ ${imagesToInsert.length} images saved to database successfully`)
         
       } catch (imageError) {
-        console.error('❌ Error saving image permanently:', imageError)
-        console.log('🔄 Attempting fallback: saving temporary URL to database')
-        
-        // Fallback: save temporary URL to database
-        try {
-          const { error: fallbackError } = await supabaseClient
-            .from('images')
-            .insert({
-              org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91',
-              post_id: insertedPackage.id,
-              url: generatedImage,
-              prompt: `AI generated image for: ${title}`
-            })
-          
-          if (fallbackError) {
-            console.error('❌ Fallback save also failed:', fallbackError)
-          } else {
-            console.log('⚠️ Saved temporary URL as fallback')
-          }
-        } catch (fallbackError) {
-          console.error('❌ Fallback save also failed:', fallbackError)
-        }
+        console.error('❌ Error saving images permanently:', imageError)
       }
     } else {
-      console.log('⚠️ No image to save or no post ID available')
+      console.log('⚠️ No images to save or no post ID available')
     }
     
     console.log('✅ Admin package created successfully:', insertedPackage?.id)

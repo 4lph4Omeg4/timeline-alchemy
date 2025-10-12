@@ -6,6 +6,16 @@ import { addWatermarkToImageServer } from '@/lib/watermark'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 180 // 3 minutes for generating 3 images
 
+// GET endpoint for route verification
+export async function GET() {
+  return NextResponse.json({
+    message: 'Multi-Image Generation API',
+    status: 'active',
+    method: 'POST',
+    description: 'Generates 3 images in different styles for a blog post'
+  })
+}
+
 // Define image styles
 const IMAGE_STYLES = [
   {

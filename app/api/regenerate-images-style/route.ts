@@ -6,6 +6,16 @@ import { addWatermarkToImageServer } from '@/lib/watermark'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 120 // 2 minutes for regenerating 2 images
 
+// GET endpoint for route verification
+export async function GET() {
+  return NextResponse.json({
+    message: 'Image Style Regeneration API',
+    status: 'active',
+    method: 'POST',
+    description: 'Regenerates images in a chosen style'
+  })
+}
+
 // Style definitions (same as multi-images)
 const IMAGE_STYLES: Record<string, string> = {
   photorealistic: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k',
