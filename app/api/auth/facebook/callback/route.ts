@@ -175,16 +175,37 @@ export async function GET(request: NextRequest) {
 
     // Try to fetch user's pages immediately and store first one
     try {
+      console.log('🔍 Attempting to fetch Facebook Pages...')
+      console.log('🔑 Access token (first 30 chars):', access_token.substring(0, 30) + '...')
+      
+      // First, check permissions
+      const permissionsResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me/permissions?access_token=${access_token}`
+      )
+      
+      if (permissionsResponse.ok) {
+        const permissionsData = await permissionsResponse.json()
+        console.log('🔐 Granted permissions:', permissionsData.data?.map((p: any) => `${p.permission}:${p.status}`).join(', '))
+      }
+      
       const pagesResponse = await fetch(
         `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,category,instagram_business_account{id,username}&access_token=${access_token}`
       )
       
-      if (pagesResponse.ok) {
-        const pagesData = await pagesResponse.json()
-        
-        console.log('📘 Found', pagesData.data?.length || 0, 'pages')
-        
-        if (pagesData.data && pagesData.data.length > 0) {
+      console.log('📘 Pages API response status:', pagesResponse.status)
+      
+      if (!pagesResponse.ok) {
+        const errorData = await pagesResponse.json()
+        console.error('❌ Pages API error:', errorData)
+        throw new Error(`Facebook API error: ${JSON.stringify(errorData)}`)
+      }
+      
+      const pagesData = await pagesResponse.json()
+      
+      console.log('📘 Raw pages response:', JSON.stringify(pagesData, null, 2))
+      console.log('📘 Found', pagesData.data?.length || 0, 'pages')
+      
+      if (pagesData.data && pagesData.data.length > 0) {
           // Use first page as default
           const firstPage = pagesData.data[0]
           console.log('✅ Auto-selecting first page:', firstPage.name)
@@ -221,8 +242,12 @@ export async function GET(request: NextRequest) {
     
     // Fallback: No pages found
     console.warn('⚠️ No Facebook pages found for user')
+    console.warn('💡 This usually means:')
+    console.warn('   1. App is in Development Mode and user is not a Test User')
+    console.warn('   2. User is not Admin/Manager of any Facebook Pages')
+    console.warn('   3. pages_show_list permission was not granted')
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_pages_found&details=no_facebook_pages_managed`
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=no_pages_found&details=Check: (1) Are you added as Test User in Meta App? (2) Are you Admin of a Facebook Page? (3) Is app in Development Mode?`
     )
 
   } catch (error) {
