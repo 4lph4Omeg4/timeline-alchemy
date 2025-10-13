@@ -372,7 +372,12 @@ export default function ContentPackagePage() {
         .select('*')
         .eq('post_id', params.id)
 
-      console.log('Fetched images for post:', images)
+      console.log('📷 Fetched images for post:', params.id)
+      console.log('📷 Total images found:', images?.length || 0)
+      if (images && images.length > 0) {
+        console.log('📷 Active images:', images.filter(img => img.is_active).length)
+        console.log('📷 Image details:', images.map(img => ({ url: img.url?.substring(0, 50), is_active: img.is_active, style: img.style })))
+      }
 
              // Use existing content directly - no generation, no processing
              const cleanContent = postData.content
@@ -678,11 +683,12 @@ export default function ContentPackagePage() {
             </div>
           </CardHeader>
           <CardContent>
-            {/* Active Images */}
+            {/* Active Images (or all if none are active) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {generatedContent.images
-                .filter(img => img.is_active)
-                .map((image, index) => (
+              {(generatedContent.images.filter(img => img.is_active).length > 0
+                ? generatedContent.images.filter(img => img.is_active)
+                : generatedContent.images.slice(0, 3)
+              ).map((image, index) => (
                   <div key={index} className="space-y-2">
                     <div className="w-full h-64 bg-black/30 rounded-lg shadow-lg border-2 border-green-500/30 overflow-hidden flex items-center justify-center">
                       <img 
