@@ -316,15 +316,19 @@ export default function PortfolioPage() {
                       {post.excerpt || truncateContent(post.content)}
                     </CardDescription>
                     
-                    {/* Post Image */}
+                    {/* Post Images - Show all 3 */}
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
-                        <div className="w-full h-48 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
-                          <img 
-                            src={(getActiveImages(post)[0] || post.images[0]).url} 
-                            alt={post.title}
-                            className="w-full h-full object-contain"
-                          />
+                        <div className="grid grid-cols-3 gap-2">
+                          {getActiveImages(post).slice(0, 3).map((image, idx) => (
+                            <div key={idx} className="w-full h-32 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
+                              <img 
+                                src={image.url} 
+                                alt={`${post.title} - Image ${idx + 1}`}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          ))}
                         </div>
                         {/* Resonance Rating */}
                         <div className="flex items-center justify-center mt-3 mb-2">
