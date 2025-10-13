@@ -91,6 +91,103 @@ export default function ContentPackagePage() {
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
   const [scheduleDateTime, setScheduleDateTime] = useState('')
   const [scheduling, setScheduling] = useState(false)
+  const [regeneratingImages, setRegeneratingImages] = useState(false)
+  const [selectedImageStyle, setSelectedImageStyle] = useState<'photorealistic' | 'digital_art' | 'cosmic'>('photorealistic')
+
+  const handleRegenerateImages = async () => {
+    if (!post) return
+    
+    setRegeneratingImages(true)
+    
+    try {
+      toast.loading(`Generating 3 diverse images in ${selectedImageStyle.replace('_', ' ')} style...`, { id: 'regen-images' })
+      
+      const imageStyleSuffixes: Record<string, string> = {
+        'photorealistic': 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
+        'digital_art': 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
+        'cosmic': 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
+      }
+      
+      const selectedStyleSuffix = imageStyleSuffixes[selectedImageStyle]
+      
+      // Create 3 diverse prompts
+      const imagePrompts = [
+        `${post.title} - Realistic scene with people or objects depicting the main concept`,
+        `${post.title} - Abstract artistic visualization with shapes and colors representing key themes`,
+        `${post.title} - Cosmic mystical energy visualization with celestial elements and divine atmosphere`
+      ]
+      
+      const newImages = []
+      
+      // Generate 3 images
+      for (let i = 0; i < 3; i++) {
+        try {
+          const fullPrompt = `${imagePrompts[i]}. ${selectedStyleSuffix}`
+          
+          console.log(`🎨 Generating image ${i + 1}/3 in ${selectedImageStyle} style...`)
+          
+          const imageResponse = await fetch('/api/generate-vercel-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: fullPrompt })
+          })
+          
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json()
+            newImages.push({
+              url: imageData.imageUrl,
+              prompt: imagePrompts[i],
+              style: selectedImageStyle,
+              variant_type: 'final',
+              is_active: true,
+              prompt_number: i + 1
+            })
+            console.log(`✅ Generated image ${i + 1}/3`)
+          }
+          
+          // Small delay
+          if (i < 2) {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
+        } catch (error) {
+          console.error(`❌ Error generating image ${i + 1}:`, error)
+        }
+      }
+      
+      if (newImages.length > 0) {
+        // Save to database
+        const { data: { user } } = await supabase.auth.getUser()
+        const { data: orgMembers } = await supabase.from('org_members').select('org_id, role').eq('user_id', user!.id)
+        const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
+        
+        const imagesToSave = newImages.map(img => ({
+          org_id: userOrgId,
+          post_id: post.id,
+          url: img.url,
+          prompt: img.prompt,
+          style: img.style,
+          variant_type: 'final',
+          is_active: true,
+          prompt_number: img.prompt_number,
+          style_group: crypto.randomUUID()
+        }))
+        
+        await (supabase as any).from('images').insert(imagesToSave)
+        
+        // Refresh the page data to show new images
+        await fetchPost()
+        
+        toast.success(`✨ Created new set of 3 images in ${selectedImageStyle.replace('_', ' ')} style!`, { id: 'regen-images' })
+      } else {
+        toast.error('Failed to generate images', { id: 'regen-images' })
+      }
+    } catch (error) {
+      console.error('Error generating images:', error)
+      toast.error('Failed to generate images', { id: 'regen-images' })
+    } finally {
+      setRegeneratingImages(false)
+    }
+  }
 
   const handleRegenerateSocialPosts = async () => {
     if (!post) return
@@ -652,13 +749,61 @@ export default function ContentPackagePage() {
         </CardContent>
       </Card>
 
+      {/* Generate New Image Set */}
+      <Card className="bg-gradient-to-br from-pink-900/30 to-purple-900/30 border-pink-500/30">
+        <CardHeader>
+          <CardTitle className="text-white">🎨 Generate New Image Set</CardTitle>
+          <CardDescription className="text-gray-300">
+            Create 3 diverse images in your preferred style for this package
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <Label htmlFor="imageStyle">Select Style</Label>
+              <select
+                id="imageStyle"
+                value={selectedImageStyle}
+                onChange={(e) => setSelectedImageStyle(e.target.value as 'photorealistic' | 'digital_art' | 'cosmic')}
+                className="w-full mt-1 bg-gray-800 border border-purple-500/30 text-white rounded-md p-2"
+                disabled={regeneratingImages}
+              >
+                <option value="photorealistic">📸 Photorealistic</option>
+                <option value="digital_art">🎨 Digital Art</option>
+                <option value="cosmic">🌌 Cosmic</option>
+              </select>
+              <p className="text-xs text-gray-400 mt-1">
+                Will generate 3 diverse scenes in this style
+              </p>
+            </div>
+            
+            <Button
+              onClick={handleRegenerateImages}
+              disabled={regeneratingImages}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+            >
+              {regeneratingImages ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  ✨ Generate New Set
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Generated Images - Multi-Style Gallery */}
       {generatedContent.images && generatedContent.images.length > 0 && (
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-white">🖼️ Generated Images</CardTitle>
+                <CardTitle className="text-white">🖼️ Current Images</CardTitle>
                 <CardDescription className="text-gray-300">
                   {generatedContent.images.filter(img => img.is_active).length > 1 
                     ? `${generatedContent.images.filter(img => img.is_active).length} AI-generated images in ${generatedContent.images.find(img => img.is_active)?.style?.replace('_', ' ') || 'selected'} style`
