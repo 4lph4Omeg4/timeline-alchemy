@@ -6,12 +6,14 @@ import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { StarRating, RatingInput } from '@/components/ui/star-rating'
 import { BlogPost } from '@/types/index'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { Loader2 } from 'lucide-react'
 
 // Function to generate proper social media posts
 const generateSocialMediaPosts = async (title: string, content: string) => {
