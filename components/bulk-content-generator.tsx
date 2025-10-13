@@ -124,6 +124,7 @@ const detectCategoryFromContent = (title: string, summary: string, tags: string[
 export default function BulkContentGenerator() {
   const [jsonInput, setJsonInput] = useState('')
   const [language, setLanguage] = useState<'nl' | 'en' | 'auto'>('auto')
+  const [imageStyle, setImageStyle] = useState<'photorealistic' | 'digital_art' | 'cosmic'>('photorealistic')
   const [isGenerating, setIsGenerating] = useState(false)
   const [parsedItemsCount, setParsedItemsCount] = useState(0)
   const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([])
@@ -335,14 +336,16 @@ export default function BulkContentGenerator() {
         try {
           console.log(`🎨 Generating 3 images in different styles for: ${post.title}`)
           
-          // Generate 3 DIFFERENT scenes in DIFFERENT styles (one per style)
-          const imageStyles = [
-            { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
-            { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
-            { name: 'cosmic', suffix: 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' }
-          ]
+          // Use the selected image style for all 3 images (consistent style per package)
+          const imageStyleSuffixes: Record<string, string> = {
+            'photorealistic': 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
+            'digital_art': 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
+            'cosmic': 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
+          }
+          
+          const selectedStyleSuffix = imageStyleSuffixes[imageStyle]
 
-          // Create 3 DIFFERENT prompts to get variety in scenes
+          // Create 3 DIFFERENT prompts to get variety in scenes (all in the same selected style)
           const imagePrompts = [
             `${post.title} - Realistic scene with people or objects depicting the main concept`,
             `${post.title} - Abstract artistic visualization with shapes and colors representing key themes`,
@@ -351,10 +354,12 @@ export default function BulkContentGenerator() {
 
           const generatedImagesArray = []
 
-          // Generate 3 images sequentially using the working API
+          // Generate 3 images sequentially using the working API (all in selected style)
           for (let imgIndex = 0; imgIndex < 3; imgIndex++) {
             try {
-              const fullPrompt = `${imagePrompts[imgIndex]}. ${imageStyles[imgIndex].suffix}`
+              const fullPrompt = `${imagePrompts[imgIndex]}. ${selectedStyleSuffix}`
+              
+              console.log(`🎨 Generating image ${imgIndex + 1}/3 in ${imageStyle} style for: ${post.title}`)
               
               const imageResponse = await fetch('/api/generate-vercel-image', {
                 method: 'POST',
@@ -367,10 +372,12 @@ export default function BulkContentGenerator() {
                 generatedImagesArray.push({
                   url: imageData.imageUrl,
                   prompt: imagePrompts[imgIndex],
-                  style: imageStyles[imgIndex].name,
-                  promptNumber: imgIndex + 1
+                  style: imageStyle, // Use the selected style for all images
+                  promptNumber: imgIndex + 1,
+                  variantType: 'final',
+                  isActive: true
                 })
-                console.log(`✅ Image ${imgIndex + 1}/3 generated (${imageStyles[imgIndex].name}) for ${post.title}`)
+                console.log(`✅ Image ${imgIndex + 1}/3 generated in ${imageStyle} style for ${post.title}`)
               }
 
               // Small delay between images
@@ -384,7 +391,7 @@ export default function BulkContentGenerator() {
 
           if (generatedImagesArray.length > 0) {
             post.generatedImages = generatedImagesArray
-            console.log(`✅ Generated ${generatedImagesArray.length} images in different styles for ${post.title}`)
+            console.log(`✅ Generated ${generatedImagesArray.length} diverse images in ${imageStyle} style for ${post.title}`)
             console.log('🔍 Generated images array:', JSON.stringify(generatedImagesArray, null, 2))
           } else {
             // Fallback to single image if all 3 failed
@@ -829,22 +836,41 @@ Metadata:
             </AlertDescription>
           </Alert>
 
-          {/* Configuration - Language Only */}
-          <div className="w-full md:w-1/2">
-            <Label htmlFor="language">Language</Label>
-            <Select value={language} onValueChange={(value: 'nl' | 'en' | 'auto') => setLanguage(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">🌍 Auto-detect (Recommended)</SelectItem>
-                <SelectItem value="nl">🇳🇱 Nederlands</SelectItem>
-                <SelectItem value="en">🇬🇧 English</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-400 mt-1">
-              Auto-detect will match the language of your input (supports French, German, Spanish, etc.)
-            </p>
+          {/* Configuration - Language & Image Style */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="language">Language</Label>
+              <Select value={language} onValueChange={(value: 'nl' | 'en' | 'auto') => setLanguage(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">🌍 Auto-detect (Recommended)</SelectItem>
+                  <SelectItem value="nl">🇳🇱 Nederlands</SelectItem>
+                  <SelectItem value="en">🇬🇧 English</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-400 mt-1">
+                Auto-detect will match the language of your input (supports French, German, Spanish, etc.)
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="imageStyle">Image Style (for all packages)</Label>
+              <Select value={imageStyle} onValueChange={(value: 'photorealistic' | 'digital_art' | 'cosmic') => setImageStyle(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="photorealistic">📸 Photorealistic</SelectItem>
+                  <SelectItem value="digital_art">🎨 Digital Art</SelectItem>
+                  <SelectItem value="cosmic">🌌 Cosmic</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-400 mt-1">
+                Each package will get 3 diverse scenes in this style
+              </p>
+            </div>
           </div>
 
           {/* JSON Input */}
