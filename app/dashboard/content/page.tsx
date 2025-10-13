@@ -153,19 +153,10 @@ export default function ContentCreatorPage() {
     setChosenStyle(style)
 
     try {
-      toast.loading('Regenerating the 2 other scenes in your chosen style...', { id: 'regen' })
-
-      // Find the chosen image and the ones to regenerate
-      const chosenImage = generatedImages.find(img => img.style === style)
-      const imagesToRegenerate = generatedImages.filter(img => img.style !== style)
-
-      if (!chosenImage) {
-        toast.error('Style not found', { id: 'regen' })
-        return
-      }
+      toast.loading('Creating full set of 3 diverse scenes in your chosen style...', { id: 'regen' })
       
       console.log(`🎨 User chose "${style}" style`)
-      console.log(`♻️ Regenerating ${imagesToRegenerate.length} other scenes in "${style}" style`)
+      console.log(`✨ Creating 3 diverse scenes in "${style}" style`)
 
       const imageStyles: Record<string, string> = {
         photorealistic: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
@@ -173,12 +164,21 @@ export default function ContentCreatorPage() {
         cosmic: 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
       }
 
-      const regeneratedArray = [chosenImage] // Start with chosen image
+      // Generate 3 NEW diverse scenes in the chosen style
+      const diversePrompts = [
+        `${title || prompt} - Realistic scene with people or objects depicting the main concept`,
+        `${title || prompt} - Abstract artistic visualization with shapes and colors representing key themes`,
+        `${title || prompt} - Cosmic mystical energy visualization with celestial elements and divine atmosphere`
+      ]
 
-      // Regenerate other 2 prompts in chosen style
-      for (const imageToRegen of imagesToRegenerate) {
+      const regeneratedArray = []
+
+      // Generate 3 new images in chosen style
+      for (let i = 0; i < 3; i++) {
         try {
-          const fullPrompt = `${imageToRegen.prompt}. ${imageStyles[style]}`
+          const fullPrompt = `${diversePrompts[i]}. ${imageStyles[style]}`
+          
+          console.log(`🎨 Generating image ${i + 1}/3 in ${style} style...`)
           
           const imageResponse = await fetch('/api/generate-vercel-image', {
             method: 'POST',
@@ -190,17 +190,20 @@ export default function ContentCreatorPage() {
             const imageData = await imageResponse.json()
             regeneratedArray.push({
               url: imageData.imageUrl,
-              prompt: imageToRegen.prompt,
+              prompt: diversePrompts[i],
               style: style,
-              promptNumber: imageToRegen.promptNumber
+              promptNumber: i + 1,
+              variantType: 'final',
+              isActive: true
             })
-            console.log(`✅ Regenerated prompt ${imageToRegen.promptNumber} in ${style} style`)
+            console.log(`✅ Generated image ${i + 1}/3 in ${style} style`)
           }
 
-          // Small delay
+          // Small delay between generations
           await new Promise(resolve => setTimeout(resolve, 2000))
         } catch (error) {
-          console.error(`❌ Error regenerating image:`, error)
+          console.error(`❌ Error generating image ${i + 1}:`, error)
+          toast.error(`Failed to generate image ${i + 1}`, { id: 'regen' })
         }
       }
 
@@ -233,10 +236,10 @@ export default function ContentCreatorPage() {
         }
       }
 
-      toast.success(`All images regenerated in ${style} style!`, { id: 'regen' })
+      toast.success(`Created full set of 3 images in ${style} style!`, { id: 'regen' })
     } catch (error) {
-      console.error('Error regenerating images:', error)
-      toast.error('Failed to regenerate images', { id: 'regen' })
+      console.error('Error creating image set:', error)
+      toast.error('Failed to create image set', { id: 'regen' })
     } finally {
       setRegenerating(false)
     }
@@ -563,8 +566,11 @@ export default function ContentCreatorPage() {
                             className="mt-3 w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
                             size="sm"
                           >
-                            ✨ Choose This Style
+                            ✨ Create Full Set (3 images)
                           </Button>
+                          <p className="text-gray-400 text-xs mt-2">
+                            Generates 3 diverse scenes in this style
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -586,10 +592,10 @@ export default function ContentCreatorPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-green-400" />
-                <CardTitle className="text-white">✅ Final Images ({chosenStyle.replace('_', ' ')} style)</CardTitle>
+                <CardTitle className="text-white">✅ Complete Set ({chosenStyle.replace('_', ' ')} style)</CardTitle>
               </div>
               <CardDescription className="text-gray-300">
-                All 3 images regenerated in your chosen style - ready to use!
+                3 diverse scenes in your chosen style - ready to use!
               </CardDescription>
             </CardHeader>
             <CardContent>
