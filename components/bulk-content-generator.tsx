@@ -436,13 +436,13 @@ export default function BulkContentGenerator() {
 
   // Fallback function for single image generation
   const generateSingleImageFallback = async (post: GeneratedPost) => {
-    try {
-      // Create relevant image prompt based on content and category
-      const category = post.category || 'Consciousness & Awakening'
-      const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
-      const titleWords = post.title.toLowerCase()
-      
-      let imagePrompt = `Professional illustration for article: "${post.title}". `
+        try {
+          // Create relevant image prompt based on content and category
+          const category = post.category || 'Consciousness & Awakening'
+          const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
+          const titleWords = post.title.toLowerCase()
+          
+          let imagePrompt = `Professional illustration for article: "${post.title}". `
           
           // 🧠 CONSCIOUSNESS & AWAKENING - Mind expansion, enlightenment, meditation
           if (category.includes('Consciousness') || category.includes('Awakening')) {
@@ -1036,15 +1036,15 @@ Metadata:
                                     src={image.url} 
                                     alt={image.prompt || `Image ${imgIndex + 1} for ${post.title}`}
                                     className="w-full h-full object-contain"
-                                    onError={(e) => {
+                              onError={(e) => {
                                       console.error('Image failed to load:', image.url)
-                                      e.currentTarget.style.display = 'none'
-                                    }}
-                                  />
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
                                 </div>
                                 <Badge className="absolute top-2 right-2 bg-pink-500/20 text-pink-300 text-xs">
                                   {image.style.replace('_', ' ')}
-                                </Badge>
+                            </Badge>
                               </div>
                             ))}
                           </div>

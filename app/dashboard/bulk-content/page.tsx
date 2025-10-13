@@ -173,8 +173,8 @@ export default function BulkContentPage() {
                 <p className="text-white font-semibold">Trial Usage</p>
                 <p className="text-gray-300 text-sm">
                   {usageInfo.used} of {usageInfo.limit} bulk generation(s) used
-                </p>
-              </div>
+              </p>
+            </div>
               <div className="text-right">
                 <p className={`text-2xl font-bold ${usageInfo.used < usageInfo.limit ? 'text-green-400' : 'text-red-400'}`}>
                   {usageInfo.limit - usageInfo.used}

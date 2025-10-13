@@ -110,8 +110,8 @@ export default function ContentCreatorPage() {
             body: JSON.stringify({ prompt: fullPrompt })
           })
 
-          if (imageResponse.ok) {
-            const imageData = await imageResponse.json()
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json()
             generatedImagesArray.push({
               url: imageData.imageUrl,
               prompt: imagePrompts[i],
@@ -530,8 +530,8 @@ export default function ContentCreatorPage() {
         {generatedImages.length > 0 && !chosenStyle && (
           <Card className="bg-gradient-to-br from-pink-900/50 to-purple-900/50 border-pink-500/30 backdrop-blur-sm shadow-2xl">
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-pink-400" />
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-pink-400" />
                 <CardTitle className="text-white">🎨 Choose Your Preferred Style</CardTitle>
               </div>
               <CardDescription className="text-gray-300">
@@ -551,11 +551,11 @@ export default function ContentCreatorPage() {
                           src={image.url} 
                           alt={image.prompt} 
                           className="w-full h-full object-contain"
-                          onError={(e) => {
+                  onError={(e) => {
                             console.error('Image failed to load:', image.url)
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
                       </div>
                     </div>
                     
