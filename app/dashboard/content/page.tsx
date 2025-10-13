@@ -543,41 +543,41 @@ export default function ContentCreatorPage() {
                 {generatedImages.map((image, index) => (
                   <div 
                     key={index}
-                    className="group relative cursor-pointer"
-                    onClick={() => handleStyleChoice(image.style)}
+                    className="space-y-3"
                   >
-                    <div className="relative overflow-hidden rounded-lg border-2 border-pink-500/30 hover:border-pink-400 transition-all duration-300 hover:shadow-2xl hover:shadow-pink-500/50">
+                    <div className="relative overflow-hidden rounded-lg border-2 border-pink-500/30 hover:border-pink-400 transition-all duration-300">
                       <div className="w-full h-64 bg-black/30 rounded-lg overflow-hidden flex items-center justify-center">
                         <img 
                           src={image.url} 
                           alt={image.prompt} 
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-contain"
                           onError={(e) => {
                             console.error('Image failed to load:', image.url)
                             e.currentTarget.style.display = 'none'
                           }}
                         />
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <p className="text-white font-bold text-lg capitalize">{image.style.replace('_', ' ')}</p>
-                          <p className="text-gray-300 text-sm mt-1">{image.prompt}</p>
-                          <Button 
-                            className="mt-3 w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
-                            size="sm"
-                          >
-                            ✨ Create Full Set (3 images)
-                          </Button>
-                          <p className="text-gray-400 text-xs mt-2">
-                            Generates 3 diverse scenes in this style
-                          </p>
-                        </div>
-                      </div>
                     </div>
-                    <div className="mt-2 text-center">
-                      <Badge variant="secondary" className="bg-pink-600/20 text-pink-200">
-                        Style {index + 1}: {image.style.replace('_', ' ')}
-                      </Badge>
+                    
+                    {/* Style info and button - always visible */}
+                    <div className="space-y-2">
+                      <div className="text-center">
+                        <Badge variant="secondary" className="bg-pink-600/20 text-pink-200 text-sm">
+                          {image.style.replace('_', ' ')} Style
+                        </Badge>
+                      </div>
+                      
+                      <Button 
+                        onClick={() => handleStyleChoice(image.style)}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                        size="lg"
+                      >
+                        ✨ Create Full Set
+                      </Button>
+                      
+                      <p className="text-gray-400 text-xs text-center">
+                        Generates 3 diverse scenes in {image.style.replace('_', ' ')} style
+                      </p>
                     </div>
                   </div>
                 ))}
