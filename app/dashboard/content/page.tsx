@@ -216,14 +216,14 @@ export default function ContentCreatorPage() {
           const { data: orgMembers } = await supabase.from('org_members').select('org_id, role').eq('user_id', user!.id)
           const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
 
-          // Save all final images to database
+          // Save all final images to database (all are 'final' since they're freshly generated)
           const imagesToSave = regeneratedArray.map((img, index) => ({
             org_id: userOrgId,
             post_id: currentPostId,
             url: img.url,
             prompt: img.prompt,
             style: img.style,
-            variant_type: img.style === chosenImage.style ? 'original' : 'final',
+            variant_type: 'final',
             is_active: true,
             prompt_number: img.promptNumber,
             style_group: crypto.randomUUID()
