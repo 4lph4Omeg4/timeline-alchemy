@@ -390,10 +390,18 @@ export default function BillingPage() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => window.open('https://pay.timeline-alchemy.nl', '_blank')}
+                  onClick={() => {
+                    // Open a pricing modal or redirect to payment links
+                    const basicLink = process.env.NEXT_PUBLIC_STRIPE_BASIC_PAYMENT_LINK
+                    if (basicLink) {
+                      window.open(basicLink, '_blank')
+                    } else {
+                      toast.error('Payment links not configured')
+                    }
+                  }}
                   className="text-green-400 border-green-400 hover:bg-green-400/20"
                 >
-                  View Plans & Upgrade
+                  💳 Upgrade to Basic
                 </Button>
                 {subscription.status === 'active' && (
                   <Button 
@@ -596,13 +604,66 @@ export default function BillingPage() {
                 >
                   {processing === 'manage' ? 'Opening...' : '🚀 Manage Current Subscription'}
                 </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => window.open('https://pay.timeline-alchemy.nl', '_blank')}
-                  className="w-full text-green-400 border-green-400 hover:bg-green-400/20"
-                >
-                  ✨ View Plans & Upgrade
-                </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const basicLink = process.env.NEXT_PUBLIC_STRIPE_BASIC_PAYMENT_LINK
+                      if (basicLink) {
+                        window.open(basicLink, '_blank')
+                      } else {
+                        toast.error('Payment links not configured')
+                      }
+                    }}
+                    className="w-full text-blue-400 border-blue-400 hover:bg-blue-400/20"
+                  >
+                    💳 Basic Plan
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const initiateLink = process.env.NEXT_PUBLIC_STRIPE_INITIATE_PAYMENT_LINK
+                      if (initiateLink) {
+                        window.open(initiateLink, '_blank')
+                      } else {
+                        toast.error('Payment links not configured')
+                      }
+                    }}
+                    className="w-full text-purple-400 border-purple-400 hover:bg-purple-400/20"
+                  >
+                    ⚡ Initiate Plan
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const transcendantLink = process.env.NEXT_PUBLIC_STRIPE_TRANSCENDANT_PAYMENT_LINK
+                      if (transcendantLink) {
+                        window.open(transcendantLink, '_blank')
+                      } else {
+                        toast.error('Payment links not configured')
+                      }
+                    }}
+                    className="w-full text-pink-400 border-pink-400 hover:bg-pink-400/20"
+                  >
+                    ✨ Transcendant Plan
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const universalLink = process.env.NEXT_PUBLIC_STRIPE_UNIVERSAL_PAYMENT_LINK
+                      if (universalLink) {
+                        window.open(universalLink, '_blank')
+                      } else {
+                        toast.error('Payment links not configured')
+                      }
+                    }}
+                    className="w-full text-yellow-400 border-yellow-400 hover:bg-yellow-400/20"
+                  >
+                    🌟 Universal Plan
+                  </Button>
+                </div>
               </div>
               <p className="text-xs text-gray-400 mt-2">
                 Manage your existing subscription or browse available plans
