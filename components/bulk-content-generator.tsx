@@ -335,16 +335,18 @@ export default function BulkContentGenerator() {
         try {
           console.log(`🎨 Generating 3 images in different styles for: ${post.title}`)
           
+          // Generate 3 DIFFERENT scenes in DIFFERENT styles (one per style)
           const imageStyles = [
             { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
             { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
             { name: 'cosmic', suffix: 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' }
           ]
 
+          // Create 3 DIFFERENT prompts to get variety in scenes
           const imagePrompts = [
-            `${post.title} - Main concept visualization`,
-            `${post.title} - Key theme representation`,
-            `${post.title} - Abstract interpretation`
+            `${post.title} - Realistic scene with people or objects depicting the main concept`,
+            `${post.title} - Abstract artistic visualization with shapes and colors representing key themes`,
+            `${post.title} - Cosmic mystical energy visualization with celestial elements and divine atmosphere`
           ]
 
           const generatedImagesArray = []

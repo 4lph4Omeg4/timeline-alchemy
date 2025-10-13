@@ -82,17 +82,19 @@ export default function ContentCreatorPage() {
       setContentLoading(false)
       toast.success('Content and social posts generated! Now generating 3 image styles...')
 
-      // After content is generated, generate 3 images with different prompts and styles
+      // After content is generated, generate 3 images with DIFFERENT scenes in DIFFERENT styles
+      // User will choose their preferred style, then we regenerate all 3 scenes in that style
       const imageStyles = [
         { name: 'photorealistic', suffix: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
         { name: 'digital_art', suffix: 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' },
         { name: 'cosmic', suffix: 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!' }
       ]
 
+      // Generate 3 DIFFERENT scene prompts for variety
       const imagePrompts = [
-        `${title || prompt} - Main concept visualization`,
-        `${title || prompt} - Key theme representation`,
-        `${title || prompt} - Abstract interpretation`
+        `${title || prompt} - Realistic scene depicting the main concept`,
+        `${title || prompt} - Abstract artistic representation of key themes`,
+        `${title || prompt} - Cosmic mystical visualization with celestial energy`
       ]
 
       const generatedImagesArray = []
@@ -151,7 +153,7 @@ export default function ContentCreatorPage() {
     setChosenStyle(style)
 
     try {
-      toast.loading('Regenerating images in your chosen style...', { id: 'regen' })
+      toast.loading('Regenerating the 2 other scenes in your chosen style...', { id: 'regen' })
 
       // Find the chosen image and the ones to regenerate
       const chosenImage = generatedImages.find(img => img.style === style)
@@ -161,6 +163,9 @@ export default function ContentCreatorPage() {
         toast.error('Style not found', { id: 'regen' })
         return
       }
+      
+      console.log(`🎨 User chose "${style}" style`)
+      console.log(`♻️ Regenerating ${imagesToRegenerate.length} other scenes in "${style}" style`)
 
       const imageStyles: Record<string, string> = {
         photorealistic: 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
