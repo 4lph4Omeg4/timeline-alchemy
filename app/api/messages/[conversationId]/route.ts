@@ -69,7 +69,7 @@ export async function GET(
     }
 
     // Mark all unread messages from the other user as read
-    const { error: markReadError } = await supabaseAdmin
+    const { error: markReadError } = await (supabaseAdmin as any)
       .from('messages')
       .update({ read: true })
       .eq('conversation_id', conversationId)
