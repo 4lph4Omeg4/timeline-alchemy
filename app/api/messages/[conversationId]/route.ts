@@ -1,0 +1,109 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase'
+import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
+
+export const dynamic = 'force-dynamic'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { conversationId: string } }
+) {
+  try {
+    // Get user from session
+    const cookieStore = cookies()
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 })
+    }
+
+    const conversationId = params.conversationId
+
+    // Verify user is part of this conversation
+    const { data: conversation, error: convError } = await supabaseAdmin
+      .from('conversations')
+      .select('*')
+      .eq('id', conversationId)
+      .single()
+
+    if (convError || !conversation) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Conversation not found' 
+      }, { status: 404 })
+    }
+
+    if (conversation.user1_id !== user.id && conversation.user2_id !== user.id) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 403 })
+    }
+
+    // Get messages for this conversation
+    const { data: messages, error: messagesError } = await supabaseAdmin
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true })
+
+    if (messagesError) {
+      console.error('❌ Error fetching messages:', messagesError)
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to fetch messages' 
+      }, { status: 500 })
+    }
+
+    // Mark all unread messages from the other user as read
+    const { error: markReadError } = await supabaseAdmin
+      .from('messages')
+      .update({ read: true })
+      .eq('conversation_id', conversationId)
+      .eq('read', false)
+      .neq('sender_id', user.id)
+
+    if (markReadError) {
+      console.error('⚠️ Error marking messages as read:', markReadError)
+    }
+
+    // Get other user's info
+    const otherUserId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id
+    const { data: otherUser } = await supabaseAdmin.auth.admin.getUserById(otherUserId)
+
+    return NextResponse.json({ 
+      success: true, 
+      messages,
+      otherUser: {
+        id: otherUser?.user?.id,
+        email: otherUser?.user?.email,
+        name: otherUser?.user?.user_metadata?.name || otherUser?.user?.email?.split('@')[0],
+        avatar_url: otherUser?.user?.user_metadata?.avatar_url
+      }
+    })
+
+  } catch (error) {
+    console.error('❌ Error in messages API:', error)
+    return NextResponse.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 })
+  }
+}
+

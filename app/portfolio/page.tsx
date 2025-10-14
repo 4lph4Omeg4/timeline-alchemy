@@ -118,6 +118,32 @@ export default function PortfolioPage() {
     setShowAllStyles(false)
   }
 
+  const startConversation = async (creatorUserId: string) => {
+    try {
+      toast.loading('Starting conversation...', { id: 'conversation' })
+      
+      // Create or get conversation
+      const response = await fetch('/api/messages/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otherUserId: creatorUserId })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success('Opening messages...', { id: 'conversation' })
+        // Navigate to messages page
+        window.location.href = '/dashboard/messages'
+      } else {
+        toast.error(data.error || 'Failed to start conversation', { id: 'conversation' })
+      }
+    } catch (error) {
+      console.error('Error starting conversation:', error)
+      toast.error('Failed to start conversation', { id: 'conversation' })
+    }
+  }
+
   const getActiveImages = (post: PortfolioPost) => {
     if (!post.images || post.images.length === 0) return []
     
@@ -588,6 +614,33 @@ export default function PortfolioPage() {
                 </div>
               </div>
             )}
+
+            {/* Message Creator Button */}
+            <div className="border-t border-purple-500/30 pt-6">
+              <div className="flex items-center justify-between bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-1">
+                    💬 Connect with the Creator
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    Start a conversation with <span className="text-purple-300 font-semibold">{selectedPost.organizations?.name}</span>
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (selectedPost.created_by_user_id) {
+                      startConversation(selectedPost.created_by_user_id)
+                    } else {
+                      toast.error('Creator information not available for this post')
+                    }
+                  }}
+                  disabled={!selectedPost.created_by_user_id}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  💬 Send Message
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </Modal>

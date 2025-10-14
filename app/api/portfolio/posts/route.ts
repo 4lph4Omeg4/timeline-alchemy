@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
         updated_at,
         average_rating,
         rating_count,
+        created_by_user_id,
         images (
           id,
           url,
@@ -134,6 +135,7 @@ export async function GET(request: NextRequest) {
           updated_at: post.updated_at,
           average_rating: post.average_rating ? parseFloat(post.average_rating) : null,
           rating_count: post.rating_count || 0,
+          created_by_user_id: post.created_by_user_id || null,
           organizations: post.organizations ? {
             ...post.organizations,
             name: post.organizations.name === 'Admin Organization' ? 'Timeline Alchemy' : post.organizations.name

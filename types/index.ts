@@ -41,6 +41,7 @@ export interface BlogPost {
   updated_at: string
   client_id?: string
   created_by_admin?: boolean
+  created_by_user_id?: string
   average_rating?: number
   rating_count?: number
   organizations?: {

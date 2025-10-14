@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
       .from('blog_posts')
       .insert({
         org_id: 'e6c0db74-03ee-4bb3-b08d-d94512efab91', // Admin organization ID  
+        created_by_user_id: userId, // Track creator for messaging  
         title: title, // Clean title without category prefix
         content: content,
         category: category || 'uncategorized', // Store category in dedicated column
