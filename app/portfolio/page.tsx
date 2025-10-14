@@ -773,13 +773,13 @@ export default function PortfolioPage() {
                                 submittingRating 
                                   ? 'opacity-50 cursor-not-allowed' 
                                   : 'hover:scale-125 cursor-pointer'
-                              } ${
-                                userRating && star <= userRating
-                                  ? 'text-yellow-400'
-                                  : 'text-gray-600 hover:text-yellow-300'
                               }`}
                             >
-                              ⭐
+                              {userRating && star <= userRating ? (
+                                <span className="text-yellow-400">⭐</span>
+                              ) : (
+                                <span className="text-gray-600 hover:text-yellow-300">☆</span>
+                              )}
                             </button>
                           ))}
                         </div>
