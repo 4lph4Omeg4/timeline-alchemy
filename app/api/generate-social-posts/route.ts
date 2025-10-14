@@ -11,34 +11,77 @@ export async function POST(req: Request) {
     console.log('🚀 Using Vercel AI Gateway for social posts generation')
     
     // Create a comprehensive prompt for social media generation
-    const socialPrompt = `Create engaging, platform-specific social media posts based on this content. Each post must be unique and tailored to its platform.
+    const socialPrompt = `Create engaging, platform-specific social media posts based on this blog article. Each post MUST reference the blog and create curiosity to read more.
 
-Title: ${title}
+Blog Title: ${title}
 
-Content: ${content}
+Blog Content Summary: ${content.substring(0, 500)}...
+
+CRITICAL REQUIREMENTS:
+- Each post MUST tease the blog content and make readers want to read the full article
+- Include relevant hashtags for each platform (3-5 per post)
+- Create UNIQUE posts - NEVER repeat the same text across platforms
+- Make readers curious about the full blog article
+- Reference specific insights from the blog to create interest
 
 Create posts for these platforms:
 
-Facebook: Engaging community post, 2-3 sentences, ask a question or share insight
-Instagram: Visual storytelling with emojis, 2-3 sentences, lifestyle-focused
-Twitter: Concise and punchy, under 280 characters, trending style
-LinkedIn: Professional insight, 2-3 sentences, business value
-Discord: Community-focused, casual tone, engaging for discussions
-Reddit: Authentic discussion starter, no corporate speak
-Telegram: Informative update, 2-3 sentences with emojis
-
-OUTPUT FORMAT:
-Facebook:
-[Post content]
+Facebook: 
+- Engaging hook that teases blog insights
+- 2-3 sentences max
+- Include question to spark discussion
+- End with CTA to read full article
+- Add 3-4 relevant hashtags
 
 Instagram:
-[Post content]
+- Visual, emotional hook with emojis
+- 1-2 sentences teasing the blog
+- Lifestyle-focused angle
+- 5-6 relevant hashtags
+- Use line breaks for readability
 
 Twitter:
-[Post content]
+- Punchy hook about blog's main insight
+- Under 250 characters (leave room for link)
+- 2-3 relevant hashtags
+- Create FOMO about missing the full article
 
 LinkedIn:
-[Post content]
+- Professional hook highlighting key business insight
+- 2-3 sentences
+- Thought-provoking question
+- 3-4 professional hashtags
+
+Discord:
+- Community-focused hook
+- Casual, friendly tone
+- "Just published..." or "New article up!" style
+- Tease the content, don't spoil it
+
+Reddit:
+- Authentic, discussion-starting hook
+- Reference blog insights without corporate speak
+- Create genuine curiosity
+- No hashtags (Reddit doesn't use them in posts)
+
+Telegram:
+- Informative hook with emojis
+- 2-3 sentences
+- Newsletter-style teaser
+- 3-4 relevant hashtags
+
+OUTPUT FORMAT (EXACTLY AS SHOWN):
+Facebook:
+[Post content with hashtags]
+
+Instagram:
+[Post content with hashtags]
+
+Twitter:
+[Post content with hashtags]
+
+LinkedIn:
+[Post content with hashtags]
 
 Discord:
 [Post content]
@@ -47,9 +90,7 @@ Reddit:
 [Post content]
 
 Telegram:
-[Post content]
-
-Each post should be engaging and platform-appropriate.`
+[Post content with hashtags]`
 
     // Use direct Gateway call for better control
     const gatewayApiKey = process.env.AI_GATEWAY_API_KEY

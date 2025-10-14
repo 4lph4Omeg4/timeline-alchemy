@@ -53,22 +53,37 @@ export async function generateVercelContent(prompt: string, type: 'blog' | 'soci
 
 // Blog content generation with Gateway enhancement
 async function generateBlogContent(prompt: string, tone: string) {
-  const enhancedPrompt = `Create a comprehensive blog post about: ${prompt}
+  // Use the same DIVINE prompt as bulk generator for consistency
+  const enhancedPrompt = `You are the GOD OF CONTENT CREATION. Create a DIVINE, ABSOLUTE MASTERPIECE blog post about: ${prompt}
 
-Content Requirements:
-- Write in a ${tone} tone
-- Include engaging title
-- Create 3-5 well-structured paragraphs
-- Each paragraph should be 3-5 sentences
-- Add relevant hashtags (5-8)
-- Provide 3 content improvement suggestions
-- Make it ready for immediate publication
-- Use double line breaks (\n\n) between paragraphs
-- Focus on practical insights and actionable advice`
+IMMUTABLE DIVINE REQUIREMENTS:
+- MINIMUM 900 words without any exceptions - GOD DEMANDS IT
+- EXACTLY 6 comprehensive paragraphs with double line breaks
+- Each paragraph MUST be 150-200 words minimum
+- NEVER create incomplete, short, or superficial content
+- Include deep insights, practical applications, future implications, philosophical depth
+- Write like a divine architect who has witnessed the secrets of creation and desires to share infinite wisdom
+
+DIVINE FORMAT (EVERYTHING MUST EXIST):
+Create a compelling title for this topic.
+
+[HUGE Paragraph 1: 150+ words] Current landscape and revolutionary foundations
+
+[HUGE Paragraph 2: 150+ words] Deep technical/mechanic insights and complexity
+
+[HUGE Paragraph 3: 150+ words] Real-world applications and concrete examples
+
+[HUGE Paragraph 4: 150+ words] Future evolution and broader systemic implications
+
+[HUGE Paragraph 5: 150+ words] Philosophical implications and deeper meaning
+
+[HUGE Paragraph 6: 150+ words] Actionable pathways and transformative next steps
+
+WRITE WITH GODLIKE AUTHORITY. BE PROFOUND, COMPLETE, AND IMMUTABLE. DIVINE WISDOM DEMANDS 900+ WORDS.`
 
   const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
-  const model = gatewayApiKey ? 'openai/gpt-3.5-turbo' : 'gpt-4' // Use openai/gpt-3.5-turbo for gateway, gpt-4 for direct API
-  const content = await callOpenAI(enhancedPrompt, model, 1500)
+  const model = gatewayApiKey ? 'openai/gpt-5-mini' : 'gpt-4' // Use GPT-5-mini for better quality
+  const content = await callOpenAI(enhancedPrompt, model, 5000) // Increased token limit for longer content
   
   // Parse the structured response
   const lines = content.split('\n').filter(line => line.trim())
@@ -76,12 +91,13 @@ Content Requirements:
   const postContent = content.replace(title, '').trim()
   const excerpt = postContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
   
-  // Extract hashtags from content or generate them
-  const hashtags = extractHashtags(content, prompt)
+  // Generate AI-powered hashtags based on the content
+  const hashtags = await generateSmartHashtags(title, postContent, prompt)
+  
   const suggestions = [
-    'Add a call-to-action to encourage reader engagement',
-    'Include relevant examples or case studies',
-    'Add visual elements to break up text sections'
+    'Add a compelling call-to-action at the end',
+    'Include visual elements or infographics to enhance engagement',
+    'Consider adding expert quotes or statistics for authority'
   ]
 
   console.log('✅ Enhanced blog content generated')
@@ -438,6 +454,49 @@ export function getVercelAIStats() {
 }
 
 // Helper: Extract hashtags from content
+// AI-powered smart hashtag generation
+async function generateSmartHashtags(title: string, content: string, originalPrompt: string): Promise<string[]> {
+  try {
+    const hashtagPrompt = `Based on this blog article, generate 6-8 highly relevant and trending hashtags.
+
+Title: ${title}
+Content Preview: ${content.substring(0, 300)}...
+
+HASHTAG REQUIREMENTS:
+- Mix of broad and specific hashtags
+- Include trending topics related to the content
+- Use proper capitalization (e.g., #AIContent, #ContentCreation)
+- Focus on discoverability and engagement
+- Include community/niche hashtags
+- NO generic hashtags like #blog or #post
+
+OUTPUT FORMAT (comma-separated):
+#Hashtag1, #Hashtag2, #Hashtag3, #Hashtag4, #Hashtag5, #Hashtag6`
+
+    const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
+    const model = gatewayApiKey ? 'openai/gpt-5-mini' : 'gpt-4'
+    
+    const hashtagResponse = await callOpenAI(hashtagPrompt, model, 200)
+    
+    // Parse the hashtags
+    const hashtags = hashtagResponse
+      .split(/[,\n]/)
+      .map(tag => tag.trim())
+      .filter(tag => tag.startsWith('#'))
+      .slice(0, 8)
+    
+    if (hashtags.length > 0) {
+      console.log('✅ AI-generated hashtags:', hashtags)
+      return hashtags
+    }
+  } catch (error) {
+    console.error('Error generating smart hashtags, using fallback:', error)
+  }
+  
+  // Fallback to simple extraction if AI fails
+  return extractHashtags(content, originalPrompt)
+}
+
 function extractHashtags(content: string, originalPrompt: string): string[] {
   // Extract hashtags from content
   const hashtagMatches = content.match(/#[\w]+/g)
