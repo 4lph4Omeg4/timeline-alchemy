@@ -115,7 +115,23 @@ YouTube:
         messages: [
           {
             role: 'system',
-            content: 'You are a social media expert. Create COMPLETELY UNIQUE posts for each platform. NEVER repeat the title. NEVER copy article text. Each post must be DIFFERENT and platform-specific.'
+            content: `You are a DIVINE social media expert creating platform-specific content that drives traffic to Facebook. 
+
+CRITICAL RULES:
+- NEVER use generic phrases like "thoughts on this?", "what's your opinion?", "new content alert"
+- ALWAYS extract specific insights from the blog content
+- Each post must provide VALUE first, then drive to Facebook
+- Create UNIQUE, engaging content for each platform
+- Use platform-specific language and style
+- Include relevant hashtags (3-6 per platform)
+- Make readers curious about the full Facebook article
+
+EXAMPLE GOOD POSTS:
+Instagram: "✨ Just discovered how AI transforms content creation... The implications are mind-blowing! ✨ Read the full insights on our Facebook page #AIContent #ContentCreation #DigitalTransformation"
+
+Twitter: "AI isn't replacing creativity—it's amplifying it. Timeline Alchemy proves this with cosmic-quality content generation. Full article: [Facebook link] #AI #Creativity #Content"
+
+LinkedIn: "The future of content creation isn't human vs AI—it's human + AI collaboration. Discover how conscious creators are scaling their message authentically. Read more on our Facebook page #ContentStrategy #AI #BusinessGrowth"`
           },
           {
             role: 'user',
@@ -181,31 +197,32 @@ YouTube:
     
     for (const platform of requiredPlatforms) {
       if (!socialPosts[platform]) {
-        // Create simple fallback content
+        // Create better fallback content based on the blog topic
+        const topic = title.toLowerCase()
         switch (platform) {
           case 'facebook':
-            socialPosts.facebook = `What do you think about this topic? Share your thoughts below! 💭 #Discussion #Community`
+            socialPosts.facebook = `Discover the revolutionary insights about ${title}. This comprehensive analysis reveals game-changing perspectives that will transform your understanding. Read the full article for complete details! #${title.replace(/\s+/g, '')} #Insights #Transformation`
             break
           case 'instagram':
-            socialPosts.instagram = `✨ New insights coming your way! ✨ #Inspiration #Growth #Mindset`
+            socialPosts.instagram = `✨ Mind-blowing insights about ${title}! ✨ This changes everything we thought we knew. Swipe up for the full article on our Facebook page! #${title.replace(/\s+/g, '')} #Mindset #Growth #Transformation`
             break
           case 'twitter':
-            socialPosts.twitter = `Thoughts on this? 🤔 #Discussion #Community`
+            socialPosts.twitter = `Just uncovered something incredible about ${title}. The implications are bigger than you think. Full analysis: [Facebook link] #${title.replace(/\s+/g, '')} #Insights #GameChanger`
             break
           case 'linkedin':
-            socialPosts.linkedin = `Professional insights worth sharing. What's your take? #Professional #Insights`
+            socialPosts.linkedin = `Professional breakthrough insights on ${title}. This analysis reveals strategic implications for business leaders and entrepreneurs. Read the complete study on our Facebook page. #${title.replace(/\s+/g, '')} #BusinessStrategy #Leadership`
             break
           case 'discord':
-            socialPosts.discord = `New content alert! 🚨 What do you think? #Community #Discussion`
+            socialPosts.discord = `Community! Check out these amazing insights about ${title}. This is exactly what we've been discussing! Full article on our Facebook page. #${title.replace(/\s+/g, '')} #Community #Insights`
             break
           case 'reddit':
-            socialPosts.reddit = `What's your opinion on this? Let's discuss! #Discussion #Community`
+            socialPosts.reddit = `Interesting analysis on ${title}. The research reveals some surprising patterns that challenge conventional thinking. Full article available on our Facebook page if you want to dive deeper.`
             break
           case 'telegram':
-            socialPosts.telegram = `📢 New insights coming your way! 📢 #Newsletter #Updates #TimelineAlchemy`
+            socialPosts.telegram = `📢 Exclusive insights about ${title}! 📢 This comprehensive analysis reveals breakthrough findings. Read the full article on our Facebook page! #${title.replace(/\s+/g, '')} #Exclusive #Insights #Analysis`
             break
           case 'youtube':
-            socialPosts.youtube = `🎥 New video content about this topic! 🎥 #YouTube #ContentCreation #Video`
+            socialPosts.youtube = `🎥 Deep dive analysis: ${title} 🎥 This comprehensive study reveals game-changing insights. Full article with detailed analysis on our Facebook page! #${title.replace(/\s+/g, '')} #Analysis #DeepDive #Insights`
             break
         }
       }

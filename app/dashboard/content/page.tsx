@@ -373,8 +373,8 @@ export default function ContentCreatorPage() {
           </p>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+        {/* Main Content Layout - Full Width */}
+        <div className="w-full max-w-7xl mx-auto space-y-8">
           {/* AI Generation Panel */}
           <div className="w-full">
             <Card className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 border-purple-500/30 backdrop-blur-sm shadow-2xl h-full w-full">
