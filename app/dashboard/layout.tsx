@@ -26,6 +26,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [editOrgModal, setEditOrgModal] = useState(false)
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null)
   const [newOrgName, setNewOrgName] = useState('')
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const router = useRouter()
 
   const ensureAdminOrganization = async (userId: string) => {
@@ -207,6 +208,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
 
       setLoading(false)
+      
+      // Load unread message count after user is loaded
+      if (user) {
+        loadUnreadMessageCount()
+      }
     }
 
     getUser()
@@ -218,9 +224,39 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       }
     )
+    
+    // Poll for new messages every 30 seconds
+    const messageInterval = setInterval(() => {
+      loadUnreadMessageCount()
+    }, 30000)
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      clearInterval(messageInterval)
+    }
   }, [router])
+
+  const loadUnreadMessageCount = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      const response = await fetch('/api/messages/conversations', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+      
+      const data = await response.json()
+      
+      if (data.success && data.conversations) {
+        const totalUnread = data.conversations.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0)
+        setUnreadMessageCount(totalUnread)
+      }
+    } catch (error) {
+      // Silently fail - don't spam console
+    }
+  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -371,9 +407,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🏆</span>
                     <span className="font-semibold">Leaderboard</span>
                   </Link>
-                  <Link href="/dashboard/messages" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💬</span>
-                    <span className="font-semibold">Messages</span>
+                  <Link href="/dashboard/messages" className="flex items-center justify-between px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                    <div className="flex items-center">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💬</span>
+                      <span className="font-semibold">Messages</span>
+                    </div>
+                    {unreadMessageCount > 0 && (
+                      <span className="bg-gradient-to-r from-red-600 to-pink-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                        {unreadMessageCount}
+                      </span>
+                    )}
                   </Link>
                   <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                     <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📅</span>

@@ -164,6 +164,8 @@ export default function PortfolioPage() {
     setSubmittingRating(true)
     
     try {
+      console.log('📤 Submitting rating:', { rating, reviewText: reviewText || userReviewText })
+      
       const response = await fetch('/api/ratings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,19 +173,26 @@ export default function PortfolioPage() {
           postId: selectedPost.id,
           userId: currentUserId,
           rating: rating,
-          reviewText: reviewText || userReviewText || null
+          reviewText: reviewText !== undefined ? reviewText : userReviewText
         })
       })
       
       const data = await response.json()
+      console.log('📥 Rating response:', data)
       
       if (data.success) {
         setUserRating(rating)
+        if (reviewText !== undefined) {
+          setUserReviewText(reviewText)
+        }
         setShowRatingForm(false)
         toast.success('Rating submitted! ✨')
         
         // Refresh posts to update average rating
         await fetchPosts()
+        
+        // Reload the rating to ensure we have the latest
+        await loadUserRating(selectedPost.id)
       } else {
         toast.error(data.error || 'Failed to submit rating')
       }
