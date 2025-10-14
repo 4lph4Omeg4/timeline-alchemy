@@ -37,10 +37,10 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('📝 Post found:', {
-      id: post.id,
-      title: post.title,
-      orgId: post.org_id,
-      orgName: post.organizations?.name
+      id: (post as any).id,
+      title: (post as any).title,
+      orgId: (post as any).org_id,
+      orgName: (post as any).organizations?.name
     })
 
     // Get social connections for the organization
@@ -48,31 +48,31 @@ export async function GET(request: NextRequest) {
     const { data: connections, error: connectionsError } = await supabaseAdmin
       .from('social_connections')
       .select('*')
-      .eq('org_id', post.org_id)
+      .eq('org_id', (post as any).org_id)
 
     console.log('🔗 Social connections:', {
-      postOrgId: post.org_id,
+      postOrgId: (post as any).org_id,
       count: connections?.length || 0,
       platforms: connections?.map(c => c.platform) || [],
       error: connectionsError
     })
 
     // Check if post has social_posts data
-    const socialPosts = post.social_posts || {}
+    const socialPosts = (post as any).social_posts || {}
     console.log('📱 Social posts available:', Object.keys(socialPosts))
 
     return NextResponse.json({
       success: true,
       debug: {
         post: {
-          id: post.id,
-          title: post.title,
-          orgId: post.org_id,
-          orgName: post.organizations?.name,
-          hasSocialPosts: !!post.social_posts
+          id: (post as any).id,
+          title: (post as any).title,
+          orgId: (post as any).org_id,
+          orgName: (post as any).organizations?.name,
+          hasSocialPosts: !!(post as any).social_posts
         },
         connections: {
-          postOrgId: post.org_id,
+          postOrgId: (post as any).org_id,
           count: connections?.length || 0,
           platforms: connections?.map(c => ({
             platform: c.platform,
