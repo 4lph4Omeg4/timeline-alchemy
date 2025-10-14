@@ -170,11 +170,23 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get social connections for the organization
+    // Get social connections for the organization AND admin organization
+    // Clients have connections in Admin Organization, but posts in their own org
+    const { data: adminOrg } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('name', 'Admin Organization')
+      .single()
+
+    const orgIds = [(post as any).org_id]
+    if (adminOrg) {
+      orgIds.push(adminOrg.id)
+    }
+
     const { data: connections, error: connectionsError } = await supabase
       .from('social_connections')
       .select('*')
-      .eq('org_id', (post as any).org_id)
+      .in('org_id', orgIds)
 
     if (connectionsError) {
       return NextResponse.json({ 
@@ -182,6 +194,13 @@ export async function POST(request: NextRequest) {
         error: 'Failed to fetch social connections' 
       })
     }
+
+    console.log('🔗 Found social connections:', {
+      postOrgId: (post as any).org_id,
+      adminOrgId: adminOrg?.id,
+      connectionsCount: connections?.length || 0,
+      platforms: connections?.map(c => c.platform) || []
+    })
 
     const results = []
     const errors = []
