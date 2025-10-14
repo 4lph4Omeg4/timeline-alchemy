@@ -35,6 +35,8 @@ export default function PortfolioPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showAllStyles, setShowAllStyles] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [userRating, setUserRating] = useState<number | null>(null)
+  const [submittingRating, setSubmittingRating] = useState(false)
 
   const categories = getAllCategories()
 
@@ -117,16 +119,72 @@ export default function PortfolioPage() {
     return content.substring(0, maxLength) + '...'
   }
 
-  const openPostModal = (post: PortfolioPost) => {
+  const openPostModal = async (post: PortfolioPost) => {
     setSelectedPost(post)
     setIsModalOpen(true)
     setShowAllStyles(false)
+    
+    // Load user's rating for this post
+    if (currentUserId) {
+      await loadUserRating(post.id)
+    }
   }
 
   const closePostModal = () => {
     setSelectedPost(null)
     setIsModalOpen(false)
     setShowAllStyles(false)
+    setUserRating(null)
+  }
+
+  const loadUserRating = async (postId: string) => {
+    try {
+      const response = await fetch(`/api/ratings?postId=${postId}&userId=${currentUserId}`)
+      const data = await response.json()
+      
+      if (data.userRating) {
+        setUserRating(data.userRating.rating)
+      } else {
+        setUserRating(null)
+      }
+    } catch (error) {
+      console.error('Error loading user rating:', error)
+    }
+  }
+
+  const submitRating = async (rating: number) => {
+    if (!selectedPost || !currentUserId) return
+    
+    setSubmittingRating(true)
+    
+    try {
+      const response = await fetch('/api/ratings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: selectedPost.id,
+          userId: currentUserId,
+          rating: rating
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setUserRating(rating)
+        toast.success('Rating submitted! ✨')
+        
+        // Refresh posts to update average rating
+        await fetchPosts()
+      } else {
+        toast.error(data.error || 'Failed to submit rating')
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error)
+      toast.error('Failed to submit rating')
+    } finally {
+      setSubmittingRating(false)
+    }
   }
 
   const startConversation = async (creatorUserId: string) => {
@@ -613,6 +671,65 @@ export default function PortfolioPage() {
                 {selectedPost.content}
               </div>
             </div>
+
+            {/* Rating Section */}
+            {currentUserId && (
+              <div className="border-t border-purple-500/30 pt-6">
+                <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                    <span className="mr-2">⭐</span>
+                    Resonance Rating
+                  </h3>
+                  
+                  {/* Average Rating Display */}
+                  {selectedPost.average_rating && selectedPost.rating_count && selectedPost.rating_count > 0 && (
+                    <div className="mb-4 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <StarRating rating={selectedPost.average_rating} size="lg" />
+                        <span className="text-2xl font-bold text-yellow-400">
+                          {selectedPost.average_rating.toFixed(1)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-400">
+                        Based on {selectedPost.rating_count} rating{selectedPost.rating_count !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* User Rating Input */}
+                  <div className="text-center">
+                    <p className="text-sm text-gray-300 mb-3">
+                      {userRating ? 'Your rating:' : 'Rate this content:'}
+                    </p>
+                    <div className="flex justify-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => submitRating(star)}
+                          disabled={submittingRating}
+                          className={`text-4xl transition-all duration-300 ${
+                            submittingRating 
+                              ? 'opacity-50 cursor-not-allowed' 
+                              : 'hover:scale-125 cursor-pointer'
+                          } ${
+                            userRating && star <= userRating
+                              ? 'text-yellow-400'
+                              : 'text-gray-600 hover:text-yellow-300'
+                          }`}
+                        >
+                          ⭐
+                        </button>
+                      ))}
+                    </div>
+                    {userRating && (
+                      <p className="text-xs text-green-400 mt-2">
+                        ✓ You rated this {userRating} star{userRating !== 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Social Links */}
             {selectedPost.social_posts && Object.keys(selectedPost.social_posts).length > 0 && (
