@@ -34,12 +34,22 @@ export default function PortfolioPage() {
   const [selectedPost, setSelectedPost] = useState<PortfolioPost | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showAllStyles, setShowAllStyles] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   const categories = getAllCategories()
 
   useEffect(() => {
     fetchPosts()
+    loadCurrentUser()
   }, [selectedCategory])
+
+  const loadCurrentUser = async () => {
+    const { supabase } = await import('@/lib/supabase')
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      setCurrentUserId(user.id)
+    }
+  }
 
   const fetchPosts = async () => {
     try {
@@ -629,31 +639,39 @@ export default function PortfolioPage() {
             )}
 
             {/* Message Creator Button */}
-            <div className="border-t border-purple-500/30 pt-6">
-              <div className="flex items-center justify-between bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-1">
-                    💬 Connect with the Creator
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    Start a conversation with <span className="text-purple-300 font-semibold">{selectedPost.organizations?.name}</span>
+            {selectedPost.created_by_user_id && selectedPost.created_by_user_id !== currentUserId && (
+              <div className="border-t border-purple-500/30 pt-6">
+                <div className="flex items-center justify-between bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1">
+                      💬 Connect with the Creator
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      Start a conversation with <span className="text-purple-300 font-semibold">{selectedPost.organizations?.name}</span>
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (selectedPost.created_by_user_id) {
+                        startConversation(selectedPost.created_by_user_id)
+                      }
+                    }}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                  >
+                    💬 Send Message
+                  </Button>
+                </div>
+              </div>
+            )}
+            {selectedPost.created_by_user_id === currentUserId && (
+              <div className="border-t border-purple-500/30 pt-6">
+                <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl p-6 text-center">
+                  <p className="text-blue-300 font-semibold">
+                    ✨ This is your own content package
                   </p>
                 </div>
-                <Button
-                  onClick={() => {
-                    if (selectedPost.created_by_user_id) {
-                      startConversation(selectedPost.created_by_user_id)
-                    } else {
-                      toast.error('Creator information not available for this post')
-                    }
-                  }}
-                  disabled={!selectedPost.created_by_user_id}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  💬 Send Message
-                </Button>
               </div>
-            </div>
+            )}
           </div>
         )}
       </Modal>
