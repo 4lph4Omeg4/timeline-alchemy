@@ -706,6 +706,7 @@ export default function PortfolioPage() {
                   
                   {/* User Rating Input */}
                   <div className="text-center">
+                    {/* Show button if no rating yet and form is closed */}
                     {!showRatingForm && !userRating && (
                       <Button
                         onClick={() => setShowRatingForm(true)}
@@ -715,22 +716,49 @@ export default function PortfolioPage() {
                       </Button>
                     )}
                     
-                    {(showRatingForm || userRating) && (
-                      <>
-                        <p className="text-sm text-gray-300 mb-3">
-                          {userRating ? 'Your rating:' : 'Rate this content:'}
+                    {/* Show existing rating if not editing */}
+                    {userRating && !showRatingForm && (
+                      <div className="max-w-md mx-auto">
+                        <p className="text-sm text-gray-300 mb-3">Your rating:</p>
+                        <div className="flex justify-center gap-2 mb-3">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span key={star} className="text-4xl">
+                              {star <= userRating ? '⭐' : '☆'}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-green-400 mb-3">
+                          ✓ You rated this {userRating} star{userRating !== 1 ? 's' : ''}
                         </p>
+                        {userReviewText && (
+                          <div className="bg-gray-800/50 border border-purple-500/20 rounded-lg p-3 mb-3">
+                            <p className="text-sm text-gray-300 italic">"{userReviewText}"</p>
+                          </div>
+                        )}
+                        <Button
+                          onClick={() => setShowRatingForm(true)}
+                          size="sm"
+                          variant="outline"
+                          className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+                        >
+                          ✏️ Edit Rating
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Show rating form when editing or creating new */}
+                    {showRatingForm && (
+                      <div className="max-w-md mx-auto">
+                        <p className="text-sm text-gray-300 mb-3">
+                          {userRating ? 'Update your rating:' : 'Rate this content:'}
+                        </p>
+                        
+                        {/* Star selector */}
                         <div className="flex justify-center gap-2 mb-4">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
                               key={star}
-                              onClick={() => {
-                                setUserRating(star)
-                                if (!userReviewText) {
-                                  // If no review text, submit immediately
-                                  submitRating(star)
-                                }
-                              }}
+                              onClick={() => setUserRating(star)}
                               disabled={submittingRating}
                               className={`text-4xl transition-all duration-300 ${
                                 submittingRating 
@@ -748,65 +776,51 @@ export default function PortfolioPage() {
                         </div>
                         
                         {/* Review Text (Optional) */}
-                        {showRatingForm && (
-                          <div className="max-w-md mx-auto">
-                            <textarea
-                              value={userReviewText}
-                              onChange={(e) => setUserReviewText(e.target.value)}
-                              placeholder="Share your thoughts (optional)..."
-                              className="w-full bg-gray-800 border border-purple-500/30 text-white rounded-lg p-3 mb-3 resize-none"
-                              rows={3}
-                            />
-                            <div className="flex gap-2 justify-center">
-                              <Button
-                                onClick={() => {
-                                  if (userRating) {
-                                    submitRating(userRating, userReviewText)
-                                  } else {
-                                    toast.error('Please select a star rating first')
-                                  }
-                                }}
-                                disabled={submittingRating || !userRating}
-                                className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400"
-                              >
-                                {submittingRating ? 'Submitting...' : '✓ Submit Rating'}
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  setShowRatingForm(false)
-                                  setUserRating(null)
-                                  setUserReviewText('')
-                                }}
-                                variant="outline"
-                                className="border-gray-600 text-gray-300"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        )}
+                        <textarea
+                          value={userReviewText}
+                          onChange={(e) => setUserReviewText(e.target.value)}
+                          placeholder="Share your thoughts (optional)..."
+                          className="w-full bg-gray-800 border border-purple-500/30 text-white rounded-lg p-3 mb-3 resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+                          rows={3}
+                        />
                         
-                        {userRating && !showRatingForm && (
-                          <div className="max-w-md mx-auto">
-                            <p className="text-xs text-green-400 mb-2">
-                              ✓ You rated this {userRating} star{userRating !== 1 ? 's' : ''}
-                            </p>
-                            {userReviewText && (
-                              <div className="bg-gray-800/50 border border-purple-500/20 rounded-lg p-3 mb-3">
-                                <p className="text-sm text-gray-300 italic">"{userReviewText}"</p>
-                              </div>
+                        {/* Action buttons */}
+                        <div className="flex gap-2 justify-center">
+                          <Button
+                            onClick={() => {
+                              if (userRating) {
+                                submitRating(userRating, userReviewText)
+                              } else {
+                                toast.error('Please select a star rating first')
+                              }
+                            }}
+                            disabled={submittingRating || !userRating}
+                            className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400"
+                          >
+                            {submittingRating ? (
+                              <>
+                                <span className="animate-spin mr-2">⏳</span>
+                                Submitting...
+                              </>
+                            ) : (
+                              '✓ Submit Rating'
                             )}
-                            <Button
-                              onClick={() => setShowRatingForm(true)}
-                              size="sm"
-                              variant="outline"
-                              className="border-purple-500/50 text-purple-300"
-                            >
-                              Edit Rating
-                            </Button>
-                          </div>
-                        )}
-                      </>
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setShowRatingForm(false)
+                              // Reload the original rating if it exists
+                              if (selectedPost) {
+                                loadUserRating(selectedPost.id)
+                              }
+                            }}
+                            variant="outline"
+                            className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
