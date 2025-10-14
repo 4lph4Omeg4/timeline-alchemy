@@ -231,6 +231,26 @@ export default function ContentPackagePage() {
     try {
       toast.loading(`Posting to ${platform}...`, { id: 'posting' })
       
+      // First, debug the connections
+      console.log('🔍 Debugging social connections...')
+      const debugResponse = await fetch(`/api/debug-social-connections?postId=${post.id}`)
+      const debugData = await debugResponse.json()
+      
+      if (debugData.success) {
+        console.log('🔍 Debug info:', debugData.debug)
+        
+        // Check if platform has connection
+        const hasConnection = debugData.debug.connections.platforms.some((p: any) => p.platform === platform)
+        if (!hasConnection) {
+          throw new Error(`No ${platform} connection found. Please connect your ${platform} account first.`)
+        }
+        
+        // Check if platform has social post content
+        if (!debugData.debug.socialPosts.available.includes(platform)) {
+          throw new Error(`No ${platform} content found. Please regenerate social posts.`)
+        }
+      }
+      
       // Call the posting API
       const response = await fetch('/api/post-to-platforms', {
         method: 'POST',
@@ -245,10 +265,12 @@ export default function ContentPackagePage() {
 
       if (!response.ok) {
         const error = await response.json()
+        console.error('❌ Posting API error:', error)
         throw new Error(error.error || 'Posting failed')
       }
 
       const result = await response.json()
+      console.log('📊 Posting result:', result)
       
       if (result.success) {
         toast.success(`Successfully posted to ${platform}!`, { id: 'posting' })
@@ -265,6 +287,7 @@ export default function ContentPackagePage() {
         // Refresh the page to show updated status
         window.location.reload()
       } else {
+        console.error('❌ Posting failed:', result)
         throw new Error(result.error || 'Unknown error')
       }
       
