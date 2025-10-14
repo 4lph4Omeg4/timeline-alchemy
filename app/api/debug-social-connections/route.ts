@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     console.log('🔗 Social connections:', {
       postOrgId: (post as any).org_id,
       count: connections?.length || 0,
-      platforms: connections?.map(c => c.platform) || [],
+      platforms: connections?.map((c: any) => c.platform) || [],
       error: connectionsError
     })
 
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
         connections: {
           postOrgId: (post as any).org_id,
           count: connections?.length || 0,
-          platforms: connections?.map(c => ({
+          platforms: connections?.map((c: any) => ({
             platform: c.platform,
             orgId: c.org_id,
             accountId: c.account_id,
