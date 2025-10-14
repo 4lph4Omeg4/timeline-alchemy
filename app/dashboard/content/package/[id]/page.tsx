@@ -221,6 +221,59 @@ export default function ContentPackagePage() {
     }
   }
 
+  const handlePostNow = async (platform: string) => {
+    if (!post) return
+    
+    if (!confirm(`Are you sure you want to post to ${platform} now?`)) {
+      return
+    }
+    
+    try {
+      toast.loading(`Posting to ${platform}...`, { id: 'posting' })
+      
+      // Call the posting API
+      const response = await fetch('/api/post-to-platforms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          postId: post.id,
+          platforms: [platform]
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Posting failed')
+      }
+
+      const result = await response.json()
+      
+      if (result.success) {
+        toast.success(`Successfully posted to ${platform}!`, { id: 'posting' })
+        
+        // Update post status to published
+        await supabase
+          .from('blog_posts')
+          .update({
+            state: 'published',
+            published_at: new Date().toISOString(),
+          })
+          .eq('id', post.id)
+          
+        // Refresh the page to show updated status
+        window.location.reload()
+      } else {
+        throw new Error(result.error || 'Unknown error')
+      }
+      
+    } catch (error) {
+      console.error(`Error posting to ${platform}:`, error)
+      toast.error(`Failed to post to ${platform}: ${error instanceof Error ? error.message : 'Unknown error'}`, { id: 'posting' })
+    }
+  }
+
   const handleSchedulePost = async (platform: string | null = null) => {
     if (!post) return
     
@@ -946,16 +999,38 @@ export default function ContentPackagePage() {
               </div>
               <h4 className="font-semibold text-white">Facebook</h4>
               </div>
-              <Button
-                size="sm"
-                onClick={() => openScheduleModal('facebook')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-              >
-                📅 Schedule
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => handlePostNow('facebook')}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                >
+                  🚀 Post Now
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => openScheduleModal('facebook')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                >
+                  📅 Schedule
+                </Button>
+              </div>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.facebook}</p>
+              {/* Show image preview for Facebook */}
+              {generatedContent.images && generatedContent.images.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-gray-400 mb-2">📷 Image will be included:</p>
+                  <div className="w-32 h-32 bg-black/30 rounded-lg overflow-hidden">
+                    <img 
+                      src={generatedContent.images[0].url} 
+                      alt="Post image"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -970,16 +1045,38 @@ export default function ContentPackagePage() {
               </div>
               <h4 className="font-semibold text-white">Instagram</h4>
               </div>
-              <Button
-                size="sm"
-                onClick={() => openScheduleModal('instagram')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-              >
-                📅 Schedule
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => handlePostNow('instagram')}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                >
+                  🚀 Post Now
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => openScheduleModal('instagram')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                >
+                  📅 Schedule
+                </Button>
+              </div>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.instagram}</p>
+              {/* Show image preview for Instagram */}
+              {generatedContent.images && generatedContent.images.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-gray-400 mb-2">📷 Image will be included:</p>
+                  <div className="w-32 h-32 bg-black/30 rounded-lg overflow-hidden">
+                    <img 
+                      src={generatedContent.images[0].url} 
+                      alt="Post image"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -994,13 +1091,22 @@ export default function ContentPackagePage() {
               </div>
               <h4 className="font-semibold text-white">Twitter/X</h4>
               </div>
-              <Button
-                size="sm"
-                onClick={() => openScheduleModal('twitter')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-              >
-                📅 Schedule
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => handlePostNow('twitter')}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                >
+                  🚀 Post Now
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => openScheduleModal('twitter')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                >
+                  📅 Schedule
+                </Button>
+              </div>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.twitter}</p>
@@ -1018,16 +1124,38 @@ export default function ContentPackagePage() {
               </div>
               <h4 className="font-semibold text-white">LinkedIn</h4>
               </div>
-              <Button
-                size="sm"
-                onClick={() => openScheduleModal('linkedin')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-              >
-                📅 Schedule
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => handlePostNow('linkedin')}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                >
+                  🚀 Post Now
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => openScheduleModal('linkedin')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                >
+                  📅 Schedule
+                </Button>
+              </div>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.linkedin}</p>
+              {/* Show image preview for LinkedIn */}
+              {generatedContent.images && generatedContent.images.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-gray-400 mb-2">📷 Image will be included:</p>
+                  <div className="w-32 h-32 bg-black/30 rounded-lg overflow-hidden">
+                    <img 
+                      src={generatedContent.images[0].url} 
+                      alt="Post image"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1042,13 +1170,22 @@ export default function ContentPackagePage() {
               </div>
                 <h4 className="font-semibold text-white">Discord</h4>
             </div>
-            <Button
-                size="sm"
-                onClick={() => openScheduleModal('discord')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-              >
-                📅 Schedule
-            </Button>
+            <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => handlePostNow('discord')}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                >
+                  🚀 Post Now
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => openScheduleModal('discord')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                >
+                  📅 Schedule
+                </Button>
+              </div>
           </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.discord}</p>
@@ -1064,13 +1201,22 @@ export default function ContentPackagePage() {
                 </div>
                 <h4 className="font-semibold text-white">Reddit</h4>
               </div>
-            <Button
-                size="sm"
-                onClick={() => openScheduleModal('reddit')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-              >
-                📅 Schedule
-            </Button>
+            <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => handlePostNow('reddit')}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                >
+                  🚀 Post Now
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => openScheduleModal('reddit')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                >
+                  📅 Schedule
+                </Button>
+              </div>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.reddit}</p>
