@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create message
-    const { data: message, error: messageError } = await supabaseAdmin
+    const { data: message, error: messageError } = await (supabaseAdmin as any)
       .from('messages')
       .insert({
         conversation_id: conversationId,
