@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert or update rating
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('ratings')
       .upsert({
         user_id: userId,
@@ -24,16 +24,19 @@ export async function POST(request: NextRequest) {
         rating: rating,
         review_text: reviewText || null,
         updated_at: new Date().toISOString()
-      } as any)
+      })
       .select()
       .single()
 
     if (error) {
       console.error('Error saving rating:', error)
-      return NextResponse.json({ error: 'Failed to save rating' }, { status: 500 })
+      return NextResponse.json({ success: false, error: 'Failed to save rating' }, { status: 500 })
     }
 
+    console.log('✅ Rating saved successfully:', data)
+
     return NextResponse.json({ 
+      success: true,
       message: 'Rating saved successfully',
       rating: data 
     })
@@ -57,24 +60,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
     }
 
-    let query = supabaseAdmin
+    // Get all ratings for this post
+    const { data: ratings, error } = await supabaseAdmin
       .from('ratings')
       .select('*')
       .eq('post_id', postId)
-
-    // If userId is provided, also get that user's rating
-    if (userId) {
-      query = query.or(`user_id.eq.${userId},user_id.neq.${userId}`)
-    }
-
-    const { data: ratings, error } = await query.order('created_at', { ascending: false })
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching ratings:', error)
       return NextResponse.json({ error: 'Failed to fetch ratings' }, { status: 500 })
     }
 
-    return NextResponse.json({ ratings })
+    // If userId is provided, find their specific rating
+    let userRating = null
+    if (userId) {
+      userRating = ratings?.find((r: any) => r.user_id === userId) || null
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      ratings,
+      userRating 
+    })
 
   } catch (error) {
     console.error('Rating API Error:', error)

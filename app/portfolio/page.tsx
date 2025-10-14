@@ -36,7 +36,9 @@ export default function PortfolioPage() {
   const [showAllStyles, setShowAllStyles] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [userRating, setUserRating] = useState<number | null>(null)
+  const [userReviewText, setUserReviewText] = useState<string>('')
   const [submittingRating, setSubmittingRating] = useState(false)
+  const [showRatingForm, setShowRatingForm] = useState(false)
 
   const categories = getAllCategories()
 
@@ -135,6 +137,8 @@ export default function PortfolioPage() {
     setIsModalOpen(false)
     setShowAllStyles(false)
     setUserRating(null)
+    setUserReviewText('')
+    setShowRatingForm(false)
   }
 
   const loadUserRating = async (postId: string) => {
@@ -142,17 +146,19 @@ export default function PortfolioPage() {
       const response = await fetch(`/api/ratings?postId=${postId}&userId=${currentUserId}`)
       const data = await response.json()
       
-      if (data.userRating) {
+      if (data.success && data.userRating) {
         setUserRating(data.userRating.rating)
+        setUserReviewText(data.userRating.review_text || '')
       } else {
         setUserRating(null)
+        setUserReviewText('')
       }
     } catch (error) {
       console.error('Error loading user rating:', error)
     }
   }
 
-  const submitRating = async (rating: number) => {
+  const submitRating = async (rating: number, reviewText?: string) => {
     if (!selectedPost || !currentUserId) return
     
     setSubmittingRating(true)
@@ -164,7 +170,8 @@ export default function PortfolioPage() {
         body: JSON.stringify({
           postId: selectedPost.id,
           userId: currentUserId,
-          rating: rating
+          rating: rating,
+          reviewText: reviewText || userReviewText || null
         })
       })
       
@@ -172,6 +179,7 @@ export default function PortfolioPage() {
       
       if (data.success) {
         setUserRating(rating)
+        setShowRatingForm(false)
         toast.success('Rating submitted! ✨')
         
         // Refresh posts to update average rating
@@ -698,33 +706,107 @@ export default function PortfolioPage() {
                   
                   {/* User Rating Input */}
                   <div className="text-center">
-                    <p className="text-sm text-gray-300 mb-3">
-                      {userRating ? 'Your rating:' : 'Rate this content:'}
-                    </p>
-                    <div className="flex justify-center gap-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          onClick={() => submitRating(star)}
-                          disabled={submittingRating}
-                          className={`text-4xl transition-all duration-300 ${
-                            submittingRating 
-                              ? 'opacity-50 cursor-not-allowed' 
-                              : 'hover:scale-125 cursor-pointer'
-                          } ${
-                            userRating && star <= userRating
-                              ? 'text-yellow-400'
-                              : 'text-gray-600 hover:text-yellow-300'
-                          }`}
-                        >
-                          ⭐
-                        </button>
-                      ))}
-                    </div>
-                    {userRating && (
-                      <p className="text-xs text-green-400 mt-2">
-                        ✓ You rated this {userRating} star{userRating !== 1 ? 's' : ''}
-                      </p>
+                    {!showRatingForm && !userRating && (
+                      <Button
+                        onClick={() => setShowRatingForm(true)}
+                        className="bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-white font-semibold"
+                      >
+                        ⭐ Rate This Content
+                      </Button>
+                    )}
+                    
+                    {(showRatingForm || userRating) && (
+                      <>
+                        <p className="text-sm text-gray-300 mb-3">
+                          {userRating ? 'Your rating:' : 'Rate this content:'}
+                        </p>
+                        <div className="flex justify-center gap-2 mb-4">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => {
+                                setUserRating(star)
+                                if (!userReviewText) {
+                                  // If no review text, submit immediately
+                                  submitRating(star)
+                                }
+                              }}
+                              disabled={submittingRating}
+                              className={`text-4xl transition-all duration-300 ${
+                                submittingRating 
+                                  ? 'opacity-50 cursor-not-allowed' 
+                                  : 'hover:scale-125 cursor-pointer'
+                              } ${
+                                userRating && star <= userRating
+                                  ? 'text-yellow-400'
+                                  : 'text-gray-600 hover:text-yellow-300'
+                              }`}
+                            >
+                              ⭐
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {/* Review Text (Optional) */}
+                        {showRatingForm && (
+                          <div className="max-w-md mx-auto">
+                            <textarea
+                              value={userReviewText}
+                              onChange={(e) => setUserReviewText(e.target.value)}
+                              placeholder="Share your thoughts (optional)..."
+                              className="w-full bg-gray-800 border border-purple-500/30 text-white rounded-lg p-3 mb-3 resize-none"
+                              rows={3}
+                            />
+                            <div className="flex gap-2 justify-center">
+                              <Button
+                                onClick={() => {
+                                  if (userRating) {
+                                    submitRating(userRating, userReviewText)
+                                  } else {
+                                    toast.error('Please select a star rating first')
+                                  }
+                                }}
+                                disabled={submittingRating || !userRating}
+                                className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400"
+                              >
+                                {submittingRating ? 'Submitting...' : '✓ Submit Rating'}
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  setShowRatingForm(false)
+                                  setUserRating(null)
+                                  setUserReviewText('')
+                                }}
+                                variant="outline"
+                                className="border-gray-600 text-gray-300"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {userRating && !showRatingForm && (
+                          <div className="max-w-md mx-auto">
+                            <p className="text-xs text-green-400 mb-2">
+                              ✓ You rated this {userRating} star{userRating !== 1 ? 's' : ''}
+                            </p>
+                            {userReviewText && (
+                              <div className="bg-gray-800/50 border border-purple-500/20 rounded-lg p-3 mb-3">
+                                <p className="text-sm text-gray-300 italic">"{userReviewText}"</p>
+                              </div>
+                            )}
+                            <Button
+                              onClick={() => setShowRatingForm(true)}
+                              size="sm"
+                              variant="outline"
+                              className="border-purple-500/50 text-purple-300"
+                            >
+                              Edit Rating
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
