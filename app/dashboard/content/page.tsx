@@ -44,35 +44,41 @@ export default function ContentCreatorPage() {
     setFinalImages([])
     
     try {
-      // First generate content and social posts
-      const [contentResponse, socialResponse] = await Promise.all([
-        fetch('/api/generate-content', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt,
-            type: 'blog',
-            tone: 'professional',
-            length: 'medium',
-          }),
+      // First generate content
+      const contentResponse = await fetch('/api/generate-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          type: 'blog',
+          tone: 'professional',
+          length: 'medium',
         }),
-        
-        fetch('/api/generate-social-posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: prompt,
-            content: prompt,
-            platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'telegram']
-          }),
-        })
-      ])
+      })
+
+      let generatedTitle = ''
+      let generatedContent = ''
 
       if (contentResponse.ok) {
         const contentData = await contentResponse.json()
-        if (contentData.title) setTitle(contentData.title)
+        if (contentData.title) {
+          setTitle(contentData.title)
+          generatedTitle = contentData.title
+        }
         setContent(contentData.content)
+        generatedContent = contentData.content
       }
+
+      // Then generate social posts with the ACTUAL title and content
+      const socialResponse = await fetch('/api/generate-social-posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: generatedTitle || prompt,
+          content: generatedContent || prompt,
+          platforms: ['facebook', 'instagram', 'twitter', 'linkedin', 'discord', 'reddit', 'telegram', 'youtube']
+        }),
+      })
 
       if (socialResponse.ok) {
         const socialData = await socialResponse.json()

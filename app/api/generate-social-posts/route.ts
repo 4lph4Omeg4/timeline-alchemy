@@ -197,32 +197,34 @@ LinkedIn: "The future of content creation isn't human vs AI—it's human + AI co
     
     for (const platform of requiredPlatforms) {
       if (!socialPosts[platform]) {
-        // Create better fallback content based on the blog topic
-        const topic = title.toLowerCase()
+        // Create better fallback content - extract actual topic from title
+        const cleanTitle = title.replace(/^Create a comprehensive blog post about /i, '').replace(/^Timeline Alchemy's revolutionary approach to /i, '').split(',')[0].trim()
+        const shortTitle = cleanTitle.length > 50 ? cleanTitle.substring(0, 50) + '...' : cleanTitle
+        
         switch (platform) {
           case 'facebook':
-            socialPosts.facebook = `Discover the revolutionary insights about ${title}. This comprehensive analysis reveals game-changing perspectives that will transform your understanding. Read the full article for complete details! #${title.replace(/\s+/g, '')} #Insights #Transformation`
+            socialPosts.facebook = `Discover the revolutionary insights about ${shortTitle}. This comprehensive analysis reveals game-changing perspectives that will transform your understanding. Read the full article for complete details! #TimelineAlchemy #AI #ContentCreation #Insights`
             break
           case 'instagram':
-            socialPosts.instagram = `✨ Mind-blowing insights about ${title}! ✨ This changes everything we thought we knew. Swipe up for the full article on our Facebook page! #${title.replace(/\s+/g, '')} #Mindset #Growth #Transformation`
+            socialPosts.instagram = `✨ Mind-blowing insights about ${shortTitle}! ✨ This changes everything we thought we knew. Swipe up for the full article on our Facebook page! #TimelineAlchemy #AI #ContentCreation #Mindset #Growth`
             break
           case 'twitter':
-            socialPosts.twitter = `Just uncovered something incredible about ${title}. The implications are bigger than you think. Full analysis: [Facebook link] #${title.replace(/\s+/g, '')} #Insights #GameChanger`
+            socialPosts.twitter = `Just uncovered something incredible about ${shortTitle}. The implications are bigger than you think. Full analysis: [Facebook link] #TimelineAlchemy #AI #ContentCreation #GameChanger`
             break
           case 'linkedin':
-            socialPosts.linkedin = `Professional breakthrough insights on ${title}. This analysis reveals strategic implications for business leaders and entrepreneurs. Read the complete study on our Facebook page. #${title.replace(/\s+/g, '')} #BusinessStrategy #Leadership`
+            socialPosts.linkedin = `Professional breakthrough insights on ${shortTitle}. This analysis reveals strategic implications for business leaders and entrepreneurs. Read the complete study on our Facebook page. #TimelineAlchemy #AI #ContentCreation #BusinessStrategy #Leadership`
             break
           case 'discord':
-            socialPosts.discord = `Community! Check out these amazing insights about ${title}. This is exactly what we've been discussing! Full article on our Facebook page. #${title.replace(/\s+/g, '')} #Community #Insights`
+            socialPosts.discord = `Community! Check out these amazing insights about ${shortTitle}. This is exactly what we've been discussing! Full article on our Facebook page. #TimelineAlchemy #AI #ContentCreation #Community`
             break
           case 'reddit':
-            socialPosts.reddit = `Interesting analysis on ${title}. The research reveals some surprising patterns that challenge conventional thinking. Full article available on our Facebook page if you want to dive deeper.`
+            socialPosts.reddit = `Interesting analysis on ${shortTitle}. The research reveals some surprising patterns that challenge conventional thinking. Full article available on our Facebook page if you want to dive deeper.`
             break
           case 'telegram':
-            socialPosts.telegram = `📢 Exclusive insights about ${title}! 📢 This comprehensive analysis reveals breakthrough findings. Read the full article on our Facebook page! #${title.replace(/\s+/g, '')} #Exclusive #Insights #Analysis`
+            socialPosts.telegram = `📢 Exclusive insights about ${shortTitle}! 📢 This comprehensive analysis reveals breakthrough findings. Read the full article on our Facebook page! #TimelineAlchemy #AI #ContentCreation #Exclusive #Insights`
             break
           case 'youtube':
-            socialPosts.youtube = `🎥 Deep dive analysis: ${title} 🎥 This comprehensive study reveals game-changing insights. Full article with detailed analysis on our Facebook page! #${title.replace(/\s+/g, '')} #Analysis #DeepDive #Insights`
+            socialPosts.youtube = `🎥 Deep dive analysis: ${shortTitle} 🎥 This comprehensive study reveals game-changing insights. Full article with detailed analysis on our Facebook page! #TimelineAlchemy #AI #ContentCreation #Analysis #DeepDive`
             break
         }
       }
