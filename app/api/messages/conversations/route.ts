@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     // For each conversation, get the other user's info and latest message
     const enrichedConversations = await Promise.all(
-      (conversations || []).map(async (conv) => {
+      (conversations || []).map(async (conv: any) => {
         const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id
 
         // Get other user's profile

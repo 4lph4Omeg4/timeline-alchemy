@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
 
-    if (conversation.user1_id !== user.id && conversation.user2_id !== user.id) {
+    // Cast conversation to any for type safety
+    const conv = conversation as any
+
+    if (conv.user1_id !== user.id && conv.user2_id !== user.id) {
       return NextResponse.json({ 
         success: false, 
         error: 'Unauthorized - not part of this conversation' 

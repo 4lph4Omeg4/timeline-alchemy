@@ -43,7 +43,10 @@ export async function GET(
       }, { status: 404 })
     }
 
-    if (conversation.user1_id !== user.id && conversation.user2_id !== user.id) {
+    // Cast conversation to any for type safety
+    const conv = conversation as any
+
+    if (conv.user1_id !== user.id && conv.user2_id !== user.id) {
       return NextResponse.json({ 
         success: false, 
         error: 'Unauthorized' 
@@ -78,7 +81,7 @@ export async function GET(
     }
 
     // Get other user's info
-    const otherUserId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id
+    const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id
     const { data: otherUser } = await supabaseAdmin.auth.admin.getUserById(otherUserId)
 
     return NextResponse.json({ 
