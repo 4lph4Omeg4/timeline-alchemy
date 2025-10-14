@@ -122,10 +122,22 @@ export default function PortfolioPage() {
     try {
       toast.loading('Starting conversation...', { id: 'conversation' })
       
+      // Get auth token
+      const { supabase } = await import('@/lib/supabase')
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session?.access_token) {
+        toast.error('Please sign in to send messages', { id: 'conversation' })
+        return
+      }
+      
       // Create or get conversation
       const response = await fetch('/api/messages/conversations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({ otherUserId: creatorUserId })
       })
       

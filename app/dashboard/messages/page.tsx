@@ -62,7 +62,17 @@ export default function MessagesPage() {
 
   const loadConversations = async () => {
     try {
-      const response = await fetch('/api/messages/conversations')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        toast.error('Not authenticated')
+        return
+      }
+
+      const response = await fetch('/api/messages/conversations', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
       const data = await response.json()
       
       if (data.success) {
@@ -78,7 +88,17 @@ export default function MessagesPage() {
     try {
       setSelectedConversation(conversation)
       
-      const response = await fetch(`/api/messages/${conversation.id}`)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        toast.error('Not authenticated')
+        return
+      }
+
+      const response = await fetch(`/api/messages/${conversation.id}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
       const data = await response.json()
       
       if (data.success) {
@@ -100,9 +120,19 @@ export default function MessagesPage() {
     setSending(true)
     
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        toast.error('Not authenticated')
+        setSending(false)
+        return
+      }
+
       const response = await fetch('/api/messages/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({
           conversationId: selectedConversation.id,
           content: newMessage.trim()
