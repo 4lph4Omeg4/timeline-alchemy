@@ -320,7 +320,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   onClick={handleSignOut}
                   className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300"
                 >
-                  Exit Dimension
+                  EXIT
                 </Button>
               </div>
             </div>
