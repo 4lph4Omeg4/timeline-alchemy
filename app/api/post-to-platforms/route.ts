@@ -139,7 +139,7 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
 
 export async function POST(request: NextRequest) {
   try {
-    const { postId, platforms } = await request.json()
+    const { postId, platforms, selectedImageUrl } = await request.json()
     
     if (!postId || !platforms || !Array.isArray(platforms)) {
       return NextResponse.json({ 
@@ -147,6 +147,8 @@ export async function POST(request: NextRequest) {
         error: 'Post ID and platforms array are required' 
       })
     }
+    
+    console.log('📸 Selected image URL for posting:', selectedImageUrl)
 
     const supabase = supabaseAdmin
     
@@ -211,25 +213,25 @@ export async function POST(request: NextRequest) {
         // Post to specific platform
         switch (platform) {
           case 'twitter':
-            result = await postToTwitter(post, connection)
+            result = await postToTwitter(post, connection, selectedImageUrl)
             break
           case 'linkedin':
-            result = await postToLinkedIn(post, connection)
+            result = await postToLinkedIn(post, connection, selectedImageUrl)
             break
           case 'instagram':
-            result = await postToInstagram(post, connection)
+            result = await postToInstagram(post, connection, selectedImageUrl)
             break
           case 'youtube':
-            result = await postToYouTube(post, connection)
+            result = await postToYouTube(post, connection, selectedImageUrl)
             break
           case 'discord':
-            result = await postToDiscord(post, connection)
+            result = await postToDiscord(post, connection, selectedImageUrl)
             break
           case 'reddit':
-            result = await postToReddit(post, connection)
+            result = await postToReddit(post, connection, selectedImageUrl)
             break
           case 'telegram':
-            result = await postToTelegram(post, connection)
+            result = await postToTelegram(post, connection, selectedImageUrl)
             break
           case 'wordpress':
             // WordPress requires special handling - get credentials from connection
@@ -301,7 +303,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Platform-specific posting functions
-async function postToTwitter(post: any, connection: any) {
+async function postToTwitter(post: any, connection: any, selectedImageUrl?: string | null) {
   const twitter = new TwitterOAuth()
   
   // Get social posts for Twitter
@@ -312,6 +314,8 @@ async function postToTwitter(post: any, connection: any) {
 
   // Remove image URL from Twitter posts to make them text-only
   const cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
+  
+  console.log('🖼️ Twitter posting with image:', selectedImageUrl || 'none')
 
   // Use retry logic for Twitter posting
   const result = await withRetry(async () => {
@@ -354,7 +358,7 @@ async function postToTwitter(post: any, connection: any) {
   return result.data
 }
 
-async function postToLinkedIn(post: any, connection: any) {
+async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: string | null) {
   const linkedin = new LinkedInOAuth()
   
   let socialPosts = post.social_posts?.linkedin || post.social_posts?.LinkedIn
@@ -362,15 +366,23 @@ async function postToLinkedIn(post: any, connection: any) {
     throw new Error('No LinkedIn content found')
   }
 
-  // Extract image URL from the post content
-  const imageUrlMatch = socialPosts.match(/🖼️ Image: (https:\/\/[^\s]+)/)
-  let imageUrl = null
+  // Use selected image URL if provided, otherwise extract from post content
+  let imageUrl = selectedImageUrl
   let cleanText = socialPosts
 
-  if (imageUrlMatch) {
-    imageUrl = imageUrlMatch[1]
+  if (!imageUrl) {
+    // Fallback: Extract image URL from the post content
+    const imageUrlMatch = socialPosts.match(/🖼️ Image: (https:\/\/[^\s]+)/)
+    if (imageUrlMatch) {
+      imageUrl = imageUrlMatch[1]
+      cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
+    }
+  } else {
+    // Remove image marker from text if it exists
     cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
   }
+  
+  console.log('🖼️ LinkedIn posting with image:', imageUrl)
 
   // Use retry logic for LinkedIn posting
   const result = await withRetry(async () => {
@@ -491,7 +503,8 @@ async function postToLinkedIn(post: any, connection: any) {
   return result.data
 }
 
-async function postToInstagram(post: any, connection: any) {
+async function postToInstagram(post: any, connection: any, selectedImageUrl?: string | null) {
+  console.log('🖼️ Instagram posting with image:', selectedImageUrl || 'none')
   const instagram = new InstagramOAuth()
   
   const socialPosts = post.social_posts?.instagram || post.social_posts?.Instagram
@@ -520,7 +533,8 @@ async function postToInstagram(post: any, connection: any) {
   return await response.json()
 }
 
-async function postToYouTube(post: any, connection: any) {
+async function postToYouTube(post: any, connection: any, selectedImageUrl?: string | null) {
+  console.log('🖼️ YouTube posting with image:', selectedImageUrl || 'none')
   const youtube = new YouTubeOAuth()
   
   const socialPosts = post.social_posts?.youtube || post.social_posts?.YouTube
@@ -550,7 +564,8 @@ async function postToYouTube(post: any, connection: any) {
   return await response.json()
 }
 
-async function postToDiscord(post: any, connection: any) {
+async function postToDiscord(post: any, connection: any, selectedImageUrl?: string | null) {
+  console.log('🖼️ Discord posting with image:', selectedImageUrl || 'none')
   const discord = new DiscordOAuth()
   
   const socialPosts = post.social_posts?.discord || post.social_posts?.Discord
@@ -591,7 +606,8 @@ async function postToDiscord(post: any, connection: any) {
   return await response.json()
 }
 
-async function postToReddit(post: any, connection: any) {
+async function postToReddit(post: any, connection: any, selectedImageUrl?: string | null) {
+  console.log('🖼️ Reddit posting with image:', selectedImageUrl || 'none')
   const reddit = new RedditOAuth()
   
   const socialPosts = post.social_posts?.reddit || post.social_posts?.Reddit
@@ -635,7 +651,8 @@ async function postToReddit(post: any, connection: any) {
   return await response.json()
 }
 
-async function postToTelegram(post: any, connection: any) {
+async function postToTelegram(post: any, connection: any, selectedImageUrl?: string | null) {
+  console.log('🖼️ Telegram posting with image:', selectedImageUrl || 'none')
   const telegram = new TelegramOAuth()
   
   const socialPosts = post.social_posts?.telegram || post.social_posts?.Telegram

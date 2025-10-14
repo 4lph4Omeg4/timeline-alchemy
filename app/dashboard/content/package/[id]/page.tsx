@@ -95,6 +95,16 @@ export default function ContentPackagePage() {
   const [scheduling, setScheduling] = useState(false)
   const [regeneratingImages, setRegeneratingImages] = useState(false)
   const [selectedImageStyle, setSelectedImageStyle] = useState<'photorealistic' | 'digital_art' | 'cosmic'>('photorealistic')
+  const [selectedImagePerPlatform, setSelectedImagePerPlatform] = useState<Record<string, number>>({
+    facebook: 0,
+    instagram: 0,
+    linkedin: 0,
+    twitter: 0,
+    discord: 0,
+    reddit: 0,
+    telegram: 0,
+    youtube: 0
+  })
 
   const handleRegenerateImages = async () => {
     if (!post) return
@@ -251,6 +261,12 @@ export default function ContentPackagePage() {
         }
       }
       
+      // Get the selected image for this platform
+      const selectedImageIndex = selectedImagePerPlatform[platform] || 0
+      const selectedImageUrl = generatedContent?.images?.[selectedImageIndex]?.url || null
+      
+      console.log(`🖼️ Using image ${selectedImageIndex + 1} for ${platform}:`, selectedImageUrl)
+      
       // Call the posting API
       const response = await fetch('/api/post-to-platforms', {
         method: 'POST',
@@ -259,7 +275,8 @@ export default function ContentPackagePage() {
         },
         body: JSON.stringify({
           postId: post.id,
-          platforms: [platform]
+          platforms: [platform],
+          selectedImageUrl: selectedImageUrl
         })
       })
 
@@ -1041,17 +1058,32 @@ export default function ContentPackagePage() {
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.facebook}</p>
-              {/* Show image preview for Facebook */}
+              {/* Image selector for Facebook */}
               {generatedContent.images && generatedContent.images.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-xs text-gray-400 mb-2">📷 Image will be included:</p>
-                  <div className="w-32 h-32 bg-black/30 rounded-lg overflow-hidden">
-                    <img 
-                      src={generatedContent.images[0].url} 
-                      alt="Post image"
-                      className="w-full h-full object-contain"
-                    />
+                  <p className="text-xs text-gray-400 mb-2">📷 Select image for this post:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {generatedContent.images.slice(0, 3).map((image, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, facebook: idx }))}
+                        className={`w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                          selectedImagePerPlatform.facebook === idx 
+                            ? 'ring-4 ring-green-500 scale-105' 
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                        }`}
+                      >
+                        <img 
+                          src={image.url} 
+                          alt={`Image ${idx + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ))}
                   </div>
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Image {selectedImagePerPlatform.facebook + 1} selected
+                  </p>
                 </div>
               )}
             </div>
@@ -1087,17 +1119,32 @@ export default function ContentPackagePage() {
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.instagram}</p>
-              {/* Show image preview for Instagram */}
+              {/* Image selector for Instagram */}
               {generatedContent.images && generatedContent.images.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-xs text-gray-400 mb-2">📷 Image will be included:</p>
-                  <div className="w-32 h-32 bg-black/30 rounded-lg overflow-hidden">
-                    <img 
-                      src={generatedContent.images[0].url} 
-                      alt="Post image"
-                      className="w-full h-full object-contain"
-                    />
+                  <p className="text-xs text-gray-400 mb-2">📷 Select image for this post:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {generatedContent.images.slice(0, 3).map((image, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, instagram: idx }))}
+                        className={`w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                          selectedImagePerPlatform.instagram === idx 
+                            ? 'ring-4 ring-green-500 scale-105' 
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                        }`}
+                      >
+                        <img 
+                          src={image.url} 
+                          alt={`Image ${idx + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ))}
                   </div>
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Image {selectedImagePerPlatform.instagram + 1} selected
+                  </p>
                 </div>
               )}
             </div>
@@ -1166,17 +1213,32 @@ export default function ContentPackagePage() {
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.linkedin}</p>
-              {/* Show image preview for LinkedIn */}
+              {/* Image selector for LinkedIn */}
               {generatedContent.images && generatedContent.images.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-xs text-gray-400 mb-2">📷 Image will be included:</p>
-                  <div className="w-32 h-32 bg-black/30 rounded-lg overflow-hidden">
-                    <img 
-                      src={generatedContent.images[0].url} 
-                      alt="Post image"
-                      className="w-full h-full object-contain"
-                    />
+                  <p className="text-xs text-gray-400 mb-2">📷 Select image for this post:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {generatedContent.images.slice(0, 3).map((image, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, linkedin: idx }))}
+                        className={`w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                          selectedImagePerPlatform.linkedin === idx 
+                            ? 'ring-4 ring-green-500 scale-105' 
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                        }`}
+                      >
+                        <img 
+                          src={image.url} 
+                          alt={`Image ${idx + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    ))}
                   </div>
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Image {selectedImagePerPlatform.linkedin + 1} selected
+                  </p>
                 </div>
               )}
             </div>
