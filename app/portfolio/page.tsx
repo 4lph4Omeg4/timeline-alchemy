@@ -12,6 +12,7 @@ import { StarRating } from '@/components/ui/star-rating'
 import { CONTENT_CATEGORIES, getAllCategories, getCategoryInfo, type CategoryId } from '@/lib/category-detector'
 import { BlogPost } from '@/types/index'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 interface PortfolioPost extends BlogPost {
   images?: Array<{ 
