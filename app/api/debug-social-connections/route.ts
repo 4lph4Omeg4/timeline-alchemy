@@ -43,28 +43,15 @@ export async function GET(request: NextRequest) {
       orgName: post.organizations?.name
     })
 
-    // Get social connections for the organization AND admin organization
-    // Clients have connections in Admin Organization, but posts in their own org
-    const { data: adminOrg } = await supabaseAdmin
-      .from('organizations')
-      .select('id')
-      .eq('name', 'Admin Organization')
-      .single()
-
-    const orgIds = [post.org_id]
-    if (adminOrg) {
-      orgIds.push(adminOrg.id)
-    }
-
+    // Get social connections for the organization
+    // Clients have their own social connections in their own organization
     const { data: connections, error: connectionsError } = await supabaseAdmin
       .from('social_connections')
       .select('*')
-      .in('org_id', orgIds)
+      .eq('org_id', post.org_id)
 
     console.log('🔗 Social connections:', {
       postOrgId: post.org_id,
-      adminOrgId: adminOrg?.id,
-      searchedOrgIds: orgIds,
       count: connections?.length || 0,
       platforms: connections?.map(c => c.platform) || [],
       error: connectionsError
@@ -86,8 +73,6 @@ export async function GET(request: NextRequest) {
         },
         connections: {
           postOrgId: post.org_id,
-          adminOrgId: adminOrg?.id,
-          searchedOrgIds: orgIds,
           count: connections?.length || 0,
           platforms: connections?.map(c => ({
             platform: c.platform,
