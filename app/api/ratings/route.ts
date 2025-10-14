@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 })
     }
 
-    // Insert or update rating
+    // Insert or update rating (upsert based on user_id + post_id unique constraint)
     const { data, error } = await (supabaseAdmin as any)
       .from('ratings')
       .upsert({
@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
         rating: rating,
         review_text: reviewText || null,
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,post_id', // Specify the unique constraint columns
+        ignoreDuplicates: false // Update on conflict instead of ignoring
       })
       .select()
       .single()
