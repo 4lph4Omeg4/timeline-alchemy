@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     console.log('🔗 Found social connections:', {
       postOrgId: (post as any).org_id,
       connectionsCount: connections?.length || 0,
-      platforms: connections?.map(c => c.platform) || []
+      platforms: connections?.map((c: any) => c.platform) || []
     })
 
     const results = []
