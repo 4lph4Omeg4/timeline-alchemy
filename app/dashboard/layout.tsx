@@ -466,7 +466,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       </Link>
                       <Link href="/dashboard/admin/clients" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">👥</span>
-                        <span className="font-semibold">Manage Clients</span>
+                        <span className="font-semibold">Manage Members</span>
                       </Link>
                       <Link href="/dashboard/admin/packages" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
                         <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📦</span>

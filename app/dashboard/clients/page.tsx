@@ -1,19 +1,19 @@
-'use client'
+'use member'
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
-import { Client } from '@/types/index'
+import { member } from '@/types/index'
 
-export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([])
+export default function membersPage() {
+  const [members, setmembers] = useState<member[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    const fetchClients = async () => {
+    const fetchmembers = async () => {
       try {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser()
@@ -23,21 +23,21 @@ export default function ClientsPage() {
         const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
         setIsAdmin(isAdminUser)
 
-        let clientsData, error
+        let membersData, error
 
         if (isAdminUser) {
-          // Admin: fetch all clients from all organizations
+          // Admin: fetch all members from all organizations
           const result = await (supabase as any)
-            .from('clients')
+            .from('members')
             .select(`
               *,
               organizations(name, plan)
             `)
             .order('created_at', { ascending: false })
           
-          clientsData = result.data
+          membersData = result.data
           error = result.error
-          console.log('Admin clients query result:', { clientsData, error })
+          console.log('Admin members query result:', { membersData, error })
         } else {
           // Regular user: get user's organizations
           const { data: orgMembers } = await (supabase as any)
@@ -47,16 +47,16 @@ export default function ClientsPage() {
 
           if (!orgMembers || orgMembers.length === 0) {
             console.log('No organizations found for user')
-            setClients([])
+            setmembers([])
             return
           }
 
           // Get all organization IDs the user belongs to
           const orgIds = orgMembers.map((member: any) => member.org_id)
 
-          // Fetch clients for all user's organizations
+          // Fetch members for all user's organizations
           const result = await (supabase as any)
-            .from('clients')
+            .from('members')
             .select(`
               *,
               organizations(name, plan)
@@ -64,22 +64,22 @@ export default function ClientsPage() {
             .in('org_id', orgIds)
             .order('created_at', { ascending: false })
           
-          clientsData = result.data
+          membersData = result.data
           error = result.error
-          console.log('User clients query result:', { clientsData, error, orgIds })
+          console.log('User members query result:', { membersData, error, orgIds })
         }
 
-        if (clientsData) {
-          setClients(clientsData)
+        if (membersData) {
+          setmembers(membersData)
         }
       } catch (error) {
-        console.error('Error fetching clients:', error)
+        console.error('Error fetching members:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchClients()
+    fetchmembers()
   }, [])
 
   if (loading) {
@@ -93,26 +93,26 @@ export default function ClientsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Clients</h1>
+        <h1 className="text-3xl font-bold text-white">members</h1>
         <p className="text-gray-300 mt-2">
-          {isAdmin ? 'Manage all client accounts across all organizations' : 'Manage your organization\'s client accounts'}
+          {isAdmin ? 'Manage all member accounts across all organizations' : 'Manage your organization\'s member accounts'}
         </p>
       </div>
 
           <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="text-white">
-                {isAdmin ? 'All Clients' : 'My Clients'}
+                {isAdmin ? 'All members' : 'My members'}
               </CardTitle>
               <CardDescription className="text-gray-200">
-                {clients.length} clients found
+                {members.length} members found
               </CardDescription>
             </CardHeader>
         <CardContent>
-          {clients.length === 0 ? (
+          {members.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-400">
-                {isAdmin ? 'No clients found across all organizations' : 'No clients found in your organization'}
+                {isAdmin ? 'No members found across all organizations' : 'No members found in your organization'}
               </p>
               {!isAdmin && (
                 <p className="text-gray-500 text-sm mt-2">
@@ -122,17 +122,17 @@ export default function ClientsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {clients.map((client) => (
-                <div key={client.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
+              {members.map((member) => (
+                <div key={member.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
                   <div className="flex items-start">
                     <div className="flex-1">
-                      <h3 className="font-medium text-white">{client.name}</h3>
+                      <h3 className="font-medium text-white">{member.name}</h3>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-300">
-                        <span>Email: {client.contact_info?.email || 'No email'}</span>
+                        <span>Email: {member.contact_info?.email || 'No email'}</span>
                         <Badge variant="secondary" className="bg-gray-700 text-gray-200">
-                          {(client as any).organizations?.name || 'Unknown Org'}
+                          {(member as any).organizations?.name || 'Unknown Org'}
                         </Badge>
-                        <span>Created: {new Date(client.created_at).toLocaleDateString()}</span>
+                        <span>Created: {new Date(member.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>

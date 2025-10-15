@@ -217,30 +217,30 @@ export default function AdminClientsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Manage Clients</h1>
+          <h1 className="text-3xl font-bold text-white">Manage Members</h1>
           <p className="text-gray-300 mt-2">
-            Create and manage clients for package assignment.
+            Create and manage members for package assignment.
           </p>
         </div>
       </div>
 
-      {/* Create Client Form */}
+      {/* Create Member Form */}
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">Create New Client</CardTitle>
+          <CardTitle className="text-white">Create New Member</CardTitle>
           <CardDescription className="text-gray-300">
-            Add a new client to assign packages to.
+            Add a new member to assign packages to.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="client-name" className="text-white">Client Name</Label>
+            <Label htmlFor="client-name" className="text-white">Member Name</Label>
             <Input
               id="client-name"
               value={newClientName}
               onChange={(e) => setNewClientName(e.target.value)}
               className="mt-2 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-              placeholder="Enter client name"
+              placeholder="Enter member name"
             />
           </div>
           <div>
@@ -251,7 +251,7 @@ export default function AdminClientsPage() {
               value={newClientEmail}
               onChange={(e) => setNewClientEmail(e.target.value)}
               className="mt-2 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-              placeholder="Enter client email"
+              placeholder="Enter member email"
             />
           </div>
           <div>
@@ -311,7 +311,7 @@ export default function AdminClientsPage() {
             )}
 
             <p className="text-gray-400 text-sm mt-1">
-              Clients are always created in the Admin Organization. This assigns them to an additional organization.
+              Members are always created in the Admin Organization. This assigns them to an additional organization.
             </p>
           </div>
           <Button 
@@ -321,21 +321,21 @@ export default function AdminClientsPage() {
             {saving ? (
               <>
                 <Loader className="mr-2 h-4 w-4" />
-                Creating Client...
+                Creating Member...
               </>
             ) : (
-              'Create Client'
+              'Create Member'
             )}
           </Button>
         </CardContent>
       </Card>
 
-      {/* Clients List */}
+      {/* Members List */}
       {clients.length === 0 ? (
         <Card className="bg-gray-900 border-gray-800 text-center py-12">
-          <CardTitle className="text-white">No Clients Found</CardTitle>
+          <CardTitle className="text-white">No Members Found</CardTitle>
           <CardDescription className="text-gray-400 mt-2">
-            Start by creating clients to assign packages to.
+            Start by creating members to assign packages to.
           </CardDescription>
         </Card>
       ) : (
@@ -360,7 +360,7 @@ export default function AdminClientsPage() {
                   onClick={() => handleDeleteClient(client.id)}
                   className="w-full"
                 >
-                  Delete Client
+                  Delete Member
                 </Button>
               </CardContent>
             </Card>

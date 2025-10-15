@@ -1,4 +1,4 @@
-'use client'
+'use member'
 
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,16 +6,16 @@ import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/Loader'
 import toast from 'react-hot-toast'
 
-export default function FixClientAccessPage() {
+export default function FixmemberAccessPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
 
-  const handleFixClientAccess = async () => {
+  const handleFixmemberAccess = async () => {
     setLoading(true)
     setResult(null)
     
     try {
-      const response = await fetch('/api/fix-client-access', {
+      const response = await fetch('/api/fix-member-access', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -25,14 +25,14 @@ export default function FixClientAccessPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fix client access')
+        throw new Error(data.error || 'Failed to fix member access')
       }
 
       setResult(data)
-      toast.success('Client access fixed successfully!')
+      toast.success('member access fixed successfully!')
     } catch (error) {
-      console.error('Error fixing client access:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to fix client access')
+      console.error('Error fixing member access:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to fix member access')
     } finally {
       setLoading(false)
     }
@@ -41,7 +41,7 @@ export default function FixClientAccessPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Fix Client Access</h1>
+        <h1 className="text-3xl font-bold text-white">Fix member Access</h1>
         <p className="text-gray-300 mt-2">
           This tool ensures all users have access to the admin organization for global package access.
         </p>
@@ -49,30 +49,30 @@ export default function FixClientAccessPage() {
 
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">Client Access Fix</CardTitle>
+          <CardTitle className="text-white">member Access Fix</CardTitle>
           <CardDescription className="text-gray-300">
             This will:
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Ensure Admin Organization exists</li>
-              <li>Add all users to Admin Organization (admin as owner, others as client)</li>
+              <li>Add all users to Admin Organization (admin as owner, others as member)</li>
               <li>Create admin subscription</li>
-              <li>Move all clients to Admin Organization</li>
+              <li>Move all members to Admin Organization</li>
             </ul>
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button 
-            onClick={handleFixClientAccess}
+            onClick={handleFixmemberAccess}
             disabled={loading}
             className="w-full"
           >
             {loading ? (
               <>
                 <Loader className="mr-2 h-4 w-4" />
-                Fixing Client Access...
+                Fixing member Access...
               </>
             ) : (
-              'Fix Client Access'
+              'Fix member Access'
             )}
           </Button>
 
