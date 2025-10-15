@@ -1,19 +1,19 @@
-'use member'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
-import { member } from '@/types/index'
+import { Client } from '@/types/index'
 
-export default function membersPage() {
-  const [members, setmembers] = useState<member[]>([])
+export default function ClientsPage() {
+  const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    const fetchmembers = async () => {
+    const fetchClients = async () => {
       try {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser()
@@ -23,21 +23,21 @@ export default function membersPage() {
         const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
         setIsAdmin(isAdminUser)
 
-        let membersData, error
+        let clientsData, error
 
         if (isAdminUser) {
-          // Admin: fetch all members from all organizations
+          // Admin: fetch all clients from all organizations
           const result = await (supabase as any)
-            .from('members')
+            .from('clients')
             .select(`
               *,
               organizations(name, plan)
             `)
             .order('created_at', { ascending: false })
           
-          membersData = result.data
+          clientsData = result.data
           error = result.error
-          console.log('Admin members query result:', { membersData, error })
+          console.log('Admin clients query result:', { clientsData, error })
         } else {
           // Regular user: get user's organizations
           const { data: orgMembers } = await (supabase as any)
@@ -47,16 +47,16 @@ export default function membersPage() {
 
           if (!orgMembers || orgMembers.length === 0) {
             console.log('No organizations found for user')
-            setmembers([])
+            setClients([])
             return
           }
 
           // Get all organization IDs the user belongs to
           const orgIds = orgMembers.map((member: any) => member.org_id)
 
-          // Fetch members for all user's organizations
+          // Fetch clients for all user's organizations
           const result = await (supabase as any)
-            .from('members')
+            .from('clients')
             .select(`
               *,
               organizations(name, plan)
@@ -64,22 +64,22 @@ export default function membersPage() {
             .in('org_id', orgIds)
             .order('created_at', { ascending: false })
           
-          membersData = result.data
+          clientsData = result.data
           error = result.error
-          console.log('User members query result:', { membersData, error, orgIds })
+          console.log('User clients query result:', { clientsData, error, orgIds })
         }
 
-        if (membersData) {
-          setmembers(membersData)
+        if (clientsData) {
+          setClients(clientsData)
         }
       } catch (error) {
-        console.error('Error fetching members:', error)
+        console.error('Error fetching clients:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchmembers()
+    fetchClients()
   }, [])
 
   if (loading) {
@@ -105,11 +105,11 @@ export default function membersPage() {
                 {isAdmin ? 'All members' : 'My members'}
               </CardTitle>
               <CardDescription className="text-gray-200">
-                {members.length} members found
+                {clients.length} members found
               </CardDescription>
             </CardHeader>
         <CardContent>
-          {members.length === 0 ? (
+          {clients.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-400">
                 {isAdmin ? 'No members found across all organizations' : 'No members found in your organization'}
@@ -122,17 +122,17 @@ export default function membersPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {members.map((member) => (
-                <div key={member.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
+              {clients.map((client) => (
+                <div key={client.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
                   <div className="flex items-start">
                     <div className="flex-1">
-                      <h3 className="font-medium text-white">{member.name}</h3>
+                      <h3 className="font-medium text-white">{client.name}</h3>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-300">
-                        <span>Email: {member.contact_info?.email || 'No email'}</span>
+                        <span>Email: {client.contact_info?.email || 'No email'}</span>
                         <Badge variant="secondary" className="bg-gray-700 text-gray-200">
-                          {(member as any).organizations?.name || 'Unknown Org'}
+                          {(client as any).organizations?.name || 'Unknown Org'}
                         </Badge>
-                        <span>Created: {new Date(member.created_at).toLocaleDateString()}</span>
+                        <span>Created: {new Date(client.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
