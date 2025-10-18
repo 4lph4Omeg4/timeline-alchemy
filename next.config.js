@@ -2,6 +2,12 @@
 const nextConfig = {
   images: {
     domains: ['localhost', 'supabase.co', 'auth.timeline-alchemy.nl'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+    ],
   },
   // Optimize build performance
   // Note: optimizeCss requires 'critters' package, disabled for now

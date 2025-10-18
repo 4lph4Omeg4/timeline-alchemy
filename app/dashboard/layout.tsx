@@ -342,14 +342,31 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {/* User Info & Buttons - Right */}
               <div className="flex items-center gap-4">
-                <div className="text-sm text-purple-200">
-                  <span className="font-semibold">{user?.name || user?.email}</span>
-                  {isAdmin && (
-                    <span className="ml-2 px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-yellow-400 text-black rounded-full font-bold shadow-lg">
-                      ✨ COSMIC ADMIN ✨
-                    </span>
+                <Link href="/dashboard/profile" className="flex items-center gap-2 text-sm text-purple-200 hover:text-yellow-400 transition-colors">
+                  {user?.avatar_url ? (
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-purple-500/50">
+                      <img 
+                        src={user.avatar_url} 
+                        alt="Avatar" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center border-2 border-purple-500/50">
+                      <span className="text-sm text-white font-bold">
+                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}
+                      </span>
+                    </div>
                   )}
-                </div>
+                  <div>
+                    <span className="font-semibold block">{user?.name || user?.email}</span>
+                    {isAdmin && (
+                      <span className="text-xs bg-gradient-to-r from-yellow-500 to-yellow-400 text-black px-2 py-0.5 rounded-full font-bold">
+                        ✨ ADMIN
+                      </span>
+                    )}
+                  </div>
+                </Link>
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -451,6 +468,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <span className="font-semibold">Billing</span>
                     </div>
                     {/* Trial badge will be shown dynamically based on user's subscription status */}
+                  </Link>
+                  <Link href="/dashboard/profile" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">👤</span>
+                    <span className="font-semibold">Profile</span>
                   </Link>
                   {isAdmin && (
                     <>
