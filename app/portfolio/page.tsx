@@ -24,6 +24,12 @@ interface PortfolioPost extends BlogPost {
     is_active?: boolean
     prompt_number?: number
   }>
+  creator?: {
+    id: string
+    name: string
+    email?: string
+    avatar_url?: string
+  }
 }
 
 export default function PortfolioPage() {
@@ -513,10 +519,30 @@ export default function PortfolioPage() {
                         <span>Gepubliceerd</span>
                       </div>
                       
-                      {post.organizations && (
-                        <div className="text-right">
-                          <div className="text-xs text-purple-300">
-                            {post.organizations.name}
+                      {/* Creator info */}
+                      {(post.creator || post.organizations) && (
+                        <div className="flex items-center gap-2">
+                          {post.creator?.avatar_url && (
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-500/50 flex-shrink-0">
+                              <img 
+                                src={post.creator.avatar_url} 
+                                alt={post.creator.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.currentTarget as HTMLImageElement
+                                  target.style.display = 'none'
+                                  const fallback = document.createElement('div')
+                                  fallback.className = 'w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-[8px]'
+                                  fallback.textContent = post.creator?.name.charAt(0).toUpperCase() || '?'
+                                  target.parentElement?.appendChild(fallback)
+                                }}
+                              />
+                            </div>
+                          )}
+                          <div className="text-right">
+                            <div className="text-xs text-purple-300">
+                              {post.creator?.name || post.organizations?.name}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -864,13 +890,37 @@ export default function PortfolioPage() {
             {selectedPost.created_by_user_id && selectedPost.created_by_user_id !== currentUserId && (
               <div className="border-t border-purple-500/30 pt-6">
                 <div className="flex items-center justify-between bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">
-                      💬 Connect with the Creator
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      Start a conversation with <span className="text-purple-300 font-semibold">{selectedPost.organizations?.name}</span>
-                    </p>
+                  <div className="flex items-center gap-4">
+                    {/* Creator Avatar */}
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500/50 flex-shrink-0">
+                      {selectedPost.creator?.avatar_url ? (
+                        <img 
+                          src={selectedPost.creator.avatar_url} 
+                          alt={selectedPost.creator.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement
+                            target.style.display = 'none'
+                            const fallback = document.createElement('div')
+                            fallback.className = 'w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg'
+                            fallback.textContent = selectedPost.creator?.name.charAt(0).toUpperCase() || '?'
+                            target.parentElement?.appendChild(fallback)
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                          {selectedPost.creator?.name?.charAt(0).toUpperCase() || selectedPost.organizations?.name?.charAt(0).toUpperCase() || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        💬 Connect with the Creator
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        Start a conversation with <span className="text-purple-300 font-semibold">{selectedPost.creator?.name || selectedPost.organizations?.name}</span>
+                      </p>
+                    </div>
                   </div>
                   <Button
                     onClick={() => {

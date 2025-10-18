@@ -210,8 +210,27 @@ export default function MessagesPage() {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                          {conv.otherUser.name.charAt(0).toUpperCase()}
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-purple-500/50 flex-shrink-0">
+                          {conv.otherUser.avatar_url ? (
+                            <img 
+                              src={conv.otherUser.avatar_url} 
+                              alt={conv.otherUser.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Fallback to gradient on error
+                                const target = e.currentTarget as HTMLImageElement
+                                target.style.display = 'none'
+                                const fallback = document.createElement('div')
+                                fallback.className = 'w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold'
+                                fallback.textContent = conv.otherUser.name.charAt(0).toUpperCase()
+                                target.parentElement?.appendChild(fallback)
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                              {conv.otherUser.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                         </div>
                         <div>
                           <p className="font-semibold text-white">{conv.otherUser.name}</p>
@@ -247,8 +266,27 @@ export default function MessagesPage() {
             <>
               <CardHeader className="border-b border-purple-500/30">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl">
-                    {otherUser?.name?.charAt(0).toUpperCase()}
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500/50 flex-shrink-0">
+                    {otherUser?.avatar_url ? (
+                      <img 
+                        src={otherUser.avatar_url} 
+                        alt={otherUser.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to gradient on error
+                          const target = e.currentTarget as HTMLImageElement
+                          target.style.display = 'none'
+                          const fallback = document.createElement('div')
+                          fallback.className = 'w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl'
+                          fallback.textContent = otherUser?.name?.charAt(0).toUpperCase()
+                          target.parentElement?.appendChild(fallback)
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl">
+                        {otherUser?.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <CardTitle className="text-white">{otherUser?.name}</CardTitle>
@@ -272,8 +310,30 @@ export default function MessagesPage() {
                     return (
                       <div
                         key={message.id}
-                        className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                        className={`flex gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}
                       >
+                        {!isMine && otherUser?.avatar_url && (
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-purple-500/50 flex-shrink-0 mt-1">
+                            <img 
+                              src={otherUser.avatar_url} 
+                              alt={otherUser.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget as HTMLImageElement
+                                target.style.display = 'none'
+                                const fallback = document.createElement('div')
+                                fallback.className = 'w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs'
+                                fallback.textContent = otherUser?.name?.charAt(0).toUpperCase()
+                                target.parentElement?.appendChild(fallback)
+                              }}
+                            />
+                          </div>
+                        )}
+                        {!isMine && !otherUser?.avatar_url && (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs border-2 border-purple-500/50 flex-shrink-0 mt-1">
+                            {otherUser?.name?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <div
                           className={`max-w-[70%] rounded-lg p-4 ${
                             isMine

@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
     console.log(`✅ Portfolio API - Found ${posts?.length || 0} posts for category: ${category}`)
 
     // Simple transformation for now - skip social posts temporarily
-    // Get social posts for each post separately
+    // Get social posts and creator info for each post separately
     const postsWithSocialPosts = await Promise.all(
       (posts || []).map(async (post: any) => {
         // Try to query social posts for this specific post
@@ -122,6 +122,24 @@ export async function GET(request: NextRequest) {
           console.warn(`⚠️ Error fetching social posts for post ${post.id}:`, err)
         }
 
+        // Get creator info
+        let creatorInfo = null
+        if (post.created_by_user_id) {
+          try {
+            const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(post.created_by_user_id)
+            if (!userError && userData?.user) {
+              creatorInfo = {
+                id: userData.user.id,
+                name: userData.user.user_metadata?.name || userData.user.email?.split('@')[0] || 'Unknown',
+                email: userData.user.email,
+                avatar_url: userData.user.user_metadata?.avatar_url || null
+              }
+            }
+          } catch (err) {
+            console.warn(`⚠️ Error fetching creator info for post ${post.id}:`, err)
+          }
+        }
+
         return {
           id: post.id,
           org_id: post.org_id,
@@ -136,6 +154,7 @@ export async function GET(request: NextRequest) {
           average_rating: post.average_rating ? parseFloat(post.average_rating) : null,
           rating_count: post.rating_count || 0,
           created_by_user_id: post.created_by_user_id || null,
+          creator: creatorInfo,
           organizations: post.organizations ? {
             ...post.organizations,
             name: post.organizations.name === 'Admin Organization' ? 'Timeline Alchemy' : post.organizations.name
