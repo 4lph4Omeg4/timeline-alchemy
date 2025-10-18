@@ -108,13 +108,14 @@ export default function ProfilePage() {
       setUploadingAvatar(true)
       
       // Generate unique filename
+      // Path structure: {user_id}/avatar-{timestamp}.{ext}
       const fileExt = avatarFile.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
-      const filePath = `avatars/${fileName}`
+      const fileName = `avatar-${Date.now()}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
 
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage (dedicated avatars bucket)
       const { data, error } = await supabase.storage
-        .from('blog-images')
+        .from('avatars')
         .upload(filePath, avatarFile, {
           upsert: true,
           contentType: avatarFile.type
@@ -124,7 +125,7 @@ export default function ProfilePage() {
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('blog-images')
+        .from('avatars')
         .getPublicUrl(filePath)
 
       return publicUrl

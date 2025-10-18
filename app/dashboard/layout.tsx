@@ -343,21 +343,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               {/* User Info & Buttons - Right */}
               <div className="flex items-center gap-4">
                 <Link href="/dashboard/profile" className="flex items-center gap-2 text-sm text-purple-200 hover:text-yellow-400 transition-colors">
-                  {user?.avatar_url ? (
-                    <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-purple-500/50">
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-purple-500/50">
+                    {user?.avatar_url ? (
                       <img 
                         src={user.avatar_url} 
                         alt="Avatar" 
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Replace with fallback on error
+                          const fallback = document.createElement('div')
+                          fallback.className = 'w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center'
+                          fallback.innerHTML = `<span class="text-sm text-white font-bold">${user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}</span>`
+                          e.currentTarget.parentElement?.appendChild(fallback)
+                          e.currentTarget.style.display = 'none'
+                        }}
                       />
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center border-2 border-purple-500/50">
-                      <span className="text-sm text-white font-bold">
-                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                        <span className="text-sm text-white font-bold">
+                          {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <div>
                     <span className="font-semibold block">{user?.name || user?.email}</span>
                     {isAdmin && (
