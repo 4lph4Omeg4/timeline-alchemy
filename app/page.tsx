@@ -121,9 +121,9 @@ export default function HomePage() {
               </Button>
               <Button 
                 onClick={handleSignUp}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg shadow-purple-500/50"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-semibold shadow-lg shadow-green-500/50"
               >
-                🚀 Start Free Trial
+                🎉 Join FREE
               </Button>
             </div>
           </div>
@@ -139,10 +139,22 @@ export default function HomePage() {
               Timeline Alchemy
             </h1>
             
+            {/* Free Platform Badge */}
+            <div className="inline-block mb-6">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-full font-bold text-xl shadow-lg shadow-green-500/50 animate-pulse">
+                ✨ FREE Social Platform for Creators ✨
+              </div>
+            </div>
+            
+            <p className="text-xl text-gray-200 max-w-4xl mx-auto mb-4 leading-relaxed font-semibold">
+              Join our <span className="text-green-400">FREE</span> creator community! Share your work, discover amazing content, 
+              and connect with fellow creators — <span className="text-green-400">always free, forever</span>.
+            </p>
+            
             <p className="text-lg text-gray-300 max-w-4xl mx-auto mb-6 leading-relaxed">
-              Generate stunning blog posts, social media content packages, for posting across multiple platforms. 
-              Powered by cutting-edge AI, designed for creators by others sharing creations. Rate content packages 
-              using the built-in "Resonance Rating"-system, or use it to find the good packages without effort.
+              Want to supercharge your content creation? Unlock optional AI-powered features to generate stunning blog posts 
+              and social media packages across multiple platforms. Rate content using our "Resonance Rating" system 
+              to discover the best packages effortlessly.
             </p>
             
             <p className="text-2xl md:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 font-bold mb-8">
@@ -170,9 +182,9 @@ export default function HomePage() {
             <Button 
               onClick={handleSignUp}
               size="lg"
-              className="text-xl px-12 py-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold shadow-2xl shadow-purple-500/50 transform hover:scale-105 transition-all duration-300"
+              className="text-xl px-12 py-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold shadow-2xl shadow-green-500/50 transform hover:scale-105 transition-all duration-300"
             >
-              🚀 Start Free Trial
+              🎉 Create FREE Account
             </Button>
             <Button 
               onClick={handleSignIn}
@@ -183,11 +195,115 @@ export default function HomePage() {
               Sign In
             </Button>
           </div>
+          
+          {/* Free vs Paid Info */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-400">
+              No credit card required • Free account stays free forever
+            </p>
+          </div>
         </div>
 
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
           <div className="text-purple-400 text-4xl">↓</div>
+        </div>
+      </section>
+
+      {/* Free Forever Section */}
+      <section className="relative py-20 bg-gradient-to-r from-green-900/40 via-emerald-900/40 to-green-900/40 border-y border-green-500/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-block mb-6">
+                <span className="text-6xl">💚</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                Always <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">FREE</span> for the Community
+              </h2>
+              <p className="text-xl text-green-200 mb-8">
+                Create your account today and enjoy full access to our social platform — <span className="font-bold text-green-300">free forever</span>!
+              </p>
+            </div>
+            
+            {/* Free Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+              <div className="bg-green-500/10 border border-green-400/30 rounded-xl p-8 backdrop-blur-sm">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl">📱</div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-3">Free Social Platform</h3>
+                    <ul className="space-y-2 text-green-100">
+                      <li className="flex items-start">
+                        <span className="text-green-400 mr-2">✓</span>
+                        <span>Browse and discover content from fellow creators</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-400 mr-2">✓</span>
+                        <span>Share your own creations with the community</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-400 mr-2">✓</span>
+                        <span>Rate content with the Resonance Rating system</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-400 mr-2">✓</span>
+                        <span>Connect and network with other creators</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-400 mr-2">✓</span>
+                        <span>Access the community portfolio gallery</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-purple-500/10 border border-purple-400/30 rounded-xl p-8 backdrop-blur-sm">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl">🚀</div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-3">Optional Paid Features</h3>
+                    <ul className="space-y-2 text-purple-100">
+                      <li className="flex items-start">
+                        <span className="text-purple-400 mr-2">⭐</span>
+                        <span>AI-powered content generation tools</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-purple-400 mr-2">⭐</span>
+                        <span>Multi-platform social media posting</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-purple-400 mr-2">⭐</span>
+                        <span>Advanced scheduling and automation</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-purple-400 mr-2">⭐</span>
+                        <span>Bulk content generation</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-purple-400 mr-2">⭐</span>
+                        <span>Custom branding options</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <Button 
+                onClick={handleSignUp}
+                size="lg"
+                className="text-xl px-12 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white font-bold shadow-2xl shadow-green-500/50"
+              >
+                Join the Community — It's FREE! →
+              </Button>
+              <p className="mt-4 text-green-200 text-sm">
+                No credit card required • Cancel anytime if you upgrade
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -199,11 +315,11 @@ export default function HomePage() {
               <span className="text-6xl">🎉</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Start Your Journey with a <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">Free Trial</span>
+              Try Premium Features with a <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">Free Trial</span>
             </h2>
             <p className="text-xl text-blue-200 mb-8">
-              Every new member begins with a <span className="font-bold text-yellow-300">14-day free trial</span>. 
-              No credit card required. Experience the full power of Timeline Alchemy.
+              Want to test the AI-powered tools? Every new member can try a <span className="font-bold text-yellow-300">14-day free trial</span> of premium features. 
+              No credit card required. After the trial, you'll still have full access to the free social platform!
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-blue-500/10 border border-blue-400/30 rounded-xl p-6 backdrop-blur-sm">
@@ -228,7 +344,7 @@ export default function HomePage() {
               size="lg"
               className="text-xl px-12 py-4 bg-gradient-to-r from-yellow-500 to-yellow-300 hover:from-yellow-400 hover:to-yellow-200 text-black font-bold shadow-2xl shadow-yellow-500/50"
             >
-              Claim Your Free Trial →
+              Try Premium Features →
             </Button>
           </div>
         </div>
@@ -239,10 +355,13 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-4">
-              Choose Your Plan
+              Optional Premium Plans
             </h2>
-            <p className="text-xl text-gray-300">
-              Flexible pricing for creators of all levels
+            <p className="text-xl text-gray-300 mb-2">
+              Upgrade anytime to unlock AI-powered content generation
+            </p>
+            <p className="text-md text-green-400 font-semibold">
+              The social community platform stays FREE forever — these upgrades are completely optional!
             </p>
           </div>
 
@@ -501,15 +620,15 @@ export default function HomePage() {
                 </span>
               </div>
               <p className="text-gray-400 leading-relaxed mb-6">
-                Transform your content strategy with AI-powered magic. 
-                Generate stunning blog posts, social media content, and images across multiple platforms.
+                Join our FREE creator community to share and discover amazing content. 
+                Optionally upgrade to unlock AI-powered content generation across multiple platforms.
               </p>
               <div className="flex gap-4">
                 <Button 
                   onClick={handleSignUp}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500"
                 >
-                  Get Started
+                  Join FREE
                 </Button>
               </div>
             </div>
