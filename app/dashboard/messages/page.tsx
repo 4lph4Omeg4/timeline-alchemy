@@ -18,7 +18,6 @@ interface Conversation {
   updated_at: string
   otherUser: {
     id: string
-    email: string
     name: string
     avatar_url?: string
   }
@@ -234,7 +233,7 @@ export default function MessagesPage() {
                         </div>
                         <div>
                           <p className="font-semibold text-white">{conv.otherUser.name}</p>
-                          <p className="text-xs text-gray-400">{conv.otherUser.email}</p>
+                          <p className="text-xs text-gray-500">Timeline Alchemy Creator</p>
                         </div>
                       </div>
                       {conv.unreadCount > 0 && (
@@ -290,7 +289,7 @@ export default function MessagesPage() {
                   </div>
                   <div>
                     <CardTitle className="text-white">{otherUser?.name}</CardTitle>
-                    <CardDescription className="text-gray-400">{otherUser?.email}</CardDescription>
+                    <CardDescription className="text-gray-400">Timeline Alchemy Creator</CardDescription>
                   </div>
                 </div>
               </CardHeader>
