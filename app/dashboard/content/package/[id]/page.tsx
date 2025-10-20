@@ -922,14 +922,14 @@ export default function ContentPackagePage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-white">🖼️ Current Images</CardTitle>
+                <CardTitle className="text-white">🖼️ Package Images</CardTitle>
                 <CardDescription className="text-gray-300">
                   {generatedContent.images.filter(img => img.is_active).length > 1 
                     ? `${generatedContent.images.filter(img => img.is_active).length} AI-generated images in ${generatedContent.images.find(img => img.is_active)?.style?.replace('_', ' ') || 'selected'} style`
-                    : 'AI-generated image that complements your content'}
+                    : 'AI-generated images that complement your content'}
                 </CardDescription>
               </div>
-              {generatedContent.images.length > 3 && (
+              {generatedContent.images.filter(img => img.variant_type === 'original').length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -941,7 +941,7 @@ export default function ContentPackagePage() {
                   }}
                   className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
                 >
-                  🎨 View All Styles
+                  🎨 View Original Variants
                 </Button>
               )}
             </div>
@@ -978,63 +978,30 @@ export default function ContentPackagePage() {
             </div>
 
             {/* All Style Variants Section */}
-            {generatedContent.images.length > 3 && (
+            {generatedContent.images.filter(img => img.variant_type === 'original').length > 0 && (
               <div id="all-styles-section" className="mt-8 pt-8 border-t border-gray-700 space-y-4">
-                <h3 className="text-lg font-semibold text-white">🎨 All Style Variants</h3>
+                <h3 className="text-lg font-semibold text-white">🎨 Original Style Variants</h3>
                 <p className="text-sm text-gray-400">
-                  View all the original style options and final images generated for this content
+                  View all the original style options that were generated during creation
                 </p>
                 
-                <div className="space-y-6">
-                  {/* Original Style Variants */}
-                  {generatedContent.images.filter(img => img.variant_type === 'original').length > 0 && (
-                    <div>
-                      <h4 className="text-md font-semibold text-purple-300 mb-3">Original Style Variants</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {generatedContent.images
-                          .filter(img => img.variant_type === 'original')
-                          .map((image, index) => (
-                                  <div key={index} className="space-y-2">
-                                    <div className="w-full h-48 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
-                                      <img 
-                                        src={image.url} 
-                                        alt={image.prompt || 'Original variant'}
-                                        className="w-full h-full object-contain"
-                                      />
-                                    </div>
-                                    <Badge className="bg-purple-600/20 text-purple-200">
-                                      {image.style?.replace('_', ' ')}
-                                    </Badge>
-                                  </div>
-                          ))}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {generatedContent.images
+                    .filter(img => img.variant_type === 'original')
+                    .map((image, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="w-full h-48 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
+                          <img 
+                            src={image.url} 
+                            alt={image.prompt || 'Original variant'}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <Badge className="bg-purple-600/20 text-purple-200">
+                          {image.style?.replace('_', ' ')}
+                        </Badge>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Final Images */}
-                  {generatedContent.images.filter(img => img.variant_type === 'final').length > 0 && (
-                    <div>
-                      <h4 className="text-md font-semibold text-green-300 mb-3">✅ Final Images (Chosen Style)</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {generatedContent.images
-                          .filter(img => img.variant_type === 'final')
-                          .map((image, index) => (
-                            <div key={index} className="space-y-2">
-                              <div className="w-full h-48 bg-black/30 rounded-lg border-2 border-green-500/30 overflow-hidden flex items-center justify-center">
-                                <img 
-                                  src={image.url} 
-                                  alt={image.prompt || 'Final image'}
-                                  className="w-full h-full object-contain"
-                                />
-                              </div>
-                              <Badge className="bg-green-600/20 text-green-200">
-                                {image.style?.replace('_', ' ')} {image.is_active && '(Active)'}
-                              </Badge>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
+                    ))}
                 </div>
               </div>
             )}
