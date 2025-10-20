@@ -105,6 +105,30 @@ export default function ContentPackagePage() {
     telegram: 0,
     youtube: 0
   })
+  const [showAllImagesForPlatform, setShowAllImagesForPlatform] = useState<Record<string, boolean>>({
+    facebook: false,
+    instagram: false,
+    linkedin: false,
+    twitter: false,
+    discord: false,
+    reddit: false,
+    telegram: false,
+    youtube: false
+  })
+
+  // Helper function to get images to display for a platform
+  const getImagesToDisplay = (platform: string) => {
+    if (!generatedContent?.images) return []
+    
+    if (showAllImagesForPlatform[platform]) {
+      // Show ALL images
+      return generatedContent.images
+    } else {
+      // Show only active images (default behavior)
+      const activeImages = generatedContent.images.filter(img => img.is_active !== false)
+      return activeImages.length > 0 ? activeImages : generatedContent.images.slice(0, 3)
+    }
+  }
 
   const handleRegenerateImages = async () => {
     if (!post) return
@@ -1061,13 +1085,23 @@ export default function ContentPackagePage() {
               {/* Image selector for Facebook */}
               {generatedContent.images && generatedContent.images.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-xs text-gray-400 mb-2">📷 Select image for this post:</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {generatedContent.images.slice(0, 3).map((image, idx) => (
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, facebook: !prev.facebook }))}
+                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                    >
+                      {showAllImagesForPlatform.facebook ? '👁️ Active Only' : '🎨 Show All'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                    {getImagesToDisplay('facebook').map((image, idx) => (
                       <div 
                         key={idx}
                         onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, facebook: idx }))}
-                        className={`w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
                           selectedImagePerPlatform.facebook === idx 
                             ? 'ring-4 ring-green-500 scale-105' 
                             : 'ring-2 ring-gray-600 hover:ring-purple-500'
@@ -1076,13 +1110,20 @@ export default function ContentPackagePage() {
                         <img 
                           src={image.url} 
                           alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover"
                         />
+                        {image.style && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                            <p className="text-[8px] text-purple-300 truncate">
+                              {image.style.replace('_', ' ')}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                   <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.facebook + 1} selected
+                    ✓ Image {selectedImagePerPlatform.facebook + 1} selected ({getImagesToDisplay('facebook').length} available)
                   </p>
                 </div>
               )}
@@ -1122,13 +1163,23 @@ export default function ContentPackagePage() {
               {/* Image selector for Instagram */}
               {generatedContent.images && generatedContent.images.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-xs text-gray-400 mb-2">📷 Select image for this post:</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {generatedContent.images.slice(0, 3).map((image, idx) => (
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, instagram: !prev.instagram }))}
+                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                    >
+                      {showAllImagesForPlatform.instagram ? '👁️ Active Only' : '🎨 Show All'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                    {getImagesToDisplay('instagram').map((image, idx) => (
                       <div 
                         key={idx}
                         onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, instagram: idx }))}
-                        className={`w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
                           selectedImagePerPlatform.instagram === idx 
                             ? 'ring-4 ring-green-500 scale-105' 
                             : 'ring-2 ring-gray-600 hover:ring-purple-500'
@@ -1137,13 +1188,20 @@ export default function ContentPackagePage() {
                         <img 
                           src={image.url} 
                           alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover"
                         />
+                        {image.style && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                            <p className="text-[8px] text-purple-300 truncate">
+                              {image.style.replace('_', ' ')}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                   <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.instagram + 1} selected
+                    ✓ Image {selectedImagePerPlatform.instagram + 1} selected ({getImagesToDisplay('instagram').length} available)
                   </p>
                 </div>
               )}
@@ -1180,6 +1238,51 @@ export default function ContentPackagePage() {
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.twitter}</p>
+              {/* Image selector for Twitter/X */}
+              {generatedContent.images && generatedContent.images.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, twitter: !prev.twitter }))}
+                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                    >
+                      {showAllImagesForPlatform.twitter ? '👁️ Active Only' : '🎨 Show All'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                    {getImagesToDisplay('twitter').map((image, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, twitter: idx }))}
+                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                          selectedImagePerPlatform.twitter === idx 
+                            ? 'ring-4 ring-green-500 scale-105' 
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                        }`}
+                      >
+                        <img 
+                          src={image.url} 
+                          alt={`Image ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {image.style && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                            <p className="text-[8px] text-purple-300 truncate">
+                              {image.style.replace('_', ' ')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Image {selectedImagePerPlatform.twitter + 1} selected ({getImagesToDisplay('twitter').length} available)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1216,13 +1319,23 @@ export default function ContentPackagePage() {
               {/* Image selector for LinkedIn */}
               {generatedContent.images && generatedContent.images.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-xs text-gray-400 mb-2">📷 Select image for this post:</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {generatedContent.images.slice(0, 3).map((image, idx) => (
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, linkedin: !prev.linkedin }))}
+                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                    >
+                      {showAllImagesForPlatform.linkedin ? '👁️ Active Only' : '🎨 Show All'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                    {getImagesToDisplay('linkedin').map((image, idx) => (
                       <div 
                         key={idx}
                         onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, linkedin: idx }))}
-                        className={`w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
                           selectedImagePerPlatform.linkedin === idx 
                             ? 'ring-4 ring-green-500 scale-105' 
                             : 'ring-2 ring-gray-600 hover:ring-purple-500'
@@ -1231,13 +1344,20 @@ export default function ContentPackagePage() {
                         <img 
                           src={image.url} 
                           alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover"
                         />
+                        {image.style && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                            <p className="text-[8px] text-purple-300 truncate">
+                              {image.style.replace('_', ' ')}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                   <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.linkedin + 1} selected
+                    ✓ Image {selectedImagePerPlatform.linkedin + 1} selected ({getImagesToDisplay('linkedin').length} available)
                   </p>
                 </div>
               )}
@@ -1274,8 +1394,55 @@ export default function ContentPackagePage() {
           </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.discord}</p>
+              {/* Image selector for Discord */}
+              {generatedContent.images && generatedContent.images.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, discord: !prev.discord }))}
+                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                    >
+                      {showAllImagesForPlatform.discord ? '👁️ Active Only' : '🎨 Show All'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                    {getImagesToDisplay('discord').map((image, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, discord: idx }))}
+                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                          selectedImagePerPlatform.discord === idx 
+                            ? 'ring-4 ring-green-500 scale-105' 
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                        }`}
+                      >
+                        <img 
+                          src={image.url} 
+                          alt={`Image ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {image.style && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                            <p className="text-[8px] text-purple-300 truncate">
+                              {image.style.replace('_', ' ')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Image {selectedImagePerPlatform.discord + 1} selected ({getImagesToDisplay('discord').length} available)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
+
+          <Separator className="bg-gray-700" />
 
           {/* Reddit */}
           <div>
@@ -1305,6 +1472,51 @@ export default function ContentPackagePage() {
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.reddit}</p>
+              {/* Image selector for Reddit */}
+              {generatedContent.images && generatedContent.images.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, reddit: !prev.reddit }))}
+                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                    >
+                      {showAllImagesForPlatform.reddit ? '👁️ Active Only' : '🎨 Show All'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                    {getImagesToDisplay('reddit').map((image, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, reddit: idx }))}
+                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                          selectedImagePerPlatform.reddit === idx 
+                            ? 'ring-4 ring-green-500 scale-105' 
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                        }`}
+                      >
+                        <img 
+                          src={image.url} 
+                          alt={`Image ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {image.style && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                            <p className="text-[8px] text-purple-300 truncate">
+                              {image.style.replace('_', ' ')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Image {selectedImagePerPlatform.reddit + 1} selected ({getImagesToDisplay('reddit').length} available)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1329,6 +1541,51 @@ export default function ContentPackagePage() {
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-300 select-all">{socialPosts.telegram}</p>
+              {/* Image selector for Telegram */}
+              {generatedContent.images && generatedContent.images.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, telegram: !prev.telegram }))}
+                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                    >
+                      {showAllImagesForPlatform.telegram ? '👁️ Active Only' : '🎨 Show All'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                    {getImagesToDisplay('telegram').map((image, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, telegram: idx }))}
+                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
+                          selectedImagePerPlatform.telegram === idx 
+                            ? 'ring-4 ring-green-500 scale-105' 
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                        }`}
+                      >
+                        <img 
+                          src={image.url} 
+                          alt={`Image ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {image.style && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                            <p className="text-[8px] text-purple-300 truncate">
+                              {image.style.replace('_', ' ')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-green-400 mt-2">
+                    ✓ Image {selectedImagePerPlatform.telegram + 1} selected ({getImagesToDisplay('telegram').length} available)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
