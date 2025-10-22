@@ -46,8 +46,10 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string>('')
   const [otherUser, setOtherUser] = useState<any>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const loadUserAndConversations = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -247,9 +249,11 @@ export default function MessagesPage() {
                         <p className="text-sm text-gray-400 truncate">
                           {conv.latestMessage.content}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatDistanceToNow(new Date(conv.latestMessage.created_at), { addSuffix: true })}
-                        </p>
+                        {mounted && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formatDistanceToNow(new Date(conv.latestMessage.created_at), { addSuffix: true })}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -341,9 +345,11 @@ export default function MessagesPage() {
                           }`}
                         >
                           <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                          <p className={`text-xs mt-2 ${isMine ? 'text-purple-200' : 'text-gray-400'}`}>
-                            {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                          </p>
+                          {mounted && (
+                            <p className={`text-xs mt-2 ${isMine ? 'text-purple-200' : 'text-gray-400'}`}>
+                              {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                            </p>
+                          )}
                         </div>
                       </div>
                     )
