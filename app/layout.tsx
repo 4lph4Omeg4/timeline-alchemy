@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { Analytics } from '@vercel/analytics/react'
@@ -73,43 +74,38 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         {/* Google Tag Manager */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K6DKJ89B');`,
-          }}
-        />
-        {/* End Google Tag Manager */}
+        <Script id="google-tag-manager" strategy="afterInteractive">
+          {`
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','GTM-K6DKJ89B');
+          `}
+        </Script>
 
         {/* Facebook SDK */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-window.fbAsyncInit = function() {
-  FB.init({
-    appId      : '${process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || 'YOUR_APP_ID'}',
-    cookie     : true,
-    xfbml      : true,
-    version    : 'v18.0'
-  });
-  
-  FB.AppEvents.logPageView();
-};
+        <Script id="facebook-sdk" strategy="afterInteractive">
+          {`
+            window.fbAsyncInit = function() {
+              FB.init({
+                appId      : '${process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || 'YOUR_APP_ID'}',
+                cookie     : true,
+                xfbml      : true,
+                version    : 'v18.0'
+              });
+              FB.AppEvents.logPageView();
+            };
 
-(function(d, s, id){
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) {return;}
-  js = d.createElement(s); js.id = id;
-  js.src = "https://connect.facebook.net/en_US/sdk.js";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));
-`,
-          }}
-        />
-        {/* End Facebook SDK */}
+            (function(d, s, id){
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) {return;}
+              js = d.createElement(s); js.id = id;
+              js.src = "https://connect.facebook.net/en_US/sdk.js";
+              fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+          `}
+        </Script>
       </head>
       <body className={inter.className}>
         {/* Google Tag Manager (noscript) */}
