@@ -62,9 +62,7 @@ export class TwitterOAuth {
     try {
       const client = new TwitterApi(accessToken)
 
-      // Add hashtags to content
-      const hashtags = '#tmline_alchemy #sh4m4ni4k'
-      const tweetContent = `${content}\n\n${hashtags}`
+      const tweetContent = content
 
       let mediaId: string | undefined
 
