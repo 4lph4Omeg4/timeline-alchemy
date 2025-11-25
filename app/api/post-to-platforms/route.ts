@@ -148,30 +148,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    console.log('📸 Selected image URL for posting:', selectedImageUrl)
-
     const supabase = supabaseAdmin
 
     // Get the post data
     const { data: post, error: postError } = await supabase
       .from('blog_posts')
-      .select(`
-        *,
-        )
-      `)
+      .select('*')
       .eq('id', postId)
       .single()
 
     if (postError || !post) {
-      console.error('❌ Post fetch failed:', {
-        postId,
-        error: postError,
-        postFound: !!post
-      })
       return NextResponse.json({
         success: false,
-        error: 'Post not found',
-        details: postError
+        error: 'Post not found'
       })
     }
 
@@ -180,7 +169,27 @@ export async function POST(request: NextRequest) {
       .from('social_posts')
       .select('platform, content')
       .eq('post_id', postId)
-    // Clients have their own social connections in their own organization
+
+    // Merge social posts from table into post object
+    if (socialPostsTableData && socialPostsTableData.length > 0) {
+      const postAny = post as any
+      if (!postAny.social_posts) {
+        postAny.social_posts = {}
+      }
+
+      socialPostsTableData.forEach((sp: any) => {
+        // Normalize platform names to lowercase for consistency
+        const platformKey = sp.platform.toLowerCase()
+        if (!postAny.social_posts[platformKey]) {
+          postAny.social_posts[platformKey] = sp.content
+        }
+        // Also keep original case just in case
+        if (!postAny.social_posts[sp.platform]) {
+          postAny.social_posts[sp.platform] = sp.content
+        }
+      })
+    }
+
     const { data: connections, error: connectionsError } = await supabase
       .from('social_connections')
       .select('*')
