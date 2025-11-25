@@ -163,9 +163,15 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (postError || !post) {
+      console.error('❌ Post fetch failed:', {
+        postId,
+        error: postError,
+        postFound: !!post
+      })
       return NextResponse.json({
         success: false,
-        error: 'Post not found'
+        error: 'Post not found',
+        details: postError
       })
     }
 
