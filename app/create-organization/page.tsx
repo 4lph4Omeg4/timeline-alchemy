@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function CreateOrganizationPage() {
   const [name, setName] = useState('')
-  const [plan, setPlan] = useState<'basic' | 'initiate' | 'transcendant' | 'universal'>('basic')
+  const [plan, setPlan] = useState<'basic' | 'initiate' | 'transcendant'>('basic')
   const [isCreating, setIsCreating] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
@@ -120,25 +120,24 @@ export default function CreateOrganizationPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="basic">Basic - $129/month</SelectItem>
-                <SelectItem value="pro">Pro - $249/month</SelectItem>
-                <SelectItem value="enterprise">Enterprise - $499/month</SelectItem>
+                <SelectItem value="basic">Basic - €10/month</SelectItem>
+                <SelectItem value="initiate">Initiate - €29/month</SelectItem>
+                <SelectItem value="transcendant">Transcendant - €199/month</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {message && (
-            <div className={`p-3 rounded-lg text-sm ${
-              message.includes('successfully') 
-                ? 'bg-green-900 text-green-300' 
-                : 'bg-red-900 text-red-300'
-            }`}>
+            <div className={`p-3 rounded-lg text-sm ${message.includes('successfully')
+              ? 'bg-green-900 text-green-300'
+              : 'bg-red-900 text-red-300'
+              }`}>
               {message}
             </div>
           )}
 
-          <Button 
-            onClick={handleCreate} 
+          <Button
+            onClick={handleCreate}
             disabled={isCreating || !name.trim()}
             className="w-full"
           >
@@ -146,8 +145,8 @@ export default function CreateOrganizationPage() {
           </Button>
 
           <div className="text-center">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => router.push('/dashboard')}
               className="text-gray-300"
             >

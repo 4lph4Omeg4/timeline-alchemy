@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
 
     if (authError || !authData.user) {
       console.error('Auth error:', authError)
-      return NextResponse.json({ 
-        error: authError?.message || 'Failed to create user account' 
+      return NextResponse.json({
+        error: authError?.message || 'Failed to create user account'
       }, { status: 400 })
     }
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Find or create Admin Organization and add user as client
     let adminOrgId: string | null = null
-    
+
     // First, find the Admin Organization
     const { data: adminOrg, error: adminOrgFindError } = await (supabaseAdmin as any)
       .from('organizations')
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         .from('organizations')
         .insert({
           name: 'Admin Organization',
-          plan: 'universal'
+          plan: 'transcendant'
         })
         .select()
         .single()
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
             org_id: adminOrgId,
             stripe_customer_id: 'admin-' + adminOrgId,
             stripe_subscription_id: 'admin-sub-' + adminOrgId,
-            plan: 'universal',
+            plan: 'transcendant',
             status: 'active'
           })
       }
@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
       console.error('Error creating organization:', orgError)
       // Clean up: delete the user if organization creation fails
       await supabaseAdmin.auth.admin.deleteUser(userId)
-      return NextResponse.json({ 
-        error: 'Failed to create organization' 
+      return NextResponse.json({
+        error: 'Failed to create organization'
       }, { status: 500 })
     }
 
@@ -128,8 +128,8 @@ export async function POST(request: NextRequest) {
       // Clean up
       await supabaseAdmin.auth.admin.deleteUser(userId)
       await (supabaseAdmin as any).from('organizations').delete().eq('id', orgData.id)
-      return NextResponse.json({ 
-        error: 'Failed to add user to organization' 
+      return NextResponse.json({
+        error: 'Failed to add user to organization'
       }, { status: 500 })
     }
 
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     // Step 5: Create Stripe customer
     let stripeCustomerId = 'trial-customer-' + orgData.id // fallback
     let stripeSubscriptionId = 'trial-sub-' + orgData.id // fallback
-    
+
     try {
       const stripeCustomer = await createStripeCustomer(email, name)
       stripeCustomerId = stripeCustomer.id
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       // Step 6: Create Stripe subscription with 14-day trial that converts to Basic plan
       const stripe = getStripe()
       const basicPriceId = process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
-      
+
       if (!basicPriceId) {
         console.warn('NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID not found, creating manual trial subscription')
       } else {
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
     console.log('- User is owner of personal organization')
     console.log('- Trial subscription with Stripe customer linked')
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       message: 'Account, organization, and client created successfully',
       userId: userId,
