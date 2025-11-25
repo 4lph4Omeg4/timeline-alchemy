@@ -23,7 +23,7 @@ export default function ContentCreatorPage() {
     promptNumber: number
   }>>([])
   const [chosenStyle, setChosenStyle] = useState<string | null>(null)
-  const [finalImages, setFinalImages] = useState<Array<{url: string, prompt: string}>>([])
+  const [finalImages, setFinalImages] = useState<Array<{ url: string, prompt: string }>>([])
   const [contentLoading, setContentLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
@@ -42,7 +42,7 @@ export default function ContentCreatorPage() {
     setGeneratedImages([])
     setChosenStyle(null)
     setFinalImages([])
-    
+
     try {
       // First generate content
       const contentResponse = await fetch('/api/generate-content', {
@@ -109,15 +109,15 @@ export default function ContentCreatorPage() {
       for (let i = 0; i < 3; i++) {
         try {
           const fullPrompt = `${imagePrompts[i]}. ${imageStyles[i].suffix}`
-          
+
           const imageResponse = await fetch('/api/generate-vercel-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: fullPrompt })
           })
 
-      if (imageResponse.ok) {
-        const imageData = await imageResponse.json()
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json()
             generatedImagesArray.push({
               url: imageData.imageUrl,
               prompt: imagePrompts[i],
@@ -144,7 +144,7 @@ export default function ContentCreatorPage() {
       } else {
         toast.error('Image generation failed')
       }
-      
+
     } catch (error) {
       console.error('Error generating content:', error)
       toast.error('Failed to generate content')
@@ -160,7 +160,7 @@ export default function ContentCreatorPage() {
 
     try {
       toast.loading('Creating full set of 3 diverse scenes in your chosen style...', { id: 'regen' })
-      
+
       console.log(`🎨 User chose "${style}" style`)
       console.log(`✨ Creating 3 diverse scenes in "${style}" style`)
 
@@ -183,9 +183,9 @@ export default function ContentCreatorPage() {
       for (let i = 0; i < 3; i++) {
         try {
           const fullPrompt = `${diversePrompts[i]}. ${imageStyles[style]}`
-          
+
           console.log(`🎨 Generating image ${i + 1}/3 in ${style} style...`)
-          
+
           const imageResponse = await fetch('/api/generate-vercel-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -214,7 +214,7 @@ export default function ContentCreatorPage() {
       }
 
       setFinalImages(regeneratedArray)
-      
+
       // Save to database if we have a post ID
       if (currentPostId) {
         try {
@@ -311,7 +311,7 @@ export default function ContentCreatorPage() {
                 platform,
                 content
               })
-            
+
             if (socialError) {
               console.error('Error saving social post:', socialError)
             }
@@ -321,19 +321,22 @@ export default function ContentCreatorPage() {
         }
       }
 
-      // Save multi-images if generated
-      if (generatedImages.length > 0) {
+      // Save images - prioritize final images if they exist
+      const imagesToProcess = finalImages.length > 0 ? finalImages : generatedImages
+      const isFinal = finalImages.length > 0
+
+      if (imagesToProcess.length > 0) {
         try {
-          // Save all generated images to database
-          const imagesToSave = generatedImages.map(img => ({
+          // Save images to database
+          const imagesToSave = imagesToProcess.map(img => ({
             org_id: userOrgId,
             post_id: postData.id,
             url: img.url,
             prompt: img.prompt,
-            style: img.style,
-            variant_type: 'original',
-            is_active: false, // Not active yet - user needs to choose style
-            prompt_number: img.promptNumber,
+            style: (img as any).style || chosenStyle || 'photorealistic',
+            variant_type: isFinal ? 'final' : 'original',
+            is_active: isFinal, // Final images are active by default
+            prompt_number: (img as any).promptNumber || 1,
             style_group: crypto.randomUUID()
           }))
 
@@ -343,8 +346,8 @@ export default function ContentCreatorPage() {
             console.error('Failed to save images:', imgError)
             toast.error('Post saved but images failed to save')
           } else {
-            console.log(`✅ Saved ${imagesToSave.length} style preview images`)
-            toast.success('Post, social posts, and style preview images saved! Choose your preferred style.')
+            console.log(`✅ Saved ${imagesToSave.length} images`)
+            toast.success('Post, social posts, and images saved successfully!')
           }
         } catch (error) {
           console.error('Error saving images:', error)
@@ -405,8 +408,8 @@ export default function ContentCreatorPage() {
                     rows={8}
                   />
                 </div>
-                <Button 
-                  onClick={handleGenerateContent} 
+                <Button
+                  onClick={handleGenerateContent}
                   disabled={contentLoading || imageLoading}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-6 text-lg shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
                 >
@@ -436,8 +439,8 @@ export default function ContentCreatorPage() {
                     <CardTitle className="text-white">Sacred Manuscript</CardTitle>
                   </div>
                   {(title || content) && (
-                    <Button 
-                      onClick={handleSavePost} 
+                    <Button
+                      onClick={handleSavePost}
                       disabled={saving || !title.trim() || !content.trim()}
                       className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                     >
@@ -468,7 +471,7 @@ export default function ContentCreatorPage() {
                     </div>
                   </div>
                 )}
-                
+
                 {content && (
                   <div className="space-y-2">
                     <Label className="text-white text-lg">Content</Label>
@@ -481,7 +484,7 @@ export default function ContentCreatorPage() {
                     </div>
                   </div>
                 )}
-                
+
                 {!title && !content && (
                   <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                     <Wand2 className="w-16 h-16 text-purple-400/50" />
@@ -536,8 +539,8 @@ export default function ContentCreatorPage() {
         {generatedImages.length > 0 && !chosenStyle && (
           <Card className="bg-gradient-to-br from-pink-900/50 to-purple-900/50 border-pink-500/30 backdrop-blur-sm shadow-2xl">
             <CardHeader>
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-pink-400" />
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-pink-400" />
                 <CardTitle className="text-white">🎨 Choose Your Preferred Style</CardTitle>
               </div>
               <CardDescription className="text-gray-300">
@@ -547,24 +550,24 @@ export default function ContentCreatorPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {generatedImages.map((image, index) => (
-                  <div 
+                  <div
                     key={index}
                     className="space-y-3"
                   >
                     <div className="relative overflow-hidden rounded-lg border-2 border-pink-500/30 hover:border-pink-400 transition-all duration-300">
                       <div className="w-full h-64 bg-black/30 rounded-lg overflow-hidden flex items-center justify-center">
-                        <img 
-                          src={image.url} 
-                          alt={image.prompt} 
+                        <img
+                          src={image.url}
+                          alt={image.prompt}
                           className="w-full h-full object-contain"
-                  onError={(e) => {
+                          onError={(e) => {
                             console.error('Image failed to load:', image.url)
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
                       </div>
                     </div>
-                    
+
                     {/* Style info and button - always visible */}
                     <div className="space-y-2">
                       <div className="text-center">
@@ -572,15 +575,15 @@ export default function ContentCreatorPage() {
                           {image.style.replace('_', ' ')} Style
                         </Badge>
                       </div>
-                      
-                      <Button 
+
+                      <Button
                         onClick={() => handleStyleChoice(image.style)}
                         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
                         size="lg"
                       >
                         ✨ Create Full Set
                       </Button>
-                      
+
                       <p className="text-gray-400 text-xs text-center">
                         Generates 3 diverse scenes in {image.style.replace('_', ' ')} style
                       </p>
@@ -609,8 +612,8 @@ export default function ContentCreatorPage() {
                 {finalImages.map((image, index) => (
                   <div key={index} className="space-y-2">
                     <div className="w-full h-64 bg-black/30 rounded-lg border-2 border-green-500/30 shadow-xl overflow-hidden flex items-center justify-center">
-                      <img 
-                        src={image.url} 
+                      <img
+                        src={image.url}
                         alt={`Final image ${index + 1}`}
                         className="w-full h-full object-contain"
                       />

@@ -78,13 +78,14 @@ export class TwitterOAuth {
 
             // Get content type
             const contentType = response.headers.get('content-type') || 'image/jpeg'
+            console.log('🖼️ Image downloaded, size:', buffer.length, 'type:', contentType)
 
             // Upload media
             console.log('Uploading media to Twitter...')
             mediaId = await client.v1.uploadMedia(buffer, { mimeType: contentType })
-            console.log('Media uploaded, ID:', mediaId)
+            console.log('✅ Media uploaded, ID:', mediaId)
           } else {
-            console.error('Failed to download image:', response.statusText)
+            console.error('❌ Failed to download image:', response.status, response.statusText)
           }
         } catch (error) {
           console.error('Error uploading media to Twitter:', error)

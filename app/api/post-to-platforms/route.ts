@@ -344,6 +344,7 @@ async function postToTwitter(post: any, connection: any, selectedImageUrl?: stri
   cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
 
   console.log('🖼️ Twitter posting with image:', imageUrl || 'none')
+  if (imageUrl) console.log('🖼️ Image URL length:', imageUrl.length)
 
   // Use retry logic for Twitter posting
   const result = await withRetry(async () => {
