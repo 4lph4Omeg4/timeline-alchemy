@@ -157,9 +157,6 @@ export async function POST(request: NextRequest) {
       .from('blog_posts')
       .select(`
         *,
-        organizations:org_id (
-          id,
-          name
         )
       `)
       .eq('id', postId)
@@ -172,7 +169,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get social connections for the organization
+    // Fetch social posts from the separate table as well
+    const { data: socialPostsTableData } = await supabase
+      .from('social_posts')
+      .select('platform, content')
+      .eq('post_id', postId)
     // Clients have their own social connections in their own organization
     const { data: connections, error: connectionsError } = await supabase
       .from('social_connections')
@@ -247,7 +248,7 @@ export async function POST(request: NextRequest) {
             }, 'wordpress')
 
             if (!wpResult.success) {
-              throw new Error(`WordPress posting failed after ${wpResult.attempts} attempts: ${wpResult.error}`)
+              throw new Error(`WordPress posting failed after ${wpResult.attempts} attempts: ${wpResult.error} `)
             }
 
             result = wpResult.data
@@ -255,7 +256,7 @@ export async function POST(request: NextRequest) {
           default:
             errors.push({
               platform,
-              error: `Unsupported platform: ${platform}`
+              error: `Unsupported platform: ${platform} `
             })
             continue
         }
@@ -347,7 +348,7 @@ async function postToTwitter(post: any, connection: any, selectedImageUrl?: stri
   }, 'twitter')
 
   if (!result.success) {
-    throw new Error(`Twitter posting failed after ${result.attempts} attempts: ${result.error}`)
+    throw new Error(`Twitter posting failed after ${result.attempts} attempts: ${result.error} `)
   }
 
   return result.data
@@ -393,7 +394,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
     }
 
     let postData: any = {
-      author: `urn:li:person:${connection.account_id.replace('linkedin_', '')}`,
+      author: `urn: li: person:${connection.account_id.replace('linkedin_', '')} `,
       lifecycleState: 'PUBLISHED',
       specificContent: {
         'com.linkedin.ugc.ShareContent': {
@@ -414,7 +415,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
         // Download the image
         const imageResponse = await fetch(imageUrl)
         if (!imageResponse.ok) {
-          throw new Error(`Failed to download image: ${imageResponse.statusText}`)
+          throw new Error(`Failed to download image: ${imageResponse.statusText} `)
         }
 
         const imageBuffer = await imageResponse.arrayBuffer()
@@ -423,13 +424,13 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
         const uploadResponse = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${freshToken}`,
+            'Authorization': `Bearer ${freshToken} `,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             registerUploadRequest: {
               recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
-              owner: `urn:li:person:${connection.account_id.replace('linkedin_', '')}`,
+              owner: `urn: li: person:${connection.account_id.replace('linkedin_', '')} `,
               serviceRelationships: [{
                 relationshipType: 'OWNER',
                 identifier: 'urn:li:userGeneratedContent'
@@ -440,7 +441,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
 
         if (!uploadResponse.ok) {
           const error = await uploadResponse.json()
-          throw new Error(`LinkedIn image upload failed: ${error.message || 'Unknown error'}`)
+          throw new Error(`LinkedIn image upload failed: ${error.message || 'Unknown error'} `)
         }
 
         const uploadData = await uploadResponse.json()
@@ -452,7 +453,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
         })
 
         if (!imageUploadResponse.ok) {
-          throw new Error(`LinkedIn image upload failed: ${imageUploadResponse.statusText}`)
+          throw new Error(`LinkedIn image upload failed: ${imageUploadResponse.statusText} `)
         }
 
         // Add image to post
@@ -476,7 +477,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
     const response = await fetch('https://api.linkedin.com/v2/ugcPosts', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${freshToken}`,
+        'Authorization': `Bearer ${freshToken} `,
         'Content-Type': 'application/json',
         'X-Restli-Protocol-Version': '2.0.0'
       },
@@ -485,14 +486,14 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
 
     if (!response.ok) {
       const error = await response.json()
-      throw new Error(`LinkedIn API error: ${error.message}`)
+      throw new Error(`LinkedIn API error: ${error.message} `)
     }
 
     return await response.json()
   }, 'linkedin')
 
   if (!result.success) {
-    throw new Error(`LinkedIn posting failed after ${result.attempts} attempts: ${result.error}`)
+    throw new Error(`LinkedIn posting failed after ${result.attempts} attempts: ${result.error} `)
   }
 
   return result.data
