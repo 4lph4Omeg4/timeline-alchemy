@@ -17,7 +17,7 @@ export class TwitterOAuth {
       scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
       state: state || Math.random().toString(36).substring(2, 15),
     })
-    
+
     return authLink.url
   }
 
@@ -58,17 +58,49 @@ export class TwitterOAuth {
   }
 
   // Post a tweet
-  async postTweet(accessToken: string, refreshToken: string, content: string) {
+  async postTweet(accessToken: string, content: string, imageUrl?: string) {
     try {
-      const client = this.createClientWithTokens(accessToken, refreshToken)
-      
+      const client = new TwitterApi(accessToken)
+
       // Add hashtags to content
       const hashtags = '#tmline_alchemy #sh4m4ni4k'
       const tweetContent = `${content}\n\n${hashtags}`
-      
-      const tweet = await client.v2.tweet({
+
+      let mediaId: string | undefined
+
+      if (imageUrl) {
+        try {
+          console.log('Downloading image for Twitter:', imageUrl)
+          const response = await fetch(imageUrl)
+          if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+
+            // Get content type
+            const contentType = response.headers.get('content-type') || 'image/jpeg'
+
+            // Upload media
+            console.log('Uploading media to Twitter...')
+            mediaId = await client.v1.uploadMedia(buffer, { mimeType: contentType })
+            console.log('Media uploaded, ID:', mediaId)
+          } else {
+            console.error('Failed to download image:', response.statusText)
+          }
+        } catch (error) {
+          console.error('Error uploading media to Twitter:', error)
+          // Continue without image if upload fails
+        }
+      }
+
+      const payload: any = {
         text: tweetContent,
-      })
+      }
+
+      if (mediaId) {
+        payload.media = { media_ids: [mediaId] }
+      }
+
+      const tweet = await client.v2.tweet(payload)
 
       return tweet.data
     } catch (error) {
@@ -82,7 +114,7 @@ export class TwitterOAuth {
     try {
       const client = this.createClientWithTokens('', refreshToken)
       const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await client.refreshOAuth2Token(refreshToken)
-      
+
       return {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
@@ -229,18 +261,18 @@ export class InstagramOAuth {
     try {
       // Get Facebook Pages
       const pagesResponse = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${facebookAccessToken}`)
-      
+
       if (!pagesResponse.ok) {
         throw new Error('Failed to get Facebook pages')
       }
-      
+
       const pagesData = await pagesResponse.json()
       const pages = pagesData.data
-      
+
       if (!pages || pages.length === 0) {
         throw new Error('No Facebook pages found')
       }
-      
+
       // Find pages with Instagram Business accounts connected
       const instagramPages = []
       for (const page of pages) {
@@ -259,16 +291,16 @@ export class InstagramOAuth {
           console.log(`Page ${page.id} has no Instagram Business account`)
         }
       }
-      
+
       if (instagramPages.length === 0) {
         throw new Error('No Instagram Business accounts found connected to Facebook Pages')
       }
-      
+
       // Use the first Instagram-enabled page
       const instagramPage = instagramPages[0]
       const hashtags = '#TimelineAlchemy #sh4m4ni4k'
       const instagramContent = `${content}\n\n${hashtags}`
-      
+
       // Create Instagram media container
       const mediaResponse = await fetch(`https://graph.facebook.com/v18.0/${instagramPage.instagram_account_id}/media`, {
         method: 'POST',
@@ -391,9 +423,9 @@ export class DiscordOAuth {
       // and proper channel permissions
       const hashtags = '#TimelineAlchemy #sh4m4ni4k'
       const discordContent = `${content}\n\n${hashtags}`
-      
+
       console.log('Discord post content:', discordContent)
-      
+
       return {
         success: true,
         message: 'Discord post created (simulated)',
@@ -455,7 +487,7 @@ export class RedditOAuth {
     try {
       // Reddit requires Basic Auth with client credentials
       const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')
-      
+
       const tokenResponse = await fetch('https://www.reddit.com/api/v1/access_token', {
         method: 'POST',
         headers: {
@@ -506,7 +538,7 @@ export class RedditOAuth {
     try {
       const hashtags = '#TimelineAlchemy #sh4m4ni4k'
       const redditContent = `${content}\n\n${hashtags}`
-      
+
       const response = await fetch(`https://oauth.reddit.com/api/submit`, {
         method: 'POST',
         headers: {
@@ -568,7 +600,7 @@ export class TelegramOAuth {
   async getBotInfo() {
     try {
       const response = await fetch(`https://api.telegram.org/bot${this.botToken}/getMe`)
-      
+
       if (!response.ok) {
         throw new Error('Failed to get bot info')
       }
@@ -668,7 +700,7 @@ export class TelegramOAuth {
   async getWebhookInfo() {
     try {
       const response = await fetch(`https://api.telegram.org/bot${this.botToken}/getWebhookInfo`)
-      
+
       if (!response.ok) {
         throw new Error('Failed to get webhook info')
       }
@@ -688,7 +720,7 @@ export class YouTubeOAuth {
     try {
       const hashtags = '#TimelineAlchemy #sh4m4ni4k'
       const fullDescription = `${description}\n\n${hashtags}`
-      
+
       // For now, we'll create a placeholder video post
       // In a real implementation, you would upload a video file
       const videoData = {
@@ -705,7 +737,7 @@ export class YouTubeOAuth {
 
       // This is a placeholder - actual video upload would require file handling
       console.log('YouTube video post data:', videoData)
-      
+
       return {
         success: true,
         message: 'YouTube video post created (placeholder)',
