@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { title, content, orgId, postId } = body
-    
+
     if (!title || !content) {
       return NextResponse.json(
         { error: 'Missing required fields: title and content' },
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Generate 3 different prompts based on the content
     const basePrompts = generateImagePrompts(title, content)
-    
+
     const generatedImages = []
     const styleGroupId = crypto.randomUUID() // Group these images together
 
@@ -67,12 +67,12 @@ export async function POST(request: NextRequest) {
       const style = IMAGE_STYLES[i]
       const basePrompt = basePrompts[i]
       const fullPrompt = `${basePrompt}. ${style.suffix}`
-      
+
       console.log(`🎨 Generating image ${i + 1}/3 (${style.name}):`, basePrompt)
 
       try {
         const vercelResponse = await generateVercelImage(fullPrompt)
-        
+
         if (vercelResponse.success) {
           let finalImageUrl = vercelResponse.imageUrl
 
@@ -85,9 +85,33 @@ export async function POST(request: NextRequest) {
                 .eq('id', orgId)
                 .single()
 
-              const needsAdminWatermark = org && (org as { plan: string }).plan?.toLowerCase() !== 'universal'
-              
-              if (needsAdminWatermark) {
+              // Get plan features to check for white_label capability
+              const { data: features } = await supabaseAdmin
+                .from('plan_features')
+                .select('white_label')
+                .eq('plan_name', (org as { plan: string }).plan)
+                .single()
+
+              const hasWhiteLabel = features?.white_label === true
+
+              if (hasWhiteLabel) {
+                // White Label plans can use their own branding
+                const { data: branding } = await supabaseAdmin
+                  .from('branding_settings')
+                  .select('*')
+                  .eq('organization_id', orgId)
+                  .single()
+
+                if (branding && (branding as { logo_url: string }).logo_url) {
+                  try {
+                    finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
+                    console.log(`✅ Custom watermark applied to image ${i + 1}`)
+                  } catch (watermarkError) {
+                    console.error(`❌ Watermark failed for image ${i + 1}:`, watermarkError)
+                  }
+                }
+              } else {
+                // Standard plans get the Admin Organization's branding
                 const { data: adminOrg } = await supabaseAdmin
                   .from('organizations')
                   .select('id')
@@ -104,7 +128,7 @@ export async function POST(request: NextRequest) {
                   if (adminBranding && (adminBranding as { logo_url: string }).logo_url) {
                     try {
                       finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, adminBranding, orgId)
-                      console.log(`✅ Watermark applied to image ${i + 1}`)
+                      console.log(`✅ Admin watermark applied to image ${i + 1}`)
                     } catch (watermarkError) {
                       console.error(`❌ Watermark failed for image ${i + 1}:`, watermarkError)
                     }

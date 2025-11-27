@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { prompt, orgId } = body
-    
+
     if (!prompt) {
       return NextResponse.json(
         { error: 'Missing required field: prompt' },
@@ -20,17 +20,17 @@ export async function POST(request: NextRequest) {
 
     // Check if we have Google API or fallback to OpenAI
     const hasGoogleApi = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY
-    
+
     if (hasGoogleApi) {
       console.log('🚀 Using Google Gemini for image generation')
     } else {
       console.log('🚀 Falling back to DALL-E for image generation')
     }
-    
+
     const improvedPrompt = `${prompt}. Professional photography, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality.`
 
     const vercelResponse = await generateVercelImage(improvedPrompt)
-    
+
     if (vercelResponse.success) {
       let finalImageUrl = vercelResponse.imageUrl
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       if (orgId) {
         try {
           console.log('🔍 Checking plan for orgId:', orgId)
-          
+
           // Get organization plan
           const { data: org } = await supabaseAdmin
             .from('organizations')
@@ -49,13 +49,43 @@ export async function POST(request: NextRequest) {
 
           console.log('🔍 Organization plan:', org ? (org as { plan: string }).plan : 'unknown')
 
-          // For all plans except Universal, use Admin Organization's branding
-          const needsAdminWatermark = org && (org as { plan: string }).plan && (org as { plan: string }).plan.toLowerCase() !== 'universal'
-          
-          if (needsAdminWatermark) {
-            console.log('🔄 Using Admin Organization watermark for', (org as { plan: string }).plan, 'plan')
-            
-            // Get Admin Organization's branding settings
+          // Get plan features to check for white_label capability
+          const { data: features } = await supabaseAdmin
+            .from('plan_features')
+            .select('white_label')
+            .eq('plan_name', (org as { plan: string }).plan)
+            .single()
+
+          const hasWhiteLabel = features?.white_label === true
+          console.log('🏷️ White Label Enabled:', hasWhiteLabel)
+
+          if (hasWhiteLabel) {
+            console.log('🔄 White Label plan - checking custom branding...')
+
+            // White Label plans can use their own branding
+            const { data: branding } = await supabaseAdmin
+              .from('branding_settings')
+              .select('*')
+              .eq('organization_id', orgId)
+              .single()
+
+            if (branding && (branding as { logo_url: string }).logo_url) {
+              console.log('🔄 Applying custom watermark...')
+              try {
+                finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
+                watermarked = true
+                console.log('✅ Custom watermark applied successfully')
+              } catch (watermarkError) {
+                console.error('❌ Watermark failed:', watermarkError)
+                console.log('⚠️ Using original image without watermark')
+              }
+            } else {
+              console.log('⚠️ No custom branding configured for White Label plan')
+            }
+          } else {
+            console.log('🔄 Standard plan - using Admin Organization watermark')
+
+            // Standard plans get the Admin Organization's branding
             const { data: adminOrg } = await supabaseAdmin
               .from('organizations')
               .select('id')
@@ -82,29 +112,6 @@ export async function POST(request: NextRequest) {
               } else {
                 console.log('⚠️ Admin branding not configured')
               }
-            }
-          } else if (org && (org as { plan: string }).plan === 'universal') {
-            console.log('🔄 Universal plan - checking custom branding...')
-            
-            // Universal plan can use their own branding
-            const { data: branding } = await supabaseAdmin
-              .from('branding_settings')
-              .select('*')
-              .eq('organization_id', orgId)
-              .single()
-
-            if (branding && (branding as { logo_url: string }).logo_url) {
-              console.log('🔄 Applying custom watermark...')
-              try {
-                finalImageUrl = await addWatermarkToImageServer(vercelResponse.imageUrl, branding, orgId)
-                watermarked = true
-                console.log('✅ Custom watermark applied successfully')
-              } catch (watermarkError) {
-                console.error('❌ Watermark failed:', watermarkError)
-                console.log('⚠️ Using original image without watermark')
-              }
-            } else {
-              console.log('⚠️ No custom branding configured for Universal plan')
             }
           }
         } catch (error) {
