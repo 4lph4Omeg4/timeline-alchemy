@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     )
 
     // Update subscription status in database
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('subscriptions')
       .update({
         status: 'canceled',
