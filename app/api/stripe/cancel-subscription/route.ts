@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       .update({
         status: 'canceled',
         updated_at: new Date().toISOString(),
-      })
+      } as any)
       .eq('org_id', orgMember.org_id)
 
     if (updateError) {
