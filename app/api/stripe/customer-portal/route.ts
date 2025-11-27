@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       .select('org_id, organizations(*)')
       .eq('user_id', user.id)
       .eq('role', 'owner')
-      .single()
+      .single() as any
 
     if (orgError || !orgMember) {
       return NextResponse.json(

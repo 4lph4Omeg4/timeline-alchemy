@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       .select('org_id')
       .eq('user_id', user.id)
       .eq('role', 'owner')
-      .single()
+      .single() as any
 
     if (orgError || !orgMember) {
       return NextResponse.json(
@@ -72,8 +72,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Subscription canceled successfully. You will retain access until the end of your billing period.',
       cancelAt: canceledSubscription.cancel_at,
     })
