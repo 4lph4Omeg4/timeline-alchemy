@@ -119,7 +119,7 @@ export default function ContentPackagePage() {
   // Helper function to get images to display for a platform
   const getImagesToDisplay = (platform: string) => {
     if (!generatedContent?.images) return []
-    
+
     if (showAllImagesForPlatform[platform]) {
       // Show ALL images
       return generatedContent.images
@@ -132,42 +132,42 @@ export default function ContentPackagePage() {
 
   const handleRegenerateImages = async () => {
     if (!post) return
-    
+
     setRegeneratingImages(true)
-    
+
     try {
       toast.loading(`Generating 3 diverse images in ${selectedImageStyle.replace('_', ' ')} style...`, { id: 'regen-images' })
-      
+
       const imageStyleSuffixes: Record<string, string> = {
         'photorealistic': 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
         'digital_art': 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
         'cosmic': 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
       }
-      
+
       const selectedStyleSuffix = imageStyleSuffixes[selectedImageStyle]
-      
+
       // Create 3 diverse prompts
       const imagePrompts = [
         `${post.title} - Realistic scene with people or objects depicting the main concept`,
         `${post.title} - Abstract artistic visualization with shapes and colors representing key themes`,
         `${post.title} - Cosmic mystical energy visualization with celestial elements and divine atmosphere`
       ]
-      
+
       const newImages = []
-      
+
       // Generate 3 images
       for (let i = 0; i < 3; i++) {
         try {
           const fullPrompt = `${imagePrompts[i]}. ${selectedStyleSuffix}`
-          
+
           console.log(`🎨 Generating image ${i + 1}/3 in ${selectedImageStyle} style...`)
-          
+
           const imageResponse = await fetch('/api/generate-vercel-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: fullPrompt })
           })
-          
+
           if (imageResponse.ok) {
             const imageData = await imageResponse.json()
             newImages.push({
@@ -180,7 +180,7 @@ export default function ContentPackagePage() {
             })
             console.log(`✅ Generated image ${i + 1}/3`)
           }
-          
+
           // Small delay
           if (i < 2) {
             await new Promise(resolve => setTimeout(resolve, 2000))
@@ -189,13 +189,13 @@ export default function ContentPackagePage() {
           console.error(`❌ Error generating image ${i + 1}:`, error)
         }
       }
-      
+
       if (newImages.length > 0) {
         // Save to database
         const { data: { user } } = await supabase.auth.getUser()
         const { data: orgMembers } = await supabase.from('org_members').select('org_id, role').eq('user_id', user!.id)
         const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
-        
+
         const imagesToSave = newImages.map(img => ({
           org_id: userOrgId,
           post_id: post.id,
@@ -207,12 +207,12 @@ export default function ContentPackagePage() {
           prompt_number: img.prompt_number,
           style_group: crypto.randomUUID()
         }))
-        
+
         await (supabase as any).from('images').insert(imagesToSave)
-        
+
         // Refresh the page data to show new images
         await fetchPost()
-        
+
         toast.success(`✨ Created new set of 3 images in ${selectedImageStyle.replace('_', ' ')} style!`, { id: 'regen-images' })
       } else {
         toast.error('Failed to generate images', { id: 'regen-images' })
@@ -227,25 +227,25 @@ export default function ContentPackagePage() {
 
   const handleRegenerateSocialPosts = async () => {
     if (!post) return
-    
+
     setRegeneratingSocial(true)
     try {
       const cleanContent = post.content.replace(/^[\s\S]*?Content:\s*/, '').trim()
       const socialPosts = await generateSocialMediaPosts(post.title, cleanContent)
-      
+
       // Update the database
       await supabase
         .from('blog_posts')
         .update({ social_posts: socialPosts })
         .eq('id', post.id)
-      
-             // Update the local state
-             setSocialPosts(socialPosts)
-             setGeneratedContent(prev => prev ? {
-               ...prev,
-               socialPosts
-             } : null)
-      
+
+      // Update the local state
+      setSocialPosts(socialPosts)
+      setGeneratedContent(prev => prev ? {
+        ...prev,
+        socialPosts
+      } : null)
+
       toast.success('Social media posts regenerated!')
     } catch (error) {
       console.error('Error regenerating social posts:', error)
@@ -257,40 +257,40 @@ export default function ContentPackagePage() {
 
   const handlePostNow = async (platform: string) => {
     if (!post) return
-    
+
     if (!confirm(`Are you sure you want to post to ${platform} now?`)) {
       return
     }
-    
+
     try {
       toast.loading(`Posting to ${platform}...`, { id: 'posting' })
-      
+
       // First, debug the connections
       console.log('🔍 Debugging social connections...')
       const debugResponse = await fetch(`/api/debug-social-connections?postId=${post.id}`)
       const debugData = await debugResponse.json()
-      
+
       if (debugData.success) {
         console.log('🔍 Debug info:', debugData.debug)
-        
+
         // Check if platform has connection
         const hasConnection = debugData.debug.connections.platforms.some((p: any) => p.platform === platform)
         if (!hasConnection) {
           throw new Error(`No ${platform} connection found. Please connect your ${platform} account first.`)
         }
-        
+
         // Check if platform has social post content
         if (!debugData.debug.socialPosts.available.includes(platform)) {
           throw new Error(`No ${platform} content found. Please regenerate social posts.`)
         }
       }
-      
+
       // Get the selected image for this platform
       const selectedImageIndex = selectedImagePerPlatform[platform] || 0
       const selectedImageUrl = generatedContent?.images?.[selectedImageIndex]?.url || null
-      
+
       console.log(`🖼️ Using image ${selectedImageIndex + 1} for ${platform}:`, selectedImageUrl)
-      
+
       // Call the posting API
       const response = await fetch('/api/post-to-platforms', {
         method: 'POST',
@@ -312,10 +312,10 @@ export default function ContentPackagePage() {
 
       const result = await response.json()
       console.log('📊 Posting result:', result)
-      
+
       if (result.success) {
         toast.success(`Successfully posted to ${platform}!`, { id: 'posting' })
-        
+
         // Update post status to published
         await supabase
           .from('blog_posts')
@@ -324,14 +324,14 @@ export default function ContentPackagePage() {
             published_at: new Date().toISOString(),
           })
           .eq('id', post.id)
-          
+
         // Refresh the page to show updated status
         window.location.reload()
       } else {
         console.error('❌ Posting failed:', result)
         throw new Error(result.error || 'Unknown error')
       }
-      
+
     } catch (error) {
       console.error(`Error posting to ${platform}:`, error)
       toast.error(`Failed to post to ${platform}: ${error instanceof Error ? error.message : 'Unknown error'}`, { id: 'posting' })
@@ -340,7 +340,7 @@ export default function ContentPackagePage() {
 
   const handleSchedulePost = async (platform: string | null = null) => {
     if (!post) return
-    
+
     setScheduling(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -412,15 +412,15 @@ export default function ContentPackagePage() {
         }
 
         // Update local state to show the new scheduled post
-        setPost(prev => prev ? { 
-          ...prev, 
+        setPost(prev => prev ? {
+          ...prev,
           id: newPost.id,
           org_id: userOrgId,
-          state: 'scheduled', 
+          state: 'scheduled',
           scheduled_for: scheduledDate.toISOString(),
           social_posts: socialSchedulingInfo.scheduled_social_content
         } : null)
-        
+
         if (errorCount === 0) {
           toast.success(`All platforms scheduled successfully! (${successCount + 1} posts including blog)`)
         } else {
@@ -443,14 +443,14 @@ export default function ContentPackagePage() {
 
         // Update the original post with individual social platform scheduling
         const scheduledDate = new Date(scheduleDateTime)
-        
+
         // Get current social posts and add the new one
         const currentSocialPosts = post.social_posts || {}
         const updatedSocialPosts = {
           ...currentSocialPosts,
           [platform]: enhancedContent
         }
-        
+
         // Create a new blog post in Timeline-Alchemy's organization for individual platform
         const { data: newPost, error: updateError } = await supabase
           .from('blog_posts')
@@ -473,15 +473,15 @@ export default function ContentPackagePage() {
         }
 
         // Update local state to show the new scheduled post
-        setPost(prev => prev ? { 
-          ...prev, 
+        setPost(prev => prev ? {
+          ...prev,
           id: newPost.id,
           org_id: userOrgId,
-          state: 'scheduled', 
+          state: 'scheduled',
           scheduled_for: scheduledDate.toISOString(),
           social_posts: updatedSocialPosts
         } : null)
-        
+
         toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} post scheduled successfully!`)
       } else {
         // Schedule the main blog post
@@ -541,7 +541,7 @@ export default function ContentPackagePage() {
   const fetchPost = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/auth/signin')
         return
@@ -595,26 +595,26 @@ export default function ContentPackagePage() {
         console.log('📷 Image details:', images.map(img => ({ url: img.url?.substring(0, 50), is_active: img.is_active, style: img.style })))
       }
 
-             // Use existing content directly - no generation, no processing
-             const cleanContent = postData.content
-               .replace(/^[\s\S]*?Content:\s*/, '') // Remove "Content:" prefix if it exists
-               .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
-               .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
-               .trim()
-             
-             // Load social posts from separate table
-             const { data: socialPostsData } = await supabase
-               .from('social_posts')
-               .select('platform, content')
-               .eq('post_id', postData.id)
-             
-             const socialPostsMap: Record<string, string> = {}
-             if (socialPostsData) {
-               socialPostsData.forEach(post => {
-                 socialPostsMap[post.platform] = post.content
-               })
-             }
-             setSocialPosts(socialPostsMap)
+      // Use existing content directly - no generation, no processing
+      const cleanContent = postData.content
+        .replace(/^[\s\S]*?Content:\s*/, '') // Remove "Content:" prefix if it exists
+        .replace(/^(Title|Introduction|Content|Conclusion|Summary|Excerpt):\s*/gim, '') // Remove common labels
+        .replace(/^(Titel|Introductie|Inhoud|Conclusie|Samenvatting|Uittreksel):\s*/gim, '') // Remove Dutch labels
+        .trim()
+
+      // Load social posts from separate table
+      const { data: socialPostsData } = await supabase
+        .from('social_posts')
+        .select('platform, content')
+        .eq('post_id', postData.id)
+
+      const socialPostsMap: Record<string, string> = {}
+      if (socialPostsData) {
+        socialPostsData.forEach(post => {
+          socialPostsMap[post.platform] = post.content
+        })
+      }
+      setSocialPosts(socialPostsMap)
 
       // Set the actual generated content with real data
       const actualGeneratedContent: GeneratedContent = {
@@ -625,7 +625,7 @@ export default function ContentPackagePage() {
           tags: ['AI Generated', 'Content Package']
         },
         images: images || [],
-        socialPosts: (socialPosts || {}) as any
+        socialPosts: (socialPostsMap || {}) as any
       }
 
       setGeneratedContent(actualGeneratedContent)
@@ -642,7 +642,7 @@ export default function ContentPackagePage() {
     try {
       const response = await fetch(`/api/ratings?postId=${postId}&userId=${userId}`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setRatings(data.ratings || [])
         // Find user's rating
@@ -657,7 +657,7 @@ export default function ContentPackagePage() {
   const handleRatingSubmit = async (rating: number, reviewText?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         toast.error('You must be logged in to rate packages')
         return
@@ -773,27 +773,27 @@ export default function ContentPackagePage() {
         </div>
       </div>
 
-             {/* Excerpt */}
-             {actualExcerpt && (
-               <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30">
-                 <CardHeader>
-                   <CardTitle className="text-white flex items-center gap-2">
-                     <span className="text-blue-400">📖</span>
-                     Article Excerpt
-                   </CardTitle>
-                   <CardDescription className="text-gray-300">
-                     A preview of this article's key insights
-                   </CardDescription>
-                 </CardHeader>
-                 <CardContent>
-                   <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-                     <p className="text-gray-200 leading-relaxed text-lg italic">
-                       {actualExcerpt}
-                     </p>
-                   </div>
-                 </CardContent>
-               </Card>
-             )}
+      {/* Excerpt */}
+      {actualExcerpt && (
+        <Card className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <span className="text-blue-400">📖</span>
+              Article Excerpt
+            </CardTitle>
+            <CardDescription className="text-gray-300">
+              A preview of this article's key insights
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-200 leading-relaxed text-lg italic">
+                {actualExcerpt}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Blog Post */}
       <Card className="bg-gray-900 border-gray-800">
@@ -814,14 +814,14 @@ export default function ContentPackagePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="prose prose-invert max-w-none">
-            <div 
+            <div
               className="text-gray-300 leading-relaxed whitespace-pre-wrap select-all"
               style={{ maxHeight: 'none', overflow: 'visible' }}
             >
               {generatedContent.blogPost.content}
             </div>
           </div>
-          
+
           {/* Blog Post Scheduling Options */}
           <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg">
             <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
@@ -895,7 +895,7 @@ export default function ContentPackagePage() {
                 Will generate 3 diverse scenes in this style
               </p>
             </div>
-            
+
             <Button
               onClick={handleRegenerateImages}
               disabled={regeneratingImages}
@@ -924,7 +924,7 @@ export default function ContentPackagePage() {
               <div>
                 <CardTitle className="text-white">🖼️ Package Images</CardTitle>
                 <CardDescription className="text-gray-300">
-                  {generatedContent.images.filter(img => img.is_active).length > 1 
+                  {generatedContent.images.filter(img => img.is_active).length > 1
                     ? `${generatedContent.images.filter(img => img.is_active).length} AI-generated images in ${generatedContent.images.find(img => img.is_active)?.style?.replace('_', ' ') || 'selected'} style`
                     : 'AI-generated images that complement your content'}
                 </CardDescription>
@@ -953,28 +953,28 @@ export default function ContentPackagePage() {
                 ? generatedContent.images.filter(img => img.is_active)
                 : generatedContent.images.slice(0, 3)
               ).map((image, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="w-full h-64 bg-black/30 rounded-lg shadow-lg border-2 border-green-500/30 overflow-hidden flex items-center justify-center">
-                      <img 
-                        src={image.url} 
-                        alt={image.prompt || 'Generated image'}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                    <div className="text-sm text-gray-400 space-y-1">
-                      {image.prompt && (
-                        <p className="text-center"><strong>Scene:</strong> {image.prompt}</p>
-                      )}
-                      {image.style && (
-                        <div className="flex justify-center">
-                          <Badge className="bg-green-600/20 text-green-200">
-                            ✅ {image.style.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
+                <div key={index} className="space-y-2">
+                  <div className="w-full h-64 bg-black/30 rounded-lg shadow-lg border-2 border-green-500/30 overflow-hidden flex items-center justify-center">
+                    <img
+                      src={image.url}
+                      alt={image.prompt || 'Generated image'}
+                      className="w-full h-full object-contain"
+                    />
                   </div>
-                ))}
+                  <div className="text-sm text-gray-400 space-y-1">
+                    {image.prompt && (
+                      <p className="text-center"><strong>Scene:</strong> {image.prompt}</p>
+                    )}
+                    {image.style && (
+                      <div className="flex justify-center">
+                        <Badge className="bg-green-600/20 text-green-200">
+                          ✅ {image.style.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* All Style Variants Section */}
@@ -984,15 +984,15 @@ export default function ContentPackagePage() {
                 <p className="text-sm text-gray-400">
                   View all the original style options that were generated during creation
                 </p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {generatedContent.images
                     .filter(img => img.variant_type === 'original')
                     .map((image, index) => (
                       <div key={index} className="space-y-2">
                         <div className="w-full h-48 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
-                          <img 
-                            src={image.url} 
+                          <img
+                            src={image.url}
                             alt={image.prompt || 'Original variant'}
                             className="w-full h-full object-contain"
                           />
@@ -1009,555 +1009,548 @@ export default function ContentPackagePage() {
         </Card>
       )}
 
-             {/* Social Media Posts */}
-             {(Object.keys(socialPosts).length > 0 || (generatedContent && generatedContent.socialPosts)) && (
-               <Card className="bg-gray-900 border-gray-800">
-                 <CardHeader>
-                     <div>
-                       <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
-                       <CardDescription className="text-gray-300">
-                         Platform-optimized posts ready for publishing
-                       </CardDescription>
-                   </div>
-                 </CardHeader>
-                 <CardContent className="space-y-6">
-          {/* Facebook */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">f</span>
+      {/* Social Media Posts */}
+      {(Object.keys(socialPosts).length > 0 || (generatedContent && generatedContent.socialPosts)) && (
+        <Card className="bg-gray-900 border-gray-800">
+          <CardHeader>
+            <div>
+              <CardTitle className="text-white">📱 Social Media Posts</CardTitle>
+              <CardDescription className="text-gray-300">
+                Platform-optimized posts ready for publishing
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Facebook */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">f</span>
+                  </div>
+                  <h4 className="font-semibold text-white">Facebook</h4>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handlePostNow('facebook')}
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                  >
+                    🚀 Post Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => openScheduleModal('facebook')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                  >
+                    📅 Schedule
+                  </Button>
+                </div>
               </div>
-              <h4 className="font-semibold text-white">Facebook</h4>
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <p className="text-gray-300 select-all">{socialPosts.facebook}</p>
+                {/* Image selector for Facebook */}
+                {generatedContent.images && generatedContent.images.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, facebook: !prev.facebook }))}
+                        className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                      >
+                        {showAllImagesForPlatform.facebook ? '👁️ Active Only' : '🎨 Show All'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                      {getImagesToDisplay('facebook').map((image, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, facebook: idx }))}
+                          className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.facebook === idx
+                              ? 'ring-4 ring-green-500 scale-105'
+                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Image ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.style && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                              <p className="text-[8px] text-purple-300 truncate">
+                                {image.style.replace('_', ' ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-green-400 mt-2">
+                      ✓ Image {selectedImagePerPlatform.facebook + 1} selected ({getImagesToDisplay('facebook').length} available)
+                    </p>
+                  </div>
+                )}
               </div>
-              <div className="flex gap-2">
+            </div>
+
+            <Separator className="bg-gray-700" />
+
+            {/* Instagram */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">📷</span>
+                  </div>
+                  <h4 className="font-semibold text-white">Instagram</h4>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handlePostNow('instagram')}
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                  >
+                    🚀 Post Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => openScheduleModal('instagram')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                  >
+                    📅 Schedule
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <p className="text-gray-300 select-all">{socialPosts.instagram}</p>
+                {/* Image selector for Instagram */}
+                {generatedContent.images && generatedContent.images.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, instagram: !prev.instagram }))}
+                        className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                      >
+                        {showAllImagesForPlatform.instagram ? '👁️ Active Only' : '🎨 Show All'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                      {getImagesToDisplay('instagram').map((image, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, instagram: idx }))}
+                          className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.instagram === idx
+                              ? 'ring-4 ring-green-500 scale-105'
+                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Image ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.style && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                              <p className="text-[8px] text-purple-300 truncate">
+                                {image.style.replace('_', ' ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-green-400 mt-2">
+                      ✓ Image {selectedImagePerPlatform.instagram + 1} selected ({getImagesToDisplay('instagram').length} available)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="bg-gray-700" />
+
+            {/* Twitter/X */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">𝕏</span>
+                  </div>
+                  <h4 className="font-semibold text-white">Twitter/X</h4>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handlePostNow('twitter')}
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                  >
+                    🚀 Post Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => openScheduleModal('twitter')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                  >
+                    📅 Schedule
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <p className="text-gray-300 select-all">{socialPosts.twitter}</p>
+                {/* Image selector for Twitter/X */}
+                {generatedContent.images && generatedContent.images.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, twitter: !prev.twitter }))}
+                        className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                      >
+                        {showAllImagesForPlatform.twitter ? '👁️ Active Only' : '🎨 Show All'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                      {getImagesToDisplay('twitter').map((image, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, twitter: idx }))}
+                          className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.twitter === idx
+                              ? 'ring-4 ring-green-500 scale-105'
+                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Image ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.style && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                              <p className="text-[8px] text-purple-300 truncate">
+                                {image.style.replace('_', ' ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-green-400 mt-2">
+                      ✓ Image {selectedImagePerPlatform.twitter + 1} selected ({getImagesToDisplay('twitter').length} available)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="bg-gray-700" />
+
+            {/* LinkedIn */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-blue-700 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">in</span>
+                  </div>
+                  <h4 className="font-semibold text-white">LinkedIn</h4>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handlePostNow('linkedin')}
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                  >
+                    🚀 Post Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => openScheduleModal('linkedin')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                  >
+                    📅 Schedule
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <p className="text-gray-300 select-all">{socialPosts.linkedin}</p>
+                {/* Image selector for LinkedIn */}
+                {generatedContent.images && generatedContent.images.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, linkedin: !prev.linkedin }))}
+                        className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                      >
+                        {showAllImagesForPlatform.linkedin ? '👁️ Active Only' : '🎨 Show All'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                      {getImagesToDisplay('linkedin').map((image, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, linkedin: idx }))}
+                          className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.linkedin === idx
+                              ? 'ring-4 ring-green-500 scale-105'
+                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Image ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.style && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                              <p className="text-[8px] text-purple-300 truncate">
+                                {image.style.replace('_', ' ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-green-400 mt-2">
+                      ✓ Image {selectedImagePerPlatform.linkedin + 1} selected ({getImagesToDisplay('linkedin').length} available)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="bg-gray-700" />
+
+            {/* Discord */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">💬</span>
+                  </div>
+                  <h4 className="font-semibold text-white">Discord</h4>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handlePostNow('discord')}
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                  >
+                    🚀 Post Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => openScheduleModal('discord')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                  >
+                    📅 Schedule
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <p className="text-gray-300 select-all">{socialPosts.discord}</p>
+                {/* Image selector for Discord */}
+                {generatedContent.images && generatedContent.images.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, discord: !prev.discord }))}
+                        className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                      >
+                        {showAllImagesForPlatform.discord ? '👁️ Active Only' : '🎨 Show All'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                      {getImagesToDisplay('discord').map((image, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, discord: idx }))}
+                          className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.discord === idx
+                              ? 'ring-4 ring-green-500 scale-105'
+                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Image ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.style && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                              <p className="text-[8px] text-purple-300 truncate">
+                                {image.style.replace('_', ' ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-green-400 mt-2">
+                      ✓ Image {selectedImagePerPlatform.discord + 1} selected ({getImagesToDisplay('discord').length} available)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="bg-gray-700" />
+
+            {/* Reddit */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-orange-600 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">🤖</span>
+                  </div>
+                  <h4 className="font-semibold text-white">Reddit</h4>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handlePostNow('reddit')}
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
+                  >
+                    🚀 Post Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => openScheduleModal('reddit')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
+                  >
+                    📅 Schedule
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <p className="text-gray-300 select-all">{socialPosts.reddit}</p>
+                {/* Image selector for Reddit */}
+                {generatedContent.images && generatedContent.images.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, reddit: !prev.reddit }))}
+                        className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
+                      >
+                        {showAllImagesForPlatform.reddit ? '👁️ Active Only' : '🎨 Show All'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                      {getImagesToDisplay('reddit').map((image, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, reddit: idx }))}
+                          className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.reddit === idx
+                              ? 'ring-4 ring-green-500 scale-105'
+                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Image ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.style && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                              <p className="text-[8px] text-purple-300 truncate">
+                                {image.style.replace('_', ' ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-green-400 mt-2">
+                      ✓ Image {selectedImagePerPlatform.reddit + 1} selected ({getImagesToDisplay('reddit').length} available)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator className="bg-gray-700" />
+
+            {/* Telegram */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">📢</span>
+                  </div>
+                  <h4 className="font-semibold text-white">Telegram</h4>
+                </div>
                 <Button
                   size="sm"
-                  onClick={() => handlePostNow('facebook')}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
-                >
-                  🚀 Post Now
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => openScheduleModal('facebook')}
+                  onClick={() => openScheduleModal('telegram')}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
                 >
                   📅 Schedule
                 </Button>
               </div>
-            </div>
-            <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.facebook}</p>
-              {/* Image selector for Facebook */}
-              {generatedContent.images && generatedContent.images.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, facebook: !prev.facebook }))}
-                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
-                    >
-                      {showAllImagesForPlatform.facebook ? '👁️ Active Only' : '🎨 Show All'}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
-                    {getImagesToDisplay('facebook').map((image, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, facebook: idx }))}
-                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
-                          selectedImagePerPlatform.facebook === idx 
-                            ? 'ring-4 ring-green-500 scale-105' 
-                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
-                        }`}
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <p className="text-gray-300 select-all">{socialPosts.telegram}</p>
+                {/* Image selector for Telegram */}
+                {generatedContent.images && generatedContent.images.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-gray-400">📷 Select image for this post:</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, telegram: !prev.telegram }))}
+                        className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
                       >
-                        <img 
-                          src={image.url} 
-                          alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {image.style && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
-                            <p className="text-[8px] text-purple-300 truncate">
-                              {image.style.replace('_', ' ')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                        {showAllImagesForPlatform.telegram ? '👁️ Active Only' : '🎨 Show All'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
+                      {getImagesToDisplay('telegram').map((image, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, telegram: idx }))}
+                          className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.telegram === idx
+                              ? 'ring-4 ring-green-500 scale-105'
+                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Image ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.style && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
+                              <p className="text-[8px] text-purple-300 truncate">
+                                {image.style.replace('_', ' ')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-green-400 mt-2">
+                      ✓ Image {selectedImagePerPlatform.telegram + 1} selected ({getImagesToDisplay('telegram').length} available)
+                    </p>
                   </div>
-                  <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.facebook + 1} selected ({getImagesToDisplay('facebook').length} available)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Separator className="bg-gray-700" />
-
-          {/* Instagram */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">📷</span>
-              </div>
-              <h4 className="font-semibold text-white">Instagram</h4>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => handlePostNow('instagram')}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
-                >
-                  🚀 Post Now
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => openScheduleModal('instagram')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-                >
-                  📅 Schedule
-                </Button>
+                )}
               </div>
             </div>
-            <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.instagram}</p>
-              {/* Image selector for Instagram */}
-              {generatedContent.images && generatedContent.images.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, instagram: !prev.instagram }))}
-                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
-                    >
-                      {showAllImagesForPlatform.instagram ? '👁️ Active Only' : '🎨 Show All'}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
-                    {getImagesToDisplay('instagram').map((image, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, instagram: idx }))}
-                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
-                          selectedImagePerPlatform.instagram === idx 
-                            ? 'ring-4 ring-green-500 scale-105' 
-                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
-                        }`}
-                      >
-                        <img 
-                          src={image.url} 
-                          alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {image.style && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
-                            <p className="text-[8px] text-purple-300 truncate">
-                              {image.style.replace('_', ' ')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.instagram + 1} selected ({getImagesToDisplay('instagram').length} available)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Separator className="bg-gray-700" />
-
-          {/* Twitter/X */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">𝕏</span>
-              </div>
-              <h4 className="font-semibold text-white">Twitter/X</h4>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => handlePostNow('twitter')}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
-                >
-                  🚀 Post Now
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => openScheduleModal('twitter')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-                >
-                  📅 Schedule
-                </Button>
-              </div>
-            </div>
-            <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.twitter}</p>
-              {/* Image selector for Twitter/X */}
-              {generatedContent.images && generatedContent.images.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, twitter: !prev.twitter }))}
-                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
-                    >
-                      {showAllImagesForPlatform.twitter ? '👁️ Active Only' : '🎨 Show All'}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
-                    {getImagesToDisplay('twitter').map((image, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, twitter: idx }))}
-                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
-                          selectedImagePerPlatform.twitter === idx 
-                            ? 'ring-4 ring-green-500 scale-105' 
-                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
-                        }`}
-                      >
-                        <img 
-                          src={image.url} 
-                          alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {image.style && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
-                            <p className="text-[8px] text-purple-300 truncate">
-                              {image.style.replace('_', ' ')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.twitter + 1} selected ({getImagesToDisplay('twitter').length} available)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Separator className="bg-gray-700" />
-
-          {/* LinkedIn */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-700 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">in</span>
-              </div>
-              <h4 className="font-semibold text-white">LinkedIn</h4>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => handlePostNow('linkedin')}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
-                >
-                  🚀 Post Now
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => openScheduleModal('linkedin')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-                >
-                  📅 Schedule
-                </Button>
-              </div>
-            </div>
-            <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.linkedin}</p>
-              {/* Image selector for LinkedIn */}
-              {generatedContent.images && generatedContent.images.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, linkedin: !prev.linkedin }))}
-                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
-                    >
-                      {showAllImagesForPlatform.linkedin ? '👁️ Active Only' : '🎨 Show All'}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
-                    {getImagesToDisplay('linkedin').map((image, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, linkedin: idx }))}
-                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
-                          selectedImagePerPlatform.linkedin === idx 
-                            ? 'ring-4 ring-green-500 scale-105' 
-                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
-                        }`}
-                      >
-                        <img 
-                          src={image.url} 
-                          alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {image.style && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
-                            <p className="text-[8px] text-purple-300 truncate">
-                              {image.style.replace('_', ' ')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.linkedin + 1} selected ({getImagesToDisplay('linkedin').length} available)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Separator className="bg-gray-700" />
-
-          {/* Discord */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">💬</span>
-              </div>
-                <h4 className="font-semibold text-white">Discord</h4>
-            </div>
-            <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => handlePostNow('discord')}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
-                >
-                  🚀 Post Now
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => openScheduleModal('discord')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-                >
-                  📅 Schedule
-                </Button>
-              </div>
-          </div>
-            <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.discord}</p>
-              {/* Image selector for Discord */}
-              {generatedContent.images && generatedContent.images.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, discord: !prev.discord }))}
-                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
-                    >
-                      {showAllImagesForPlatform.discord ? '👁️ Active Only' : '🎨 Show All'}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
-                    {getImagesToDisplay('discord').map((image, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, discord: idx }))}
-                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
-                          selectedImagePerPlatform.discord === idx 
-                            ? 'ring-4 ring-green-500 scale-105' 
-                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
-                        }`}
-                      >
-                        <img 
-                          src={image.url} 
-                          alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {image.style && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
-                            <p className="text-[8px] text-purple-300 truncate">
-                              {image.style.replace('_', ' ')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.discord + 1} selected ({getImagesToDisplay('discord').length} available)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Separator className="bg-gray-700" />
-
-          {/* Reddit */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-orange-600 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🤖</span>
-                </div>
-                <h4 className="font-semibold text-white">Reddit</h4>
-              </div>
-            <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => handlePostNow('reddit')}
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-500 hover:to-blue-500 text-white font-semibold shadow-lg hover:shadow-green-500/50"
-                >
-                  🚀 Post Now
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => openScheduleModal('reddit')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-                >
-                  📅 Schedule
-                </Button>
-              </div>
-            </div>
-            <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.reddit}</p>
-              {/* Image selector for Reddit */}
-              {generatedContent.images && generatedContent.images.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, reddit: !prev.reddit }))}
-                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
-                    >
-                      {showAllImagesForPlatform.reddit ? '👁️ Active Only' : '🎨 Show All'}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
-                    {getImagesToDisplay('reddit').map((image, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, reddit: idx }))}
-                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
-                          selectedImagePerPlatform.reddit === idx 
-                            ? 'ring-4 ring-green-500 scale-105' 
-                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
-                        }`}
-                      >
-                        <img 
-                          src={image.url} 
-                          alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {image.style && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
-                            <p className="text-[8px] text-purple-300 truncate">
-                              {image.style.replace('_', ' ')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.reddit + 1} selected ({getImagesToDisplay('reddit').length} available)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <Separator className="bg-gray-700" />
-
-          {/* Telegram */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">📢</span>
-                </div>
-                <h4 className="font-semibold text-white">Telegram</h4>
-              </div>
-            <Button
-                size="sm"
-                onClick={() => openScheduleModal('telegram')}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
-              >
-                📅 Schedule
-            </Button>
-            </div>
-            <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-300 select-all">{socialPosts.telegram}</p>
-              {/* Image selector for Telegram */}
-              {generatedContent.images && generatedContent.images.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-gray-400">📷 Select image for this post:</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowAllImagesForPlatform(prev => ({ ...prev, telegram: !prev.telegram }))}
-                      className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-900/30"
-                    >
-                      {showAllImagesForPlatform.telegram ? '👁️ Active Only' : '🎨 Show All'}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
-                    {getImagesToDisplay('telegram').map((image, idx) => (
-                      <div 
-                        key={idx}
-                        onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, telegram: idx }))}
-                        className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${
-                          selectedImagePerPlatform.telegram === idx 
-                            ? 'ring-4 ring-green-500 scale-105' 
-                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
-                        }`}
-                      >
-                        <img 
-                          src={image.url} 
-                          alt={`Image ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        {image.style && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-1 py-0.5">
-                            <p className="text-[8px] text-purple-300 truncate">
-                              {image.style.replace('_', ' ')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-green-400 mt-2">
-                    ✓ Image {selectedImagePerPlatform.telegram + 1} selected ({getImagesToDisplay('telegram').length} available)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-             )}
+          </CardContent>
+        </Card>
+      )}
 
 
 
@@ -1573,9 +1566,9 @@ export default function ContentPackagePage() {
           {/* Current Rating Display */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <StarRating 
-                rating={post.average_rating || 0} 
-                size="lg" 
+              <StarRating
+                rating={post.average_rating || 0}
+                size="lg"
                 showNumber={true}
               />
               <span className="text-gray-400">
@@ -1640,7 +1633,7 @@ export default function ContentPackagePage() {
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               📅 Schedule {selectedPlatform === 'all' ? 'All Platforms' : selectedPlatform ? `${selectedPlatform.charAt(0).toUpperCase() + selectedPlatform.slice(1)} Post` : 'Blog Post'}
             </h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -1654,7 +1647,7 @@ export default function ContentPackagePage() {
                   min={new Date().toISOString().slice(0, 16)}
                 />
               </div>
-              
+
               {selectedPlatform && selectedPlatform !== 'all' && (
                 <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
                   <p className="text-sm text-gray-400 mb-2">Preview:</p>
@@ -1663,7 +1656,7 @@ export default function ContentPackagePage() {
                   </p>
                 </div>
               )}
-              
+
               {selectedPlatform === 'all' && (
                 <div className="p-3 bg-gray-800 rounded-lg border border-gray-600">
                   <p className="text-sm text-gray-400 mb-2">Will schedule:</p>
@@ -1682,7 +1675,7 @@ export default function ContentPackagePage() {
                   </ul>
                 </div>
               )}
-              
+
               <div className="flex justify-end space-x-3 pt-4">
                 <Button
                   variant="outline"

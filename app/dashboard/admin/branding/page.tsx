@@ -35,7 +35,7 @@ export default function BrandingPage() {
   const checkAccessAndFetchOrg = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/dashboard')
         return
@@ -43,7 +43,7 @@ export default function BrandingPage() {
 
       // Check if admin
       const isAdmin = user.email?.includes('sh4m4ni4k@sh4m4ni4k.nl')
-      
+
       if (isAdmin) {
         // Admin always has access - fetch Admin Organization
         const { data, error } = await supabase
@@ -82,9 +82,9 @@ export default function BrandingPage() {
 
           if (subscription) {
             setUserPlan(subscription.plan)
-            
-            // Only Universal plan can customize branding
-            if (subscription.plan === 'universal') {
+
+            // Only Transcendant plan can customize branding
+            if (subscription.plan === 'transcendant') {
               setHasAccess(true)
               setAdminOrgId(orgId)
             } else {
@@ -170,7 +170,7 @@ export default function BrandingPage() {
         setBranding(prev => prev ? { ...prev, logo_url: data.url } : null)
         toast.success('Logo uploaded successfully!')
         setSelectedFile(null)
-        
+
         // Auto-save the logo URL to branding settings
         try {
           await fetch('/api/branding', {
@@ -201,10 +201,10 @@ export default function BrandingPage() {
 
   const handlePositionChange = async (position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
     if (!branding || !adminOrgId) return
-    
+
     // Update local state immediately
     setBranding(prev => prev ? { ...prev, logo_position: position } : null)
-    
+
     // Auto-save the change
     try {
       const response = await fetch('/api/branding', {
@@ -237,10 +237,10 @@ export default function BrandingPage() {
 
   const handleSwitchChange = async (checked: boolean) => {
     if (!branding || !adminOrgId) return
-    
+
     // Update local state immediately
     setBranding(prev => prev ? { ...prev, enabled: checked } : null)
-    
+
     // Auto-save the change
     try {
       const response = await fetch('/api/branding', {
@@ -286,9 +286,9 @@ export default function BrandingPage() {
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <Shield className="h-16 w-16 text-yellow-400 mx-auto" />
-              <h2 className="text-2xl font-bold text-white">Custom Branding - Universal Only</h2>
+              <h2 className="text-2xl font-bold text-white">Custom Branding - Transcendant Only</h2>
               <p className="text-gray-300">
-                Custom branding and watermarks are exclusive to the Universal plan.
+                Custom branding and watermarks are exclusive to the Transcendant plan.
               </p>
               <div className="mt-4 space-y-2">
                 <p className="text-purple-300 font-semibold">Current Plan: {userPlan || 'Unknown'}</p>
@@ -296,7 +296,7 @@ export default function BrandingPage() {
                   {userPlan === 'trial' && '🎉 You are on a trial. Trial users receive the Timeline Alchemy watermark on all generated images.'}
                   {(userPlan === 'basic' || userPlan === 'initiate' || userPlan === 'transcendant') && 'Your plan includes the Timeline Alchemy watermark on all generated images.'}
                 </p>
-                <p className="text-purple-300 font-semibold mt-6">Upgrade to Universal to unlock:</p>
+                <p className="text-purple-300 font-semibold mt-6">Upgrade to Transcendant to unlock:</p>
                 <ul className="text-sm text-gray-300 space-y-1">
                   <li>✓ Custom logo watermarks</li>
                   <li>✓ Adjustable watermark position & opacity</li>
@@ -308,7 +308,7 @@ export default function BrandingPage() {
                   onClick={() => router.push('/dashboard/billing')}
                   className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-500 hover:to-pink-500 transition-all"
                 >
-                  Upgrade to Universal
+                  Upgrade to Transcendant
                 </button>
               </div>
             </div>

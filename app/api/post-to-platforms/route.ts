@@ -8,15 +8,15 @@ import { withRetry, RetryManager } from '@/lib/retry-manager'
 async function postToWordPress(content: string, title: string, siteUrl: string, username: string, password: string) {
   try {
     console.log('🚀 Starting WordPress post:', { title, siteUrl })
-    
+
     // Clean up the site URL (remove trailing slash)
     const cleanSiteUrl = siteUrl.replace(/\/$/, '')
-    
+
     // Check if it's a WordPress.com site
     const isWordPressCom = cleanSiteUrl.includes('.wordpress.com')
-    
+
     console.log('🔍 WordPress site type:', isWordPressCom ? 'WordPress.com' : 'Self-hosted')
-    
+
     // Prepare the post data with better formatting
     const postData = {
       title: title,
@@ -29,15 +29,15 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
         created_at: new Date().toISOString()
       }
     }
-    
+
     // For WordPress.com, we might need different handling
     let apiUrl: string
     let headers: Record<string, string>
-    
+
     if (isWordPressCom) {
       // WordPress.com uses different endpoints and might have stricter limitations
       apiUrl = `${cleanSiteUrl}/wp-json/wp/v2/posts`
-      
+
       // WordPress.com might require different authentication
       headers = {
         'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
     } else {
       // Self-hosted WordPress
       apiUrl = `${cleanSiteUrl}/wp-json/wp/v2/posts`
-      
+
       headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64'),
@@ -56,10 +56,10 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
         'Accept': 'application/json'
       }
     }
-    
+
     console.log('📡 Making request to:', apiUrl)
     console.log('🔐 Using auth header length:', headers.Authorization.length)
-    
+
     // Make the posting request with timeout
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -74,14 +74,14 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
     if (!response.ok) {
       let errorMessage = ''
       let errorDetails = ''
-      
+
       try {
         const errorData = await response.json()
         errorDetails = JSON.stringify(errorData, null, 2)
-        
+
         if (isWordPressCom) {
           errorMessage = `WordPress.com API error (${response.status}): ${errorData.message || response.statusText}`
-          
+
           // Provide specific guidance for WordPress.com issues
           if (response.status === 403) {
             errorMessage += '. WordPress.com has limited REST API access for posting.'
@@ -90,7 +90,7 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
           }
         } else {
           errorMessage = `WordPress API error (${response.status}): ${errorData.message || response.statusText}`
-          
+
           // Provide specific guidance for self-hosted WordPress issues
           if (response.status === 404) {
             errorMessage += '. Please ensure WordPress REST API is enabled on your site.'
@@ -104,13 +104,13 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
         errorMessage = `WordPress API error (${response.status}): ${response.statusText}. Could not parse error details.`
         errorDetails = 'Failed to parse error response'
       }
-      
+
       console.error('❌ WordPress posting failed:', {
         status: response.status,
         statusText: response.statusText,
         errorDetails
       })
-      
+
       throw new Error(errorMessage)
     }
 
@@ -120,7 +120,7 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
       link: result.link,
       title: result.title?.rendered
     })
-    
+
     return {
       success: true,
       postId: result.id,
@@ -140,49 +140,65 @@ async function postToWordPress(content: string, title: string, siteUrl: string, 
 export async function POST(request: NextRequest) {
   try {
     const { postId, platforms, selectedImageUrl } = await request.json()
-    
+
     if (!postId || !platforms || !Array.isArray(platforms)) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Post ID and platforms array are required' 
+      return NextResponse.json({
+        success: false,
+        error: 'Post ID and platforms array are required'
       })
     }
-    
-    console.log('📸 Selected image URL for posting:', selectedImageUrl)
 
     const supabase = supabaseAdmin
-    
+
     // Get the post data
     const { data: post, error: postError } = await supabase
       .from('blog_posts')
-      .select(`
-        *,
-        organizations:org_id (
-          id,
-          name
-        )
-      `)
+      .select('*')
       .eq('id', postId)
       .single()
 
     if (postError || !post) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Post not found' 
+      return NextResponse.json({
+        success: false,
+        error: 'Post not found'
       })
     }
 
-    // Get social connections for the organization
-    // Clients have their own social connections in their own organization
+    // Fetch social posts from the separate table as well
+    const { data: socialPostsTableData } = await supabase
+      .from('social_posts')
+      .select('platform, content')
+      .eq('post_id', postId)
+
+    // Merge social posts from table into post object
+    if (socialPostsTableData && socialPostsTableData.length > 0) {
+      const postAny = post as any
+      if (!postAny.social_posts) {
+        postAny.social_posts = {}
+      }
+
+      socialPostsTableData.forEach((sp: any) => {
+        // Normalize platform names to lowercase for consistency
+        const platformKey = sp.platform.toLowerCase()
+        if (!postAny.social_posts[platformKey]) {
+          postAny.social_posts[platformKey] = sp.content
+        }
+        // Also keep original case just in case
+        if (!postAny.social_posts[sp.platform]) {
+          postAny.social_posts[sp.platform] = sp.content
+        }
+      })
+    }
+
     const { data: connections, error: connectionsError } = await supabase
       .from('social_connections')
       .select('*')
       .eq('org_id', (post as any).org_id)
 
     if (connectionsError) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to fetch social connections' 
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to fetch social connections'
       })
     }
 
@@ -199,7 +215,7 @@ export async function POST(request: NextRequest) {
     for (const platform of platforms) {
       try {
         const connection = connections?.find((conn: any) => conn.platform === platform)
-        
+
         if (!connection) {
           errors.push({
             platform,
@@ -240,22 +256,22 @@ export async function POST(request: NextRequest) {
               username: (connection as any).username,
               password: (connection as any).password
             }
-            
+
             // Use retry logic for WordPress posting
             const wpResult = await withRetry(async () => {
               return await postToWordPress((post as any).content, (post as any).title, wpCredentials.siteUrl, wpCredentials.username, wpCredentials.password)
             }, 'wordpress')
-            
+
             if (!wpResult.success) {
-              throw new Error(`WordPress posting failed after ${wpResult.attempts} attempts: ${wpResult.error}`)
+              throw new Error(`WordPress posting failed after ${wpResult.attempts} attempts: ${wpResult.error} `)
             }
-            
+
             result = wpResult.data
             break
           default:
             errors.push({
               platform,
-              error: `Unsupported platform: ${platform}`
+              error: `Unsupported platform: ${platform} `
             })
             continue
         }
@@ -294,8 +310,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Posting engine error:', error)
-    return NextResponse.json({ 
-      success: false, 
+    return NextResponse.json({
+      success: false,
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     })
@@ -305,24 +321,37 @@ export async function POST(request: NextRequest) {
 // Platform-specific posting functions
 async function postToTwitter(post: any, connection: any, selectedImageUrl?: string | null) {
   const twitter = new TwitterOAuth()
-  
+
   // Get social posts for Twitter
   let socialPosts = post.social_posts?.twitter || post.social_posts?.Twitter
   if (!socialPosts) {
     throw new Error('No Twitter content found')
   }
 
-  // Remove image URL from Twitter posts to make them text-only
-  const cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
-  
-  console.log('🖼️ Twitter posting with image:', selectedImageUrl || 'none')
+  // Logic to get image URL:
+  let imageUrl = selectedImageUrl
+  let cleanText = socialPosts
+
+  if (!imageUrl) {
+    // Fallback: Extract image URL from the post content if not provided explicitly
+    const imageUrlMatch = socialPosts.match(/🖼️ Image: (https:\/\/[^\s]+)/)
+    if (imageUrlMatch) {
+      imageUrl = imageUrlMatch[1]
+    }
+  }
+
+  // Always clean the text of the image marker
+  cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
+
+  console.log('🖼️ Twitter posting with image:', imageUrl || 'none')
+  if (imageUrl) console.log('🖼️ Image URL length:', imageUrl.length)
 
   // Use retry logic for Twitter posting
   const result = await withRetry(async () => {
     // Get fresh token with automatic refresh
     const freshToken = await TokenManager.getFreshToken(
-      connection.org_id, 
-      'twitter', 
+      connection.org_id,
+      'twitter',
       connection.account_id
     )
 
@@ -330,29 +359,12 @@ async function postToTwitter(post: any, connection: any, selectedImageUrl?: stri
       throw new Error('Unable to get fresh Twitter token')
     }
 
-    const tweetData: any = {
-      text: cleanText
-    }
-
-    const response = await fetch('https://api.twitter.com/2/tweets', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${freshToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(tweetData)
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(`Twitter API error: ${error.detail || error.message}`)
-    }
-
-    return await response.json()
+    // Use the updated postTweet method
+    return await twitter.postTweet(freshToken, cleanText, imageUrl || undefined)
   }, 'twitter')
 
   if (!result.success) {
-    throw new Error(`Twitter posting failed after ${result.attempts} attempts: ${result.error}`)
+    throw new Error(`Twitter posting failed after ${result.attempts} attempts: ${result.error} `)
   }
 
   return result.data
@@ -360,7 +372,7 @@ async function postToTwitter(post: any, connection: any, selectedImageUrl?: stri
 
 async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: string | null) {
   const linkedin = new LinkedInOAuth()
-  
+
   let socialPosts = post.social_posts?.linkedin || post.social_posts?.LinkedIn
   if (!socialPosts) {
     throw new Error('No LinkedIn content found')
@@ -381,15 +393,15 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
     // Remove image marker from text if it exists
     cleanText = socialPosts.replace(/🖼️ Image: https:\/\/[^\s]+/, '').trim()
   }
-  
+
   console.log('🖼️ LinkedIn posting with image:', imageUrl)
 
   // Use retry logic for LinkedIn posting
   const result = await withRetry(async () => {
     // Get fresh token with automatic refresh
     const freshToken = await TokenManager.getFreshToken(
-      connection.org_id, 
-      'linkedin', 
+      connection.org_id,
+      'linkedin',
       connection.account_id
     )
 
@@ -398,7 +410,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
     }
 
     let postData: any = {
-      author: `urn:li:person:${connection.account_id.replace('linkedin_', '')}`,
+      author: `urn: li: person:${connection.account_id.replace('linkedin_', '')} `,
       lifecycleState: 'PUBLISHED',
       specificContent: {
         'com.linkedin.ugc.ShareContent': {
@@ -419,22 +431,22 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
         // Download the image
         const imageResponse = await fetch(imageUrl)
         if (!imageResponse.ok) {
-          throw new Error(`Failed to download image: ${imageResponse.statusText}`)
+          throw new Error(`Failed to download image: ${imageResponse.statusText} `)
         }
-        
+
         const imageBuffer = await imageResponse.arrayBuffer()
-        
+
         // Upload image to LinkedIn
         const uploadResponse = await fetch('https://api.linkedin.com/v2/assets?action=registerUpload', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${freshToken}`,
+            'Authorization': `Bearer ${freshToken} `,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             registerUploadRequest: {
               recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
-              owner: `urn:li:person:${connection.account_id.replace('linkedin_', '')}`,
+              owner: `urn: li: person:${connection.account_id.replace('linkedin_', '')} `,
               serviceRelationships: [{
                 relationshipType: 'OWNER',
                 identifier: 'urn:li:userGeneratedContent'
@@ -445,11 +457,11 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
 
         if (!uploadResponse.ok) {
           const error = await uploadResponse.json()
-          throw new Error(`LinkedIn image upload failed: ${error.message || 'Unknown error'}`)
+          throw new Error(`LinkedIn image upload failed: ${error.message || 'Unknown error'} `)
         }
 
         const uploadData = await uploadResponse.json()
-        
+
         // Upload the actual image
         const imageUploadResponse = await fetch(uploadData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl, {
           method: 'POST',
@@ -457,7 +469,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
         })
 
         if (!imageUploadResponse.ok) {
-          throw new Error(`LinkedIn image upload failed: ${imageUploadResponse.statusText}`)
+          throw new Error(`LinkedIn image upload failed: ${imageUploadResponse.statusText} `)
         }
 
         // Add image to post
@@ -481,7 +493,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
     const response = await fetch('https://api.linkedin.com/v2/ugcPosts', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${freshToken}`,
+        'Authorization': `Bearer ${freshToken} `,
         'Content-Type': 'application/json',
         'X-Restli-Protocol-Version': '2.0.0'
       },
@@ -490,14 +502,14 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
 
     if (!response.ok) {
       const error = await response.json()
-      throw new Error(`LinkedIn API error: ${error.message}`)
+      throw new Error(`LinkedIn API error: ${error.message} `)
     }
 
     return await response.json()
   }, 'linkedin')
 
   if (!result.success) {
-    throw new Error(`LinkedIn posting failed after ${result.attempts} attempts: ${result.error}`)
+    throw new Error(`LinkedIn posting failed after ${result.attempts} attempts: ${result.error} `)
   }
 
   return result.data
@@ -506,7 +518,7 @@ async function postToLinkedIn(post: any, connection: any, selectedImageUrl?: str
 async function postToInstagram(post: any, connection: any, selectedImageUrl?: string | null) {
   console.log('🖼️ Instagram posting with image:', selectedImageUrl || 'none')
   const instagram = new InstagramOAuth()
-  
+
   const socialPosts = post.social_posts?.instagram || post.social_posts?.Instagram
   if (!socialPosts) {
     throw new Error('No Instagram content found')
@@ -536,7 +548,7 @@ async function postToInstagram(post: any, connection: any, selectedImageUrl?: st
 async function postToYouTube(post: any, connection: any, selectedImageUrl?: string | null) {
   console.log('🖼️ YouTube posting with image:', selectedImageUrl || 'none')
   const youtube = new YouTubeOAuth()
-  
+
   const socialPosts = post.social_posts?.youtube || post.social_posts?.YouTube
   if (!socialPosts) {
     throw new Error('No YouTube content found')
@@ -567,7 +579,7 @@ async function postToYouTube(post: any, connection: any, selectedImageUrl?: stri
 async function postToDiscord(post: any, connection: any, selectedImageUrl?: string | null) {
   console.log('🖼️ Discord posting with image:', selectedImageUrl || 'none')
   const discord = new DiscordOAuth()
-  
+
   const socialPosts = post.social_posts?.discord || post.social_posts?.Discord
   if (!socialPosts) {
     throw new Error('No Discord content found')
@@ -575,8 +587,8 @@ async function postToDiscord(post: any, connection: any, selectedImageUrl?: stri
 
   // Get fresh token with automatic refresh
   const freshToken = await TokenManager.getFreshToken(
-    connection.org_id, 
-    'discord', 
+    connection.org_id,
+    'discord',
     connection.account_id
   )
 
@@ -586,7 +598,7 @@ async function postToDiscord(post: any, connection: any, selectedImageUrl?: stri
 
   // Discord requires channel ID, we'll need to get this from the connection
   const channelId = connection.account_id // Assuming this is the channel ID
-  
+
   const response = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
     method: 'POST',
     headers: {
@@ -609,7 +621,7 @@ async function postToDiscord(post: any, connection: any, selectedImageUrl?: stri
 async function postToReddit(post: any, connection: any, selectedImageUrl?: string | null) {
   console.log('🖼️ Reddit posting with image:', selectedImageUrl || 'none')
   const reddit = new RedditOAuth()
-  
+
   const socialPosts = post.social_posts?.reddit || post.social_posts?.Reddit
   if (!socialPosts) {
     throw new Error('No Reddit content found')
@@ -617,8 +629,8 @@ async function postToReddit(post: any, connection: any, selectedImageUrl?: strin
 
   // Get fresh token with automatic refresh
   const freshToken = await TokenManager.getFreshToken(
-    connection.org_id, 
-    'reddit', 
+    connection.org_id,
+    'reddit',
     connection.account_id
   )
 
@@ -628,7 +640,7 @@ async function postToReddit(post: any, connection: any, selectedImageUrl?: strin
 
   // Reddit requires subreddit, we'll need to get this from the connection
   const subreddit = connection.account_id // Assuming this is the subreddit
-  
+
   const response = await fetch(`https://oauth.reddit.com/r/${subreddit}/submit`, {
     method: 'POST',
     headers: {
@@ -654,7 +666,7 @@ async function postToReddit(post: any, connection: any, selectedImageUrl?: strin
 async function postToTelegram(post: any, connection: any, selectedImageUrl?: string | null) {
   console.log('🖼️ Telegram posting with image:', selectedImageUrl || 'none')
   const telegram = new TelegramOAuth()
-  
+
   const socialPosts = post.social_posts?.telegram || post.social_posts?.Telegram
   if (!socialPosts) {
     throw new Error('No Telegram content found')
@@ -672,7 +684,7 @@ async function postToTelegram(post: any, connection: any, selectedImageUrl?: str
   }
 
   const results = []
-  
+
   // Post to all Telegram channels
   for (const channel of channels) {
     try {

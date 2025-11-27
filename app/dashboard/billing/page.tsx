@@ -45,7 +45,7 @@ export default function BillingPage() {
 
         if (sub) {
           setSubscription(sub)
-          
+
           // Get trial status
           const trialResponse = await fetch(`/api/trial/status?orgId=${userOrgId}`)
           if (trialResponse.ok) {
@@ -110,7 +110,7 @@ export default function BillingPage() {
 
       if (sub) {
         setSubscription(sub)
-        
+
         // Get trial status
         const trialResponse = await fetch(`/api/trial/status?orgId=${userOrgId}`)
         if (trialResponse.ok) {
@@ -141,7 +141,6 @@ export default function BillingPage() {
         basic: process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID || 'price_basic',
         initiate: process.env.NEXT_PUBLIC_STRIPE_INITIATE_PRICE_ID || 'price_initiate',
         transcendant: process.env.NEXT_PUBLIC_STRIPE_TRANSCENDANT_PRICE_ID || 'price_transcendant',
-        universal: process.env.NEXT_PUBLIC_STRIPE_UNIVERSAL_PRICE_ID || 'price_universal',
       }
 
       const response = await fetch('/api/stripe/create-checkout-session', {
@@ -342,12 +341,11 @@ export default function BillingPage() {
                 <p className="text-gray-300">
                   €{STRIPE_PLANS[subscription.plan as StripePlanType]?.price || 'N/A'}/month
                 </p>
-                <p className={`text-sm ${
-                  subscription.status === 'active' ? 'text-green-400' :
-                  subscription.status === 'trialing' ? 'text-blue-400' :
-                  subscription.status === 'canceled' ? 'text-red-400' :
-                  'text-yellow-400'
-                }`}>
+                <p className={`text-sm ${subscription.status === 'active' ? 'text-green-400' :
+                    subscription.status === 'trialing' ? 'text-blue-400' :
+                      subscription.status === 'canceled' ? 'text-red-400' :
+                        'text-yellow-400'
+                  }`}>
                   Status: {subscription.status === 'trialing' ? 'Trial' : subscription.status}
                   {subscription.status === 'trialing' && (
                     <span className="block text-xs text-gray-400 mt-1">
@@ -355,7 +353,7 @@ export default function BillingPage() {
                     </span>
                   )}
                 </p>
-                
+
                 {/* Trial Status */}
                 {trialStatus && trialStatus.isTrial && (
                   <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
@@ -363,7 +361,7 @@ export default function BillingPage() {
                       <div>
                         <h4 className="text-blue-200 font-semibold">🎉 Free Trial Active</h4>
                         <p className="text-blue-300 text-sm">
-                          {trialStatus.daysRemaining > 0 
+                          {trialStatus.daysRemaining > 0
                             ? `${trialStatus.daysRemaining} days remaining`
                             : 'Trial expired'
                           }
@@ -381,15 +379,15 @@ export default function BillingPage() {
                 )}
               </div>
               <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleManageSubscription}
                   disabled={processing === 'manage'}
                 >
                   {processing === 'manage' ? 'Opening...' : 'Manage Billing'}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     const portalLink = process.env.NEXT_PUBLIC_STRIPE_PRICING_PORTAL || 'https://pay.timeline-alchemy.nl/p/login/eVqfZj1tyaVQgkH1CteAg00'
                     window.open(portalLink, '_blank')
@@ -399,8 +397,8 @@ export default function BillingPage() {
                   ✨ View Plans & Upgrade
                 </Button>
                 {subscription.status === 'active' && (
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     onClick={handleCancel}
                     disabled={processing === 'cancel'}
                   >
@@ -421,7 +419,7 @@ export default function BillingPage() {
             <div className="flex-1">
               <h3 className="text-xl font-bold text-white mb-2">Start with a Free Trial!</h3>
               <p className="text-blue-200 mb-3">
-                Every new member begins with a <span className="font-semibold text-yellow-300">2-week free trial period</span>. 
+                Every new member begins with a <span className="font-semibold text-yellow-300">2-week free trial period</span>.
                 Explore the platform with 2 content packages, 5 custom content generations, and 1 bulk generation to experience what Timeline Alchemy can do for you.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -452,9 +450,8 @@ export default function BillingPage() {
               return (
                 <div
                   key={planKey}
-                  className={`border rounded-lg p-6 bg-gray-700 ${
-                    planKey === 'transcendant' ? 'border-purple-400 border-2' : 'border-gray-600'
-                  }`}
+                  className={`border rounded-lg p-6 bg-gray-700 ${planKey === 'transcendant' ? 'border-purple-400 border-2' : 'border-gray-600'
+                    }`}
                 >
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
@@ -463,7 +460,7 @@ export default function BillingPage() {
                       <span className="text-lg text-gray-400">/month</span>
                     </div>
                   </div>
-                  
+
                   <ul className="mt-6 space-y-2">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-center text-sm text-gray-300">
@@ -489,8 +486,8 @@ export default function BillingPage() {
                           onClick={() => handleChangePlan(planType)}
                           disabled={processing === planKey}
                         >
-                          {processing === planKey ? 'Processing...' : 
-                           subscription.stripe_customer_id.startsWith('temp-') ? 'Subscribe' : 'Change Plan'}
+                          {processing === planKey ? 'Processing...' :
+                            subscription.stripe_customer_id.startsWith('temp-') ? 'Subscribe' : 'Change Plan'}
                         </Button>
                       )
                     ) : (
@@ -524,7 +521,7 @@ export default function BillingPage() {
               <div className="text-2xl font-bold text-yellow-400">4</div>
               <div className="text-sm text-gray-300">Content Packages</div>
               <div className="text-xs text-gray-400">
-                {subscription ? 
+                {subscription ?
                   `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.contentPackages === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.contentPackages || 0} limit` :
                   '4 limit'
                 }
@@ -534,7 +531,7 @@ export default function BillingPage() {
               <div className="text-2xl font-bold text-yellow-400">2</div>
               <div className="text-sm text-gray-300">Custom Content</div>
               <div className="text-xs text-gray-400">
-                {subscription ? 
+                {subscription ?
                   `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.customContent === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.customContent || 0} limit` :
                   '0 limit'
                 }
@@ -544,7 +541,7 @@ export default function BillingPage() {
               <div className="text-2xl font-bold text-yellow-400">0</div>
               <div className="text-sm text-gray-300">Bulk Generations</div>
               <div className="text-xs text-gray-400">
-                {subscription ? 
+                {subscription ?
                   `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.bulkGeneration === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.bulkGeneration || 0} limit` :
                   '0 limit'
                 }
@@ -592,14 +589,14 @@ export default function BillingPage() {
             <div>
               <h4 className="text-white font-semibold mb-3">Quick Access:</h4>
               <div className="space-y-3">
-                <Button 
+                <Button
                   onClick={handleManageSubscription}
                   disabled={processing === 'manage'}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
                 >
                   {processing === 'manage' ? 'Opening...' : '🚀 Manage Current Subscription'}
                 </Button>
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => {
                     const portalLink = process.env.NEXT_PUBLIC_STRIPE_PRICING_PORTAL || 'https://pay.timeline-alchemy.nl/p/login/eVqfZj1tyaVQgkH1CteAg00'

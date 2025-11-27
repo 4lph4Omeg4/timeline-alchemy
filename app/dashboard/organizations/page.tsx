@@ -66,8 +66,8 @@ export default function OrganizationsPage() {
             .filter((org: any) => org.name !== 'Admin Organization')
             .map((org: any) => ({
               ...org,
-              plan: org.subscriptions && org.subscriptions.length > 0 
-                ? org.subscriptions[0].plan 
+              plan: org.subscriptions && org.subscriptions.length > 0
+                ? org.subscriptions[0].plan
                 : org.plan,
               clients: org.clients || []
             }))
@@ -78,18 +78,18 @@ export default function OrganizationsPage() {
           // Filter out clients that are only in Admin Organization
           const nonAdminClients = allClientsData.filter((client: any) => {
             // Check if this client has any organization other than Admin Organization
-            const hasNonAdminOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) => 
+            const hasNonAdminOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) =>
               org.name !== 'Admin Organization'
             )
             return hasNonAdminOrg
           })
           // Store filtered clients for manual assignment
           setAllClients(nonAdminClients)
-          
+
           // Filter clients that don't have their own organization
           const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
             // Check if this client has any organization other than Admin Organization
-            const hasOwnOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) => 
+            const hasOwnOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) =>
               org.name !== 'Admin Organization'
             )
             return !hasOwnOrg
@@ -148,7 +148,7 @@ export default function OrganizationsPage() {
         })
 
       toast.success(`Organization created for ${client.name}`)
-      
+
       // Refresh the data
       const fetchOrganizations = async () => {
         try {
@@ -186,8 +186,8 @@ export default function OrganizationsPage() {
               .filter((org: any) => org.name !== 'Admin Organization')
               .map((org: any) => ({
                 ...org,
-                plan: org.subscriptions && org.subscriptions.length > 0 
-                  ? org.subscriptions[0].plan 
+                plan: org.subscriptions && org.subscriptions.length > 0
+                  ? org.subscriptions[0].plan
                   : org.plan,
                 clients: org.clients || []
               }))
@@ -198,7 +198,7 @@ export default function OrganizationsPage() {
             // Filter clients that don't have their own organization
             const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
               // Check if this client has any organization other than Admin Organization
-              const hasOwnOrg = client.organizations && client.organizations.some((org: any) => 
+              const hasOwnOrg = client.organizations && client.organizations.some((org: any) =>
                 org.name !== 'Admin Organization'
               )
               return !hasOwnOrg
@@ -231,7 +231,7 @@ export default function OrganizationsPage() {
       }
 
       toast.success('Client assigned to organization successfully')
-      
+
       // Refresh the data
       const fetchOrganizations = async () => {
         try {
@@ -269,8 +269,8 @@ export default function OrganizationsPage() {
               .filter((org: any) => org.name !== 'Admin Organization')
               .map((org: any) => ({
                 ...org,
-                plan: org.subscriptions && org.subscriptions.length > 0 
-                  ? org.subscriptions[0].plan 
+                plan: org.subscriptions && org.subscriptions.length > 0
+                  ? org.subscriptions[0].plan
                   : org.plan,
                 clients: org.clients || []
               }))
@@ -281,18 +281,18 @@ export default function OrganizationsPage() {
             // Filter out clients that are only in Admin Organization
             const nonAdminClients = allClientsData.filter((client: any) => {
               // Check if this client has any organization other than Admin Organization
-              const hasNonAdminOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) => 
+              const hasNonAdminOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) =>
                 org.name !== 'Admin Organization'
               )
               return hasNonAdminOrg
             })
             // Store filtered clients for manual assignment
             setAllClients(nonAdminClients)
-            
+
             // Filter clients that don't have their own organization
             const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
               // Check if this client has any organization other than Admin Organization
-              const hasOwnOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) => 
+              const hasOwnOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) =>
                 org.name !== 'Admin Organization'
               )
               return !hasOwnOrg
@@ -340,7 +340,7 @@ export default function OrganizationsPage() {
           <CardContent>
             <div className="space-y-3">
               {allClients.map((client) => {
-                const currentOrg = client.organizations && Array.isArray(client.organizations) 
+                const currentOrg = client.organizations && Array.isArray(client.organizations)
                   ? client.organizations.find((org: any) => org.name !== 'Admin Organization')
                   : null
                 return (
@@ -355,7 +355,7 @@ export default function OrganizationsPage() {
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <select 
+                      <select
                         className="bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-lg text-sm"
                         onChange={(e) => {
                           if (e.target.value) {
@@ -372,7 +372,7 @@ export default function OrganizationsPage() {
                         ))}
                       </select>
                       {!currentOrg && (
-                        <Button 
+                        <Button
                           onClick={() => createOrganizationForClient(client)}
                           className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white text-sm"
                         >
@@ -409,14 +409,12 @@ export default function OrganizationsPage() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-white text-lg">{org.name}</h3>
                       <div className="flex items-center space-x-4 mt-3 text-sm">
-                        <Badge 
-                          variant="secondary" 
-                          className={`font-medium ${
-                            org.plan === 'universal' ? 'bg-purple-700 text-purple-200' :
-                            org.plan === 'transcendant' ? 'bg-pink-700 text-pink-200' :
-                            org.plan === 'initiate' ? 'bg-blue-700 text-blue-200' :
-                            'bg-gray-700 text-gray-200'
-                          }`}
+                        <Badge
+                          variant="secondary"
+                          className={`font-medium ${org.plan === 'transcendant' ? 'bg-pink-700 text-pink-200' :
+                              org.plan === 'initiate' ? 'bg-blue-700 text-blue-200' :
+                                'bg-gray-700 text-gray-200'
+                            }`}
                         >
                           {org.plan?.charAt(0).toUpperCase() + org.plan?.slice(1) || 'Basic'}
                         </Badge>
@@ -430,7 +428,7 @@ export default function OrganizationsPage() {
                           {org.clients.length} client{org.clients.length !== 1 ? 's' : ''}
                         </Badge>
                       </div>
-                      
+
                       {/* Show clients linked to this organization */}
                       {org.clients.length > 0 && (
                         <div className="mt-4">

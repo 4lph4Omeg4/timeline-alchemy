@@ -6,7 +6,7 @@ export interface User {
   created_at: string
 }
 
-export type PlanType = 'trial' | 'basic' | 'initiate' | 'transcendant' | 'universal'
+export type PlanType = 'trial' | 'basic' | 'initiate' | 'transcendant'
 
 export interface Organization {
   id: string
@@ -152,14 +152,14 @@ export interface UsageStats {
   socialAccountsCount: number
 }
 
-export type BusinessType = 
-  | 'camperdealer' 
-  | 'tankstation' 
-  | 'restaurant' 
-  | 'retail' 
-  | 'service' 
-  | 'hospitality' 
-  | 'automotive' 
+export type BusinessType =
+  | 'camperdealer'
+  | 'tankstation'
+  | 'restaurant'
+  | 'retail'
+  | 'service'
+  | 'hospitality'
+  | 'automotive'
   | 'general'
 
 export interface BusinessProfile {

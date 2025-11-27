@@ -35,14 +35,14 @@ export const STRIPE_PLANS = {
   },
   basic: {
     name: 'Basic',
-    price: 49, // €49.00
+    price: 10, // €10.00
     features: [
-      '4 content packages',
+      '5 content packages',
       'Basic scheduling',
       'Standard support',
     ],
     limits: {
-      contentPackages: 4,
+      contentPackages: 5,
       customContent: 0,
       bulkGeneration: 0,
       customIntegrations: false,
@@ -53,15 +53,15 @@ export const STRIPE_PLANS = {
   },
   initiate: {
     name: 'Initiate',
-    price: 99, // €99.00
+    price: 29, // €29.00
     features: [
-      '8 content packages',
+      '50 content packages',
       '10 custom content generations',
       'Advanced scheduling',
       'Priority support',
     ],
     limits: {
-      contentPackages: 8,
+      contentPackages: 50,
       customContent: 10,
       bulkGeneration: 0,
       customIntegrations: false,
@@ -73,25 +73,6 @@ export const STRIPE_PLANS = {
   transcendant: {
     name: 'Transcendant',
     price: 199, // €199.00
-    features: [
-      '12 content packages',
-      'Unlimited custom content',
-      'Advanced analytics',
-      'Priority support',
-    ],
-    limits: {
-      contentPackages: 12,
-      customContent: -1, // unlimited
-      bulkGeneration: 0,
-      customIntegrations: false,
-      whiteLabel: false,
-      prioritySupport: true,
-      advancedAnalytics: true,
-    },
-  },
-  universal: {
-    name: 'Universal',
-    price: 499, // €499.00
     features: [
       'Unlimited content packages',
       'Unlimited custom content',

@@ -7,16 +7,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const postId = searchParams.get('postId')
-    
+
     if (!postId) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Post ID is required' 
+      return NextResponse.json({
+        success: false,
+        error: 'Post ID is required'
       })
     }
 
     console.log('🔍 Debug: Checking social connections for post:', postId)
-    
+
     // Get the post data
     const { data: post, error: postError } = await supabaseAdmin
       .from('blog_posts')
@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (postError || !post) {
-      return NextResponse.json({ 
-        success: false, 
+      return NextResponse.json({
+        success: false,
         error: 'Post not found',
         details: postError
       })
@@ -60,7 +60,28 @@ export async function GET(request: NextRequest) {
     })
 
     // Check if post has social_posts data
-    const socialPosts = (post as any).social_posts || {}
+    let socialPosts = (post as any).social_posts || {}
+
+    // Also fetch from social_posts table
+    const { data: socialPostsTableData } = await supabaseAdmin
+      .from('social_posts')
+      .select('platform, content')
+      .eq('post_id', postId)
+
+    if (socialPostsTableData && socialPostsTableData.length > 0) {
+      socialPostsTableData.forEach((sp: any) => {
+        // Normalize platform names to lowercase for consistency
+        const platformKey = sp.platform.toLowerCase()
+        if (!socialPosts[platformKey]) {
+          socialPosts[platformKey] = sp.content
+        }
+        // Also keep original case just in case
+        if (!socialPosts[sp.platform]) {
+          socialPosts[sp.platform] = sp.content
+        }
+      })
+    }
+
     console.log('📱 Social posts available:', Object.keys(socialPosts))
 
     return NextResponse.json({
@@ -97,8 +118,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('💥 Debug error:', error)
-    return NextResponse.json({ 
-      success: false, 
+    return NextResponse.json({
+      success: false,
       error: 'Debug failed',
       details: error instanceof Error ? error.message : 'Unknown error'
     })
