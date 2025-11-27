@@ -4,7 +4,8 @@ Dit document legt uit hoe de twee OAuth systemen in Timeline Alchemy werken en h
 
 ## 🎯 Twee Onafhankelijke OAuth Flows
 
-### 1️⃣ Supabase Auth (User Login)
+
+### 2️⃣ Supabase Auth (User Login)
 **Purpose**: Gebruikers inloggen in de Timeline Alchemy app
 
 **Flow**:
@@ -34,6 +35,17 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    - `https://www.timeline-alchemy.nl/auth/callback`
    - `https://auth.timeline-alchemy.nl/auth/callback`
    - `http://localhost:3000/auth/callback` (voor development)
+
+### 3️⃣ Supabase OAuth Server (Identity Provider)
+**Purpose**: Timeline Alchemy gebruiken als login provider voor *andere* apps (Timeline Alchemy is de provider)
+
+**Configuration**:
+1. Ga naar Supabase Dashboard → Authentication → OAuth Server
+2. **Enable Supabase OAuth Server**: ON
+3. **Site URL**: `https://www.timeline-alchemy.nl`
+4. **Authorization Path**: `/oauth/consent` (⚠️ NIET de bestandsnaam `page.tsx`, alleen het pad)
+   - Preview URL moet zijn: `https://timeline-alchemy.nl/oauth/consent`
+
 
 ---
 
