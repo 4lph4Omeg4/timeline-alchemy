@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
@@ -59,14 +59,14 @@ if (typeof window !== 'undefined') {
 }
 
 // Global singleton instances
-let supabaseClient: ReturnType<typeof createClient> | null = null
-let supabaseAdminClient: ReturnType<typeof createClient> | null = null
+let supabaseClient: SupabaseClient<Database> | null = null
+let supabaseAdminClient: SupabaseClient<Database> | null = null
 
 // Client-side Supabase instance (for browser) - singleton pattern
 export const supabase = (() => {
   if (typeof window === 'undefined') {
     // Server-side: create a new instance
-    return createClient(supabaseUrl, supabaseAnonKey, {
+    return createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
@@ -77,7 +77,7 @@ export const supabase = (() => {
 
   // Client-side: use singleton with minimal config to avoid crypto issues
   if (!supabaseClient) {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -97,7 +97,7 @@ export const supabase = (() => {
 // Server-side Supabase instance (for API routes) - singleton pattern
 export const supabaseAdmin = (() => {
   if (!supabaseAdminClient) {
-    supabaseAdminClient = createClient(
+    supabaseAdminClient = createClient<Database>(
       supabaseUrl,
       process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
       {
