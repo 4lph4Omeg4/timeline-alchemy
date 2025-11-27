@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       .from('subscriptions')
       .select('stripe_customer_id')
       .eq('org_id', orgMember.org_id)
-      .single()
+      .single() as any
 
     if (subError || !subscription?.stripe_customer_id) {
       return NextResponse.json(
