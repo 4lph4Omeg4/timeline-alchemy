@@ -86,13 +86,17 @@ export async function POST(request: NextRequest) {
                 .single()
 
               // Get plan features to check for white_label capability
-              const { data: features } = await supabaseAdmin
-                .from('plan_features')
-                .select('white_label')
-                .eq('plan_name', (org as { plan: string }).plan)
-                .single()
+              let hasWhiteLabel = false
 
-              const hasWhiteLabel = features?.white_label === true
+              if (org) {
+                const { data: features } = await supabaseAdmin
+                  .from('plan_features')
+                  .select('white_label')
+                  .eq('plan_name', (org as { plan: string }).plan)
+                  .single()
+
+                hasWhiteLabel = features?.white_label === true
+              }
 
               if (hasWhiteLabel) {
                 // White Label plans can use their own branding
