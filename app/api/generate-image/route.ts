@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
               .from('plan_features')
               .select('white_label')
               .eq('plan_name', (org as { plan: string }).plan)
-              .single()
+              .single() as any
 
             hasWhiteLabel = features?.white_label === true
           }
