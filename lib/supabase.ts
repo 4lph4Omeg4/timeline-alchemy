@@ -10,26 +10,26 @@ if (typeof window !== 'undefined') {
     if (typeof window.crypto === 'undefined') {
       (window as any).crypto = {}
     }
-    
+
     if (typeof window.crypto.subtle === 'undefined') {
       (window as any).crypto.subtle = {}
     }
-    
+
     // Polyfill digest function to prevent "Unrecognized name" error
-    if (typeof window.crypto.subtle.digest === 'undefined' || 
-        typeof window.crypto.subtle.digest !== 'function') {
+    if (typeof window.crypto.subtle.digest === 'undefined' ||
+      typeof window.crypto.subtle.digest !== 'function') {
       (window as any).crypto.subtle.digest = async (algorithm: string, data: ArrayBuffer) => {
         // Simple fallback hash - not cryptographically secure but prevents errors
         console.warn('Using polyfill for crypto.subtle.digest with algorithm:', algorithm)
-        
+
         // Create a deterministic "hash" to prevent errors
         const bytes = new Uint8Array(data)
         const hashArray = new Uint8Array(32) // Standard SHA-256 size
-        
+
         for (let i = 0; i < hashArray.length; i++) {
           hashArray[i] = bytes[i % bytes.length] ^ (i * 7 + 13)
         }
-        
+
         return hashArray.buffer
       }
     } else {
@@ -41,14 +41,14 @@ if (typeof window !== 'undefined') {
         } catch (error) {
           // If it fails with "Unrecognized name" or similar, use our fallback
           console.warn('crypto.subtle.digest failed with algorithm:', algorithm, 'using fallback')
-          
+
           const bytes = new Uint8Array(data)
           const hashArray = new Uint8Array(32) // Standard SHA-256 size
-          
+
           for (let i = 0; i < hashArray.length; i++) {
             hashArray[i] = bytes[i % bytes.length] ^ (i * 7 + 13)
           }
-          
+
           return hashArray.buffer
         }
       }
@@ -74,23 +74,23 @@ export const supabase = (() => {
       }
     })
   }
-  
-// Client-side: use singleton with minimal config to avoid crypto issues
-if (!supabaseClient) {
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: 'timeline-alchemy-auth-v3' // Updated storage key to clear old sessions
-    },
-    global: {
-      headers: {
-        'X-Client-Info': 'timeline-alchemy-web-v3'
+
+  // Client-side: use singleton with minimal config to avoid crypto issues
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'timeline-alchemy-auth-v3' // Updated storage key to clear old sessions
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'timeline-alchemy-web-v3'
+        }
       }
-    }
-  })
-}
+    })
+  }
   return supabaseClient
 })()
 
@@ -312,6 +312,50 @@ export interface Database {
           logo_opacity?: number
           logo_size?: number
           enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      plan_features: {
+        Row: {
+          id: string
+          plan_name: 'trial' | 'basic' | 'initiate' | 'transcendant' | 'universal'
+          content_packages_limit: number | null
+          custom_content_limit: number | null
+          bulk_generation_limit: number | null
+          custom_integrations: boolean
+          white_label: boolean
+          priority_support: boolean
+          advanced_analytics: boolean
+          price_monthly: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          plan_name: 'trial' | 'basic' | 'initiate' | 'transcendant' | 'universal'
+          content_packages_limit?: number | null
+          custom_content_limit?: number | null
+          bulk_generation_limit?: number | null
+          custom_integrations?: boolean
+          white_label?: boolean
+          priority_support?: boolean
+          advanced_analytics?: boolean
+          price_monthly?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          plan_name?: 'trial' | 'basic' | 'initiate' | 'transcendant' | 'universal'
+          content_packages_limit?: number | null
+          custom_content_limit?: number | null
+          bulk_generation_limit?: number | null
+          custom_integrations?: boolean
+          white_label?: boolean
+          priority_support?: boolean
+          advanced_analytics?: boolean
+          price_monthly?: number
           created_at?: string
           updated_at?: string
         }
