@@ -39,7 +39,7 @@ export default function AdminPackagesPage() {
       }
 
       // Get admin's organization
-      const { data: orgMember, error: orgError } = await supabase
+      const { data: orgMember, error: orgError } = await (supabase as any)
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
@@ -53,7 +53,7 @@ export default function AdminPackagesPage() {
       }
 
       // Fetch admin-created packages with images
-      const { data: packagesData, error: packagesError } = await supabase
+      const { data: packagesData, error: packagesError } = await (supabase as any)
         .from('blog_posts')
         .select(`
           id,
