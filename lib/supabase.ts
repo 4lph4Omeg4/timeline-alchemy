@@ -389,6 +389,84 @@ export interface Database {
           updated_at?: string
         }
       }
+      clients: {
+        Row: {
+          id: string
+          org_id: string
+          name: string
+          contact_info: { email: string } | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          name: string
+          contact_info?: { email: string } | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          name?: string
+          contact_info?: { email: string } | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      images: {
+        Row: {
+          id: string
+          org_id: string
+          post_id: string
+          url: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          post_id: string
+          url: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          post_id?: string
+          url?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      social_posts: {
+        Row: {
+          id: string
+          post_id: string
+          platform: string
+          content: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          platform: string
+          content: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          platform?: string
+          content?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
