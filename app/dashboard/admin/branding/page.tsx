@@ -65,7 +65,7 @@ export default function BrandingPage() {
         }
       } else {
         // For non-admin users, check their plan
-        const { data: orgMembers } = await supabase
+        const { data: orgMembers } = await (supabase as any)
           .from('org_members')
           .select('org_id')
           .eq('user_id', user.id)
