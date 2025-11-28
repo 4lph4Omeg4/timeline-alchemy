@@ -107,7 +107,7 @@ export default function ContentListPage() {
         // Calculate category counts
         const counts: Record<string, number> = {}
         CONTENT_CATEGORIES.forEach(category => {
-          counts[category.id] = posts.filter(post => post.category === category.id).length
+          counts[category.id] = posts.filter((post: any) => post.category === category.id).length
         })
         setCategoryCounts(counts)
       }
@@ -286,8 +286,8 @@ export default function ContentListPage() {
               <Button
                 variant={selectedCategory === 'all' ? 'default' : 'ghost'}
                 className={`w-full justify-start text-left ${selectedCategory === 'all'
-                    ? 'bg-purple-600 text-white border-purple-500'
-                    : 'hover:bg-gray-800'
+                  ? 'bg-purple-600 text-white border-purple-500'
+                  : 'hover:bg-gray-800'
                   }`}
                 onClick={() => setSelectedCategory('all')}
               >
@@ -306,8 +306,8 @@ export default function ContentListPage() {
                   key={category.id}
                   variant={selectedCategory === category.id ? 'default' : 'ghost'}
                   className={`w-full justify-start text-left h-auto py-2 ${selectedCategory === category.id
-                      ? 'bg-purple-600 text-white border-purple-500'
-                      : 'hover:bg-gray-800'
+                    ? 'bg-purple-600 text-white border-purple-500'
+                    : 'hover:bg-gray-800'
                     }`}
                   onClick={() => setSelectedCategory(category.id)}
                 >
@@ -413,7 +413,7 @@ export default function ContentListPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => (
+              {posts.map((post: any) => (
                 <Card key={post.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors">
                   <CardHeader>
                     <div className="flex justify-between items-start">
