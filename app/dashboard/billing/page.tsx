@@ -31,7 +31,7 @@ export default function BillingPage() {
         if (!orgMembers || orgMembers.length === 0) return
 
         // Find the user's personal organization (not Admin Organization)
-        let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+        let userOrgId = orgMembers.find((member: any) => member.role !== 'client')?.org_id
         if (!userOrgId) {
           userOrgId = orgMembers[0].org_id
         }
@@ -96,7 +96,7 @@ export default function BillingPage() {
       if (!orgMembers || orgMembers.length === 0) return
 
       // Find the user's personal organization (not Admin Organization)
-      let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+      let userOrgId = orgMembers.find((member: any) => member.role !== 'client')?.org_id
       if (!userOrgId) {
         userOrgId = orgMembers[0].org_id
       }
