@@ -360,6 +360,35 @@ export interface Database {
           updated_at?: string
         }
       }
+      organization_usage: {
+        Row: {
+          id: string
+          org_id: string
+          content_packages_used: number
+          custom_content_used: number
+          bulk_generation_used: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          content_packages_used?: number
+          custom_content_used?: number
+          bulk_generation_used?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          content_packages_used?: number
+          custom_content_used?: number
+          bulk_generation_used?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
