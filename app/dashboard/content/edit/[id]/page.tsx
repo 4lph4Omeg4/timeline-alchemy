@@ -211,7 +211,7 @@ export default function ContentEditPage() {
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e: any) => setTitle(e.target.value)}
               className="mt-2 bg-gray-800 border-gray-700 text-white"
               placeholder="Enter your post title..."
             />
@@ -222,7 +222,7 @@ export default function ContentEditPage() {
             <Textarea
               id="content"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e: any) => setContent(e.target.value)}
               className="mt-2 bg-gray-800 border-gray-700 text-white min-h-[400px] whitespace-pre-wrap"
               placeholder="Write your post content here..."
               rows={20}
@@ -251,8 +251,8 @@ export default function ContentEditPage() {
                     </div>
                     <Textarea
                       value={post}
-                      onChange={(e) => {
-                        setSocialPosts(prev => ({
+                      onChange={(e: any) => {
+                        setSocialPosts((prev: any) => ({
                           ...prev,
                           [platform]: e.target.value
                         }))
@@ -271,7 +271,7 @@ export default function ContentEditPage() {
             <div>
               <Label className="text-white">Post Images</Label>
               <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {postImages.map((imageUrl, index) => (
+                {postImages.map((imageUrl: any, index: any) => (
                   <div key={index} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
                     <img
                       src={imageUrl}
