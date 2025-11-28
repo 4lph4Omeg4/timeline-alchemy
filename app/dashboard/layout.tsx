@@ -127,6 +127,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
 
       if (userError) {
+        // If the error is just that the session is missing, redirect to signin without logging an error
+        if (userError.name === 'AuthSessionMissingError' || userError.message === 'Auth session missing!') {
+          router.push('/auth/signin')
+          return
+        }
+
         console.error('Auth error in dashboard layout:', userError)
         router.push('/auth/signin')
         return
