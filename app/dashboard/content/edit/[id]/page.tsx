@@ -33,14 +33,14 @@ export default function ContentEditPage() {
   const fetchPost = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/auth/signin')
         return
       }
 
       // Get user's organizations (any role)
-      const { data: orgMembers, error: orgError } = await supabase
+      const { data: orgMembers, error: orgError } = await (supabase as any)
         .from('org_members')
         .select('org_id, role')
         .eq('user_id', user.id)
@@ -53,10 +53,10 @@ export default function ContentEditPage() {
       }
 
       // Get all organization IDs the user belongs to
-      const orgIds = orgMembers.map(member => member.org_id)
+      const orgIds = orgMembers.map((member: any) => member.org_id)
 
       // Fetch the post
-      const { data: postData, error: postError } = await supabase
+      const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .select('*')
         .eq('id', params.id)
@@ -74,13 +74,13 @@ export default function ContentEditPage() {
       setTitle(postData.title)
       setContent(postData.content)
       setExcerpt('') // Will be added after database update
-      
+
       // Load social posts from separate table
-      const { data: socialPostsData } = await supabase
+      const { data: socialPostsData } = await (supabase as any)
         .from('social_posts')
         .select('platform, content')
         .eq('post_id', postData.id)
-      
+
       const socialPostsMap: Record<string, string> = {}
       if (socialPostsData) {
         socialPostsData.forEach(post => {
@@ -90,7 +90,7 @@ export default function ContentEditPage() {
       setSocialPosts(socialPostsMap)
 
       // Fetch images for this post
-      const { data: images, error: imagesError } = await supabase
+      const { data: images, error: imagesError } = await (supabase as any)
         .from('images')
         .select('url')
         .eq('post_id', params.id)
@@ -115,7 +115,7 @@ export default function ContentEditPage() {
 
     setSaving(true)
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('blog_posts')
         .update({
           title,
@@ -127,14 +127,14 @@ export default function ContentEditPage() {
       // Update social posts
       if (Object.keys(socialPosts).length > 0) {
         // Delete existing social posts
-        await supabase
+        await (supabase as any)
           .from('social_posts')
           .delete()
           .eq('post_id', params.id)
 
         // Insert updated social posts
         for (const [platform, content] of Object.entries(socialPosts)) {
-          await supabase
+          await (supabase as any)
             .from('social_posts')
             .insert({
               post_id: params.id,
@@ -217,17 +217,17 @@ export default function ContentEditPage() {
             />
           </div>
 
-                 <div>
-                   <Label htmlFor="content" className="text-white">Content</Label>
-                   <Textarea
-                     id="content"
-                     value={content}
-                     onChange={(e) => setContent(e.target.value)}
-                     className="mt-2 bg-gray-800 border-gray-700 text-white min-h-[400px] whitespace-pre-wrap"
-                     placeholder="Write your post content here..."
-                     rows={20}
-                   />
-                 </div>
+          <div>
+            <Label htmlFor="content" className="text-white">Content</Label>
+            <Textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="mt-2 bg-gray-800 border-gray-700 text-white min-h-[400px] whitespace-pre-wrap"
+              placeholder="Write your post content here..."
+              rows={20}
+            />
+          </div>
 
           {/* Excerpt */}
           {excerpt && (
@@ -273,9 +273,9 @@ export default function ContentEditPage() {
               <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {postImages.map((imageUrl, index) => (
                   <div key={index} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
-                    <img 
-                      src={imageUrl} 
-                      alt={`Post image ${index + 1}`} 
+                    <img
+                      src={imageUrl}
+                      alt={`Post image ${index + 1}`}
                       className="max-w-full h-auto rounded-lg"
                     />
                   </div>
@@ -294,7 +294,7 @@ export default function ContentEditPage() {
             >
               {saving ? 'Saving...' : 'Save as Draft'}
             </Button>
-            
+
             <Button
               onClick={() => router.push(`/dashboard/content/package/${params.id}`)}
               variant="outline"
