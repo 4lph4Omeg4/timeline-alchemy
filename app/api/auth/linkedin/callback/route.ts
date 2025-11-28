@@ -5,19 +5,21 @@ import { LinkedInOAuth } from '@/lib/social-auth'
 export const dynamic = 'force-dynamic'
 
 // Server-side Supabase client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+// Server-side Supabase client creation moved inside handler
 
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
     const state = searchParams.get('state')
@@ -29,14 +31,14 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('LinkedIn OAuth error:', error)
       console.error('Full search params:', Object.fromEntries(searchParams.entries()))
-      
+
       // If it's an auth_required error, redirect to signin first
       if (error === 'auth_required') {
         return NextResponse.redirect(
           `${process.env.NEXT_PUBLIC_APP_URL}/auth/signin?redirectTo=${encodeURIComponent('/dashboard/socials')}`
         )
       }
-      
+
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=${encodeURIComponent(error)}`
       )
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
       LINKEDIN_CLIENT_SECRET: process.env.LINKEDIN_CLIENT_SECRET ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
     })
-    
+
     if (!process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
       console.error('Missing LinkedIn API credentials:', {
         NEXT_PUBLIC_LINKEDIN_CLIENT_ID: !!process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID,
@@ -73,9 +75,9 @@ export async function GET(request: NextRequest) {
       const stateData = JSON.parse(atob(state || ''))
       orgId = stateData.org_id
       userId = stateData.user_id
-      
+
       console.log('LinkedIn OAuth state decoded:', { orgId, userId })
-      
+
       if (!orgId || !userId) {
         console.error('Missing org_id or user_id in state:', { orgId, userId })
         return NextResponse.redirect(
@@ -160,7 +162,7 @@ export async function GET(request: NextRequest) {
     const accountId = `linkedin_${linkedinUserId}`
     const accountName = linkedinUsername
     const accountUsername = userData.preferred_username || userData.email || `User ${linkedinUserId}`
-    
+
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({

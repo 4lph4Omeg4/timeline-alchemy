@@ -133,7 +133,9 @@ export default function ContentEditPage() {
           .eq('post_id', params.id)
 
         // Insert updated social posts
-        for (const [platform, content] of Object.entries(socialPosts)) {
+        // Insert updated social posts
+        for (const platform of Object.keys(socialPosts)) {
+          const content = socialPosts[platform]
           await (supabase as any)
             .from('social_posts')
             .insert({
@@ -244,13 +246,13 @@ export default function ContentEditPage() {
             <div>
               <Label className="text-white">Social Media Posts</Label>
               <div className="mt-2 space-y-4">
-                {Object.entries(socialPosts).map(([platform, post]: [string, any]) => (
+                {Object.keys(socialPosts).map((platform: string) => (
                   <div key={platform} className="p-4 bg-gray-800 border border-gray-700 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-blue-400 font-semibold capitalize">{platform}</span>
                     </div>
                     <Textarea
-                      value={post}
+                      value={socialPosts[platform]}
                       onChange={(e: any) => {
                         setSocialPosts((prev: any) => ({
                           ...prev,

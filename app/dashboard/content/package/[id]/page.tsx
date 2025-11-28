@@ -193,8 +193,8 @@ export default function ContentPackagePage() {
       if (newImages.length > 0) {
         // Save to database
         const { data: { user } } = await supabase.auth.getUser()
-        const { data: orgMembers } = await supabase.from('org_members').select('org_id, role').eq('user_id', user!.id)
-        const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
+        const { data: orgMembers } = await (supabase as any).from('org_members').select('org_id, role').eq('user_id', user!.id)
+        const userOrgId = orgMembers?.find((member: any) => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
 
         const imagesToSave = newImages.map(img => ({
           org_id: userOrgId,
@@ -234,7 +234,7 @@ export default function ContentPackagePage() {
       const socialPosts = await generateSocialMediaPosts(post.title, cleanContent)
 
       // Update the database
-      await supabase
+      await (supabase as any)
         .from('blog_posts')
         .update({ social_posts: socialPosts })
         .eq('id', post.id)
@@ -317,7 +317,7 @@ export default function ContentPackagePage() {
         toast.success(`Successfully posted to ${platform}!`, { id: 'posting' })
 
         // Update post status to published
-        await supabase
+        await (supabase as any)
           .from('blog_posts')
           .update({
             state: 'published',
@@ -350,7 +350,7 @@ export default function ContentPackagePage() {
       }
 
       // Get user's organization
-      const { data: orgMembers } = await supabase
+      const { data: orgMembers } = await (supabase as any)
         .from('org_members')
         .select('org_id, role')
         .eq('user_id', user.id)
@@ -361,7 +361,7 @@ export default function ContentPackagePage() {
       }
 
       // Find the user's personal organization (owner role only)
-      let userOrgId = orgMembers.find(member => member.role === 'owner')?.org_id
+      let userOrgId = orgMembers.find((member: any) => member.role === 'owner')?.org_id
       if (!userOrgId) {
         toast.error('No personal organization found. Please create an organization first.')
         return
@@ -390,7 +390,7 @@ export default function ContentPackagePage() {
         }
 
         // Create a new blog post in Timeline-Alchemy's organization
-        const { data: newPost, error: blogError } = await supabase
+        const { data: newPost, error: blogError } = await (supabase as any)
           .from('blog_posts')
           .insert({
             org_id: userOrgId,
@@ -452,7 +452,7 @@ export default function ContentPackagePage() {
         }
 
         // Create a new blog post in Timeline-Alchemy's organization for individual platform
-        const { data: newPost, error: updateError } = await supabase
+        const { data: newPost, error: updateError } = await (supabase as any)
           .from('blog_posts')
           .insert({
             org_id: userOrgId,
@@ -487,7 +487,7 @@ export default function ContentPackagePage() {
         // Schedule the main blog post
         // Convert local datetime to UTC for database storage
         const scheduledDate = new Date(scheduleDateTime)
-        const { error: updateError } = await supabase
+        const { error: updateError } = await (supabase as any)
           .from('blog_posts')
           .update({
             state: 'scheduled',
@@ -548,7 +548,7 @@ export default function ContentPackagePage() {
       }
 
       // Get user's organization
-      const { data: orgMember, error: orgError } = await supabase
+      const { data: orgMember, error: orgError } = await (supabase as any)
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
@@ -563,7 +563,7 @@ export default function ContentPackagePage() {
       }
 
       // Fetch the post - allow access to user's org content OR admin packages from any org
-      const { data: postData, error: postError } = await supabase
+      const { data: postData, error: postError } = await (supabase as any)
         .from('blog_posts')
         .select('*')
         .eq('id', params.id)
@@ -583,7 +583,7 @@ export default function ContentPackagePage() {
       await fetchRatings(postData.id, user.id)
 
       // Try to fetch associated images - allow access to admin package images or user's org images
-      const { data: images } = await supabase
+      const { data: images } = await (supabase as any)
         .from('images')
         .select('*')
         .eq('post_id', params.id)
@@ -591,8 +591,8 @@ export default function ContentPackagePage() {
       console.log('📷 Fetched images for post:', params.id)
       console.log('📷 Total images found:', images?.length || 0)
       if (images && images.length > 0) {
-        console.log('📷 Active images:', images.filter(img => img.is_active).length)
-        console.log('📷 Image details:', images.map(img => ({ url: img.url?.substring(0, 50), is_active: img.is_active, style: img.style })))
+        console.log('📷 Active images:', images.filter((img: any) => img.is_active).length)
+        console.log('📷 Image details:', images.map((img: any) => ({ url: img.url?.substring(0, 50), is_active: img.is_active, style: img.style })))
       }
 
       // Use existing content directly - no generation, no processing
@@ -603,14 +603,14 @@ export default function ContentPackagePage() {
         .trim()
 
       // Load social posts from separate table
-      const { data: socialPostsData } = await supabase
+      const { data: socialPostsData } = await (supabase as any)
         .from('social_posts')
         .select('platform, content')
         .eq('post_id', postData.id)
 
       const socialPostsMap: Record<string, string> = {}
       if (socialPostsData) {
-        socialPostsData.forEach(post => {
+        socialPostsData.forEach((post: any) => {
           socialPostsMap[post.platform] = post.content
         })
       }
@@ -702,7 +702,7 @@ export default function ContentPackagePage() {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('blog_posts')
         .update({
           state: 'draft',
@@ -1069,8 +1069,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, facebook: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.facebook === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1146,8 +1146,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, instagram: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.instagram === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1223,8 +1223,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, twitter: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.twitter === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1300,8 +1300,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, linkedin: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.linkedin === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1377,8 +1377,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, discord: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.discord === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1454,8 +1454,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, reddit: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.reddit === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1522,8 +1522,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, telegram: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.telegram === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img

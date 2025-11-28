@@ -3,19 +3,21 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+// Server-side Supabase client creation moved inside handler
 
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     const { searchParams } = new URL(request.url)
     const orgId = searchParams.get('orgId')
     const currentUserId = searchParams.get('currentUserId')
@@ -43,10 +45,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user details for each member
-    const userIds = orgMembers?.map(member => member.user_id) || []
+    const userIds = orgMembers?.map((member: any) => member.user_id) || []
     console.log('Found org members:', orgMembers)
     console.log('User IDs to fetch:', userIds)
-    
+
     const users = []
 
     for (const userId of userIds) {

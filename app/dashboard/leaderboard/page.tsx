@@ -29,14 +29,14 @@ export default function LeaderboardPage() {
   const fetchTopPackages = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/auth/signin')
         return
       }
 
       // Get user's organization
-      const { data: orgMember, error: orgError } = await supabase
+      const { data: orgMember, error: orgError } = await (supabase as any)
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
@@ -51,7 +51,7 @@ export default function LeaderboardPage() {
       }
 
       // Build query based on timeframe
-      let query = supabase
+      let query = (supabase as any)
         .from('blog_posts')
         .select('*')
         .or(`org_id.eq.${orgMember.org_id},and(created_by_admin.eq.true)`)
@@ -64,13 +64,13 @@ export default function LeaderboardPage() {
       if (timeframe !== 'all') {
         const now = new Date()
         let startDate: Date
-        
+
         if (timeframe === 'week') {
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
         } else { // month
           startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
         }
-        
+
         query = query.gte('created_at', startDate.toISOString())
       }
 
@@ -81,7 +81,7 @@ export default function LeaderboardPage() {
         toast.error('Failed to load leaderboard')
       } else {
         // Add rank to packages
-        const rankedPackages = (data || []).map((package_, index) => ({
+        const rankedPackages = (data || []).map((package_: any, index: number) => ({
           ...package_,
           rank: index + 1
         }))
@@ -156,8 +156,8 @@ export default function LeaderboardPage() {
               size="sm"
               className="capitalize"
             >
-              {timeframeType === 'all' ? 'All Time' : 
-               timeframeType === 'week' ? 'This Week' : 'This Month'}
+              {timeframeType === 'all' ? 'All Time' :
+                timeframeType === 'week' ? 'This Week' : 'This Month'}
             </Button>
           ))}
         </div>
@@ -183,13 +183,12 @@ export default function LeaderboardPage() {
           {topPackages.slice(0, 3).length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {topPackages.slice(0, 3).map((package_, index) => (
-                <Card 
-                  key={package_.id} 
-                  className={`bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors ${
-                    index === 0 ? 'ring-2 ring-yellow-500' : 
-                    index === 1 ? 'ring-2 ring-gray-400' : 
-                    'ring-2 ring-orange-600'
-                  }`}
+                <Card
+                  key={package_.id}
+                  className={`bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors ${index === 0 ? 'ring-2 ring-yellow-500' :
+                      index === 1 ? 'ring-2 ring-gray-400' :
+                        'ring-2 ring-orange-600'
+                    }`}
                 >
                   <CardHeader className="text-center">
                     <div className="text-4xl mb-2">{getRankIcon(package_.rank)}</div>
@@ -197,15 +196,15 @@ export default function LeaderboardPage() {
                       {package_.title}
                     </CardTitle>
                     <Badge className={`${getRankBadgeColor(package_.rank)} mx-auto`}>
-                      {package_.rank === 1 ? 'Champion' : 
-                       package_.rank === 2 ? 'Runner-up' : 'Third Place'}
+                      {package_.rank === 1 ? 'Champion' :
+                        package_.rank === 2 ? 'Runner-up' : 'Third Place'}
                     </Badge>
                   </CardHeader>
                   <CardContent className="text-center space-y-3">
                     <div className="flex justify-center">
-                      <StarRating 
-                        rating={package_.average_rating || 0} 
-                        size="md" 
+                      <StarRating
+                        rating={package_.average_rating || 0}
+                        size="md"
                         showNumber={true}
                       />
                     </div>
@@ -244,9 +243,9 @@ export default function LeaderboardPage() {
                             {package_.title}
                           </h3>
                           <div className="flex items-center space-x-2 mt-1">
-                            <StarRating 
-                              rating={package_.average_rating || 0} 
-                              size="sm" 
+                            <StarRating
+                              rating={package_.average_rating || 0}
+                              size="sm"
                               showNumber={true}
                             />
                             <span className="text-gray-400 text-sm">

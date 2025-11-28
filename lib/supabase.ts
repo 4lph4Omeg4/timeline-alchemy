@@ -466,6 +466,32 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+      },
+      telegram_channels: {
+        Row: {
+          id: string
+          org_id: string
+          channel_id: string
+          channel_name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          channel_id: string
+          channel_name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          channel_id?: string
+          channel_name?: string
+          created_at?: string
+          updated_at?: string
+        }
       }
     }
   }

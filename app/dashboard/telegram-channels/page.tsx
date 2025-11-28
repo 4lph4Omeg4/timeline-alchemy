@@ -31,7 +31,7 @@ export default function TelegramChannelsPage() {
 
   // Helper function to get user's organization ID (owner role only)
   const getUserOrgId = async (userId: string) => {
-    const { data: orgMembers } = await supabase
+    const { data: orgMembers } = await (supabase as any)
       .from('org_members')
       .select('org_id, role')
       .eq('user_id', userId)
@@ -46,7 +46,7 @@ export default function TelegramChannelsPage() {
       try {
         // Get the current user
         const { data: { user }, error: userError } = await supabase.auth.getUser()
-        
+
         if (userError || !user) {
           toast.error('Please sign in to view Telegram channels')
           router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/telegram-channels'))
@@ -63,7 +63,7 @@ export default function TelegramChannelsPage() {
         }
 
         // Fetch Telegram channels for the user's organization
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('telegram_channels')
           .select('*')
           .eq('org_id', userOrgId)
@@ -89,7 +89,7 @@ export default function TelegramChannelsPage() {
     try {
       // Get the current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError || !user) {
         toast.error('Please sign in to add Telegram channels')
         return
@@ -110,7 +110,7 @@ export default function TelegramChannelsPage() {
       }
 
       // Add the Telegram channel
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('telegram_channels')
         .insert({
           id: crypto.randomUUID(), // Generate UUID explicitly
@@ -129,7 +129,7 @@ export default function TelegramChannelsPage() {
 
       // Add to local state
       setChannels(prev => [...prev, ...data])
-      
+
       // Reset form
       setNewChannel({
         channel_id: '',
@@ -146,7 +146,7 @@ export default function TelegramChannelsPage() {
 
   const handleDeleteChannel = async (channelId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('telegram_channels')
         .delete()
         .eq('id', channelId)
@@ -158,8 +158,8 @@ export default function TelegramChannelsPage() {
       }
 
       // Remove from local state
-      setChannels(prev => prev.filter(channel => channel.id !== channelId))
-      
+      setChannels(prev => prev.filter((channel: any) => channel.id !== channelId))
+
       toast.success('Telegram channel deleted successfully!')
     } catch (error) {
       console.error('Unexpected error:', error)

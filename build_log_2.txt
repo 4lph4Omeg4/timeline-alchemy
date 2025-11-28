@@ -1,0 +1,29 @@
+
+> timeline-alchemy@0.1.0 build
+> next build
+
+   Ôû▓ Next.js 14.0.4
+
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+Error: supabaseUrl is required.
+    at C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\chunks\2964.js:34:36204
+    at new aU (C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\chunks\2964.js:34:36455)
+    at aL (C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\chunks\2964.js:34:40742)
+    at 44983 (C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\app\api\auth\reddit\callback\route.js:1:860)
+    at t (C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\webpack-runtime.js:1:128)
+    at t (C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\app\api\auth\reddit\callback\route.js:1:3793)
+    at C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\app\api\auth\reddit\callback\route.js:1:3841
+    at t.X (C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\webpack-runtime.js:1:1196)
+    at C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\app\api\auth\reddit\callback\route.js:1:3806
+    at Object.<anonymous> (C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\app\api\auth\reddit\callback\route.js:1:3869)
+
+> Build error occurred
+Error: Failed to collect page data for /api/auth/reddit/callback
+    at C:\Users\denni\OneDrive\Github\timeline-alchemy\node_modules\next\dist\build\utils.js:1220:15
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  type: 'Error'
+}

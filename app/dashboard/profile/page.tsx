@@ -31,7 +31,7 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      
+
       // Get current user
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) {
@@ -45,7 +45,7 @@ export default function ProfilePage() {
       setAvatarPreview(authUser.user_metadata?.avatar_url || '')
 
       // Get user's organizations
-      const { data: orgMembers } = await supabase
+      const { data: orgMembers } = await (supabase as any)
         .from('org_members')
         .select('org_id, role, organizations(*)')
         .eq('user_id', authUser.id)
@@ -58,12 +58,12 @@ export default function ProfilePage() {
         setOrganizations(orgs)
 
         // Find personal organization (not Admin Organization and where user is owner/admin)
-        const personal = orgs.find((org: any) => 
-          org.name !== 'Admin Organization' && 
-          (orgMembers.find((m: any) => m.org_id === org.id)?.role === 'owner' || 
-           orgMembers.find((m: any) => m.org_id === org.id)?.role === 'admin')
+        const personal = orgs.find((org: any) =>
+          org.name !== 'Admin Organization' &&
+          (orgMembers.find((m: any) => m.org_id === org.id)?.role === 'owner' ||
+            orgMembers.find((m: any) => m.org_id === org.id)?.role === 'admin')
         )
-        
+
         if (personal) {
           setPersonalOrg(personal)
           setOrganizationName(personal.name)
@@ -91,7 +91,7 @@ export default function ProfilePage() {
       }
 
       setAvatarFile(file)
-      
+
       // Create preview
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
     try {
       setUploadingAvatar(true)
-      
+
       // Generate unique filename
       // Path structure: {user_id}/avatar-{timestamp}.{ext}
       const fileExt = avatarFile.name.split('.').pop()
@@ -168,9 +168,9 @@ export default function ProfilePage() {
 
       // Update organization name if personal org exists and name changed
       if (personalOrg && organizationName !== personalOrg.name) {
-        const { error: orgError } = await supabase
+        const { error: orgError } = await (supabase as any)
           .from('organizations')
-          .update({ 
+          .update({
             name: organizationName,
             updated_at: new Date().toISOString()
           })
@@ -183,10 +183,10 @@ export default function ProfilePage() {
       }
 
       toast.success('Profile updated successfully!')
-      
+
       // Refresh profile data
       await fetchProfile()
-      
+
       // Clear avatar file after successful save
       setAvatarFile(null)
     } catch (error: any) {
@@ -233,9 +233,9 @@ export default function ProfilePage() {
             <div className="relative">
               {avatarPreview ? (
                 <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-purple-500/50">
-                  <Image 
-                    src={avatarPreview} 
-                    alt="Avatar" 
+                  <Image
+                    src={avatarPreview}
+                    alt="Avatar"
                     fill
                     className="object-cover"
                   />

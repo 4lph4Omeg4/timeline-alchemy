@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+// Environment variables accessed inside handler
 
 export async function POST(request: NextRequest) {
   try {
     const { imageUrl, postId, orgId } = await request.json()
-    
+
     console.log('Save image request:', { imageUrl, postId, orgId })
-    
+
     if (!imageUrl || !postId || !orgId) {
       console.error('Missing required fields:', { imageUrl, postId, orgId })
       return NextResponse.json(
@@ -19,6 +18,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create server-side Supabase client with service role key
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Download the image from DALL-E URL
@@ -76,14 +77,14 @@ export async function POST(request: NextRequest) {
 
     console.log('Image saved successfully')
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       permanentUrl: publicUrl,
-      success: true 
+      success: true
     })
   } catch (error: any) {
     console.error('Error saving image:', error)
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to save image permanently',
         details: error.message || String(error)
       },

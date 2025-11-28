@@ -55,7 +55,7 @@ export default function PostingStatusDashboard() {
       }
 
       // Get user's organization (owner role only)
-      const { data: userOrg } = await supabaseClient
+      const { data: userOrg } = await (supabaseClient as any)
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
@@ -89,7 +89,7 @@ export default function PostingStatusDashboard() {
   const handleManualPost = async (postId: string) => {
     try {
       setPosting(postId)
-      
+
       const response = await fetch('/api/manual-post', {
         method: 'POST',
         headers: {
@@ -120,7 +120,7 @@ export default function PostingStatusDashboard() {
   const handleTriggerCron = async () => {
     try {
       setLoading(true)
-      
+
       const response = await fetch('/api/cron/scheduled-posts')
       const result = await response.json()
 

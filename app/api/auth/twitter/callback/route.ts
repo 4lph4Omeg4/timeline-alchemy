@@ -4,19 +4,21 @@ import { createClient } from '@supabase/supabase-js'
 export const dynamic = 'force-dynamic'
 
 // Server-side Supabase client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+// Server-side Supabase client creation moved inside handler
 
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
     const state = searchParams.get('state')
@@ -30,19 +32,19 @@ export async function GET(request: NextRequest) {
       console.error('Twitter OAuth error:', error)
       console.error('Error description:', errorDescription)
       console.error('Full search params:', Object.fromEntries(searchParams.entries()))
-      
+
       // If it's an auth_required error, redirect to signin first
       if (error === 'auth_required') {
         return NextResponse.redirect(
           `${process.env.NEXT_PUBLIC_APP_URL}/auth/signin?redirectTo=${encodeURIComponent('/dashboard/socials')}`
         )
       }
-      
+
       // Provide detailed error message
-      const errorMessage = errorDescription 
-        ? `${error}: ${errorDescription}` 
+      const errorMessage = errorDescription
+        ? `${error}: ${errorDescription}`
         : error
-      
+
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=${encodeURIComponent(errorMessage)}`
       )
@@ -61,7 +63,7 @@ export async function GET(request: NextRequest) {
       TWITTER_CLIENT_SECRET: process.env.TWITTER_CLIENT_SECRET ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
     })
-    
+
     if (!process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
       console.error('Missing Twitter API credentials:', {
         NEXT_PUBLIC_TWITTER_CLIENT_ID: !!process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID,
@@ -81,9 +83,9 @@ export async function GET(request: NextRequest) {
       codeVerifier = stateData.codeVerifier
       orgId = stateData.org_id
       userId = stateData.user_id
-      
+
       console.log('Twitter OAuth state decoded:', { orgId, userId, hasCodeVerifier: !!codeVerifier })
-      
+
       if (!orgId || !userId) {
         console.error('Missing org_id or user_id in state:', { orgId, userId })
         return NextResponse.redirect(
@@ -96,7 +98,7 @@ export async function GET(request: NextRequest) {
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=invalid_state`
       )
     }
-    
+
     // Exchange code for access token
     const tokenRequestBody = new URLSearchParams({
       code,
@@ -111,9 +113,9 @@ export async function GET(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${Buffer.from(
-              `${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`
-            ).toString('base64')}`,
+        'Authorization': `Basic ${Buffer.from(
+          `${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`
+        ).toString('base64')}`,
       },
       body: tokenRequestBody,
     })
@@ -176,7 +178,7 @@ export async function GET(request: NextRequest) {
     const accountId = `twitter_${twitterUserId}`
     const accountName = userData.data.name || `@${twitterUsername}`
     const accountUsername = `@${twitterUsername}`
-    
+
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({

@@ -4,19 +4,21 @@ import { createClient } from '@supabase/supabase-js'
 export const dynamic = 'force-dynamic'
 
 // Server-side Supabase client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+// Server-side Supabase client creation moved inside handler
 
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
     const state = searchParams.get('state')
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Facebook OAuth error:', error)
       console.error('Full search params:', Object.fromEntries(searchParams.entries()))
-      
+
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=${encodeURIComponent(error)}`
       )
@@ -47,7 +49,7 @@ export async function GET(request: NextRequest) {
       INSTAGRAM_CLIENT_SECRET: process.env.INSTAGRAM_CLIENT_SECRET ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
     })
-    
+
     if (!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || !process.env.INSTAGRAM_CLIENT_SECRET) {
       console.error('Missing Facebook API credentials:', {
         NEXT_PUBLIC_INSTAGRAM_CLIENT_ID: !!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
@@ -65,9 +67,9 @@ export async function GET(request: NextRequest) {
       const stateData = JSON.parse(atob(state || ''))
       orgId = stateData.org_id
       userId = stateData.user_id
-      
+
       console.log('Facebook OAuth state decoded:', { orgId, userId })
-      
+
       if (!orgId || !userId) {
         console.error('Missing org_id or user_id in state:', { orgId, userId })
         return NextResponse.redirect(
@@ -149,7 +151,7 @@ export async function GET(request: NextRequest) {
     const accountId = `facebook_${facebookUserId}`
     const accountName = facebookUsername
     const accountUsername = facebookUsername
-    
+
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({
@@ -177,60 +179,60 @@ export async function GET(request: NextRequest) {
     try {
       console.log('🔍 Attempting to fetch Facebook Pages...')
       console.log('🔑 Access token (first 30 chars):', access_token.substring(0, 30) + '...')
-      
+
       // First, check permissions
       const permissionsResponse = await fetch(
         `https://graph.facebook.com/v18.0/me/permissions?access_token=${access_token}`
       )
-      
+
       if (permissionsResponse.ok) {
         const permissionsData = await permissionsResponse.json()
         console.log('🔐 Granted permissions:', permissionsData.data?.map((p: any) => `${p.permission}:${p.status}`).join(', '))
       }
-      
+
       const pagesResponse = await fetch(
         `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,category,instagram_business_account{id,username}&access_token=${access_token}`
       )
-      
+
       console.log('📘 Pages API response status:', pagesResponse.status)
-      
+
       if (!pagesResponse.ok) {
         const errorData = await pagesResponse.json()
         console.error('❌ Pages API error:', errorData)
         throw new Error(`Facebook API error: ${JSON.stringify(errorData)}`)
       }
-      
+
       const pagesData = await pagesResponse.json()
-      
+
       console.log('📘 Raw pages response:', JSON.stringify(pagesData, null, 2))
       console.log('📘 Found', pagesData.data?.length || 0, 'pages')
-      
+
       if (pagesData.data && pagesData.data.length > 0) {
-          // Use first page as default
-          const firstPage = pagesData.data[0]
-          console.log('✅ Auto-selecting first page:', firstPage.name)
-          
-          // Update connection with page token and info
-          await supabaseAdmin
-            .from('social_connections')
-            .upsert({
-              org_id: orgId,
-              platform: 'facebook',
-              account_id: `facebook_page_${firstPage.id}`,
-              account_name: firstPage.name,
-              account_username: firstPage.name,
-              access_token: firstPage.access_token, // Use page token instead of user token
-              refresh_token: null,
-              expires_at: null, // Page tokens don't expire
-              updated_at: new Date().toISOString(),
-            }, {
-              onConflict: 'org_id,platform,account_id'
-            })
-          
-          return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=facebook_connected&page=${encodeURIComponent(firstPage.name)}`
-          )
-        }
+        // Use first page as default
+        const firstPage = pagesData.data[0]
+        console.log('✅ Auto-selecting first page:', firstPage.name)
+
+        // Update connection with page token and info
+        await supabaseAdmin
+          .from('social_connections')
+          .upsert({
+            org_id: orgId,
+            platform: 'facebook',
+            account_id: `facebook_page_${firstPage.id}`,
+            account_name: firstPage.name,
+            account_username: firstPage.name,
+            access_token: firstPage.access_token, // Use page token instead of user token
+            refresh_token: null,
+            expires_at: null, // Page tokens don't expire
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'org_id,platform,account_id'
+          })
+
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=facebook_connected&page=${encodeURIComponent(firstPage.name)}`
+        )
+      }
     } catch (error) {
       console.error('❌ Failed to auto-fetch pages:', error)
       // Redirect to socials with error
@@ -238,7 +240,7 @@ export async function GET(request: NextRequest) {
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=failed_to_fetch_pages&details=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
       )
     }
-    
+
     // Fallback: No pages found
     console.warn('⚠️ No Facebook pages found for user')
     console.warn('💡 This usually means:')

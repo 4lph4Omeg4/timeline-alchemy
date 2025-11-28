@@ -1,0 +1,144 @@
+
+> timeline-alchemy@0.1.0 build
+> next build
+
+   Ôû▓ Next.js 14.0.4
+
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/59) ...
+
+   Generating static pages (14/59) 
+­ƒöì Vercel AI Gateway Test - Starting...
+­ƒöì Vercel Environment Check: {
+  isVercelEnvironment: false,
+  projectId: 'Not set',
+  vercelToken: 'Not set',
+  openaiKey: 'Not set',
+  environment: 'Not set'
+}
+
+   Generating static pages (29/59) 
+ ÔÜá Entire page /oauth/consent deopted into client-side rendering. https://nextjs.org/docs/messages/deopted-into-client-rendering /oauth/consent
+
+   Generating static pages (44/59) 
+
+ Ô£ô Generating static pages (59/59) 
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Ôöî Ôùï /                                    11.1 kB         141 kB
+Ôö£ Ôùï /_not-found                          872 B          82.9 kB
+Ôö£ ╬╗ /api/admin/users                     0 B                0 B
+Ôö£ ╬╗ /api/admin/users-simple              0 B                0 B
+Ôö£ Ôùï /api/ai-gateway/setup                0 B                0 B
+Ôö£ ╬╗ /api/apply-watermark-to-existing     0 B                0 B
+Ôö£ ╬╗ /api/auth/discord                    0 B                0 B
+Ôö£ ╬╗ /api/auth/discord/callback           0 B                0 B
+Ôö£ ╬╗ /api/auth/facebook                   0 B                0 B
+Ôö£ ╬╗ /api/auth/facebook/callback          0 B                0 B
+Ôö£ ╬╗ /api/auth/instagram                  0 B                0 B
+Ôö£ ╬╗ /api/auth/instagram/callback         0 B                0 B
+Ôö£ ╬╗ /api/auth/linkedin                   0 B                0 B
+Ôö£ ╬╗ /api/auth/linkedin/callback          0 B                0 B
+Ôö£ ╬╗ /api/auth/reddit                     0 B                0 B
+Ôö£ ╬╗ /api/auth/reddit/callback            0 B                0 B
+Ôö£ ╬╗ /api/auth/twitter                    0 B                0 B
+Ôö£ ╬╗ /api/auth/twitter/callback           0 B                0 B
+Ôö£ ╬╗ /api/auth/youtube                    0 B                0 B
+Ôö£ ╬╗ /api/auth/youtube/callback           0 B                0 B
+Ôö£ ╬╗ /api/branding                        0 B                0 B
+Ôö£ ╬╗ /api/branding/upload-logo            0 B                0 B
+Ôö£ ╬╗ /api/categorize-existing-posts       0 B                0 B
+Ôö£ ╬╗ /api/check-subscription-limits       0 B                0 B
+Ôö£ ╬╗ /api/create-admin-package            0 B                0 B
+Ôö£ ╬╗ /api/create-organization             0 B                0 B
+Ôö£ ╬╗ /api/cron/scheduled-posts            0 B                0 B
+Ôö£ ╬╗ /api/debug-social-connections        0 B                0 B
+Ôö£ ╬╗ /api/debug-wordpress                 0 B                0 B
+Ôö£ ╬╗ /api/facebook/test-token             0 B                0 B
+Ôö£ ╬╗ /api/fix-client-access               0 B                0 B
+Ôö£ ╬╗ /api/fix-image-urls                  0 B                0 B
+Ôö£ ╬╗ /api/generate-bulk-content           0 B                0 B
+Ôö£ ╬╗ /api/generate-content                0 B                0 B
+Ôö£ ╬╗ /api/generate-image                  0 B                0 B
+Ôö£ ╬╗ /api/generate-image-google           0 B                0 B
+Ôö£ ╬╗ /api/generate-multi-images           0 B                0 B
+Ôö£ ╬╗ /api/generate-social-posts           0 B                0 B
+Ôö£ ╬╗ /api/generate-streaming              0 B                0 B
+Ôö£ ╬╗ /api/generate-vercel-content         0 B                0 B
+Ôö£ ╬╗ /api/generate-vercel-image           0 B                0 B
+Ôö£ ╬╗ /api/manual-post                     0 B                0 B
+Ôö£ ╬╗ /api/messages/[conversationId]       0 B                0 B
+Ôö£ ╬╗ /api/messages/conversations          0 B                0 B
+Ôö£ ╬╗ /api/messages/send                   0 B                0 B
+Ôö£ ╬╗ /api/portfolio/posts                 0 B                0 B
+Ôö£ ╬╗ /api/post-status                     0 B                0 B
+Ôö£ ╬╗ /api/post-to-platforms               0 B                0 B
+Ôö£ ╬╗ /api/ratings                         0 B                0 B
+Ôö£ ╬╗ /api/refresh-token                   0 B                0 B
+Ôö£ ╬╗ /api/regenerate-images-style         0 B                0 B
+Ôö£ ╬╗ /api/repair-expired-images           0 B                0 B
+Ôö£ ╬╗ /api/save-image                      0 B                0 B
+Ôö£ ╬╗ /api/signup                          0 B                0 B
+Ôö£ ╬╗ /api/stripe/cancel-subscription      0 B                0 B
+Ôö£ ╬╗ /api/stripe/change-plan              0 B                0 B
+Ôö£ ╬╗ /api/stripe/create-checkout-session  0 B                0 B
+Ôö£ ╬╗ /api/stripe/customer-portal          0 B                0 B
+Ôö£ ╬╗ /api/stripe/webhook                  0 B                0 B
+Ôö£ Ôùï /api/test/ai-gateway                 0 B                0 B
+Ôö£ ╬╗ /api/trial/start                     0 B                0 B
+Ôö£ ╬╗ /api/trial/status                    0 B                0 B
+Ôö£ ╬╗ /api/update-admin-branding           0 B                0 B
+Ôö£ ╬╗ /api/vercel-credits                  0 B                0 B
+Ôö£ ╬╗ /api/watermark-simple                0 B                0 B
+Ôö£ ╬╗ /auth/callback                       0 B                0 B
+Ôö£ Ôùï /auth/signin                         10.1 kB         140 kB
+Ôö£ Ôùï /auth/signup                         10.4 kB         141 kB
+Ôö£ Ôùï /cookie-policy                       186 B            89 kB
+Ôö£ Ôùï /create-organization                 4.96 kB         159 kB
+Ôö£ Ôùï /dashboard                           4.68 kB         142 kB
+Ôö£ Ôùï /dashboard/admin/branding            6.02 kB         143 kB
+Ôö£ Ôùï /dashboard/admin/clients             9.63 kB         140 kB
+Ôö£ Ôùï /dashboard/admin/create-package      4.49 kB         166 kB
+Ôö£ Ôùï /dashboard/admin/fix-client-access   7.54 kB        96.7 kB
+Ôö£ Ôùï /dashboard/admin/packages            3.96 kB         147 kB
+Ôö£ Ôùï /dashboard/admin/watermark           8.58 kB        97.7 kB
+Ôö£ Ôùï /dashboard/ai-gateway                12.2 kB         101 kB
+Ôö£ Ôùï /dashboard/analytics                 2.3 kB          133 kB
+Ôö£ Ôùï /dashboard/billing                   40.6 kB         171 kB
+Ôö£ Ôùï /dashboard/bulk-content              13.7 kB         174 kB
+Ôö£ Ôùï /dashboard/clients                   2.79 kB         133 kB
+Ôö£ Ôùï /dashboard/content                   6.88 kB         143 kB
+Ôö£ ╬╗ /dashboard/content/edit/[id]         9.6 kB          147 kB
+Ôö£ Ôùï /dashboard/content/list              12.1 kB         149 kB
+Ôö£ ╬╗ /dashboard/content/package/[id]      11.1 kB         154 kB
+Ôö£ Ôùï /dashboard/debug-db                  3.33 kB        92.5 kB
+Ôö£ Ôùï /dashboard/leaderboard               10.5 kB         148 kB
+Ôö£ Ôùï /dashboard/messages                  7.84 kB         144 kB
+Ôö£ Ôùï /dashboard/organizations             9.58 kB         140 kB
+Ôö£ Ôùï /dashboard/posting-status            4.68 kB         135 kB
+Ôö£ Ôùï /dashboard/profile                   14.9 kB         145 kB
+Ôö£ Ôùï /dashboard/schedule                  8.21 kB         151 kB
+Ôö£ Ôùï /dashboard/socials                   9.93 kB         146 kB
+Ôö£ Ôùï /dashboard/subscriptions             3.57 kB         134 kB
+Ôö£ Ôùï /dashboard/telegram-channels         6.74 kB         143 kB
+Ôö£ Ôùï /dashboard/token-status              5.67 kB         136 kB
+Ôö£ Ôùï /oauth/consent                       8.91 kB          98 kB
+Ôö£ Ôùï /portfolio                           9.55 kB         111 kB
+Ôö£ Ôùï /privacy-policy                      186 B            89 kB
+Ôöö Ôùï /terms-of-service                    186 B            89 kB
++ First Load JS shared by all            82 kB
+  Ôö£ chunks/4938-72a0d248ad877fd0.js      26.7 kB
+  Ôö£ chunks/fd9d1056-ebce643dd1fbb311.js  53.3 kB
+  Ôö£ chunks/main-app-3f028a7d44e67813.js  223 B
+  Ôöö chunks/webpack-26f134d946b38e11.js   1.84 kB
+
+
+Ôùï  (Static)   prerendered as static content
+╬╗  (Dynamic)  server-rendered on demand using Node.js
+

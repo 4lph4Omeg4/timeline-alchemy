@@ -4,19 +4,21 @@ import { createClient } from '@supabase/supabase-js'
 export const dynamic = 'force-dynamic'
 
 // Server-side Supabase client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+// Server-side Supabase client creation moved inside handler
 
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
     const state = searchParams.get('state')
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Instagram OAuth error:', error)
       console.error('Full search params:', Object.fromEntries(searchParams.entries()))
-      
+
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=${encodeURIComponent(error)}`
       )
@@ -47,7 +49,7 @@ export async function GET(request: NextRequest) {
       INSTAGRAM_CLIENT_SECRET: process.env.INSTAGRAM_CLIENT_SECRET ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
     })
-    
+
     if (!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || !process.env.INSTAGRAM_CLIENT_SECRET) {
       console.error('Missing Instagram API credentials:', {
         NEXT_PUBLIC_INSTAGRAM_CLIENT_ID: !!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
@@ -65,9 +67,9 @@ export async function GET(request: NextRequest) {
       const stateData = JSON.parse(atob(state || ''))
       orgId = stateData.org_id
       userId = stateData.user_id
-      
+
       console.log('Instagram OAuth state decoded:', { orgId, userId })
-      
+
       if (!orgId || !userId) {
         console.error('Missing org_id or user_id in state:', { orgId, userId })
         return NextResponse.redirect(
@@ -148,7 +150,7 @@ export async function GET(request: NextRequest) {
     // This will be replaced by the Instagram Business Account connection after user selects
     const accountId = `facebook_${instagramUserId}` // Facebook user ID for fetching pages
     const accountName = instagramUsername
-    
+
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')
       .upsert({
@@ -177,24 +179,24 @@ export async function GET(request: NextRequest) {
       const pagesResponse = await fetch(
         `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,category,instagram_business_account{id,username}&access_token=${access_token}`
       )
-      
+
       if (pagesResponse.ok) {
         const pagesData = await pagesResponse.json()
-        
+
         console.log('📷 Found', pagesData.data?.length || 0, 'pages')
-        
+
         // Filter for pages with Instagram Business Account
         const instagramPages = pagesData.data?.filter((page: any) => page.instagram_business_account) || []
-        
+
         console.log('📷 Found', instagramPages.length, 'pages with Instagram')
-        
+
         if (instagramPages.length > 0) {
           // Use first Instagram-connected page
           const firstPage = instagramPages[0]
           const igAccount = firstPage.instagram_business_account
-          
+
           console.log('✅ Auto-selecting Instagram:', igAccount.username)
-          
+
           // Store Instagram Business Account connection
           await supabaseAdmin
             .from('social_connections')
@@ -211,7 +213,7 @@ export async function GET(request: NextRequest) {
             }, {
               onConflict: 'org_id,platform,account_id'
             })
-          
+
           return NextResponse.redirect(
             `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?success=instagram_connected&username=${encodeURIComponent(igAccount.username)}`
           )
@@ -229,7 +231,7 @@ export async function GET(request: NextRequest) {
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=failed_to_fetch_instagram&details=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
       )
     }
-    
+
     // Fallback: No Instagram pages found
     console.warn('⚠️ No Instagram Business Accounts found for user')
     return NextResponse.redirect(

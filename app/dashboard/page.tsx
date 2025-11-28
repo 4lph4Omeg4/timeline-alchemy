@@ -30,7 +30,7 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        
+
         if (!user) return
 
         // Check if user is admin
@@ -110,7 +110,7 @@ export default function DashboardPage() {
           })
         } else {
           // Regular user dashboard data - get user's organization first
-          const { data: orgMember, error: orgError } = await supabase
+          const { data: orgMember, error: orgError } = await (supabase as any)
             .from('org_members')
             .select('org_id')
             .eq('user_id', user.id)
@@ -118,7 +118,7 @@ export default function DashboardPage() {
             .single()
 
           if (orgMember && !orgError) {
-            const { data: postsData, error: postsError } = await supabase
+            const { data: postsData, error: postsError } = await (supabase as any)
               .from('blog_posts')
               .select('*')
               .eq('org_id', orgMember.org_id)
@@ -132,24 +132,24 @@ export default function DashboardPage() {
 
           // Fetch usage stats
           const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM format
-          
-          const { data: postsThisMonth } = await supabase
+
+          const { data: postsThisMonth } = await (supabase as any)
             .from('blog_posts')
             .select('id')
             .eq('org_id', orgMember?.org_id)
             .gte('created_at', `${currentMonth}-01`)
 
-          const { data: organizations } = await supabase
+          const { data: organizations } = await (supabase as any)
             .from('org_members')
             .select('org_id')
             .eq('user_id', user.id)
 
-          const { data: socialConnections } = await supabase
+          const { data: socialConnections } = await (supabase as any)
             .from('social_connections')
             .select('id')
             .eq('org_id', orgMember?.org_id)
 
-          const { data: telegramChannels } = await supabase
+          const { data: telegramChannels } = await (supabase as any)
             .from('telegram_channels')
             .select('id')
             .eq('org_id', orgMember?.org_id)
@@ -186,7 +186,7 @@ export default function DashboardPage() {
           {isAdmin ? 'Admin Dashboard' : 'Dashboard'}
         </h1>
         <p className="text-gray-300 mt-2">
-          {isAdmin 
+          {isAdmin
             ? 'System overview and management tools for Timeline Alchemy.'
             : 'Welcome back! Here\'s what\'s happening with your content.'
           }
@@ -197,44 +197,44 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {isAdmin ? (
           <>
-                <Card className="bg-gray-900 border-gray-800">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Total Organizations</CardTitle>
-                    <span className="text-2xl">🏢</span>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-yellow-400">{adminStats.totalOrganizations}</div>
-                    <p className="text-xs text-gray-300">
-                      All registered organizations
-                    </p>
-                  </CardContent>
-                </Card>
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-white">Total Organizations</CardTitle>
+                <span className="text-2xl">🏢</span>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-400">{adminStats.totalOrganizations}</div>
+                <p className="text-xs text-gray-300">
+                  All registered organizations
+                </p>
+              </CardContent>
+            </Card>
 
-                <Card className="bg-gray-900 border-gray-800">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Active Subscriptions</CardTitle>
-                    <span className="text-2xl">💳</span>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-yellow-400">{adminStats.activeSubscriptions}</div>
-                    <p className="text-xs text-gray-300">
-                      Paying customers
-                    </p>
-                  </CardContent>
-                </Card>
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-white">Active Subscriptions</CardTitle>
+                <span className="text-2xl">💳</span>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-400">{adminStats.activeSubscriptions}</div>
+                <p className="text-xs text-gray-300">
+                  Paying customers
+                </p>
+              </CardContent>
+            </Card>
 
-                <Card className="bg-gray-900 border-gray-800">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-white">Total Clients</CardTitle>
-                    <span className="text-2xl">👥</span>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-yellow-400">{adminStats.totalClients}</div>
-                    <p className="text-xs text-gray-300">
-                      Client accounts
-                    </p>
-                  </CardContent>
-                </Card>
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-white">Total Clients</CardTitle>
+                <span className="text-2xl">👥</span>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-400">{adminStats.totalClients}</div>
+                <p className="text-xs text-gray-300">
+                  Client accounts
+                </p>
+              </CardContent>
+            </Card>
           </>
         ) : (
           <>
@@ -287,7 +287,7 @@ export default function DashboardPage() {
             {isAdmin ? 'Admin Actions' : 'Quick Actions'}
           </CardTitle>
           <CardDescription className="text-gray-200">
-            {isAdmin 
+            {isAdmin
               ? 'System management and monitoring tools'
               : 'Get started with creating new content'
             }
@@ -331,19 +331,19 @@ export default function DashboardPage() {
       </Card>
 
 
-          {/* Recent Posts */}
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white">
-                {isAdmin ? 'All Recent Posts' : 'Recent Posts'}
-              </CardTitle>
-              <CardDescription className="text-gray-200">
-                {isAdmin 
-                  ? 'Latest content from all organizations'
-                  : 'Your latest content creations'
-                }
-              </CardDescription>
-            </CardHeader>
+      {/* Recent Posts */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">
+            {isAdmin ? 'All Recent Posts' : 'Recent Posts'}
+          </CardTitle>
+          <CardDescription className="text-gray-200">
+            {isAdmin
+              ? 'Latest content from all organizations'
+              : 'Your latest content creations'
+            }
+          </CardDescription>
+        </CardHeader>
         <CardContent>
           {posts.length === 0 ? (
             <div className="text-center py-8">
@@ -353,37 +353,36 @@ export default function DashboardPage() {
               </Link>
             </div>
           ) : (
-                <div className="space-y-4">
-                  {posts.map((post) => (
-                    <div key={post.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-white">{post.title}</h3>
-                          <p className="text-sm text-gray-200 mt-1 line-clamp-2">
-                            {post.content}
-                          </p>
-                          <div className="flex items-center space-x-4 mt-2 text-xs text-gray-300">
-                            <span className={`px-2 py-1 rounded-full ${
-                              post.state === 'published' ? 'bg-green-900 text-green-300' :
-                              post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <div key={post.id} className="border border-gray-700 rounded-lg p-4 bg-gray-800">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-white">{post.title}</h3>
+                      <p className="text-sm text-gray-200 mt-1 line-clamp-2">
+                        {post.content}
+                      </p>
+                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-300">
+                        <span className={`px-2 py-1 rounded-full ${post.state === 'published' ? 'bg-green-900 text-green-300' :
+                            post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
                               'bg-gray-700 text-gray-200'
-                            }`}>
-                              {post.state}
-                            </span>
-                            <span>{formatDate(post.created_at)}</span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <Link href={`/dashboard/content/package/${post.id}`}>
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
-                          </Link>
-                        </div>
+                          }`}>
+                          {post.state}
+                        </span>
+                        <span>{formatDate(post.created_at)}</span>
                       </div>
                     </div>
-                  ))}
+                    <div className="ml-4">
+                      <Link href={`/dashboard/content/package/${post.id}`}>
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
