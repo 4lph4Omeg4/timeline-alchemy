@@ -153,7 +153,7 @@ export default function AdminPackagesPage() {
 
       if (result.success && result.imageUrl) {
         // Save the image to the package
-        const { error: imageError } = await supabase
+        const { error: imageError } = await (supabase as any)
           .from('images')
           .insert({
             post_id: pkg.id,

@@ -33,7 +33,7 @@ export default function AdminClientsPage() {
       }
 
       // Fetch all clients from admin organization (global clients)
-      const { data: clientsData, error: clientsError } = await supabase
+      const { data: clientsData, error: clientsError } = await (supabase as any)
         .from('clients')
         .select(`
           *,
@@ -101,7 +101,7 @@ export default function AdminClientsPage() {
       const adminOrgId = adminOrg.id
 
       // Create the client in admin organization first
-      const { data: clientData, error: clientError } = await supabase
+      const { data: clientData, error: clientError } = await (supabase as any)
         .from('clients')
         .insert({
           org_id: adminOrgId,
@@ -120,7 +120,7 @@ export default function AdminClientsPage() {
       // Handle organization assignment
       if (selectedOrgId) {
         // Update client to be assigned to the selected organization
-        const { error: updateError } = await supabase
+        const { error: updateError } = await (supabase as any)
           .from('clients')
           .update({
             org_id: selectedOrgId
@@ -149,7 +149,7 @@ export default function AdminClientsPage() {
           toast.success('Client created but failed to create organization')
         } else {
           // Update client to be assigned to the new organization
-          const { error: updateError } = await supabase
+          const { error: updateError } = await (supabase as any)
             .from('clients')
             .update({
               org_id: newOrgData.id
@@ -187,7 +187,7 @@ export default function AdminClientsPage() {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('clients')
         .delete()
         .eq('id', clientId)
