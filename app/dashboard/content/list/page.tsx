@@ -39,14 +39,14 @@ export default function ContentListPage() {
   const fetchPosts = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/auth/signin')
         return
       }
 
       // Get user's organizations
-      const { data: orgMembers, error: orgError } = await supabase
+      const { data: orgMembers, error: orgError } = await (supabase as any)
         .from('org_members')
         .select('org_id, role')
         .eq('user_id', user.id)
@@ -59,11 +59,11 @@ export default function ContentListPage() {
       }
 
       // Get all organization IDs the user belongs to
-      const orgIds = orgMembers.map(member => member.org_id)
+      const orgIds = orgMembers.map((member: any) => member.org_id)
 
       // Get all posts from user's organizations (both user-created and admin-created packages)
       // Also get admin packages from ALL organizations
-      let query = supabase
+      let query = (supabase as any)
         .from('blog_posts')
         .select('*')
         .in('org_id', orgIds)
@@ -103,7 +103,7 @@ export default function ContentListPage() {
       } else {
         const posts = data || []
         setPosts(posts)
-        
+
         // Calculate category counts
         const counts: Record<string, number> = {}
         CONTENT_CATEGORIES.forEach(category => {
@@ -125,7 +125,7 @@ export default function ContentListPage() {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('blog_posts')
         .delete()
         .eq('id', postId)
@@ -145,7 +145,7 @@ export default function ContentListPage() {
 
   const handlePublishPost = async (postId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('blog_posts')
         .update({
           state: 'published',
@@ -172,7 +172,7 @@ export default function ContentListPage() {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('blog_posts')
         .update({
           state: 'draft',
@@ -221,7 +221,7 @@ export default function ContentListPage() {
       if (!user) return
 
       const token = (await supabase.auth.getSession()).data.session?.access_token
-      
+
       const response = await fetch('/api/categorize-existing-posts', {
         method: 'POST',
         headers: {
@@ -285,11 +285,10 @@ export default function ContentListPage() {
               {/* All Content */}
               <Button
                 variant={selectedCategory === 'all' ? 'default' : 'ghost'}
-                className={`w-full justify-start text-left ${
-                  selectedCategory === 'all' 
-                    ? 'bg-purple-600 text-white border-purple-500' 
+                className={`w-full justify-start text-left ${selectedCategory === 'all'
+                    ? 'bg-purple-600 text-white border-purple-500'
                     : 'hover:bg-gray-800'
-                }`}
+                  }`}
                 onClick={() => setSelectedCategory('all')}
               >
                 <span className="flex items-center justify-between w-full">
@@ -306,11 +305,10 @@ export default function ContentListPage() {
                 <Button
                   key={category.id}
                   variant={selectedCategory === category.id ? 'default' : 'ghost'}
-                  className={`w-full justify-start text-left h-auto py-2 ${
-                    selectedCategory === category.id 
-                      ? 'bg-purple-600 text-white border-purple-500' 
+                  className={`w-full justify-start text-left h-auto py-2 ${selectedCategory === category.id
+                      ? 'bg-purple-600 text-white border-purple-500'
                       : 'hover:bg-gray-800'
-                  }`}
+                    }`}
                   onClick={() => setSelectedCategory(category.id)}
                 >
                   <span className="flex flex-col items-start w-full">
@@ -321,8 +319,8 @@ export default function ContentListPage() {
                     <span className="text-xs text-gray-400 truncate w-full">
                       {category.label.split(' & ')[1] && category.label.split(' & ')[1]}
                     </span>
-                    <Badge 
-                      variant={selectedCategory === category.id ? "default" : "secondary"} 
+                    <Badge
+                      variant={selectedCategory === category.id ? "default" : "secondary"}
                       className="mt-1"
                     >
                       {categoryCounts[category.id] || 0}
@@ -351,7 +349,7 @@ export default function ContentListPage() {
                 {selectedCategory === 'all' ? posts.length : categoryCounts[selectedCategory] || 0} articles
               </Badge>
             </div>
-            
+
             {/* Clear Filter Button */}
             {selectedCategory !== 'all' && (
               <Button
@@ -391,9 +389,9 @@ export default function ContentListPage() {
                   size="sm"
                   className="capitalize"
                 >
-                  {sortType === 'newest' ? 'Newest First' : 
-                   sortType === 'oldest' ? 'Oldest First' :
-                   sortType === 'rating' ? 'Top Rated' : 'Title A-Z'}
+                  {sortType === 'newest' ? 'Newest First' :
+                    sortType === 'oldest' ? 'Oldest First' :
+                      sortType === 'rating' ? 'Top Rated' : 'Title A-Z'}
                 </Button>
               ))}
             </div>
@@ -406,7 +404,7 @@ export default function ContentListPage() {
                 <div className="text-6xl mb-4">📝</div>
                 <h3 className="text-xl font-semibold text-white mb-2">No content found</h3>
                 <p className="text-gray-400 text-center mb-6">
-                  {filter === 'all' 
+                  {filter === 'all'
                     ? "No content found in your organization. Start by creating your first post or ask your admin to create packages for you!"
                     : `No ${filter} content found. Try creating some content or check other filters.`
                   }
@@ -452,9 +450,9 @@ export default function ContentListPage() {
                       )}
                       {/* Rating Display */}
                       <div className="flex items-center space-x-2 mt-2">
-                        <StarRating 
-                          rating={post.average_rating || 0} 
-                          size="sm" 
+                        <StarRating
+                          rating={post.average_rating || 0}
+                          size="sm"
                           showNumber={true}
                         />
                         <span className="text-xs text-gray-500">
@@ -471,7 +469,7 @@ export default function ContentListPage() {
                           <div className="flex items-center space-x-2">
                             <span className="text-orange-400 text-lg">⚠️</span>
                             <div className="text-orange-200 text-sm">
-                              <strong>Scheduled Task:</strong> This is a scheduled post created from an admin package. 
+                              <strong>Scheduled Task:</strong> This is a scheduled post created from an admin package.
                               <br />
                               <span className="text-orange-300">
                                 Scheduled for: <strong>{formatDateTime(post.scheduled_for || '')}</strong>
@@ -482,13 +480,13 @@ export default function ContentListPage() {
                           </div>
                         </div>
                       )}
-                      
+
                       {(post.state !== 'scheduled' || post.created_by_admin) && (
                         <p className="text-gray-300 text-sm line-clamp-6">
                           {post.content.substring(0, 300)}...
                         </p>
                       )}
-                      
+
                       <div className="flex flex-wrap gap-2">
                         {post.state === 'draft' && (
                           <>
@@ -518,7 +516,7 @@ export default function ContentListPage() {
                             )}
                           </>
                         )}
-                        
+
                         {post.state === 'published' && (
                           <>
                             <Link href={`/dashboard/content/package/${post.id}`}>
@@ -564,7 +562,7 @@ export default function ContentListPage() {
                             )}
                           </>
                         )}
-                        
+
                         {!post.created_by_admin && post.state !== 'scheduled' && (
                           <Button
                             size="sm"
@@ -574,7 +572,7 @@ export default function ContentListPage() {
                             Delete
                           </Button>
                         )}
-                        
+
                         {!post.created_by_admin && post.state === 'scheduled' && (
                           <Button
                             size="sm"
@@ -601,7 +599,7 @@ export default function ContentListPage() {
                 <div className="flex justify-between text-sm text-gray-400">
                   <span>Total: {posts.length} posts</span>
                   <span>
-                    Draft: {posts.filter(p => p.state === 'draft').length} | 
+                    Draft: {posts.filter(p => p.state === 'draft').length} |
                     Published: {posts.filter(p => p.state === 'published').length} |
                     Scheduled: {posts.filter(p => p.state === 'scheduled').length}
                   </span>
