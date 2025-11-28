@@ -219,7 +219,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     getUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event: any, session: any) => {
         if (event === 'SIGNED_OUT' || !session) {
           router.push('/auth/signin')
         }

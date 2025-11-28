@@ -84,7 +84,7 @@ export default function LeaderboardPage() {
         toast.error('Failed to load leaderboard')
       } else {
         // Add rank to packages
-        const rankedPackages = (data || []).map((package_, index) => ({
+        const rankedPackages = (data || []).map((package_: any, index: number) => ({
           ...package_,
           rank: index + 1
         }))
@@ -189,8 +189,8 @@ export default function LeaderboardPage() {
                 <Card
                   key={package_.id}
                   className={`bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors ${index === 0 ? 'ring-2 ring-yellow-500' :
-                      index === 1 ? 'ring-2 ring-gray-400' :
-                        'ring-2 ring-orange-600'
+                    index === 1 ? 'ring-2 ring-gray-400' :
+                      'ring-2 ring-orange-600'
                     }`}
                 >
                   <CardHeader className="text-center">

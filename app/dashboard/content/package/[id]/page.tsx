@@ -363,7 +363,8 @@ export default function ContentPackagePage() {
       }
 
       // Find the user's personal organization (owner role only)
-      let userOrgId = orgMembers.find(member => member.role === 'owner')?.org_id
+      const members = orgMembers as unknown as { org_id: string, role: string }[]
+      let userOrgId = members.find(member => member.role === 'owner')?.org_id
       if (!userOrgId) {
         toast.error('No personal organization found. Please create an organization first.')
         return
@@ -593,8 +594,9 @@ export default function ContentPackagePage() {
       console.log('📷 Fetched images for post:', params.id)
       console.log('📷 Total images found:', images?.length || 0)
       if (images && images.length > 0) {
-        console.log('📷 Active images:', images.filter(img => img.is_active).length)
-        console.log('📷 Image details:', images.map(img => ({ url: img.url?.substring(0, 50), is_active: img.is_active, style: img.style })))
+        const imgs = images as any[]
+        console.log('📷 Active images:', imgs.filter(img => img.is_active).length)
+        console.log('📷 Image details:', imgs.map(img => ({ url: img.url?.substring(0, 50), is_active: img.is_active, style: img.style })))
       }
 
       // Use existing content directly - no generation, no processing
@@ -612,7 +614,7 @@ export default function ContentPackagePage() {
 
       const socialPostsMap: Record<string, string> = {}
       if (socialPostsData) {
-        socialPostsData.forEach(post => {
+        socialPostsData.forEach((post: any) => {
           socialPostsMap[post.platform] = post.content
         })
       }

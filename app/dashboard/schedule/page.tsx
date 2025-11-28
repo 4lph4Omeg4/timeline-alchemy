@@ -112,13 +112,13 @@ export default function SchedulerPage() {
           orgIds = (allOrgs as any[])?.map(org => org.id) || []
         } else {
           // Non-admin users only see posts from their primary organization (not Admin Organization)
-          const nonAdminOrgs = orgMembers.filter(member => {
+          const nonAdminOrgs = orgMembers.filter((member: any) => {
             // Get organization name to filter out Admin Organization
             return member.org_id // We'll filter this further below
           })
 
           // Get organization names to filter out Admin Organization
-          const orgIdsToCheck = nonAdminOrgs.map(member => member.org_id)
+          const orgIdsToCheck = nonAdminOrgs.map((member: any) => member.org_id)
           const { data: orgsData } = await supabase
             .from('organizations')
             .select('id, name')
@@ -126,8 +126,8 @@ export default function SchedulerPage() {
 
           // Filter out Admin Organization
           const nonAdminOrgIds = orgsData
-            ?.filter(org => org.name !== 'Admin Organization')
-            .map(org => org.id) || []
+            ?.filter((org: any) => org.name !== 'Admin Organization')
+            .map((org: any) => org.id) || []
 
           orgIds = nonAdminOrgIds
         }
@@ -201,15 +201,15 @@ export default function SchedulerPage() {
 
               orgIds = (allOrgs as any[])?.map(org => org.id) || []
             } else {
-              const orgIdsToCheck = orgMembers.map(member => member.org_id)
+              const orgIdsToCheck = orgMembers.map((member: any) => member.org_id)
               const { data: orgsData } = await supabase
                 .from('organizations')
                 .select('id, name')
                 .in('id', orgIdsToCheck)
 
               const nonAdminOrgIds = orgsData
-                ?.filter(org => org.name !== 'Admin Organization')
-                .map(org => org.id) || []
+                ?.filter((org: any) => org.name !== 'Admin Organization')
+                .map((org: any) => org.id) || []
 
               orgIds = nonAdminOrgIds
             }
@@ -271,15 +271,15 @@ export default function SchedulerPage() {
 
               orgIds = (allOrgs as any[])?.map(org => org.id) || []
             } else {
-              const orgIdsToCheck = orgMembers.map(member => member.org_id)
+              const orgIdsToCheck = orgMembers.map((member: any) => member.org_id)
               const { data: orgsData } = await supabase
                 .from('organizations')
                 .select('id, name')
                 .in('id', orgIdsToCheck)
 
               const nonAdminOrgIds = orgsData
-                ?.filter(org => org.name !== 'Admin Organization')
-                .map(org => org.id) || []
+                ?.filter((org: any) => org.name !== 'Admin Organization')
+                .map((org: any) => org.id) || []
 
               orgIds = nonAdminOrgIds
             }
@@ -444,8 +444,8 @@ export default function SchedulerPage() {
                         </p>
                         <div className="flex items-center space-x-4 mt-3 text-xs">
                           <span className={`px-3 py-1 rounded-full font-medium ${post.state === 'published' ? 'bg-green-900 text-green-300' :
-                              post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
-                                'bg-gray-700 text-gray-300'
+                            post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+                              'bg-gray-700 text-gray-300'
                             }`}>
                             {post.state}
                           </span>
@@ -674,8 +674,8 @@ export default function SchedulerPage() {
                                         </p>
                                         <div className="flex items-center space-x-2 mt-2">
                                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
-                                              post.state === 'published' ? 'bg-green-900 text-green-300' :
-                                                'bg-gray-700 text-gray-300'
+                                            post.state === 'published' ? 'bg-green-900 text-green-300' :
+                                              'bg-gray-700 text-gray-300'
                                             }`}>
                                             {post.state}
                                           </span>
