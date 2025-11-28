@@ -83,7 +83,7 @@ export default function ContentEditPage() {
 
       const socialPostsMap: Record<string, string> = {}
       if (socialPostsData) {
-        socialPostsData.forEach(post => {
+        socialPostsData.forEach((post: any) => {
           socialPostsMap[post.platform] = post.content
         })
       }
@@ -96,7 +96,7 @@ export default function ContentEditPage() {
         .eq('post_id', params.id)
 
       if (!imagesError && images) {
-        setPostImages(images.map(img => img.url))
+        setPostImages(images.map((img: any) => img.url))
       }
 
     } catch (error) {
