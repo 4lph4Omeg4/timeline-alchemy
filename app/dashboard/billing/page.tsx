@@ -23,7 +23,7 @@ export default function BillingPage() {
         if (!user) return
 
         // Get user's organizations
-        const { data: orgMembers } = await supabase
+        const { data: orgMembers } = await (supabase as any)
           .from('org_members')
           .select('org_id, role')
           .eq('user_id', user.id)
@@ -88,7 +88,7 @@ export default function BillingPage() {
       if (!user) return
 
       // Get user's organizations
-      const { data: orgMembers } = await supabase
+      const { data: orgMembers } = await (supabase as any)
         .from('org_members')
         .select('org_id, role')
         .eq('user_id', user.id)
@@ -342,9 +342,9 @@ export default function BillingPage() {
                   €{STRIPE_PLANS[subscription.plan as StripePlanType]?.price || 'N/A'}/month
                 </p>
                 <p className={`text-sm ${subscription.status === 'active' ? 'text-green-400' :
-                    subscription.status === 'trialing' ? 'text-blue-400' :
-                      subscription.status === 'canceled' ? 'text-red-400' :
-                        'text-yellow-400'
+                  subscription.status === 'trialing' ? 'text-blue-400' :
+                    subscription.status === 'canceled' ? 'text-red-400' :
+                      'text-yellow-400'
                   }`}>
                   Status: {subscription.status === 'trialing' ? 'Trial' : subscription.status}
                   {subscription.status === 'trialing' && (
