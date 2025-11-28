@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -80,6 +80,7 @@ interface GeneratedContent {
 export default function ContentPackagePage() {
   const params = useParams()
   const router = useRouter()
+  const supabase = createClient()
   const [post, setPost] = useState<BlogPost | null>(null)
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
   const [loading, setLoading] = useState(true)
@@ -194,7 +195,8 @@ export default function ContentPackagePage() {
         // Save to database
         const { data: { user } } = await supabase.auth.getUser()
         const { data: orgMembers } = await supabase.from('org_members').select('org_id, role').eq('user_id', user!.id)
-        const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
+        const members = orgMembers as unknown as { org_id: string, role: string }[] | null
+        const userOrgId = members?.find(member => member.role !== 'client')?.org_id || members?.[0]?.org_id
 
         const imagesToSave = newImages.map(img => ({
           org_id: userOrgId,
@@ -1069,8 +1071,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, facebook: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.facebook === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1146,8 +1148,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, instagram: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.instagram === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1223,8 +1225,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, twitter: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.twitter === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1300,8 +1302,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, linkedin: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.linkedin === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1377,8 +1379,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, discord: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.discord === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1454,8 +1456,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, reddit: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.reddit === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
@@ -1522,8 +1524,8 @@ export default function ContentPackagePage() {
                           key={idx}
                           onClick={() => setSelectedImagePerPlatform(prev => ({ ...prev, telegram: idx }))}
                           className={`relative w-full h-24 bg-black/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ${selectedImagePerPlatform.telegram === idx
-                              ? 'ring-4 ring-green-500 scale-105'
-                              : 'ring-2 ring-gray-600 hover:ring-purple-500'
+                            ? 'ring-4 ring-green-500 scale-105'
+                            : 'ring-2 ring-gray-600 hover:ring-purple-500'
                             }`}
                         >
                           <img
