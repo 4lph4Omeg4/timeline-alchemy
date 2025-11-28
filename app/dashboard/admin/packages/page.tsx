@@ -31,7 +31,7 @@ export default function AdminPackagesPage() {
     setLoading(true)
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError || !user) {
         console.error('Error getting user:', userError)
         setLoading(false)
@@ -131,7 +131,7 @@ export default function AdminPackagesPage() {
 
   const handleGenerateImage = async (pkg: AdminPackage) => {
     setGeneratingImages(prev => new Set(prev).add(pkg.id))
-    
+
     try {
       const response = await fetch('/api/generate-image', {
         method: 'POST',
@@ -150,7 +150,7 @@ export default function AdminPackagesPage() {
       }
 
       const result = await response.json()
-      
+
       if (result.success && result.imageUrl) {
         // Save the image to the package
         const { error: imageError } = await supabase
@@ -158,7 +158,7 @@ export default function AdminPackagesPage() {
           .insert({
             post_id: pkg.id,
             url: result.imageUrl,
-            org_id: (await supabase.from('org_members').select('org_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).eq('role', 'owner').single()).data?.org_id
+            org_id: (await (supabase as any).from('org_members').select('org_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id).eq('role', 'owner').single()).data?.org_id
           })
 
         if (imageError) {
@@ -271,14 +271,14 @@ export default function AdminPackagesPage() {
                     🖼️ {pkg.images.length} image(s) attached
                   </div>
                 )}
-                
+
                 <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
                   <Link href={`/dashboard/content/package/${pkg.id}`}>
                     <Button className="w-full">
                       📦 View Package
                     </Button>
                   </Link>
-                  
+
                   {/* Generate Image Button */}
                   <Button
                     variant="outline"
@@ -298,7 +298,7 @@ export default function AdminPackagesPage() {
                       </>
                     )}
                   </Button>
-                  
+
                   <div className="flex space-x-2">
                     <Link href={`/dashboard/content/edit/${pkg.id}`}>
                       <Button variant="outline" className="flex-1">

@@ -25,7 +25,7 @@ export default function AdminClientsPage() {
     setLoading(true)
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError || !user) {
         console.error('Error getting user:', userError)
         setLoading(false)
@@ -87,7 +87,7 @@ export default function AdminClientsPage() {
       }
 
       // Find the admin organization (where all clients should be created)
-      const { data: adminOrg } = await supabase
+      const { data: adminOrg } = await (supabase as any)
         .from('organizations')
         .select('id')
         .eq('name', 'Admin Organization')
@@ -275,7 +275,7 @@ export default function AdminClientsPage() {
                 </option>
               ))}
             </select>
-            
+
             {/* Create New Organization Option */}
             <div className="mt-3">
               <Button
@@ -314,7 +314,7 @@ export default function AdminClientsPage() {
               Members are always created in the Admin Organization. This assigns them to an additional organization.
             </p>
           </div>
-          <Button 
+          <Button
             onClick={handleCreateClient}
             disabled={saving || !newClientName.trim()}
           >
