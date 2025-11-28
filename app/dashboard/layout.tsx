@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const router = useRouter()
 
-  const ensureAdminOrganization = async (userId: string) => {
+  const ensureAdminOrganization = async (currentUser: any) => {
     try {
       // First, check if "Admin Organization" organization already exists
       const { data: existingAdminOrg, error: orgCheckError } = await (supabase as any)
@@ -39,26 +39,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         .eq('name', 'Admin Organization')
         .single()
 
+      const isAdminUser = currentUser?.email === 'sh4m4ni4k@sh4m4ni4k.nl'
+
       if (existingAdminOrg) {
         // Organization exists, check if user is already a member
         const { data: existingMember, error: memberCheckError } = await (supabase as any)
           .from('org_members')
           .select('id, role')
-          .eq('user_id', userId)
+          .eq('user_id', currentUser.id)
           .eq('org_id', existingAdminOrg.id)
           .single()
 
         if (!existingMember) {
-          // Check if this is the admin user
-          const { data: { user } } = await supabase.auth.getUser()
-          const isAdminUser = user?.email === 'sh4m4ni4k@sh4m4ni4k.nl'
-
           // User is not a member, add them (admin as owner, others as client)
           const { error: memberError } = await (supabase as any)
             .from('org_members')
             .insert({
               org_id: existingAdminOrg.id,
-              user_id: userId,
+              user_id: currentUser.id,
               role: isAdminUser ? 'owner' : 'client'
             })
 
@@ -89,16 +87,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         return
       }
 
-      // Check if this is the admin user
-      const { data: { user } } = await supabase.auth.getUser()
-      const isAdminUser = user?.email === 'sh4m4ni4k@sh4m4ni4k.nl'
-
       // Add user (admin as owner, others as client)
       const { error: memberError } = await (supabase as any)
         .from('org_members')
         .insert({
           org_id: newOrg.id,
-          user_id: userId,
+          user_id: currentUser.id,
           role: isAdminUser ? 'owner' : 'client'
         })
 
@@ -123,102 +117,119 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+    let mounted = true
 
-      if (userError) {
-        // If the error is just that the session is missing, redirect to signin without logging an error
-        if (userError.name === 'AuthSessionMissingError' || userError.message === 'Auth session missing!') {
+    // Safety timeout to prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('Dashboard loading timed out, forcing render')
+        setLoading(false)
+      }
+    }, 8000) // 8 seconds max wait time
+
+    const getUser = async () => {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        if (userError) {
+          // If the error is just that the session is missing, redirect to signin without logging an error
+          if (userError.name === 'AuthSessionMissingError' || userError.message === 'Auth session missing!') {
+            router.push('/auth/signin')
+            return
+          }
+
+          console.error('Auth error in dashboard layout:', userError)
           router.push('/auth/signin')
           return
         }
 
-        console.error('Auth error in dashboard layout:', userError)
-        router.push('/auth/signin')
-        return
-      }
-
-      if (!user) {
-        router.push('/auth/signin')
-        return
-      }
-
-      setUser({
-        id: user.id,
-        email: user.email || '',
-        name: user.user_metadata?.name || user.email?.split('@')[0],
-        avatar_url: user.user_metadata?.avatar_url,
-        created_at: user.created_at,
-      })
-
-      // Check if user is admin (sh4m4ni4k@sh4m4ni4k.nl)
-      const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
-      setIsAdmin(isAdminUser)
-
-      // Ensure all users have access to admin organization for global packages
-      await ensureAdminOrganization(user.id)
-
-      if (isAdminUser) {
-
-        // For admin: fetch all active organizations
-        const { data: orgs, error: orgError } = await (supabase as any)
-          .from('organizations')
-          .select(`
-            *,
-            subscriptions!inner(status)
-          `)
-          .eq('subscriptions.status', 'active')
-          .order('created_at', { ascending: false })
-
-        console.log('Admin organizations query result:', { orgs, orgError })
-
-        if (orgs) {
-          setOrganizations(orgs)
+        if (!user) {
+          router.push('/auth/signin')
+          return
         }
 
-        // For admin: fetch all active clients
-        const { data: clientsData, error: clientsError } = await (supabase as any)
-          .from('clients')
-          .select(`
-            *,
-            organizations(name, plan)
-          `)
-          .order('created_at', { ascending: false })
+        if (!mounted) return
 
-        if (clientsData) {
-          setClients(clientsData)
-        }
-      } else {
-        // For regular users: fetch their organizations
-        const { data: orgs, error } = await (supabase as any)
-          .from('org_members')
-          .select('org_id, role, created_at')
-          .eq('user_id', user.id)
+        setUser({
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.name || user.email?.split('@')[0],
+          avatar_url: user.user_metadata?.avatar_url,
+          created_at: user.created_at,
+        })
 
-        if (orgs && orgs.length > 0) {
-          // Fetch organization details for each org_id
-          const orgIds = orgs.map((org: any) => org.org_id)
-          const { data: orgDetails } = await (supabase as any)
+        // Check if user is admin (sh4m4ni4k@sh4m4ni4k.nl)
+        const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
+        setIsAdmin(isAdminUser)
+
+        // Ensure all users have access to admin organization for global packages
+        // Pass user object to avoid re-fetching
+        await ensureAdminOrganization(user)
+
+        if (isAdminUser) {
+          // For admin: fetch all active organizations
+          const { data: orgs, error: orgError } = await (supabase as any)
             .from('organizations')
-            .select('*')
-            .in('id', orgIds)
+            .select(`
+              *,
+              subscriptions!inner(status)
+            `)
+            .eq('subscriptions.status', 'active')
+            .order('created_at', { ascending: false })
 
-          if (orgDetails) {
-            setOrganizations(orgDetails)
+          if (orgs && mounted) {
+            setOrganizations(orgs)
+          }
+
+          // For admin: fetch all active clients
+          const { data: clientsData, error: clientsError } = await (supabase as any)
+            .from('clients')
+            .select(`
+              *,
+              organizations(name, plan)
+            `)
+            .order('created_at', { ascending: false })
+
+          if (clientsData && mounted) {
+            setClients(clientsData)
           }
         } else {
-          // No organizations found - this shouldn't happen with new signup flow
-          // Redirect to create organization page as fallback
-          console.error('No organizations found for user. This user may have signed up before the new flow.')
-          router.push('/create-organization')
+          // For regular users: fetch their organizations
+          const { data: orgs, error } = await (supabase as any)
+            .from('org_members')
+            .select('org_id, role, created_at')
+            .eq('user_id', user.id)
+
+          if (orgs && orgs.length > 0) {
+            // Fetch organization details for each org_id
+            const orgIds = orgs.map((org: any) => org.org_id)
+            const { data: orgDetails } = await (supabase as any)
+              .from('organizations')
+              .select('*')
+              .in('id', orgIds)
+
+            if (orgDetails && mounted) {
+              setOrganizations(orgDetails)
+            }
+          } else {
+            // No organizations found - this shouldn't happen with new signup flow
+            // Redirect to create organization page as fallback
+            console.error('No organizations found for user. This user may have signed up before the new flow.')
+            router.push('/create-organization')
+          }
         }
-      }
 
-      setLoading(false)
-
-      // Load unread message count after user is loaded
-      if (user) {
-        loadUnreadMessageCount()
+        // Load unread message count after user is loaded
+        if (user && mounted) {
+          loadUnreadMessageCount()
+        }
+      } catch (error) {
+        console.error('Unexpected error in dashboard loading:', error)
+      } finally {
+        if (mounted) {
+          setLoading(false)
+          clearTimeout(safetyTimeout)
+        }
       }
     }
 
@@ -238,6 +249,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }, 30000)
 
     return () => {
+      mounted = false
+      clearTimeout(safetyTimeout)
       subscription.unsubscribe()
       clearInterval(messageInterval)
     }
