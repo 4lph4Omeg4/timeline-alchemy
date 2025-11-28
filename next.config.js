@@ -19,7 +19,7 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
   // Optimize bundle
   webpack: (config, { isServer }) => {

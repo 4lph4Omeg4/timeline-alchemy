@@ -30,9 +30,9 @@ export default function TokenStatusPage() {
     }
 
     // Find the user's personal organization (not Admin Organization)
-    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+    let userOrgId = (orgMembers as any[]).find(member => member.role !== 'client')?.org_id
     if (!userOrgId) {
-      userOrgId = orgMembers[0].org_id
+      userOrgId = (orgMembers as any[])[0].org_id
     }
     return userOrgId
   }
@@ -56,97 +56,99 @@ export default function TokenStatusPage() {
     }
   }
 
-        const fetchTokenStatus = async (orgId: string) => {
-          setLoading(true)
-          try {
-            console.log('🔍 Fetching token status for org:', orgId)
-            
-            // Fetch social connections
-            const { data: connections, error } = await supabase
-              .from('social_connections')
-              .select('*')
-              .eq('org_id', orgId)
-            
-            console.log('🔗 Raw connections found:', connections)
-            console.log('❌ Raw connections error:', error)
-            
-            // Fetch Telegram channels
-            const { data: telegramChannels, error: telegramError } = await supabase
-              .from('telegram_channels')
-              .select('*')
-              .eq('org_id', orgId)
-            
-            console.log('📱 Telegram channels found:', telegramChannels)
-            console.log('❌ Telegram channels error:', telegramError)
-            
-            // Create statuses manually since TokenManager might have issues
-            const statuses: TokenStatus[] = []
-            
-            // Process social connections
-            for (const connection of connections || []) {
-              const now = new Date()
-              let isExpired = false
-              let needsRefresh = false
-              let expiresAt: Date | undefined
+  const fetchTokenStatus = async (orgId: string) => {
+    setLoading(true)
+    try {
+      console.log('🔍 Fetching token status for org:', orgId)
 
-              // Check token expiry based on platform
-              switch (connection.platform) {
-                case 'twitter':
-                  // Twitter OAuth 1.0a tokens are long-lived and don't expire in the same way
-                  needsRefresh = false
-                  break
-                case 'linkedin':
-                  const linkedinAge = now.getTime() - new Date(connection.created_at).getTime()
-                  needsRefresh = linkedinAge > 50 * 24 * 60 * 60 * 1000 // 50 days
-                  break
-                case 'facebook':
-                case 'instagram':
-                case 'youtube':
-                case 'discord':
-                case 'reddit':
-                  needsRefresh = false
-                  break
-                case 'wordpress':
-                  needsRefresh = false
-                  break
-                default:
-                  console.warn(`Unknown platform for token status check: ${connection.platform}`)
-                  break
-              }
+      // Fetch social connections
+      const { data: connections, error } = await supabase
+        .from('social_connections')
+        .select('*')
+        .eq('org_id', orgId)
 
-              statuses.push({
-                platform: connection.platform,
-                accountId: connection.account_id,
-                accountName: connection.account_name,
-                isExpired: isExpired,
-                expiresAt: expiresAt,
-                lastChecked: now,
-                needsRefresh: needsRefresh,
-              })
-            }
-            
-            // Process Telegram channels
-            for (const channel of telegramChannels || []) {
-              const now = new Date()
-              statuses.push({
-                platform: 'telegram',
-                accountId: channel.channel_id,
-                accountName: channel.channel_name,
-                isExpired: false,
-                expiresAt: undefined,
-                lastChecked: now,
-                needsRefresh: false, // Telegram bot tokens don't expire
-              })
-            }
-            
-            console.log('📊 Token statuses:', statuses)
-            setTokenStatuses(statuses)
-          } catch (error) {
-            console.error('Error fetching token status:', error)
-          } finally {
-            setLoading(false)
-          }
+      console.log('🔗 Raw connections found:', connections)
+      console.log('❌ Raw connections error:', error)
+
+      // Fetch Telegram channels
+      const { data: telegramChannels, error: telegramError } = await supabase
+        .from('telegram_channels')
+        .select('*')
+        .eq('org_id', orgId)
+
+      console.log('📱 Telegram channels found:', telegramChannels)
+      console.log('❌ Telegram channels error:', telegramError)
+
+
+
+      // Create statuses manually since TokenManager might have issues
+      const statuses: TokenStatus[] = []
+
+      // Process social connections
+      for (const connection of (connections || []) as any[]) {
+        const now = new Date()
+        let isExpired = false
+        let needsRefresh = false
+        let expiresAt: Date | undefined
+
+        // Check token expiry based on platform
+        switch (connection.platform) {
+          case 'twitter':
+            // Twitter OAuth 1.0a tokens are long-lived and don't expire in the same way
+            needsRefresh = false
+            break
+          case 'linkedin':
+            const linkedinAge = now.getTime() - new Date(connection.created_at).getTime()
+            needsRefresh = linkedinAge > 50 * 24 * 60 * 60 * 1000 // 50 days
+            break
+          case 'facebook':
+          case 'instagram':
+          case 'youtube':
+          case 'discord':
+          case 'reddit':
+            needsRefresh = false
+            break
+          case 'wordpress':
+            needsRefresh = false
+            break
+          default:
+            console.warn(`Unknown platform for token status check: ${connection.platform}`)
+            break
         }
+
+        statuses.push({
+          platform: connection.platform,
+          accountId: connection.account_id,
+          accountName: connection.account_name,
+          isExpired: isExpired,
+          expiresAt: expiresAt,
+          lastChecked: now,
+          needsRefresh: needsRefresh,
+        })
+      }
+
+      // Process Telegram channels
+      for (const channel of (telegramChannels || []) as any[]) {
+        const now = new Date()
+        statuses.push({
+          platform: 'telegram',
+          accountId: channel.channel_id,
+          accountName: channel.channel_name || 'Telegram Channel',
+          isExpired: false,
+          expiresAt: undefined,
+          lastChecked: now,
+          needsRefresh: false, // Telegram bot tokens don't expire
+        })
+      }
+
+      console.log('📊 Token statuses:', statuses)
+      setTokenStatuses(statuses)
+    } catch (error) {
+      console.error('Error fetching token status:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
 
   const handleRefreshToken = async (platform: string, accountId: string) => {
@@ -241,7 +243,7 @@ export default function TokenStatusPage() {
             Monitor and manage your social media connection tokens
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => fetchUserOrg()}
           disabled={loading}
           className="bg-purple-600 hover:bg-purple-700"
@@ -256,7 +258,7 @@ export default function TokenStatusPage() {
           <XCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-600 mb-2">No Social Connections</h3>
           <p className="text-gray-500">
-            You haven't connected any social media accounts yet. 
+            You haven't connected any social media accounts yet.
             <a href="/dashboard/socials" className="text-purple-600 hover:underline ml-1">
               Connect your accounts
             </a>
@@ -284,7 +286,7 @@ export default function TokenStatusPage() {
                   <span className="text-sm text-gray-600">Status:</span>
                   {getStatusBadge(status)}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Last Checked:</span>
                   <span className="text-sm">

@@ -9,11 +9,11 @@ export const maxDuration = 300 // 5 minutes (max for Pro plan)
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    
+
     console.log('🚀 Bulk content generation request received')
     console.log('📊 Request body items:', body.items?.length || 'no items')
     console.log('📊 First item example:', JSON.stringify(body.items?.[0], null, 2))
-    
+
     // Validate request body
     if (!body.items || !Array.isArray(body.items)) {
       return NextResponse.json({
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         error: 'Invalid request: items array is required'
       }, { status: 400 })
     }
-    
+
     // Validate trend data structure
     if (!validateTrendData(body)) {
       return NextResponse.json({
@@ -29,28 +29,43 @@ export async function POST(req: NextRequest) {
         error: 'Invalid trend data structure. Each item must have: title, summary, tags'
       }, { status: 400 })
     }
-    
-    // Use the admin organization directly (simplified for single-user setup)
-    const { data: adminOrg, error: orgError } = await supabaseAdmin
-      .from('organizations')
-      .select('id, name')
-      .eq('name', 'Admin Organization')
-      .single()
 
-    if (orgError || !adminOrg) {
+    // Get userId from request body
+    const { userId } = body
+
+    if (!userId) {
       return NextResponse.json({
         success: false,
-        error: 'Admin organization not found'
-      }, { status: 500 })
+        error: 'User ID is required'
+      }, { status: 400 })
     }
 
-    const userOrgId = (adminOrg as { id: string }).id
-    console.log('🏢 Using Admin Organization:', userOrgId)
+    // Get user's organization
+    const { data: orgMembers, error: orgError } = await supabaseAdmin
+      .from('org_members')
+      .select('org_id, role')
+      .eq('user_id', userId)
+
+    if (orgError || !orgMembers || orgMembers.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'Organization not found for user'
+      }, { status: 400 })
+    }
+
+    // Prioritize non-client roles
+    const members = orgMembers as any[]
+    let userOrgId = members.find(member => member.role !== 'client')?.org_id
+    if (!userOrgId) {
+      userOrgId = members[0].org_id
+    }
+
+    console.log('🏢 Using Organization:', userOrgId)
 
     // Check subscription limits BEFORE generating
     const { checkPlanLimits } = await import('@/lib/subscription-limits')
     const limitCheck = await checkPlanLimits(userOrgId, 'bulkGeneration')
-    
+
     if (!limitCheck.allowed) {
       console.log('❌ Bulk generation blocked - plan limit reached')
       return NextResponse.json({
@@ -58,16 +73,16 @@ export async function POST(req: NextRequest) {
         error: limitCheck.reason || 'Plan limit reached'
       }, { status: 403 })
     }
-    
+
     // Set defaults
     const contentType = body.contentType || 'blog'
     const language = body.language || 'auto'
     const customPrompt = body.customPrompt || ''
-    
+
     console.log(`📊 Processing ${body.items.length} trend items for ${contentType} content in ${language === 'auto' ? 'auto-detected language' : language}`)
     console.log(`🏢 Organization: ${userOrgId}`)
     console.log(`✅ Limit check passed - proceeding with generation`)
-    
+
     // Check for OpenAI API key
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({
@@ -75,15 +90,15 @@ export async function POST(req: NextRequest) {
         error: 'OpenAI API key not configured'
       }, { status: 500 })
     }
-    
+
     // Generate bulk content with timeout protection
     const startTime = Date.now()
-    
+
     // Add 4 minute timeout to prevent server timeout
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Generation timeout after 4 minutes')), 4 * 60 * 1000)
     )
-    
+
     const result = await Promise.race([
       generateBulkContent({
         items: body.items,
@@ -93,12 +108,12 @@ export async function POST(req: NextRequest) {
       }),
       timeoutPromise
     ])
-    
+
     const duration = Date.now() - startTime
-    
+
     // Type assertion for better TypeScript support
     const bulkResult = result as BulkContentResult
-    
+
     console.log(`✅ Bulk generation completed in ${duration}ms`, {
       successful: bulkResult.summary.successful,
       total: bulkResult.summary.totalProcessed,
@@ -115,7 +130,7 @@ export async function POST(req: NextRequest) {
         // Don't fail the request if usage increment fails
       }
     }
-    
+
     return NextResponse.json({
       success: bulkResult.success,
       generatedPosts: bulkResult.generatedPosts,
@@ -130,10 +145,10 @@ export async function POST(req: NextRequest) {
         orgId: userOrgId
       }
     })
-    
+
   } catch (error) {
     console.error('❌ Bulk content generation error:', error)
-    
+
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

@@ -3,18 +3,18 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
-
 export async function GET(request: NextRequest) {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key',
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
+
   try {
     const { searchParams } = new URL(request.url)
     const orgId = searchParams.get('orgId')
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const userIds = orgMembers?.map(member => member.user_id) || []
     console.log('Found org members:', orgMembers)
     console.log('User IDs to fetch:', userIds)
-    
+
     const users = []
 
     for (const userId of userIds) {

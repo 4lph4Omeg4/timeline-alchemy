@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { User, Organization, Client } from '@/types/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,6 +18,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const supabase = createClient()
   const [user, setUser] = useState<User | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [clients, setClients] = useState<Client[]>([])
@@ -51,7 +52,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           // Check if this is the admin user
           const { data: { user } } = await supabase.auth.getUser()
           const isAdminUser = user?.email === 'sh4m4ni4k@sh4m4ni4k.nl'
-          
+
           // User is not a member, add them (admin as owner, others as client)
           const { error: memberError } = await (supabase as any)
             .from('org_members')
@@ -72,7 +73,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       // Organization doesn't exist, create it
       console.log('Creating admin organization...')
-      
+
       // Create admin organization
       const { data: newOrg, error: orgError } = await (supabase as any)
         .from('organizations')
@@ -91,7 +92,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       // Check if this is the admin user
       const { data: { user } } = await supabase.auth.getUser()
       const isAdminUser = user?.email === 'sh4m4ni4k@sh4m4ni4k.nl'
-      
+
       // Add user (admin as owner, others as client)
       const { error: memberError } = await (supabase as any)
         .from('org_members')
@@ -124,13 +125,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     const getUser = async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError) {
         console.error('Auth error in dashboard layout:', userError)
         router.push('/auth/signin')
         return
       }
-      
+
       if (!user) {
         router.push('/auth/signin')
         return
@@ -195,7 +196,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             .from('organizations')
             .select('*')
             .in('id', orgIds)
-          
+
           if (orgDetails) {
             setOrganizations(orgDetails)
           }
@@ -208,7 +209,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
 
       setLoading(false)
-      
+
       // Load unread message count after user is loaded
       if (user) {
         loadUnreadMessageCount()
@@ -224,7 +225,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       }
     )
-    
+
     // Poll for new messages every 30 seconds
     const messageInterval = setInterval(() => {
       loadUnreadMessageCount()
@@ -246,9 +247,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           'Authorization': `Bearer ${session.access_token}`
         }
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success && data.conversations) {
         const totalUnread = data.conversations.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0)
         setUnreadMessageCount(totalUnread)
@@ -275,7 +276,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     try {
       const { error } = await (supabase as any)
         .from('organizations')
-        .update({ 
+        .update({
           name: newOrgName.trim(),
           updated_at: new Date().toISOString()
         })
@@ -286,9 +287,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         console.error('Error updating organization:', error)
       } else {
         // Update local state
-        setOrganizations(prev => 
-          prev.map(org => 
-            org.id === editingOrg.id 
+        setOrganizations(prev =>
+          prev.map(org =>
+            org.id === editingOrg.id
               ? { ...org, name: newOrgName.trim(), updated_at: new Date().toISOString() }
               : org
           )
@@ -310,7 +311,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Cosmic Loading Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/20 to-black"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-purple-500/15 to-purple-600/10 animate-pulse"></div>
-        
+
         <div className="relative z-10 flex flex-col items-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-400"></div>
           <p className="mt-4 text-purple-200 text-lg font-semibold">✨ Entering Dimension... ✨</p>
@@ -319,211 +320,211 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     )
   }
 
-    return (
-      <div className="min-h-screen bg-black relative overflow-hidden">
-        {/* Cosmic Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/10 to-black"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-purple-500/8 to-purple-600/5 animate-pulse"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.03),transparent_70%)]"></div>
-        
-        {/* Floating Cosmic Orbs */}
-        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-purple-500/15 to-purple-400/20 rounded-full blur-xl animate-bounce"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-purple-400/10 to-pink-400/15 rounded-full blur-xl animate-bounce delay-1000"></div>
-        <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-r from-purple-500/10 to-purple-600/15 rounded-full blur-xl animate-bounce delay-2000"></div>
+  return (
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Cosmic Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/10 to-black"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-purple-500/8 to-purple-600/5 animate-pulse"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.03),transparent_70%)]"></div>
 
-        {/* Cosmic Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/30">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              {/* Logo - Left */}
-              <Link href="/dashboard" className="flex items-center">
-                <Logo size="lg" showText={false} />
-              </Link>
+      {/* Floating Cosmic Orbs */}
+      <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-purple-500/15 to-purple-400/20 rounded-full blur-xl animate-bounce"></div>
+      <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-purple-400/10 to-pink-400/15 rounded-full blur-xl animate-bounce delay-1000"></div>
+      <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-r from-purple-500/10 to-purple-600/15 rounded-full blur-xl animate-bounce delay-2000"></div>
 
-              {/* User Info & Buttons - Right */}
-              <div className="flex items-center gap-4">
-                <Link href="/dashboard/profile" className="flex items-center gap-2 text-sm text-purple-200 hover:text-yellow-400 transition-colors">
-                  <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-purple-500/50">
-                    {user?.avatar_url ? (
-                      <img 
-                        src={user.avatar_url} 
-                        alt="Avatar" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Replace with fallback on error
-                          const fallback = document.createElement('div')
-                          fallback.className = 'w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center'
-                          fallback.innerHTML = `<span class="text-sm text-white font-bold">${user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}</span>`
-                          e.currentTarget.parentElement?.appendChild(fallback)
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                        <span className="text-sm text-white font-bold">
-                          {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <span className="font-semibold block">{user?.name || user?.email}</span>
-                    {isAdmin && (
-                      <span className="text-xs bg-gradient-to-r from-yellow-500 to-yellow-400 text-black px-2 py-0.5 rounded-full font-bold">
-                        ✨ ADMIN
+      {/* Cosmic Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/30">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo - Left */}
+            <Link href="/dashboard" className="flex items-center">
+              <Logo size="lg" showText={false} />
+            </Link>
+
+            {/* User Info & Buttons - Right */}
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard/profile" className="flex items-center gap-2 text-sm text-purple-200 hover:text-yellow-400 transition-colors">
+                <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-purple-500/50">
+                  {user?.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Replace with fallback on error
+                        const fallback = document.createElement('div')
+                        fallback.className = 'w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center'
+                        fallback.innerHTML = `<span class="text-sm text-white font-bold">${user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}</span>`
+                        e.currentTarget.parentElement?.appendChild(fallback)
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                      <span className="text-sm text-white font-bold">
+                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}
                       </span>
-                    )}
-                  </div>
-                </Link>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleSignOut}
-                  className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300"
-                >
-                  EXIT
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Cosmic Sidebar */}
-        <div className="flex pt-24">
-          <aside className="w-64 bg-gradient-to-b from-purple-900/30 to-blue-900/30 backdrop-blur-md shadow-2xl min-h-screen border-r border-purple-500/30 relative z-10">
-            <div className="p-6">
-              {/* Navigation Links */}
-              <nav className="mb-8">
-                <div className="space-y-2">
-                  <Link href="/dashboard" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">✨</span>
-                    <span className="font-semibold">Dashboard</span>
-                  </Link>
-                  <Link href="/dashboard/ai-gateway" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🚀</span>
-                    <span className="font-semibold">AI Gateway</span>
-                  </Link>
-                  <Link href="/dashboard/content" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <div className="flex items-center">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📝</span>
-                    <span className="font-semibold">Content</span>
                     </div>
-                    <span className="text-xs text-blue-300 ml-8 mt-1 bg-blue-500/20 px-2 py-0.5 rounded-full w-fit">Trial</span>
-                  </Link>
-                  <Link href="/dashboard/bulk-content" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <div className="flex items-center">
-                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">⚡</span>
-                      <span className="font-semibold">Bulk Content</span>
-                    </div>
-                    <div className="flex gap-2 ml-8 mt-1">
-                      <span className="text-xs text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded-full w-fit">Trial</span>
-                      <span className="text-xs text-yellow-300 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
-                    </div>
-                  </Link>
-                  <Link href="/dashboard/content/list" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📦</span>
-                    <span className="font-semibold">Packages</span>
-                  </Link>
-                  <Link href="/portfolio" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📸</span>
-                    <span className="font-semibold">Portfolio</span>
-                  </Link>
-                  <Link href="/dashboard/leaderboard" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🏆</span>
-                    <span className="font-semibold">Leaderboard</span>
-                  </Link>
-                  <Link href="/dashboard/messages" className="flex items-center justify-between px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <div className="flex items-center">
-                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💬</span>
-                      <span className="font-semibold">Messages</span>
-                    </div>
-                    {unreadMessageCount > 0 && (
-                      <span className="bg-gradient-to-r from-red-600 to-pink-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
-                        {unreadMessageCount}
-                      </span>
-                    )}
-                  </Link>
-                  <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📅</span>
-                    <span className="font-semibold">Schedule</span>
-                  </Link>
-                  <Link href="/dashboard/posting-status" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🚀</span>
-                    <span className="font-semibold">Posting Status</span>
-                  </Link>
-                  <Link href="/dashboard/socials" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🔗</span>
-                    <span className="font-semibold">Socials</span>
-                  </Link>
-                  <Link href="/dashboard/telegram-channels" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📱</span>
-                    <span className="font-semibold">Telegram</span>
-                  </Link>
-                  <Link href="/dashboard/token-status" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🔑</span>
-                    <span className="font-semibold">Token Status</span>
-                  </Link>
-                  <Link href="/dashboard/admin/branding" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <div className="flex items-center">
-                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🎨</span>
-                      <span className="font-semibold">Branding</span>
-                    </div>
-                    <span className="text-xs text-yellow-300 ml-8 mt-1 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
-                  </Link>
-                  <Link href="/dashboard/billing" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <div className="flex items-center">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💳</span>
-                    <span className="font-semibold">Billing</span>
-                    </div>
-                    {/* Trial badge will be shown dynamically based on user's subscription status */}
-                  </Link>
-                  <Link href="/dashboard/profile" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">👤</span>
-                    <span className="font-semibold">Profile</span>
-                  </Link>
-                  {isAdmin && (
-                    <>
-                      <div className="border-t border-purple-500/30 my-4"></div>
-                      <div className="text-xs text-purple-300 font-bold uppercase tracking-wider mb-2 px-3">✨ Admin Realm ✨</div>
-                      <Link href="/dashboard/organizations" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🏢</span>
-                        <span className="font-semibold">Organizations</span>
-                      </Link>
-                      <Link href="/dashboard/subscriptions" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📋</span>
-                        <span className="font-semibold">Subscriptions</span>
-                      </Link>
-                      <Link href="/dashboard/admin/clients" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">👥</span>
-                        <span className="font-semibold">Manage Members</span>
-                      </Link>
-                      <Link href="/dashboard/admin/packages" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📦</span>
-                        <span className="font-semibold">Admin Packages</span>
-                      </Link>
-                      <Link href="/dashboard/analytics" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📈</span>
-                        <span className="font-semibold">Analytics</span>
-                      </Link>
-                      <Link href="/dashboard/admin/watermark" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
-                        <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💧</span>
-                        <span className="font-semibold">Bulk Watermark</span>
-                      </Link>
-                    </>
                   )}
                 </div>
-              </nav>
-
+                <div>
+                  <span className="font-semibold block">{user?.name || user?.email}</span>
+                  {isAdmin && (
+                    <span className="text-xs bg-gradient-to-r from-yellow-500 to-yellow-400 text-black px-2 py-0.5 rounded-full font-bold">
+                      ✨ ADMIN
+                    </span>
+                  )}
+                </div>
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300"
+              >
+                EXIT
+              </Button>
             </div>
-          </aside>
-
-          {/* Cosmic Main Content */}
-          <main className="flex-1 p-6 relative z-10">
-            <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-md rounded-2xl border border-purple-500/20 shadow-2xl min-h-full p-6">
-              {children}
-            </div>
-          </main>
+          </div>
         </div>
+      </header>
+
+      {/* Cosmic Sidebar */}
+      <div className="flex pt-24">
+        <aside className="w-64 bg-gradient-to-b from-purple-900/30 to-blue-900/30 backdrop-blur-md shadow-2xl min-h-screen border-r border-purple-500/30 relative z-10">
+          <div className="p-6">
+            {/* Navigation Links */}
+            <nav className="mb-8">
+              <div className="space-y-2">
+                <Link href="/dashboard" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">✨</span>
+                  <span className="font-semibold">Dashboard</span>
+                </Link>
+                <Link href="/dashboard/ai-gateway" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🚀</span>
+                  <span className="font-semibold">AI Gateway</span>
+                </Link>
+                <Link href="/dashboard/content" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <div className="flex items-center">
+                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📝</span>
+                    <span className="font-semibold">Content</span>
+                  </div>
+                  <span className="text-xs text-blue-300 ml-8 mt-1 bg-blue-500/20 px-2 py-0.5 rounded-full w-fit">Trial</span>
+                </Link>
+                <Link href="/dashboard/bulk-content" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <div className="flex items-center">
+                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">⚡</span>
+                    <span className="font-semibold">Bulk Content</span>
+                  </div>
+                  <div className="flex gap-2 ml-8 mt-1">
+                    <span className="text-xs text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded-full w-fit">Trial</span>
+                    <span className="text-xs text-yellow-300 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
+                  </div>
+                </Link>
+                <Link href="/dashboard/content/list" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📦</span>
+                  <span className="font-semibold">Packages</span>
+                </Link>
+                <Link href="/portfolio" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📸</span>
+                  <span className="font-semibold">Portfolio</span>
+                </Link>
+                <Link href="/dashboard/leaderboard" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🏆</span>
+                  <span className="font-semibold">Leaderboard</span>
+                </Link>
+                <Link href="/dashboard/messages" className="flex items-center justify-between px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <div className="flex items-center">
+                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💬</span>
+                    <span className="font-semibold">Messages</span>
+                  </div>
+                  {unreadMessageCount > 0 && (
+                    <span className="bg-gradient-to-r from-red-600 to-pink-600 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                      {unreadMessageCount}
+                    </span>
+                  )}
+                </Link>
+                <Link href="/dashboard/schedule" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📅</span>
+                  <span className="font-semibold">Schedule</span>
+                </Link>
+                <Link href="/dashboard/posting-status" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🚀</span>
+                  <span className="font-semibold">Posting Status</span>
+                </Link>
+                <Link href="/dashboard/socials" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🔗</span>
+                  <span className="font-semibold">Socials</span>
+                </Link>
+                <Link href="/dashboard/telegram-channels" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📱</span>
+                  <span className="font-semibold">Telegram</span>
+                </Link>
+                <Link href="/dashboard/token-status" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🔑</span>
+                  <span className="font-semibold">Token Status</span>
+                </Link>
+                <Link href="/dashboard/admin/branding" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <div className="flex items-center">
+                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🎨</span>
+                    <span className="font-semibold">Branding</span>
+                  </div>
+                  <span className="text-xs text-yellow-300 ml-8 mt-1 bg-yellow-500/20 px-2 py-0.5 rounded-full w-fit">Universal</span>
+                </Link>
+                <Link href="/dashboard/billing" className="flex flex-col px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <div className="flex items-center">
+                    <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💳</span>
+                    <span className="font-semibold">Billing</span>
+                  </div>
+                  {/* Trial badge will be shown dynamically based on user's subscription status */}
+                </Link>
+                <Link href="/dashboard/profile" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                  <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">👤</span>
+                  <span className="font-semibold">Profile</span>
+                </Link>
+                {isAdmin && (
+                  <>
+                    <div className="border-t border-purple-500/30 my-4"></div>
+                    <div className="text-xs text-purple-300 font-bold uppercase tracking-wider mb-2 px-3">✨ Admin Realm ✨</div>
+                    <Link href="/dashboard/organizations" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">🏢</span>
+                      <span className="font-semibold">Organizations</span>
+                    </Link>
+                    <Link href="/dashboard/subscriptions" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📋</span>
+                      <span className="font-semibold">Subscriptions</span>
+                    </Link>
+                    <Link href="/dashboard/admin/clients" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">👥</span>
+                      <span className="font-semibold">Manage Members</span>
+                    </Link>
+                    <Link href="/dashboard/admin/packages" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📦</span>
+                      <span className="font-semibold">Admin Packages</span>
+                    </Link>
+                    <Link href="/dashboard/analytics" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">📈</span>
+                      <span className="font-semibold">Analytics</span>
+                    </Link>
+                    <Link href="/dashboard/admin/watermark" className="flex items-center px-3 py-2 text-purple-200 hover:text-yellow-400 hover:bg-gradient-to-r hover:from-purple-800/30 hover:to-blue-800/30 rounded-lg transition-all duration-300 group">
+                      <span className="mr-3 text-lg group-hover:scale-110 transition-transform duration-300">💧</span>
+                      <span className="font-semibold">Bulk Watermark</span>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </nav>
+
+          </div>
+        </aside>
+
+        {/* Cosmic Main Content */}
+        <main className="flex-1 p-6 relative z-10">
+          <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 backdrop-blur-md rounded-2xl border border-purple-500/20 shadow-2xl min-h-full p-6">
+            {children}
+          </div>
+        </main>
+      </div>
 
       {/* Cosmic Edit Organization Modal */}
       <Modal

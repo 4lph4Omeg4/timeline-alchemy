@@ -68,7 +68,7 @@ export default function PostingStatusDashboard() {
       }
 
       // Fetch posts
-      const response = await fetch(`/api/post-status?orgId=${userOrg.org_id}`)
+      const response = await fetch(`/api/post-status?orgId=${(userOrg as any).org_id}`)
       const result = await response.json()
 
       if (!result.success) {
@@ -89,7 +89,7 @@ export default function PostingStatusDashboard() {
   const handleManualPost = async (postId: string) => {
     try {
       setPosting(postId)
-      
+
       const response = await fetch('/api/manual-post', {
         method: 'POST',
         headers: {
@@ -120,7 +120,7 @@ export default function PostingStatusDashboard() {
   const handleTriggerCron = async () => {
     try {
       setLoading(true)
-      
+
       const response = await fetch('/api/cron/scheduled-posts')
       const result = await response.json()
 

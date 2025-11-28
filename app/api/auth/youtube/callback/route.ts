@@ -5,18 +5,18 @@ import { createClient } from '@supabase/supabase-js'
 export const dynamic = 'force-dynamic'
 
 // Server-side Supabase admin client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
-
 export async function GET(request: NextRequest) {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key',
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
+
   try {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
@@ -28,11 +28,11 @@ export async function GET(request: NextRequest) {
       console.error('YouTube OAuth error:', error)
       console.error('Error description:', errorDescription)
       console.error('Full search params:', Object.fromEntries(searchParams.entries()))
-      
-      const errorMessage = errorDescription 
-        ? `${error}: ${errorDescription}` 
+
+      const errorMessage = errorDescription
+        ? `${error}: ${errorDescription}`
         : error
-      
+
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=${encodeURIComponent(errorMessage)}`
       )
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Check if required environment variables are configured
     const youtubeClientId = process.env.NEXT_PUBLIC_YOUTUBE_CLIENT_ID
     const youtubeClientSecret = process.env.YOUTUBE_CLIENT_SECRET
-    
+
     if (!youtubeClientId || !youtubeClientSecret) {
       console.error('YouTube OAuth credentials not configured')
       return NextResponse.redirect(

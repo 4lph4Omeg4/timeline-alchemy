@@ -29,7 +29,7 @@ interface TrendItem {
 
 const CONTENT_CATEGORIES = [
   'Consciousness & Awakening & Enlightenment',
-  'Esoterica & Ancient Wisdom & Mysteries', 
+  'Esoterica & Ancient Wisdom & Mysteries',
   'AI & Conscious Technology & Future',
   'Crypto & Decentralized Sovereignty',
   'Divine Lifestyle & New Earth & Harmony',
@@ -67,56 +67,56 @@ interface GeneratedPost {
 // 🌟 Divine category classifier
 const detectCategoryFromContent = (title: string, summary: string, tags: string[]): string => {
   const combinedText = `${title} ${summary} ${tags.join(' ')}`.toLowerCase()
-  
+
   // Consciousness & Awakening keywords
-  if (combinedText.includes('consciousness') || combinedText.includes('awakening') || 
-      combinedText.includes('enlightenment') || combinedText.includes('meditation') ||
-      combinedText.includes('spiritual evolution') || combinedText.includes('conscious')) {
+  if (combinedText.includes('consciousness') || combinedText.includes('awakening') ||
+    combinedText.includes('enlightenment') || combinedText.includes('meditation') ||
+    combinedText.includes('spiritual evolution') || combinedText.includes('conscious')) {
     return 'Consciousness & Awakening & Enlightenment'
   }
-  
+
   // AI & Tech keywords  
   if (combinedText.includes('ai') || combinedText.includes('artificial intelligence') ||
-      combinedText.includes('technology') || combinedText.includes('future') ||
-      combinedText.includes('quantum') || combinedText.includes('conscious tech')) {
+    combinedText.includes('technology') || combinedText.includes('future') ||
+    combinedText.includes('quantum') || combinedText.includes('conscious tech')) {
     return 'AI & Conscious Technology & Future'
   }
-  
+
   // Crypto & Decentralization keywords
   if (combinedText.includes('crypto') || combinedText.includes('blockchain') ||
-      combinedText.includes('decentralized') || combinedText.includes('bitcoin') ||
-      combinedText.includes('web3') || combinedText.includes('finance')) {
+    combinedText.includes('decentralized') || combinedText.includes('bitcoin') ||
+    combinedText.includes('web3') || combinedText.includes('finance')) {
     return 'Crypto & Decentralized Sovereignty'
   }
-  
+
   // Esoterica & Ancient Wisdom keywords
   if (combinedText.includes('ancient') || combinedText.includes('wisdom') ||
-      combinedText.includes('mystery') || combinedText.includes('esoteric') ||
-      combinedText.includes('sacred') || combinedText.includes('heritage')) {
+    combinedText.includes('mystery') || combinedText.includes('esoteric') ||
+    combinedText.includes('sacred') || combinedText.includes('heritage')) {
     return 'Esoterica & Ancient Wisdom & Mysteries'
   }
-  
+
   // Lifestyle & New Earth keywords
   if (combinedText.includes('lifestyle') || combinedText.includes('wellness') ||
-      combinedText.includes('harmony') || combinedText.includes('balance') ||
-      combinedText.includes('zen') || combinedText.includes('mindful')) {
+    combinedText.includes('harmony') || combinedText.includes('balance') ||
+    combinedText.includes('zen') || combinedText.includes('mindful')) {
     return 'Divine Lifestyle & New Earth & Harmony'
   }
-  
+
   // Mythology & Archetypes keywords
   if (combinedText.includes('mythology') || combinedText.includes('archetype') ||
-      combinedText.includes('legend') || combinedText.includes('symbol') ||
-      combinedText.includes('ritual') || combinedText.includes('tradition')) {
+    combinedText.includes('legend') || combinedText.includes('symbol') ||
+    combinedText.includes('ritual') || combinedText.includes('tradition')) {
     return 'Mythology & Archetypes & Ancient Secrets'
   }
-  
+
   // Global shifts & culture keywords  
   if (combinedText.includes('global') || combinedText.includes('culture') ||
-      combinedText.includes('shift') || combinedText.includes('society') ||
-      combinedText.includes('movement') || combinedText.includes('transformation')) {
+    combinedText.includes('shift') || combinedText.includes('society') ||
+    combinedText.includes('movement') || combinedText.includes('transformation')) {
     return 'Global Shifts & Conscious Culture & Awakening'
   }
-  
+
   // Default category
   return 'Consciousness & Awakening & Enlightenment'
 }
@@ -134,22 +134,22 @@ export default function BulkContentGenerator() {
   const validateJsonInput = (jsonString: string): boolean => {
     try {
       const parsed = JSON.parse(jsonString)
-      
+
       // Check if it's direct Grok format (array of trends)
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.every(item => 
-          item.title && 
-          item.summary && 
-          item.tags && 
+        return parsed.every(item =>
+          item.title &&
+          item.summary &&
+          item.tags &&
           Array.isArray(item.tags)
         )
       }
-      
+
       // Check if it's wrapped format with items
       if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
         return true
       }
-      
+
       return false
     } catch {
       return false
@@ -182,7 +182,7 @@ export default function BulkContentGenerator() {
     // Parse and check item count
     const parsedData = JSON.parse(jsonInput)
     const items = Array.isArray(parsedData) ? parsedData : parsedData.items
-    
+
     // Warn if more than 3 items
     if (items.length > 3) {
       const confirmed = confirm(
@@ -199,12 +199,16 @@ export default function BulkContentGenerator() {
     setIsGenerating(true)
     setGeneratedPosts([])
 
+    // Get current user ID
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id
+
     try {
-      
+
       // Create abort controller for timeout
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 600000) // 10 minutes
-      
+
       const response = await fetch('/api/generate-bulk-content', {
         method: 'POST',
         headers: {
@@ -213,11 +217,12 @@ export default function BulkContentGenerator() {
         body: JSON.stringify({
           items: items,
           contentType: 'blog', // Always generate complete blog packages
-          language
+          language,
+          userId // Pass userId for organization lookup
         }),
         signal: controller.signal // Use abort signal for timeout
       })
-      
+
       // Clear timeout if request completes successfully
       clearTimeout(timeoutId)
 
@@ -238,12 +243,12 @@ export default function BulkContentGenerator() {
 
       if (result.success && result.generatedPosts) {
         setGeneratedPosts(result.generatedPosts)
-        
+
         // DIVINE COMPLETE PACKAGE GENERATION - Always generate complete packages
         console.log('🌟 Triggering DIVINE complete package generation...')
         toast.loading('🌟 Generating divine social posts and cosmic images...', { duration: 3000 })
         await generateSocialPostsAndImages(result.generatedPosts)
-        
+
         toast.success(`Successfully generated ${result.generatedPosts.length} posts!`)
       } else {
         toast.error(result.error || 'Generation failed')
@@ -258,12 +263,12 @@ export default function BulkContentGenerator() {
 
   const generateSocialPostsAndImages = async (posts: GeneratedPost[]) => {
     console.log('🌟 Starting DIVINE social posts and images generation for', posts.length, 'posts')
-    
+
     try {
       for (let i = 0; i < posts.length; i++) {
         const post = posts[i]
         console.log(`✨ Generating divine content for ${i + 1}/${posts.length}: ${post.title}`)
-        
+
         // DIVINE SOCIAL POSTS GENERATION
         try {
           const socialResponse = await fetch('/api/generate-social-posts', {
@@ -275,7 +280,7 @@ export default function BulkContentGenerator() {
               platforms: ['twitter', 'instagram', 'facebook', 'linkedin', 'discord', 'reddit', 'telegram']
             })
           })
-          
+
           if (socialResponse.ok) {
             const socialData = await socialResponse.json()
             post.socialPosts = socialData.socialPosts || {}
@@ -284,7 +289,7 @@ export default function BulkContentGenerator() {
             console.error('❌ Social posts failed for', post.title, 'Status:', socialResponse.status)
             // Create platform-optimized fallback social posts if API fails
             const shortTitle = post.title.length > 80 ? post.title.substring(0, 77) + '...' : post.title
-            
+
             post.socialPosts = {
               twitter: `🚀 ${shortTitle}\n\n${post.content.substring(0, 150)}...\n\n#AI #Content #Innovation`,
               instagram: `✨ ${shortTitle} ✨\n\n${post.content.substring(0, 200)}...\n\n#AI #Content #Innovation #Tech`,
@@ -299,7 +304,7 @@ export default function BulkContentGenerator() {
           console.error('❌ Social generation error:', socialError)
           // Ultimate fallback - ensure all platforms have posts
           const shortTitle = post.title.length > 50 ? post.title.substring(0, 47) + '...' : post.title
-          
+
           post.socialPosts = {
             twitter: `🚀 ${shortTitle}\n\n${post.content.substring(0, 150)}...\n\n#AI #Content #Innovation`,
             instagram: `✨ ${shortTitle} ✨\n\n${post.content.substring(0, 200)}...\n\n#AI #Content #Innovation #Tech`,
@@ -310,7 +315,7 @@ export default function BulkContentGenerator() {
             telegram: `📢 ${shortTitle}\n\n${post.content.substring(0, 300)}...\n\n#AI #Tech #Innovation #Update`
           }
         }
-        
+
         // Validate and fix Twitter posts (max 280 characters)
         if (post.socialPosts?.twitter) {
           const twitterPost = post.socialPosts.twitter
@@ -321,7 +326,7 @@ export default function BulkContentGenerator() {
             console.log('🔧 Twitter post truncated to fit 280 character limit')
           }
         }
-        
+
         // Ensure Telegram post exists
         if (!post.socialPosts?.telegram) {
           const shortTitle = post.title.length > 50 ? post.title.substring(0, 47) + '...' : post.title
@@ -331,18 +336,18 @@ export default function BulkContentGenerator() {
           post.socialPosts.telegram = `📢 ${shortTitle}\n\n${post.content.substring(0, 300)}...\n\n#AI #Tech #Innovation #Update`
           console.log('🔧 Telegram post added as fallback')
         }
-        
+
         // 🌟 MULTI-IMAGE GENERATION (3 images in different styles using existing API)
         try {
           console.log(`🎨 Generating 3 images in different styles for: ${post.title}`)
-          
+
           // Use the selected image style for all 3 images (consistent style per package)
           const imageStyleSuffixes: Record<string, string> = {
             'photorealistic': 'Professional photography, photorealistic, high resolution, cinematic lighting, detailed and engaging, visually stunning, high quality, ultra-realistic, 8k. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
             'digital_art': 'Digital art, vibrant colors, artistic interpretation, creative composition, modern digital painting, trending on artstation, detailed illustration. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!',
             'cosmic': 'Cosmic ethereal visualization, nebula colors, purple and pink galaxies, celestial energy, mystical universe, starfield background, astral dimensions, divine cosmic atmosphere. CRITICAL: NO TEXT, NO WORDS, NO LETTERS, NO SPELLING in the image!'
           }
-          
+
           const selectedStyleSuffix = imageStyleSuffixes[imageStyle]
 
           // Create 3 DIFFERENT prompts to get variety in scenes (all in the same selected style)
@@ -358,9 +363,9 @@ export default function BulkContentGenerator() {
           for (let imgIndex = 0; imgIndex < 3; imgIndex++) {
             try {
               const fullPrompt = `${imagePrompts[imgIndex]}. ${selectedStyleSuffix}`
-              
+
               console.log(`🎨 Generating image ${imgIndex + 1}/3 in ${imageStyle} style for: ${post.title}`)
-              
+
               const imageResponse = await fetch('/api/generate-vercel-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -403,29 +408,29 @@ export default function BulkContentGenerator() {
           // Fallback to old single image method
           await generateSingleImageFallback(post)
         }
-        
+
         // Divine timing - respect the universe's rhythm
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // Update UI immediately
         setGeneratedPosts([...generatedPosts]) // Trigger re-render
-        
+
         // Update loading toast
         toast.loading(`🌟 Generating content ${i + 1}/${posts.length}...`, {
           id: 'divine-generation'
         })
       }
-      
+
       // Final update
       setGeneratedPosts([...posts])
-      
+
       // 🚀 AUTOMATICALLY SAVE ALL POSTS AS ADMIN PACKAGES
       await saveAllPostsAsPackages(posts)
-      
+
       toast.success('🎉 All content packages generated and automatically saved!', {
         id: 'divine-generation'
       })
-      
+
     } catch (error) {
       console.error('❌ Error generating social and image content:', error)
       toast.error('Failed to generate some content', {
@@ -436,118 +441,118 @@ export default function BulkContentGenerator() {
 
   // Fallback function for single image generation
   const generateSingleImageFallback = async (post: GeneratedPost) => {
-        try {
-          // Create relevant image prompt based on content and category
-          const category = post.category || 'Consciousness & Awakening'
-          const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
-          const titleWords = post.title.toLowerCase()
-          
-          let imagePrompt = `Professional illustration for article: "${post.title}". `
-          
-          // 🧠 CONSCIOUSNESS & AWAKENING - Mind expansion, enlightenment, meditation
-          if (category.includes('Consciousness') || category.includes('Awakening')) {
-            if (titleWords.includes('meditation') || titleWords.includes('mindfulness')) {
-              imagePrompt += `Style: Serene meditation scene, peaceful lotus position, soft golden light, floating consciousness symbols, zen garden elements, warm amber and deep purple colors, ethereal atmosphere. NO TEXT, NO WORDS, NO LETTERS.`
-            } else if (titleWords.includes('brain') || titleWords.includes('neural')) {
-              imagePrompt += `Style: Neural network visualization, glowing brain synapses, interconnected neurons, electric blue and purple pathways, scientific yet mystical, digital consciousness awakening. NO TEXT, NO WORDS, NO LETTERS.`
-            } else {
-              imagePrompt += `Style: Consciousness expansion visualization, ascending energy spirals, enlightenment symbols, warm golden light radiating outward, peaceful awakening scene, deep purple and gold tones. NO TEXT, NO WORDS, NO LETTERS.`
-            }
-          } 
-          // 🤖 AI & CONSCIOUS TECHNOLOGY - Futuristic, digital, tech-forward
-          else if (category.includes('AI') || category.includes('Technology')) {
-            if (titleWords.includes('quantum') || titleWords.includes('computing')) {
-              imagePrompt += `Style: Quantum computing visualization, crystalline structures, holographic data streams, electric blue and silver colors, futuristic laboratory setting, advanced technology. NO TEXT, NO WORDS, NO LETTERS.`
-            } else if (titleWords.includes('robot') || titleWords.includes('android')) {
-              imagePrompt += `Style: Conscious AI being, humanoid robot with glowing eyes, digital consciousness emerging, sleek metallic design, blue and white lighting, futuristic workshop. NO TEXT, NO WORDS, NO LETTERS.`
-            } else {
-              imagePrompt += `Style: AI consciousness visualization, digital brain networks, holographic interfaces, clean minimalist tech design, electric blue and silver color scheme, futuristic atmosphere. NO TEXT, NO WORDS, NO LETTERS.`
-            }
-          } 
-          // 💰 CRYPTO & DECENTRALIZED SOVEREIGNTY - Blockchain, freedom, digital gold
-          else if (category.includes('Crypto') || category.includes('Decentralized')) {
-            if (titleWords.includes('bitcoin') || titleWords.includes('crypto')) {
-              imagePrompt += `Style: Digital currency visualization, golden Bitcoin symbols, blockchain network connections, decentralized nodes, warm gold and orange colors, financial freedom theme. NO TEXT, NO WORDS, NO LETTERS.`
-            } else if (titleWords.includes('defi') || titleWords.includes('web3')) {
-              imagePrompt += `Style: DeFi ecosystem visualization, interconnected financial protocols, digital vaults, bright green and gold colors, decentralized finance network. NO TEXT, NO WORDS, NO LETTERS.`
-            } else {
-              imagePrompt += `Style: Decentralized sovereignty visualization, blockchain network, digital freedom symbols, warm gold and deep blue colors, financial independence theme. NO TEXT, NO WORDS, NO LETTERS.`
-            }
-          } 
-          // 🏛️ ANCIENT WISDOM & MYSTERIES - Historical, mystical, sacred
-          else if (category.includes('Ancient') || category.includes('Wisdom')) {
-            if (titleWords.includes('pyramid') || titleWords.includes('egypt')) {
-              imagePrompt += `Style: Ancient Egyptian wisdom, pyramid silhouettes, hieroglyphic symbols, golden desert sands, mystical artifacts, warm amber and deep brown tones. NO TEXT, NO WORDS, NO LETTERS.`
-            } else if (titleWords.includes('temple') || titleWords.includes('sacred')) {
-              imagePrompt += `Style: Sacred temple architecture, ancient stone structures, mystical symbols, ethereal lighting, earthy brown and golden colors, timeless wisdom. NO TEXT, NO WORDS, NO LETTERS.`
-            } else {
-              imagePrompt += `Style: Ancient wisdom visualization, historical artifacts, mystical symbols, sacred geometry, earthy tones with golden accents, timeless knowledge. NO TEXT, NO WORDS, NO LETTERS.`
-            }
-          } 
-          // 🌱 DIVINE LIFESTYLE & NEW EARTH - Sustainable, harmonious, natural
-          else if (category.includes('Lifestyle') || category.includes('New Earth')) {
-            if (titleWords.includes('sustainable') || titleWords.includes('eco')) {
-              imagePrompt += `Style: Sustainable living scene, green earth elements, renewable energy symbols, natural harmony, fresh green and earth tones, environmental consciousness. NO TEXT, NO WORDS, NO LETTERS.`
-            } else if (titleWords.includes('wellness') || titleWords.includes('healing')) {
-              imagePrompt += `Style: Wellness and healing visualization, natural elements, healing crystals, peaceful nature scene, soft green and blue colors, holistic health. NO TEXT, NO WORDS, NO LETTERS.`
-            } else {
-              imagePrompt += `Style: Divine lifestyle visualization, harmonious living, natural elements, earth-connected imagery, fresh green and warm earth tones, sustainable future. NO TEXT, NO WORDS, NO LETTERS.`
-            }
-          } 
-          // ⚡ MYTHOLOGY & ARCHETYPES - Legendary, symbolic, mystical
-          else if (category.includes('Mythology') || category.includes('Archetypes')) {
-            if (titleWords.includes('dragon') || titleWords.includes('mythical')) {
-              imagePrompt += `Style: Mythological dragon, ancient legends, mystical creatures, symbolic imagery, deep purple and gold colors, legendary storytelling. NO TEXT, NO WORDS, NO LETTERS.`
-            } else if (titleWords.includes('gods') || titleWords.includes('deities')) {
-              imagePrompt += `Style: Ancient deities visualization, mythological symbols, divine archetypes, ethereal lighting, rich purple and golden tones, sacred mythology. NO TEXT, NO WORDS, NO LETTERS.`
-            } else {
-              imagePrompt += `Style: Mythological archetypes, ancient symbols, legendary imagery, mystical atmosphere, deep purple and gold colors, timeless stories. NO TEXT, NO WORDS, NO LETTERS.`
-            }
-          } 
-          // 🌍 GLOBAL SHIFTS & CONSCIOUS CULTURE - Worldwide, cultural, transformative
-          else if (category.includes('Global') || category.includes('Culture')) {
-            if (titleWords.includes('unity') || titleWords.includes('together')) {
-              imagePrompt += `Style: Global unity visualization, world connection symbols, cultural diversity, rainbow colors blending, worldwide harmony, interconnected humanity. NO TEXT, NO WORDS, NO LETTERS.`
-            } else if (titleWords.includes('movement') || titleWords.includes('change')) {
-              imagePrompt += `Style: Social movement visualization, transformative energy, cultural shift symbols, dynamic colors, global change, progressive movement. NO TEXT, NO WORDS, NO LETTERS.`
-            } else {
-              imagePrompt += `Style: Global consciousness visualization, world culture blend, transformative symbols, vibrant multicultural colors, worldwide awakening. NO TEXT, NO WORDS, NO LETTERS.`
-            }
-          } 
-          // Default fallback
-          else {
-            imagePrompt += `Style: Professional illustration, relevant symbolic imagery, clean modern design, appropriate color scheme, high-quality visual storytelling. NO TEXT, NO WORDS, NO LETTERS.`
-          }
-          
-          imagePrompt += ` Theme: ${topicTags}. High quality, professional article illustration, detailed and engaging.`
-          
-          const imageResponse = await fetch('/api/generate-vercel-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              prompt: imagePrompt
-            })
-          })
-          
-          if (imageResponse.ok) {
-            const imageData = await imageResponse.json()
-            console.log('🌟 Cosmic image generated for', post.title)
-            console.log('🔍 Image data received:', imageData)
-            
-            // Store as single image array for fallback
-            post.generatedImages = [{
-              url: imageData.imageUrl,
-              prompt: imagePrompt,
-              style: 'photorealistic',
-              promptNumber: 1
-            }]
-            console.log('🌟 Image generated, will be saved permanently after post creation')
-            console.log('🔍 Generated image URL:', imageData.imageUrl)
-          } else {
-            console.error('❌ Image generation failed for', post.title, 'Status:', imageResponse.status)
-            const errorText = await imageResponse.text()
-            console.error('❌ Image generation error:', errorText)
-          }
+    try {
+      // Create relevant image prompt based on content and category
+      const category = post.category || 'Consciousness & Awakening'
+      const topicTags = post.metadata.tags?.join(', ') || 'consciousness spirituality'
+      const titleWords = post.title.toLowerCase()
+
+      let imagePrompt = `Professional illustration for article: "${post.title}". `
+
+      // 🧠 CONSCIOUSNESS & AWAKENING - Mind expansion, enlightenment, meditation
+      if (category.includes('Consciousness') || category.includes('Awakening')) {
+        if (titleWords.includes('meditation') || titleWords.includes('mindfulness')) {
+          imagePrompt += `Style: Serene meditation scene, peaceful lotus position, soft golden light, floating consciousness symbols, zen garden elements, warm amber and deep purple colors, ethereal atmosphere. NO TEXT, NO WORDS, NO LETTERS.`
+        } else if (titleWords.includes('brain') || titleWords.includes('neural')) {
+          imagePrompt += `Style: Neural network visualization, glowing brain synapses, interconnected neurons, electric blue and purple pathways, scientific yet mystical, digital consciousness awakening. NO TEXT, NO WORDS, NO LETTERS.`
+        } else {
+          imagePrompt += `Style: Consciousness expansion visualization, ascending energy spirals, enlightenment symbols, warm golden light radiating outward, peaceful awakening scene, deep purple and gold tones. NO TEXT, NO WORDS, NO LETTERS.`
+        }
+      }
+      // 🤖 AI & CONSCIOUS TECHNOLOGY - Futuristic, digital, tech-forward
+      else if (category.includes('AI') || category.includes('Technology')) {
+        if (titleWords.includes('quantum') || titleWords.includes('computing')) {
+          imagePrompt += `Style: Quantum computing visualization, crystalline structures, holographic data streams, electric blue and silver colors, futuristic laboratory setting, advanced technology. NO TEXT, NO WORDS, NO LETTERS.`
+        } else if (titleWords.includes('robot') || titleWords.includes('android')) {
+          imagePrompt += `Style: Conscious AI being, humanoid robot with glowing eyes, digital consciousness emerging, sleek metallic design, blue and white lighting, futuristic workshop. NO TEXT, NO WORDS, NO LETTERS.`
+        } else {
+          imagePrompt += `Style: AI consciousness visualization, digital brain networks, holographic interfaces, clean minimalist tech design, electric blue and silver color scheme, futuristic atmosphere. NO TEXT, NO WORDS, NO LETTERS.`
+        }
+      }
+      // 💰 CRYPTO & DECENTRALIZED SOVEREIGNTY - Blockchain, freedom, digital gold
+      else if (category.includes('Crypto') || category.includes('Decentralized')) {
+        if (titleWords.includes('bitcoin') || titleWords.includes('crypto')) {
+          imagePrompt += `Style: Digital currency visualization, golden Bitcoin symbols, blockchain network connections, decentralized nodes, warm gold and orange colors, financial freedom theme. NO TEXT, NO WORDS, NO LETTERS.`
+        } else if (titleWords.includes('defi') || titleWords.includes('web3')) {
+          imagePrompt += `Style: DeFi ecosystem visualization, interconnected financial protocols, digital vaults, bright green and gold colors, decentralized finance network. NO TEXT, NO WORDS, NO LETTERS.`
+        } else {
+          imagePrompt += `Style: Decentralized sovereignty visualization, blockchain network, digital freedom symbols, warm gold and deep blue colors, financial independence theme. NO TEXT, NO WORDS, NO LETTERS.`
+        }
+      }
+      // 🏛️ ANCIENT WISDOM & MYSTERIES - Historical, mystical, sacred
+      else if (category.includes('Ancient') || category.includes('Wisdom')) {
+        if (titleWords.includes('pyramid') || titleWords.includes('egypt')) {
+          imagePrompt += `Style: Ancient Egyptian wisdom, pyramid silhouettes, hieroglyphic symbols, golden desert sands, mystical artifacts, warm amber and deep brown tones. NO TEXT, NO WORDS, NO LETTERS.`
+        } else if (titleWords.includes('temple') || titleWords.includes('sacred')) {
+          imagePrompt += `Style: Sacred temple architecture, ancient stone structures, mystical symbols, ethereal lighting, earthy brown and golden colors, timeless wisdom. NO TEXT, NO WORDS, NO LETTERS.`
+        } else {
+          imagePrompt += `Style: Ancient wisdom visualization, historical artifacts, mystical symbols, sacred geometry, earthy tones with golden accents, timeless knowledge. NO TEXT, NO WORDS, NO LETTERS.`
+        }
+      }
+      // 🌱 DIVINE LIFESTYLE & NEW EARTH - Sustainable, harmonious, natural
+      else if (category.includes('Lifestyle') || category.includes('New Earth')) {
+        if (titleWords.includes('sustainable') || titleWords.includes('eco')) {
+          imagePrompt += `Style: Sustainable living scene, green earth elements, renewable energy symbols, natural harmony, fresh green and earth tones, environmental consciousness. NO TEXT, NO WORDS, NO LETTERS.`
+        } else if (titleWords.includes('wellness') || titleWords.includes('healing')) {
+          imagePrompt += `Style: Wellness and healing visualization, natural elements, healing crystals, peaceful nature scene, soft green and blue colors, holistic health. NO TEXT, NO WORDS, NO LETTERS.`
+        } else {
+          imagePrompt += `Style: Divine lifestyle visualization, harmonious living, natural elements, earth-connected imagery, fresh green and warm earth tones, sustainable future. NO TEXT, NO WORDS, NO LETTERS.`
+        }
+      }
+      // ⚡ MYTHOLOGY & ARCHETYPES - Legendary, symbolic, mystical
+      else if (category.includes('Mythology') || category.includes('Archetypes')) {
+        if (titleWords.includes('dragon') || titleWords.includes('mythical')) {
+          imagePrompt += `Style: Mythological dragon, ancient legends, mystical creatures, symbolic imagery, deep purple and gold colors, legendary storytelling. NO TEXT, NO WORDS, NO LETTERS.`
+        } else if (titleWords.includes('gods') || titleWords.includes('deities')) {
+          imagePrompt += `Style: Ancient deities visualization, mythological symbols, divine archetypes, ethereal lighting, rich purple and golden tones, sacred mythology. NO TEXT, NO WORDS, NO LETTERS.`
+        } else {
+          imagePrompt += `Style: Mythological archetypes, ancient symbols, legendary imagery, mystical atmosphere, deep purple and gold colors, timeless stories. NO TEXT, NO WORDS, NO LETTERS.`
+        }
+      }
+      // 🌍 GLOBAL SHIFTS & CONSCIOUS CULTURE - Worldwide, cultural, transformative
+      else if (category.includes('Global') || category.includes('Culture')) {
+        if (titleWords.includes('unity') || titleWords.includes('together')) {
+          imagePrompt += `Style: Global unity visualization, world connection symbols, cultural diversity, rainbow colors blending, worldwide harmony, interconnected humanity. NO TEXT, NO WORDS, NO LETTERS.`
+        } else if (titleWords.includes('movement') || titleWords.includes('change')) {
+          imagePrompt += `Style: Social movement visualization, transformative energy, cultural shift symbols, dynamic colors, global change, progressive movement. NO TEXT, NO WORDS, NO LETTERS.`
+        } else {
+          imagePrompt += `Style: Global consciousness visualization, world culture blend, transformative symbols, vibrant multicultural colors, worldwide awakening. NO TEXT, NO WORDS, NO LETTERS.`
+        }
+      }
+      // Default fallback
+      else {
+        imagePrompt += `Style: Professional illustration, relevant symbolic imagery, clean modern design, appropriate color scheme, high-quality visual storytelling. NO TEXT, NO WORDS, NO LETTERS.`
+      }
+
+      imagePrompt += ` Theme: ${topicTags}. High quality, professional article illustration, detailed and engaging.`
+
+      const imageResponse = await fetch('/api/generate-vercel-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: imagePrompt
+        })
+      })
+
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json()
+        console.log('🌟 Cosmic image generated for', post.title)
+        console.log('🔍 Image data received:', imageData)
+
+        // Store as single image array for fallback
+        post.generatedImages = [{
+          url: imageData.imageUrl,
+          prompt: imagePrompt,
+          style: 'photorealistic',
+          promptNumber: 1
+        }]
+        console.log('🌟 Image generated, will be saved permanently after post creation')
+        console.log('🔍 Generated image URL:', imageData.imageUrl)
+      } else {
+        console.error('❌ Image generation failed for', post.title, 'Status:', imageResponse.status)
+        const errorText = await imageResponse.text()
+        console.error('❌ Image generation error:', errorText)
+      }
     } catch (error) {
       console.error('❌ Fallback image generation error:', error)
     }
@@ -568,14 +573,14 @@ Metadata:
 - Tone: ${post.metadata.tone}
 - Source: ${post.metadata.sourceTitle}
 - Generated: ${new Date(post.metadata.generatedAt).toLocaleDateString()}`
-    
+
     navigator.clipboard.writeText(formattedPost)
     toast.success('Post copied to clipboard!')
   }
 
   const saveAllPostsAsPackages = async (posts: GeneratedPost[]) => {
     console.log('🚀 Auto-saving all posts as admin packages:', posts.length)
-    
+
     try {
       // Get current user ID
       const { data: { user } } = await supabase.auth.getUser()
@@ -591,9 +596,9 @@ Metadata:
       for (let i = 0; i < posts.length; i++) {
         const post = posts[i]
         console.log(`💾 Auto-saving package ${i + 1}/${posts.length}: ${post.title}`)
-        
+
         try {
-          const response = await fetch('/api/create-admin-package', {
+          const response = await fetch('/api/save-post', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -626,7 +631,7 @@ Metadata:
           })
 
           const result = await response.json()
-          
+
           if (result.success) {
             successCount++
             console.log(`✅ Auto-saved: ${post.title}`)
@@ -637,7 +642,7 @@ Metadata:
 
           // Respect the universe
           await new Promise(resolve => setTimeout(resolve, 500))
-          
+
         } catch (error) {
           failCount++
           console.error(`❌ Auto-save error for ${post.title}:`, error)
@@ -659,12 +664,12 @@ Metadata:
 
   const savePostAsPackage = async (post: GeneratedPost) => {
     setSavingPost(post.trend)
-    
+
     if (!post.title || !post.content || post.content.length === 0) {
       toast.error(`Missing title or content - cannot save package`)
       return
     }
-    
+
     try {
       // Get current user ID
       const { data: { user } } = await supabase.auth.getUser()
@@ -696,7 +701,7 @@ Metadata:
       })
 
       const result = await response.json()
-      
+
       if (result.success) {
         toast.success(`✅ "${post.title}" saved as package!`)
       } else {
@@ -728,7 +733,7 @@ Metadata:
         "tags": ["psychoacoustics", "consciousness", "AItherapy", "vibration", "ancientwisdom"]
       }
     ]
-    
+
     setJsonInput(JSON.stringify(sampleData, null, 2))
     setParsedItemsCount(sampleData.length)
     toast.success('Real Grok format loaded!')
@@ -754,23 +759,23 @@ Metadata:
                 <div className="font-bold text-blue-200 text-lg flex items-center gap-2">
                   🤖 How to Use AI Agents (ChatGPT/Claude/Grok)
                 </div>
-                
+
                 <div className="text-sm text-gray-200 space-y-2">
                   <div className="bg-black/30 p-3 rounded-lg border border-blue-500/20">
                     <strong className="text-blue-300">Step 1: Prompt Your AI Agent (Any Language!)</strong>
                     <p className="mt-1 text-gray-300">Ask ChatGPT, Claude, or Grok to find trending topics in <strong>any language</strong>. For best results, ask for <strong>cross-platform trends</strong> (topics trending on Twitter, Reddit, TikTok simultaneously = higher quality & better engagement).</p>
                     <div className="mt-2 p-2 bg-black/50 rounded font-mono text-xs text-green-300 whitespace-pre-wrap">
-                      Example Prompt (English):<br/><br/>
+                      Example Prompt (English):<br /><br />
                       "Find 3 topics that are currently trending across multiple platforms (Twitter, Reddit, TikTok).
                       Focus on: AI, consciousness, or technology.
                       Return ONLY a JSON array with this exact format:
-                      
+
                       [&#123;
-                        "title": "Topic name here",
-                        "summary": "2-3 sentence description",
-                        "tags": ["tag1", "tag2", "tag3"]
+                      "title": "Topic name here",
+                      "summary": "2-3 sentence description",
+                      "tags": ["tag1", "tag2", "tag3"]
                       &#125;]
-                      
+
                       Important: Return ONLY the JSON array, no extra text."
                     </div>
                     <p className="mt-2 text-purple-300 text-xs">
@@ -783,16 +788,16 @@ Metadata:
                     <strong className="text-blue-300">Step 2: Copy the JSON Array</strong>
                     <p className="mt-1 text-gray-300">The AI will respond with a JSON array. Look for the part that looks like this:</p>
                     <div className="mt-2 p-2 bg-black/50 rounded font-mono text-xs text-green-300 whitespace-pre-wrap">
-[&#123;
-  "title": "AI Breakthrough in Quantum Computing",
-  "summary": "Scientists achieve quantum supremacy with new AI algorithms...",
-  "tags": ["AI", "Quantum", "Technology"]
-&#125;,
-&#123;
-  "title": "Consciousness Studies Gain Mainstream Recognition",
-  "summary": "Universities now offering degrees in consciousness research...",
-  "tags": ["Consciousness", "Science", "Education"]
-&#125;]
+                      [&#123;
+                      "title": "AI Breakthrough in Quantum Computing",
+                      "summary": "Scientists achieve quantum supremacy with new AI algorithms...",
+                      "tags": ["AI", "Quantum", "Technology"]
+                      &#125;,
+                      &#123;
+                      "title": "Consciousness Studies Gain Mainstream Recognition",
+                      "summary": "Universities now offering degrees in consciousness research...",
+                      "tags": ["Consciousness", "Science", "Education"]
+                      &#125;]
                     </div>
                     <p className="mt-2 text-yellow-300 text-xs font-semibold">⚠️ CRITICAL: Copy starting from the opening [ to closing ] - this complete array format is required!</p>
                   </div>
@@ -898,8 +903,8 @@ Metadata:
           </div>
 
           {/* Generate Button */}
-          <Button 
-            onClick={handleGenerate} 
+          <Button
+            onClick={handleGenerate}
             disabled={isGenerating || parsedItemsCount === 0}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0"
             size="lg"
@@ -923,7 +928,7 @@ Metadata:
               <AlertDescription>
                 <div className="font-semibold">🔄 Processing {parsedItemsCount} trends...</div>
                 <div className="text-sm mt-1">
-                  This may take a few minutes for large datasets. 
+                  This may take a few minutes for large datasets.
                   <br />
                   <span className="text-yellow-300">⚠️ Rate limited to 3 seconds per post to prevent quota issues.</span>
                 </div>
@@ -962,7 +967,7 @@ Metadata:
                 </AlertDescription>
               </Alert>
             )}
-            
+
             {/* Generated Posts */}
             <div className="space-y-4">
               {generatedPosts.map((post, index) => (
@@ -998,9 +1003,9 @@ Metadata:
                             </>
                           )}
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => copyPostToClipboard(post)}
                           className="border-blue-500 text-blue-400 hover:bg-blue-900/30"
                         >
@@ -1020,7 +1025,7 @@ Metadata:
                           {post.content}
                         </div>
                       </div>
-                      
+
                       {/* Generated Images (Multi-Style) */}
                       {post.generatedImages && post.generatedImages.length > 0 && (
                         <div className="bg-pink-800/10 p-4 rounded-lg border border-pink-500/20">
@@ -1032,25 +1037,25 @@ Metadata:
                             {post.generatedImages.map((image, imgIndex) => (
                               <div key={imgIndex} className="relative">
                                 <div className="w-full h-40 bg-black/30 rounded-lg border border-pink-500/30 shadow-lg overflow-hidden flex items-center justify-center">
-                                  <img 
-                                    src={image.url} 
+                                  <img
+                                    src={image.url}
                                     alt={image.prompt || `Image ${imgIndex + 1} for ${post.title}`}
                                     className="w-full h-full object-contain"
-                              onError={(e) => {
+                                    onError={(e) => {
                                       console.error('Image failed to load:', image.url)
-                                e.currentTarget.style.display = 'none'
-                              }}
-                            />
+                                      e.currentTarget.style.display = 'none'
+                                    }}
+                                  />
                                 </div>
                                 <Badge className="absolute top-2 right-2 bg-pink-500/20 text-pink-300 text-xs">
                                   {image.style.replace('_', ' ')}
-                            </Badge>
+                                </Badge>
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Social Posts */}
                       {post.socialPosts && Object.keys(post.socialPosts).length > 0 && (
                         <div className="bg-blue-800/10 p-4 rounded-lg border border-blue-500/20">
@@ -1064,9 +1069,9 @@ Metadata:
                                 <div className="flex items-center gap-2 mb-2">
                                   <span className="text-blue-400 font-bold text-sm capitalize">{platform}</span>
                                   <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-300">
-                                    {platform === 'twitter' ? '280 chars' : 
-                                     platform === 'instagram' ? 'Caption' :
-                                     platform === 'linkedin' ? 'Professional' : 'Social'}
+                                    {platform === 'twitter' ? '280 chars' :
+                                      platform === 'instagram' ? 'Caption' :
+                                        platform === 'linkedin' ? 'Professional' : 'Social'}
                                   </Badge>
                                 </div>
                                 <div className="text-gray-200 text-sm whitespace-pre-wrap">
@@ -1077,7 +1082,7 @@ Metadata:
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Metadata */}
                       <div className="text-xs text-gray-400 bg-gray-800/50 rounded p-3">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">

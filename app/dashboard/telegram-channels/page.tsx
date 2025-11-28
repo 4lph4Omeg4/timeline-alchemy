@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +20,7 @@ interface TelegramChannel {
 }
 
 export default function TelegramChannelsPage() {
+  const supabase = createClient()
   const [channels, setChannels] = useState<TelegramChannel[]>([])
   const [loading, setLoading] = useState(true)
   const [newChannel, setNewChannel] = useState({
@@ -38,7 +39,7 @@ export default function TelegramChannelsPage() {
       .eq('role', 'owner')
       .single()
 
-    return orgMembers?.org_id
+    return (orgMembers as any)?.org_id
   }
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function TelegramChannelsPage() {
       try {
         // Get the current user
         const { data: { user }, error: userError } = await supabase.auth.getUser()
-        
+
         if (userError || !user) {
           toast.error('Please sign in to view Telegram channels')
           router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/telegram-channels'))
@@ -89,7 +90,7 @@ export default function TelegramChannelsPage() {
     try {
       // Get the current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError || !user) {
         toast.error('Please sign in to add Telegram channels')
         return
@@ -129,7 +130,7 @@ export default function TelegramChannelsPage() {
 
       // Add to local state
       setChannels(prev => [...prev, ...data])
-      
+
       // Reset form
       setNewChannel({
         channel_id: '',
@@ -159,7 +160,7 @@ export default function TelegramChannelsPage() {
 
       // Remove from local state
       setChannels(prev => prev.filter(channel => channel.id !== channelId))
-      
+
       toast.success('Telegram channel deleted successfully!')
     } catch (error) {
       console.error('Unexpected error:', error)

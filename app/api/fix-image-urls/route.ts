@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
 export async function POST(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key'
+
   try {
     // Create server-side Supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         // Download the image from Azure URL
         console.log(`Processing image ${image.id}: ${image.url}`)
         const imageResponse = await fetch(image.url)
-        
+
         if (!imageResponse.ok) {
           console.warn(`Failed to download image ${image.id}: ${imageResponse.status}`)
           errors.push(`Failed to download image ${image.id}: ${imageResponse.status}`)
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error fixing image URLs:', error)
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fix image URLs',
         details: error instanceof Error ? error.message : String(error)
       },

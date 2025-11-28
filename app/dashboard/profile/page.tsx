@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import Image from 'next/image'
 
 export default function ProfilePage() {
+  const supabase = createClient()
   const [user, setUser] = useState<any>(null)
   const [organizations, setOrganizations] = useState<any[]>([])
   const [personalOrg, setPersonalOrg] = useState<any>(null)
@@ -31,7 +32,7 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      
+
       // Get current user
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) {
@@ -58,12 +59,12 @@ export default function ProfilePage() {
         setOrganizations(orgs)
 
         // Find personal organization (not Admin Organization and where user is owner/admin)
-        const personal = orgs.find((org: any) => 
-          org.name !== 'Admin Organization' && 
-          (orgMembers.find((m: any) => m.org_id === org.id)?.role === 'owner' || 
-           orgMembers.find((m: any) => m.org_id === org.id)?.role === 'admin')
+        const personal = orgs.find((org: any) =>
+          org.name !== 'Admin Organization' &&
+          ((orgMembers as any[]).find((m: any) => m.org_id === org.id)?.role === 'owner' ||
+            (orgMembers as any[]).find((m: any) => m.org_id === org.id)?.role === 'admin')
         )
-        
+
         if (personal) {
           setPersonalOrg(personal)
           setOrganizationName(personal.name)
@@ -91,7 +92,7 @@ export default function ProfilePage() {
       }
 
       setAvatarFile(file)
-      
+
       // Create preview
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -106,7 +107,7 @@ export default function ProfilePage() {
 
     try {
       setUploadingAvatar(true)
-      
+
       // Generate unique filename
       // Path structure: {user_id}/avatar-{timestamp}.{ext}
       const fileExt = avatarFile.name.split('.').pop()
@@ -170,7 +171,7 @@ export default function ProfilePage() {
       if (personalOrg && organizationName !== personalOrg.name) {
         const { error: orgError } = await supabase
           .from('organizations')
-          .update({ 
+          .update({
             name: organizationName,
             updated_at: new Date().toISOString()
           })
@@ -183,10 +184,10 @@ export default function ProfilePage() {
       }
 
       toast.success('Profile updated successfully!')
-      
+
       // Refresh profile data
       await fetchProfile()
-      
+
       // Clear avatar file after successful save
       setAvatarFile(null)
     } catch (error: any) {
@@ -233,9 +234,9 @@ export default function ProfilePage() {
             <div className="relative">
               {avatarPreview ? (
                 <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-purple-500/50">
-                  <Image 
-                    src={avatarPreview} 
-                    alt="Avatar" 
+                  <Image
+                    src={avatarPreview}
+                    alt="Avatar"
                     fill
                     className="object-cover"
                   />

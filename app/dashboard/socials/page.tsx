@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SocialIcon } from '@/components/ui/social-icons'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { toast } from 'react-hot-toast'
 import { SocialConnection } from '@/types/index'
 
@@ -42,7 +42,7 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
   try {
     const encoder = new TextEncoder()
     const data = encoder.encode(verifier)
-    
+
     // Check if crypto.subtle is available and supports SHA256
     if (crypto.subtle && typeof crypto.subtle.digest === 'function') {
       try {
@@ -132,6 +132,7 @@ const socialPlatforms = [
 ]
 
 export default function SocialConnectionsPage() {
+  const supabase = createClient()
   const [connections, setConnections] = useState<SocialConnection[]>([])
   const [loading, setLoading] = useState(true)
   const [showWordPressModal, setShowWordPressModal] = useState(false)
@@ -157,9 +158,9 @@ export default function SocialConnectionsPage() {
     }
 
     // Find the user's personal organization (not Admin Organization)
-    let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
+    let userOrgId = (orgMembers as any[]).find(member => member.role !== 'client')?.org_id
     if (!userOrgId) {
-      userOrgId = orgMembers[0].org_id
+      userOrgId = (orgMembers as any[])[0].org_id
     }
     return userOrgId
   }
@@ -168,14 +169,14 @@ export default function SocialConnectionsPage() {
     try {
       // Get the current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError) {
         console.error('Auth error:', userError)
         toast.error('Authentication error. Please sign in again.')
         router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
         return
       }
-      
+
       if (!user) {
         console.error('No user found')
         toast.error('Please sign in to view social connections')
@@ -255,7 +256,7 @@ export default function SocialConnectionsPage() {
       if (details) {
         errorMessage += ` (${details})`
       }
-      
+
       // Provide more specific error messages
       if (error === 'oauth_not_configured') {
         errorMessage = 'YouTube OAuth is not properly configured. Please contact administrator.'
@@ -264,7 +265,7 @@ export default function SocialConnectionsPage() {
       } else if (error === 'access_denied') {
         errorMessage = 'Access denied. Please try again and grant the required permissions.'
       }
-      
+
       toast.error(errorMessage)
       console.error('OAuth error details:', { error, details })
       console.error('Full URL params:', Object.fromEntries(urlParams.entries()))
@@ -279,7 +280,7 @@ export default function SocialConnectionsPage() {
     try {
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError || !user) {
         toast.error('Please sign in to connect social accounts')
         router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
@@ -296,10 +297,10 @@ export default function SocialConnectionsPage() {
       // Generate PKCE parameters
       const codeVerifier = generateCodeVerifier()
       const codeChallenge = await generateCodeChallenge(codeVerifier)
-      
+
       // Store code verifier in session storage
       sessionStorage.setItem('code_verifier', codeVerifier)
-      
+
       // Create state parameter with user and org info
       const state = btoa(JSON.stringify({
         user_id: user.id,
@@ -307,7 +308,7 @@ export default function SocialConnectionsPage() {
       }))
 
       let authUrl = ''
-      
+
       if (platform === 'twitter') {
         authUrl = `/api/auth/twitter?state=${encodeURIComponent(state)}`
       } else if (platform === 'linkedin') {
@@ -403,7 +404,7 @@ export default function SocialConnectionsPage() {
     try {
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError || !user) {
         toast.error('Please sign in to connect WordPress')
         router.push('/auth/signin?redirectTo=' + encodeURIComponent('/dashboard/socials'))
@@ -503,7 +504,7 @@ export default function SocialConnectionsPage() {
           Connect your social media accounts to publish content automatically
         </p>
       </div>
-   
+
       {/* Connected Accounts */}
       {connections.length > 0 && (
         <Card className="bg-gray-900 border-gray-800">
@@ -550,7 +551,7 @@ export default function SocialConnectionsPage() {
                   </div>
                 )
               })}
-              
+
               {/* Show Instagram as connected if Facebook is connected */}
               {connections.some(conn => conn.platform === 'facebook') && !connections.some(conn => conn.platform === 'instagram') && (() => {
                 const facebookConnection = connections.find(conn => conn.platform === 'facebook')
@@ -581,7 +582,7 @@ export default function SocialConnectionsPage() {
                   </div>
                 )
               })()}
-   
+
               {/* Show Telegram as always connected */}
               <div className="flex items-center justify-between p-6 border border-blue-500 rounded-lg bg-gray-800 hover:bg-gray-750 transition-colors">
                 <div className="flex items-center space-x-4">
@@ -615,7 +616,7 @@ export default function SocialConnectionsPage() {
           </CardContent>
         </Card>
       )}
-   
+
       {/* Available Platforms */}
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
@@ -638,11 +639,10 @@ export default function SocialConnectionsPage() {
                 </div>
                 <p className="text-sm text-gray-300 mb-6 leading-relaxed">{platform.description}</p>
                 <Button
-                  className={`w-full transition-all duration-200 ${
-                    isConnected(platform.id) 
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50' 
+                  className={`w-full transition-all duration-200 ${isConnected(platform.id)
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
                       : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
-                  }`}
+                    }`}
                   variant={isConnected(platform.id) ? "default" : "default"}
                   onClick={() => {
                     if (platform.id === 'telegram') {
@@ -654,10 +654,10 @@ export default function SocialConnectionsPage() {
                     }
                   }}
                 >
-                  {platform.id === 'telegram' 
-                    ? '✓ Connected - Manage Channels' 
-                    : isConnected(platform.id) 
-                      ? '✓ Connected - Click to Disconnect' 
+                  {platform.id === 'telegram'
+                    ? '✓ Connected - Manage Channels'
+                    : isConnected(platform.id)
+                      ? '✓ Connected - Click to Disconnect'
                       : 'Connect Account'
                   }
                 </Button>
@@ -666,7 +666,7 @@ export default function SocialConnectionsPage() {
           </div>
         </CardContent>
       </Card>
-   
+
       {/* WordPress Connection Modal */}
       {showWordPressModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -711,7 +711,7 @@ export default function SocialConnectionsPage() {
                 </div>
                 <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3">
                   <div className="text-blue-200 text-sm">
-                    <strong>💡 Tip:</strong> For better security, use an Application Password instead of your regular password. 
+                    <strong>💡 Tip:</strong> For better security, use an Application Password instead of your regular password.
                     Go to WordPress Admin → Users → Your Profile → Application Passwords.
                   </div>
                 </div>
@@ -888,7 +888,7 @@ export default function SocialConnectionsPage() {
           </Card>
         </div>
       )}
-   
+
       {/* Help Section */}
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>

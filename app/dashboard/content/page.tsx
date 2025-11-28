@@ -267,100 +267,51 @@ export default function ContentCreatorPage() {
         return
       }
 
-      const { data: orgMembers } = await supabase
-        .from('org_members')
-        .select('org_id, role')
-        .eq('user_id', user.id)
-
-      if (!orgMembers || orgMembers.length === 0) {
-        toast.error('No organization found. Please create an organization first.')
-        return
-      }
-
-      let userOrgId = orgMembers.find(member => member.role !== 'client')?.org_id
-      if (!userOrgId) {
-        userOrgId = orgMembers[0].org_id
-      }
-
-      const { data: postData, error: postError } = await (supabase as any)
-        .from('blog_posts')
-        .insert({
-          org_id: userOrgId,
-          title,
-          content,
-          state: 'draft',
-        })
-        .select()
-        .single()
-
-      if (postError) {
-        console.error('Post save error:', postError)
-        toast.error('Failed to save post')
-        return
-      }
-
-      // Store post ID for later image regeneration
-      setCurrentPostId(postData.id)
-
-      // Save social posts to separate table
-      if (Object.keys(socialPosts).length > 0) {
-        try {
-          for (const [platform, content] of Object.entries(socialPosts)) {
-            const { error: socialError } = await supabase
-              .from('social_posts')
-              .insert({
-                post_id: postData.id,
-                platform,
-                content
-              })
-
-            if (socialError) {
-              console.error('Error saving social post:', socialError)
-            }
-          }
-        } catch (error) {
-          console.error('Error saving social posts:', error)
-        }
-      }
-
-      // Save images - prioritize final images if they exist
+      // Prepare images to save - prioritize final images if they exist
       const imagesToProcess = finalImages.length > 0 ? finalImages : generatedImages
       const isFinal = finalImages.length > 0
 
-      if (imagesToProcess.length > 0) {
-        try {
-          // Save images to database
-          const imagesToSave = imagesToProcess.map(img => ({
-            org_id: userOrgId,
-            post_id: postData.id,
-            url: img.url,
-            prompt: img.prompt,
-            style: (img as any).style || chosenStyle || 'photorealistic',
-            variant_type: isFinal ? 'final' : 'original',
-            is_active: isFinal, // Final images are active by default
-            prompt_number: (img as any).promptNumber || 1,
-            style_group: crypto.randomUUID()
-          }))
+      // Format images for the API
+      const formattedImages = imagesToProcess.map(img => ({
+        url: img.url,
+        prompt: img.prompt,
+        style: (img as any).style || chosenStyle || 'photorealistic',
+        variantType: isFinal ? 'final' : 'original',
+        isActive: isFinal,
+        promptNumber: (img as any).promptNumber || 1,
+        styleGroup: crypto.randomUUID()
+      }))
 
-          const { error: imgError } = await (supabase as any).from('images').insert(imagesToSave)
+      const response = await fetch('/api/save-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          content,
+          socialPosts,
+          generatedImages: formattedImages,
+          userId: user.id
+        }),
+      })
 
-          if (imgError) {
-            console.error('Failed to save images:', imgError)
-            toast.error('Post saved but images failed to save')
-          } else {
-            console.log(`✅ Saved ${imagesToSave.length} images`)
-            toast.success('Post, social posts, and images saved successfully!')
-          }
-        } catch (error) {
-          console.error('Error saving images:', error)
-          toast.error('Post saved but images failed to save')
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          toast.error(data.error || 'Plan limit reached. Please upgrade your plan.')
+        } else {
+          toast.error(data.error || 'Failed to save post')
         }
-      } else {
-        toast.success('Post and social posts saved successfully!')
+        return
       }
 
+      toast.success('Post saved successfully!')
       router.push('/dashboard/content/list')
+
     } catch (error) {
+      console.error('Error saving post:', error)
       toast.error('An unexpected error occurred')
     } finally {
       setSaving(false)

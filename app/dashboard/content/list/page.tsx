@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,7 @@ const CONTENT_CATEGORIES = [
 ] as const
 
 export default function ContentListPage() {
+  const supabase = createClient()
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'draft' | 'scheduled' | 'published'>('all')
@@ -46,7 +47,7 @@ export default function ContentListPage() {
       }
 
       // Get user's organizations
-      const { data: orgMembers, error: orgError } = await (supabase as any)
+      const { data: orgMembers, error: orgError } = await supabase
         .from('org_members')
         .select('org_id, role')
         .eq('user_id', user.id)
@@ -63,7 +64,7 @@ export default function ContentListPage() {
 
       // Get all posts from user's organizations (both user-created and admin-created packages)
       // Also get admin packages from ALL organizations
-      let query = (supabase as any)
+      let query = supabase
         .from('blog_posts')
         .select('*')
         .in('org_id', orgIds)
@@ -125,7 +126,7 @@ export default function ContentListPage() {
     }
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('blog_posts')
         .delete()
         .eq('id', postId)
@@ -145,7 +146,7 @@ export default function ContentListPage() {
 
   const handlePublishPost = async (postId: string) => {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('blog_posts')
         .update({
           state: 'published',
@@ -172,7 +173,7 @@ export default function ContentListPage() {
     }
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('blog_posts')
         .update({
           state: 'draft',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BlogPost } from '@/types/index'
@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import { SocialIcon } from '@/components/ui/social-icons'
 
 export default function SchedulerPage() {
+  const supabase = createClient()
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'calendar' | 'list'>('list')
@@ -25,7 +26,7 @@ export default function SchedulerPage() {
     const lastDay = new Date(year, month + 1, 0)
     const daysInMonth = lastDay.getDate()
     const startingDayOfWeek = firstDay.getDay()
-    
+
     return { daysInMonth, startingDayOfWeek, firstDay, lastDay }
   }
 
@@ -42,23 +43,23 @@ export default function SchedulerPage() {
 
   const getGroupedPostsForDate = (date: Date) => {
     const dayPosts = getPostsForDate(date)
-    
+
     // Group posts by organization
     const grouped = dayPosts.reduce((acc, post) => {
       const orgName = post.organizations?.name || 'Unknown Organization'
       const orgId = post.org_id
-      
+
       if (!acc[orgId]) {
         acc[orgId] = {
           organization: orgName,
           posts: []
         }
       }
-      
+
       acc[orgId].posts.push(post)
       return acc
     }, {} as Record<string, { organization: string; posts: any[] }>)
-    
+
     return Object.values(grouped)
   }
 
@@ -82,7 +83,7 @@ export default function SchedulerPage() {
     const fetchPosts = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        
+
         if (!user) return
 
         // Check if user is admin
@@ -107,27 +108,27 @@ export default function SchedulerPage() {
           const { data: allOrgs } = await supabase
             .from('organizations')
             .select('id')
-          
-          orgIds = allOrgs?.map(org => org.id) || []
+
+          orgIds = (allOrgs as any[])?.map(org => org.id) || []
         } else {
           // Non-admin users only see posts from their primary organization (not Admin Organization)
           const nonAdminOrgs = orgMembers.filter(member => {
             // Get organization name to filter out Admin Organization
             return member.org_id // We'll filter this further below
           })
-          
+
           // Get organization names to filter out Admin Organization
           const orgIdsToCheck = nonAdminOrgs.map(member => member.org_id)
           const { data: orgsData } = await supabase
             .from('organizations')
             .select('id, name')
             .in('id', orgIdsToCheck)
-          
+
           // Filter out Admin Organization
           const nonAdminOrgIds = orgsData
             ?.filter(org => org.name !== 'Admin Organization')
             .map(org => org.id) || []
-          
+
           orgIds = nonAdminOrgIds
         }
 
@@ -168,7 +169,7 @@ export default function SchedulerPage() {
     try {
       // Convert local datetime to UTC for database storage
       const scheduledDate = new Date(scheduledFor)
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('blog_posts')
         .update({
           state: 'scheduled',
@@ -183,12 +184,12 @@ export default function SchedulerPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           const isAdmin = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
-          
+
           const { data: orgMembers } = await supabase
             .from('org_members')
             .select('org_id, role')
             .eq('user_id', user.id)
-          
+
           if (orgMembers && orgMembers.length > 0) {
             let orgIds: string[]
 
@@ -197,36 +198,36 @@ export default function SchedulerPage() {
               const { data: allOrgs } = await supabase
                 .from('organizations')
                 .select('id')
-              
-              orgIds = allOrgs?.map(org => org.id) || []
+
+              orgIds = (allOrgs as any[])?.map(org => org.id) || []
             } else {
               const orgIdsToCheck = orgMembers.map(member => member.org_id)
               const { data: orgsData } = await supabase
                 .from('organizations')
                 .select('id, name')
                 .in('id', orgIdsToCheck)
-              
+
               const nonAdminOrgIds = orgsData
                 ?.filter(org => org.name !== 'Admin Organization')
                 .map(org => org.id) || []
-              
+
               orgIds = nonAdminOrgIds
             }
 
             if (orgIds.length > 0) {
-            const { data } = await supabase
-              .from('blog_posts')
-              .select(`
+              const { data } = await supabase
+                .from('blog_posts')
+                .select(`
                 *,
                 organizations (
                   id,
                   name
                 )
               `)
-              .in('org_id', orgIds)
-              .order('scheduled_for', { ascending: true })
-            
-            setPosts(data || [])
+                .in('org_id', orgIds)
+                .order('scheduled_for', { ascending: true })
+
+              setPosts(data || [])
             }
           }
         }
@@ -238,7 +239,7 @@ export default function SchedulerPage() {
 
   const handlePublishNow = async (postId: string) => {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('blog_posts')
         .update({
           state: 'published',
@@ -253,12 +254,12 @@ export default function SchedulerPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           const isAdmin = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
-          
+
           const { data: orgMembers } = await supabase
             .from('org_members')
             .select('org_id, role')
             .eq('user_id', user.id)
-          
+
           if (orgMembers && orgMembers.length > 0) {
             let orgIds: string[]
 
@@ -267,36 +268,36 @@ export default function SchedulerPage() {
               const { data: allOrgs } = await supabase
                 .from('organizations')
                 .select('id')
-              
-              orgIds = allOrgs?.map(org => org.id) || []
+
+              orgIds = (allOrgs as any[])?.map(org => org.id) || []
             } else {
               const orgIdsToCheck = orgMembers.map(member => member.org_id)
               const { data: orgsData } = await supabase
                 .from('organizations')
                 .select('id, name')
                 .in('id', orgIdsToCheck)
-              
+
               const nonAdminOrgIds = orgsData
                 ?.filter(org => org.name !== 'Admin Organization')
                 .map(org => org.id) || []
-              
+
               orgIds = nonAdminOrgIds
             }
 
             if (orgIds.length > 0) {
-            const { data } = await supabase
-              .from('blog_posts')
-              .select(`
+              const { data } = await supabase
+                .from('blog_posts')
+                .select(`
                 *,
                 organizations (
                   id,
                   name
                 )
               `)
-              .in('org_id', orgIds)
-              .order('scheduled_for', { ascending: true })
-            
-            setPosts(data || [])
+                .in('org_id', orgIds)
+                .order('scheduled_for', { ascending: true })
+
+              setPosts(data || [])
             }
           }
         }
@@ -309,7 +310,7 @@ export default function SchedulerPage() {
   const handleManualPost = async (postId: string) => {
     try {
       toast.loading('Posting to platforms...', { id: 'manual-post' })
-      
+
       const response = await fetch('/api/manual-post', {
         method: 'POST',
         headers: {
@@ -328,10 +329,10 @@ export default function SchedulerPage() {
       }
 
       toast.success(`Posted to ${result.summary.successful} platforms successfully!`, { id: 'manual-post' })
-      
+
       // Refresh posts by reloading the page
       window.location.reload()
-      
+
     } catch (error) {
       toast.error('An error occurred while posting', { id: 'manual-post' })
     }
@@ -442,11 +443,10 @@ export default function SchedulerPage() {
                           {post.content}
                         </p>
                         <div className="flex items-center space-x-4 mt-3 text-xs">
-                          <span className={`px-3 py-1 rounded-full font-medium ${
-                            post.state === 'published' ? 'bg-green-900 text-green-300' :
-                            post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
-                            'bg-gray-700 text-gray-300'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full font-medium ${post.state === 'published' ? 'bg-green-900 text-green-300' :
+                              post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+                                'bg-gray-700 text-gray-300'
+                            }`}>
                             {post.state}
                           </span>
                           {post.scheduled_for && (
@@ -508,9 +508,9 @@ export default function SchedulerPage() {
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle className="text-white">📅 Calendar View</CardTitle>
-            <CardDescription className="text-gray-200">
-              Visual calendar of your scheduled content
-            </CardDescription>
+                <CardDescription className="text-gray-200">
+                  Visual calendar of your scheduled content
+                </CardDescription>
               </div>
               <div className="flex items-center space-x-4">
                 <Button
@@ -545,46 +545,43 @@ export default function SchedulerPage() {
                     {day}
                   </div>
                 ))}
-                
+
                 {/* Calendar Days */}
                 {(() => {
                   const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentDate)
                   const today = new Date()
                   const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear()
-                  
+
                   const days = []
-                  
+
                   // Empty cells for days before the first day of the month
                   for (let i = 0; i < startingDayOfWeek; i++) {
                     days.push(
                       <div key={`empty-${i}`} className="h-24 border border-gray-700 bg-gray-800/50"></div>
                     )
                   }
-                  
+
                   // Days of the month
                   for (let day = 1; day <= daysInMonth; day++) {
                     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
                     const groupedPosts = getGroupedPostsForDate(date)
                     const totalPosts = groupedPosts.reduce((sum, group) => sum + group.posts.length, 0)
                     const isToday = isCurrentMonth && day === today.getDate()
-                    const isSelected = selectedDate && 
-                      date.getDate() === selectedDate.getDate() && 
-                      date.getMonth() === selectedDate.getMonth() && 
+                    const isSelected = selectedDate &&
+                      date.getDate() === selectedDate.getDate() &&
+                      date.getMonth() === selectedDate.getMonth() &&
                       date.getFullYear() === selectedDate.getFullYear()
-                    
+
                     days.push(
                       <div
                         key={day}
-                        className={`h-24 border border-gray-700 p-1 cursor-pointer transition-all duration-200 hover:bg-purple-600/20 ${
-                          isToday ? 'bg-gradient-to-br from-purple-600/30 to-pink-600/30 border-purple-500' : ''
-                        } ${
-                          isSelected ? 'bg-gradient-to-br from-purple-600/50 to-pink-600/50 border-purple-400' : ''
-                        }`}
+                        className={`h-24 border border-gray-700 p-1 cursor-pointer transition-all duration-200 hover:bg-purple-600/20 ${isToday ? 'bg-gradient-to-br from-purple-600/30 to-pink-600/30 border-purple-500' : ''
+                          } ${isSelected ? 'bg-gradient-to-br from-purple-600/50 to-pink-600/50 border-purple-400' : ''
+                          }`}
                         onClick={() => setSelectedDate(date)}
                       >
-                        <div className={`text-sm font-medium mb-1 ${
-                          isToday ? 'text-yellow-400' : 'text-white'
-                        }`}>
+                        <div className={`text-sm font-medium mb-1 ${isToday ? 'text-yellow-400' : 'text-white'
+                          }`}>
                           {day}
                         </div>
                         <div className="space-y-1">
@@ -609,26 +606,26 @@ export default function SchedulerPage() {
                       </div>
                     )
                   }
-                  
+
                   return days
                 })()}
               </div>
-              
+
               {/* Selected Date Details */}
               {selectedDate && (
                 <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-lg">
                   <h4 className="text-lg font-semibold text-white mb-3">
-                    📅 {selectedDate.toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
+                    📅 {selectedDate.toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
                     })}
                   </h4>
                   {(() => {
                     const groupedPosts = getGroupedPostsForDate(selectedDate)
                     const totalPosts = groupedPosts.reduce((sum, group) => sum + group.posts.length, 0)
-                    
+
                     return groupedPosts.length > 0 ? (
                       <div className="space-y-4">
                         <p className="text-purple-200 font-medium">
@@ -657,9 +654,9 @@ export default function SchedulerPage() {
                                   if (lowerTitle.includes('youtube')) return 'youtube'
                                   return 'blog' // Default for blog posts
                                 }
-                                
+
                                 const platform = getPlatform(post.title)
-                                
+
                                 return (
                                   <div key={post.id} className="bg-gray-700/50 p-3 rounded-lg border border-gray-500">
                                     <div className="flex justify-between items-start">
@@ -676,11 +673,10 @@ export default function SchedulerPage() {
                                           {post.content}
                                         </p>
                                         <div className="flex items-center space-x-2 mt-2">
-                                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
-                                            post.state === 'published' ? 'bg-green-900 text-green-300' :
-                                            'bg-gray-700 text-gray-300'
-                                          }`}>
+                                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${post.state === 'scheduled' ? 'bg-yellow-900 text-yellow-300' :
+                                              post.state === 'published' ? 'bg-green-900 text-green-300' :
+                                                'bg-gray-700 text-gray-300'
+                                            }`}>
                                             {post.state}
                                           </span>
                                           <span className="text-gray-400 text-xs">

@@ -12,75 +12,12 @@ import { useRouter } from 'next/navigation'
 export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [trialStatus, setTrialStatus] = useState<any>(null)
+  const [usageStats, setUsageStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState<string | null>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-
-        // Get user's organizations
-        const { data: orgMembers } = await (supabase as any)
-          .from('org_members')
-          .select('org_id, role')
-          .eq('user_id', user.id)
-
-        if (!orgMembers || orgMembers.length === 0) return
-
-        // Find the user's personal organization (not Admin Organization)
-        let userOrgId = orgMembers.find((member: any) => member.role !== 'client')?.org_id
-        if (!userOrgId) {
-          userOrgId = orgMembers[0].org_id
-        }
-
-        // Get subscription
-        const { data: sub, error } = await (supabase as any)
-          .from('subscriptions')
-          .select('*')
-          .eq('org_id', userOrgId)
-          .single()
-
-        if (sub) {
-          setSubscription(sub)
-
-          // Get trial status
-          const trialResponse = await fetch(`/api/trial/status?orgId=${userOrgId}`)
-          if (trialResponse.ok) {
-            const trialData = await trialResponse.json()
-            setTrialStatus(trialData)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching subscription:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchSubscription()
-  }, [])
-
-  // Handle URL parameters for success/cancel
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const success = urlParams.get('success')
-    const canceled = urlParams.get('canceled')
-
-    if (success) {
-      toast.success('Subscription activated successfully!')
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-      // Refresh subscription data
-      fetchSubscription()
-    } else if (canceled) {
-      toast.error('Subscription setup was canceled')
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-  }, [])
+  // ... (existing code)
 
   const fetchSubscription = async () => {
     try {
@@ -117,6 +54,13 @@ export default function BillingPage() {
           const trialData = await trialResponse.json()
           setTrialStatus(trialData)
         }
+
+        // Get usage stats
+        const usageResponse = await fetch(`/api/usage?orgId=${userOrgId}`)
+        if (usageResponse.ok) {
+          const usageData = await usageResponse.json()
+          setUsageStats(usageData)
+        }
       }
     } catch (error) {
       console.error('Error fetching subscription:', error)
@@ -124,6 +68,49 @@ export default function BillingPage() {
       setLoading(false)
     }
   }
+
+  // ... (existing code)
+
+  {/* Usage Stats */ }
+  <Card className="bg-gray-800 border-gray-700">
+    <CardHeader>
+      <CardTitle className="text-white">Usage This Month</CardTitle>
+      <CardDescription className="text-gray-300">
+        Track your current usage against plan limits
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-yellow-400">
+            {usageStats?.contentPackages?.used || 0}
+          </div>
+          <div className="text-sm text-gray-300">Content Packages</div>
+          <div className="text-xs text-gray-400">
+            {usageStats?.contentPackages?.limit === -1 ? 'Unlimited' : `${usageStats?.contentPackages?.limit || 0} limit`}
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-yellow-400">
+            {usageStats?.customContent?.used || 0}
+          </div>
+          <div className="text-sm text-gray-300">Custom Content</div>
+          <div className="text-xs text-gray-400">
+            {usageStats?.customContent?.limit === -1 ? 'Unlimited' : `${usageStats?.customContent?.limit || 0} limit`}
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-yellow-400">
+            {usageStats?.bulkGeneration?.used || 0}
+          </div>
+          <div className="text-sm text-gray-300">Bulk Generations</div>
+          <div className="text-xs text-gray-400">
+            {usageStats?.bulkGeneration?.limit === -1 ? 'Unlimited' : `${usageStats?.bulkGeneration?.limit || 0} limit`}
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
 
   const handleSubscribe = async (plan: PlanType) => {
     setProcessing(plan)

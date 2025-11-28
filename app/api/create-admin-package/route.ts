@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { title, content, excerpt, hashtags, suggestions, userId, socialPosts, generatedImages, category } = body
-    
+
     console.log('🔍 Debug - Received generatedImages:', generatedImages)
     console.log('🔍 Debug - GeneratedImages is array:', Array.isArray(generatedImages))
     console.log('🔍 Debug - GeneratedImages count:', generatedImages?.length)
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       generatedImagesCount: generatedImages?.length || 0,
       userId: userId
     })
-    
+
     if (!title || !content) {
       console.error('❌ Missing required fields:', {
         title: title,
@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Use service role key for server-side operations
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key'
+
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,
@@ -76,9 +76,9 @@ export async function POST(request: NextRequest) {
     // Check subscription limits directly (no fetch needed)
     const { checkPlanLimits } = await import('@/lib/subscription-limits')
     const limitResult = await checkPlanLimits(userOrgId, 'contentPackage')
-    
+
     console.log('🔍 Limit check result:', limitResult)
-    
+
     if (!limitResult.allowed) {
       console.log('❌ Limit check failed:', limitResult.reason)
       return NextResponse.json(
@@ -86,12 +86,12 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
     }
-    
+
     console.log('✅ Limit check passed - Admin Organization has unlimited access')
 
     // 🔧 ADMIN-ONLY SIMPLE STRATEGY: Mimic the working content generator
     console.log('🔍 Using admin organization for this admin-only package...')
-    
+
     // 🚀 CREATE ADMIN PACKAGE DIRECTLY - Skip the manual conversion workflow!
     const { data: insertedPackage, error: packageError } = await supabaseClient
       .from('blog_posts')
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     if (generatedImages && Array.isArray(generatedImages) && generatedImages.length > 0 && insertedPackage?.id) {
       console.log(`🔄 Starting permanent save for ${generatedImages.length} images...`)
       console.log('🔍 Post ID:', insertedPackage.id)
-      
+
       try {
         // Prepare images for database
         const imagesToInsert = generatedImages.map((img: any, index: number) => ({
@@ -159,10 +159,10 @@ export async function POST(request: NextRequest) {
           prompt_number: img.promptNumber || (index + 1),
           style_group: img.styleGroup || crypto.randomUUID()
         }))
-        
+
         console.log(`🔄 Saving ${imagesToInsert.length} images to database...`)
         console.log('🔍 Images to insert:', JSON.stringify(imagesToInsert, null, 2))
-        
+
         // Save to images table
         const { data: insertedImages, error: dbError } = await (supabaseClient as any)
           .from('images')
@@ -177,14 +177,14 @@ export async function POST(request: NextRequest) {
           console.log(`✅ ${imagesToInsert.length} images saved to database successfully`)
           console.log('✅ Inserted images:', insertedImages)
         }
-        
+
       } catch (imageError) {
         console.error('❌ Error saving images permanently:', imageError)
       }
     } else {
       console.log('⚠️ No images to save or no post ID available')
     }
-    
+
     console.log('✅ Admin package created successfully:', insertedPackage?.id)
 
     // Increment usage counter for successful package creation
