@@ -135,7 +135,7 @@ export default function AdminClientsPage() {
         }
       } else if (newOrgName.trim()) {
         // Create new organization and assign client
-        const { data: newOrgData, error: newOrgError } = await supabase
+        const { data: newOrgData, error: newOrgError } = await (supabase as any)
           .from('organizations')
           .insert({
             name: newOrgName.trim(),
