@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -14,6 +14,7 @@ import { Sparkles, Wand2, Image as ImageIcon, Share2, Save, Loader2 } from 'luci
 export default function ContentCreatorPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const supabase = createClient()
   const [socialPosts, setSocialPosts] = useState<Record<string, string>>({})
   const [prompt, setPrompt] = useState('')
   const [generatedImages, setGeneratedImages] = useState<Array<{
@@ -220,7 +221,8 @@ export default function ContentCreatorPage() {
         try {
           const { data: { user } } = await supabase.auth.getUser()
           const { data: orgMembers } = await supabase.from('org_members').select('org_id, role').eq('user_id', user!.id)
-          const userOrgId = orgMembers?.find(member => member.role !== 'client')?.org_id || orgMembers?.[0]?.org_id
+          const members = orgMembers as unknown as { org_id: string, role: string }[] | null
+          const userOrgId = members?.find(member => member.role !== 'client')?.org_id || members?.[0]?.org_id
 
           // Save all final images to database (all are 'final' since they're freshly generated)
           const imagesToSave = regeneratedArray.map((img, index) => ({
