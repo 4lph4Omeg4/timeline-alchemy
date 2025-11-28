@@ -29,7 +29,7 @@ export default function AdminCreatePackagePage() {
     const fetchData = async () => {
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
-        
+
         if (userError || !user) {
           console.error('Error getting user:', userError)
           setLoading(false)
@@ -37,7 +37,7 @@ export default function AdminCreatePackagePage() {
         }
 
         // Get admin's organization
-        const { data: orgMember, error: orgError } = await supabase
+        const { data: orgMember, error: orgError } = await (supabase as any)
           .from('org_members')
           .select('org_id')
           .eq('user_id', user.id)
@@ -52,7 +52,7 @@ export default function AdminCreatePackagePage() {
 
 
         // Fetch existing content from admin's organization
-        const { data: contentData, error: contentError } = await supabase
+        const { data: contentData, error: contentError } = await (supabase as any)
           .from('blog_posts')
           .select('*')
           .eq('org_id', orgMember.org_id)
@@ -98,7 +98,7 @@ export default function AdminCreatePackagePage() {
       }
 
       // Get admin's organization
-      const { data: orgMember } = await supabase
+      const { data: orgMember } = await (supabase as any)
         .from('org_members')
         .select('org_id')
         .eq('user_id', user.id)
@@ -127,7 +127,7 @@ export default function AdminCreatePackagePage() {
         const selectedPost = existingContent.find(post => post.id === selectedContent)
         if (selectedPost) {
           // Create package with ALL existing data
-          const { data: packageData, error: packageError } = await supabase
+          const { data: packageData, error: packageError } = await (supabase as any)
             .from('blog_posts')
             .insert({
               org_id: orgMember.org_id,
@@ -147,47 +147,47 @@ export default function AdminCreatePackagePage() {
             return
           }
 
-                 // Copy ALL existing images
-                 const { data: existingImages } = await supabase
-                   .from('images')
-                   .select('*')
-                   .eq('post_id', selectedPost.id)
+          // Copy ALL existing images
+          const { data: existingImages } = await (supabase as any)
+            .from('images')
+            .select('*')
+            .eq('post_id', selectedPost.id)
 
-                 if (existingImages && existingImages.length > 0) {
-                   for (const image of existingImages) {
-                     await supabase
-                       .from('images')
-                       .insert({
-                         org_id: orgMember.org_id,
-                         post_id: packageData.id,
-                         url: image.url,
-                       })
-                   }
-                 }
+          if (existingImages && existingImages.length > 0) {
+            for (const image of existingImages) {
+              await (supabase as any)
+                .from('images')
+                .insert({
+                  org_id: orgMember.org_id,
+                  post_id: packageData.id,
+                  url: image.url,
+                })
+            }
+          }
 
-                 // Copy ALL existing social posts
-                 const { data: existingSocialPosts } = await supabase
-                   .from('social_posts')
-                   .select('*')
-                   .eq('post_id', selectedPost.id)
+          // Copy ALL existing social posts
+          const { data: existingSocialPosts } = await (supabase as any)
+            .from('social_posts')
+            .select('*')
+            .eq('post_id', selectedPost.id)
 
-                 if (existingSocialPosts && existingSocialPosts.length > 0) {
-                   for (const socialPost of existingSocialPosts) {
-                     await supabase
-                       .from('social_posts')
-                       .insert({
-                         post_id: packageData.id,
-                         platform: socialPost.platform,
-                         content: socialPost.content,
-                       })
-                   }
-                 }
+          if (existingSocialPosts && existingSocialPosts.length > 0) {
+            for (const socialPost of existingSocialPosts) {
+              await (supabase as any)
+                .from('social_posts')
+                .insert({
+                  post_id: packageData.id,
+                  platform: socialPost.platform,
+                  content: socialPost.content,
+                })
+            }
+          }
 
           toast.success('Package created with existing content!')
         }
       } else {
         // For new content, just create basic package
-        const { data: packageData, error: packageError } = await supabase
+        const { data: packageData, error: packageError } = await (supabase as any)
           .from('blog_posts')
           .insert({
             org_id: orgMember.org_id,
@@ -306,13 +306,13 @@ export default function AdminCreatePackagePage() {
           )}
 
           <div className="flex space-x-4 pt-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => router.push('/dashboard/admin/packages')}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSavePackage}
               disabled={saving || (!useExistingContent && (!title.trim() || !content.trim())) || (useExistingContent && !selectedContent)}
             >
