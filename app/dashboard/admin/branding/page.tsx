@@ -46,7 +46,7 @@ export default function BrandingPage() {
 
       if (isAdmin) {
         // Admin always has access - fetch Admin Organization
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('organizations')
           .select('id')
           .eq('name', 'Admin Organization')
