@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 import { Shield, Check, X, Info, AlertTriangle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 
-export default function OAuthConsentPage() {
+function ConsentContent() {
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const router = useRouter()
@@ -179,5 +179,17 @@ export default function OAuthConsentPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function OAuthConsentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-pulse text-purple-500">Loading...</div>
+      </div>
+    }>
+      <ConsentContent />
+    </Suspense>
   )
 }
