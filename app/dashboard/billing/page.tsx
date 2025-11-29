@@ -328,13 +328,6 @@ export default function BillingPage() {
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
-                  onClick={handleManageSubscription}
-                  disabled={processing === 'manage'}
-                >
-                  {processing === 'manage' ? 'Opening...' : 'Manage Billing'}
-                </Button>
-                <Button
-                  variant="outline"
                   onClick={() => {
                     const portalLink = process.env.NEXT_PUBLIC_STRIPE_PRICING_PORTAL || 'https://pay.timeline-alchemy.nl/p/login/eVqfZj1tyaVQgkH1CteAg00'
                     window.open(portalLink, '_blank')
@@ -533,13 +526,6 @@ export default function BillingPage() {
             <div>
               <h4 className="text-white font-semibold mb-3">Quick Access:</h4>
               <div className="space-y-3">
-                <Button
-                  onClick={handleManageSubscription}
-                  disabled={processing === 'manage'}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
-                >
-                  {processing === 'manage' ? 'Opening...' : '🚀 Manage Current Subscription'}
-                </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
