@@ -362,12 +362,7 @@ export default function BillingPage() {
                 Every new member begins with a <span className="font-semibold text-yellow-300">2-week free trial period</span>.
                 Explore the platform with 2 content packages, 5 custom content generations, and 1 bulk generation to experience what Timeline Alchemy can do for you.
               </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="bg-blue-500/20 text-blue-200 text-xs px-3 py-1 rounded-full">✓ 2 Content Packages</span>
-                <span className="bg-blue-500/20 text-blue-200 text-xs px-3 py-1 rounded-full">✓ 5 Custom Generations</span>
-                <span className="bg-blue-500/20 text-blue-200 text-xs px-3 py-1 rounded-full">✓ 1 Bulk Generation</span>
-                <span className="bg-blue-500/20 text-blue-200 text-xs px-3 py-1 rounded-full">✓ 14 Days Free</span>
-              </div>
+
             </div>
           </div>
         </CardContent>

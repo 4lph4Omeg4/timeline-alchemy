@@ -321,24 +321,7 @@ export default function HomePage() {
               Want to test the AI-powered tools? Every new member can try a <span className="font-bold text-yellow-300">14-day free trial</span> of premium features.
               No credit card required. After the trial, you'll still have full access to the free social platform!
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-blue-500/10 border border-blue-400/30 rounded-xl p-6 backdrop-blur-sm">
-                <div className="text-3xl font-bold text-yellow-400 mb-2">2</div>
-                <div className="text-sm text-blue-200">Content Packages</div>
-              </div>
-              <div className="bg-blue-500/10 border border-blue-400/30 rounded-xl p-6 backdrop-blur-sm">
-                <div className="text-3xl font-bold text-yellow-400 mb-2">5</div>
-                <div className="text-sm text-blue-200">Custom Generations</div>
-              </div>
-              <div className="bg-blue-500/10 border border-blue-400/30 rounded-xl p-6 backdrop-blur-sm">
-                <div className="text-3xl font-bold text-yellow-400 mb-2">1</div>
-                <div className="text-sm text-blue-200">Bulk Generation</div>
-              </div>
-              <div className="bg-blue-500/10 border border-blue-400/30 rounded-xl p-6 backdrop-blur-sm">
-                <div className="text-3xl font-bold text-yellow-400 mb-2">14</div>
-                <div className="text-sm text-blue-200">Days Free</div>
-              </div>
-            </div>
+
             <Button
               onClick={handleSignUp}
               size="lg"
