@@ -360,7 +360,7 @@ export default function BillingPage() {
               <h3 className="text-xl font-bold text-white mb-2">Start with a Free Trial!</h3>
               <p className="text-blue-200 mb-3">
                 Every new member begins with a <span className="font-semibold text-yellow-300">2-week free trial period</span>.
-                Explore the platform with 2 content packages, 5 custom content generations, and 1 bulk generation to experience what Timeline Alchemy can do for you.
+                Explore the platform  to experience what Timeline Alchemy can do for you.
               </p>
 
             </div>

@@ -152,6 +152,8 @@ export async function POST(request: NextRequest) {
         console.warn('NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID not found, creating manual trial subscription')
       } else {
         try {
+          console.log('Attempting to create Stripe subscription for customer:', stripeCustomerId, 'with price:', basicPriceId)
+
           // Create subscription with trial period that auto-converts to Basic plan
           const subscription = await stripe.subscriptions.create({
             customer: stripeCustomerId,
@@ -177,13 +179,37 @@ export async function POST(request: NextRequest) {
           stripeSubscriptionId = subscription.id
           console.log('Stripe subscription created with 14-day trial:', stripeSubscriptionId)
           console.log('Trial ends at:', new Date(subscription.trial_end! * 1000).toISOString())
-        } catch (subscriptionError) {
-          console.error('Error creating Stripe subscription:', subscriptionError)
-          // Continue with fallback
+        } catch (subscriptionError: any) {
+          console.error('Error creating Stripe subscription with trial settings:', JSON.stringify(subscriptionError))
+
+          // Retry without advanced trial settings (fallback for API compatibility or other issues)
+          try {
+            console.log('Retrying subscription creation without advanced trial settings...')
+            const retrySubscription = await stripe.subscriptions.create({
+              customer: stripeCustomerId,
+              items: [
+                {
+                  price: basicPriceId,
+                },
+              ],
+              trial_period_days: 14,
+              metadata: {
+                org_id: orgData.id,
+                user_id: userId,
+                plan: 'basic',
+              },
+            })
+
+            stripeSubscriptionId = retrySubscription.id
+            console.log('Retry successful: Stripe subscription created:', stripeSubscriptionId)
+          } catch (retryError: any) {
+            console.error('Retry failed: Error creating Stripe subscription:', JSON.stringify(retryError))
+            // Continue with fallback (database-only trial)
+          }
         }
       }
-    } catch (stripeError) {
-      console.error('Error creating Stripe customer:', stripeError)
+    } catch (stripeError: any) {
+      console.error('Error creating Stripe customer:', JSON.stringify(stripeError))
       // Continue with fallback customer ID - don't fail signup
     }
 
