@@ -3,11 +3,12 @@
 import BulkContentGenerator from '@/components/bulk-content-generator'
 import { Card, CardContent } from '@/components/ui/card'
 import { Shield, Sparkles } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 export default function BulkContentPage() {
+  const supabase = createClient()
   const [hasAccess, setHasAccess] = useState(false)
   const [loading, setLoading] = useState(true)
   const [userPlan, setUserPlan] = useState<string>('')

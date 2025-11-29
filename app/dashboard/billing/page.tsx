@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { STRIPE_PLANS, StripePlanType } from '@/lib/stripe'
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 
 export default function BillingPage() {
+  const supabase = createClient()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [trialStatus, setTrialStatus] = useState<any>(null)
   const [usageStats, setUsageStats] = useState<any>(null)
