@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { BrandingSettings } from '@/types/index'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { Shield } from 'lucide-react'
 
 export default function BrandingPage() {
+  const supabase = createClient()
   const [branding, setBranding] = useState<BrandingSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
