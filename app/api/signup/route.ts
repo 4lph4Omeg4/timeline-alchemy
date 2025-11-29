@@ -212,19 +212,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 8: Create default client in user's personal organization
-    const { error: clientError } = await (supabaseAdmin as any)
+    console.log('Attempting to create default client for org:', orgData.id)
+
+    const clientName = name ? `${name}'s Client` : 'Default Client'
+
+    const { data: newClient, error: clientError } = await (supabaseAdmin as any)
       .from('clients')
       .insert({
         org_id: orgData.id,
-        name: name + "'s Client",
+        name: clientName,
         contact_info: { email: email }
       })
+      .select()
+      .single()
 
     if (clientError) {
-      console.error('Error creating client:', clientError)
-      // Don't fail the whole signup for client errors
+      console.error('Error creating client with contact info:', JSON.stringify(clientError))
+
+      // Retry without contact info
+      const { error: retryError } = await (supabaseAdmin as any)
+        .from('clients')
+        .insert({
+          org_id: orgData.id,
+          name: clientName
+        })
+
+      if (retryError) {
+        console.error('Error creating client without contact info:', JSON.stringify(retryError))
+        // Don't fail the whole signup for client errors, but log it clearly
+      } else {
+        console.log('Default client created (without contact info) on retry')
+      }
     } else {
-      console.log('Default client created')
+      console.log('Default client created successfully:', newClient?.id)
     }
 
     console.log('Signup process completed successfully')
