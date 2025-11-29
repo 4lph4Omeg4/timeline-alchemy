@@ -14,7 +14,7 @@ interface Client {
   contact_info: any
   org_id: string | null
   created_at: string
-  organizations?: Array<{ name: string }>
+  organizations?: { name: string }
 }
 
 interface OrganizationWithClients extends Organization {
@@ -31,35 +31,15 @@ export default function OrganizationsPage() {
   useEffect(() => {
     const fetchOrganizations = async () => {
       try {
-        // Fetch organizations with their subscriptions and clients
-        const { data: orgsWithSubs, error } = await (supabase as any)
-          .from('organizations')
-          .select(`
-            *,
-            subscriptions(
-              id,
-              plan,
-              status,
-              created_at
-            ),
-            clients(
-              id,
-              name,
-              contact_info,
-              org_id,
-              created_at
-            )
-          `)
-          .order('created_at', { ascending: false })
+        const response = await fetch('/api/admin/dashboard-data')
+        const data = await response.json()
 
-        // Fetch ALL clients to check which ones don't have their own organization
-        const { data: allClientsData, error: clientsError } = await (supabase as any)
-          .from('clients')
-          .select(`
-            *,
-            organizations(name)
-          `)
-          .order('created_at', { ascending: false })
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch data')
+        }
+
+        const orgsWithSubs = data.organizations
+        const allClientsData = data.clients
 
         if (orgsWithSubs) {
           // Filter out Admin Organization and update organizations with subscription plan and clients
@@ -79,9 +59,7 @@ export default function OrganizationsPage() {
           // Filter out clients that are only in Admin Organization
           const nonAdminClients = allClientsData.filter((client: any) => {
             // Check if this client has any organization other than Admin Organization
-            const hasNonAdminOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) =>
-              org.name !== 'Admin Organization'
-            )
+            const hasNonAdminOrg = client.organizations && client.organizations.name !== 'Admin Organization'
             return hasNonAdminOrg
           })
           // Store filtered clients for manual assignment
@@ -90,9 +68,7 @@ export default function OrganizationsPage() {
           // Filter clients that don't have their own organization
           const clientsWithoutOwnOrg = allClientsData.filter((client: any) => {
             // Check if this client has any organization other than Admin Organization
-            const hasOwnOrg = client.organizations && Array.isArray(client.organizations) && client.organizations.some((org: any) =>
-              org.name !== 'Admin Organization'
-            )
+            const hasOwnOrg = client.organizations && client.organizations.name !== 'Admin Organization'
             return !hasOwnOrg
           })
           setClientsWithoutOrg(clientsWithoutOwnOrg)

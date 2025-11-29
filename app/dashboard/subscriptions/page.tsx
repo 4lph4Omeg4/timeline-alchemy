@@ -15,13 +15,14 @@ export default function SubscriptionsPage() {
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
-        const { data: subs, error } = await supabase
-          .from('subscriptions')
-          .select(`
-            *,
-            organizations(name)
-          `)
-          .order('created_at', { ascending: false })
+        const response = await fetch('/api/admin/dashboard-data')
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch data')
+        }
+
+        const subs = data.subscriptions
 
         if (subs) {
           // Filter out Admin Organization subscriptions

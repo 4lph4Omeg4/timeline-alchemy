@@ -25,45 +25,29 @@ export default function AdminClientsPage() {
   const fetchClients = async () => {
     setLoading(true)
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      const response = await fetch('/api/admin/dashboard-data')
+      const data = await response.json()
 
-      if (userError || !user) {
-        console.error('Error getting user:', userError)
-        setLoading(false)
-        return
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch data')
       }
 
-      // Fetch all clients from admin organization (global clients)
-      const { data: clientsData, error: clientsError } = await (supabase as any)
-        .from('clients')
-        .select(`
-          *,
-          organizations(name)
-        `)
-        .order('name')
+      setClients(data.clients || [])
 
-      if (clientsError) {
-        console.error('Error fetching clients:', clientsError)
-        toast.error('Failed to fetch clients')
-      } else {
-        setClients(clientsData || [])
-      }
+      // Filter organizations for assignment (exclude Admin Organization)
+      const validOrgs = (data.organizations || [])
+        .filter((org: any) => org.name !== 'Admin Organization')
+        .map((org: any) => ({
+          id: org.id,
+          name: org.name
+        }))
+        .sort((a: any, b: any) => a.name.localeCompare(b.name))
 
-      // Fetch organizations for assignment
-      const { data: orgsData, error: orgsError } = await supabase
-        .from('organizations')
-        .select('id, name')
-        .neq('name', 'Admin Organization')
-        .order('name')
+      setOrganizations(validOrgs)
 
-      if (orgsError) {
-        console.error('Error fetching organizations:', orgsError)
-      } else {
-        setOrganizations(orgsData || [])
-      }
     } catch (error) {
-      console.error('Unexpected error:', error)
-      toast.error('An unexpected error occurred')
+      console.error('Error fetching clients:', error)
+      toast.error('Failed to fetch clients')
     } finally {
       setLoading(false)
     }
