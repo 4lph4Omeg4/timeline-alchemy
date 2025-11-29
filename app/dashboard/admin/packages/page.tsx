@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,7 @@ interface AdminPackage {
 }
 
 export default function AdminPackagesPage() {
+  const supabase = createClient()
   const [packages, setPackages] = useState<AdminPackage[]>([])
   const [loading, setLoading] = useState(true)
   const [generatingImages, setGeneratingImages] = useState<Set<string>>(new Set())

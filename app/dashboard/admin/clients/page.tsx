@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import { Loader } from '@/components/Loader'
 
 export default function AdminClientsPage() {
+  const supabase = createClient()
   const [clients, setClients] = useState<Client[]>([])
   const [organizations, setOrganizations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

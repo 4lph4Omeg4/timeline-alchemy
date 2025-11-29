@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Organization } from '@/types/index'
 import toast from 'react-hot-toast'
 
@@ -22,6 +22,7 @@ interface OrganizationWithClients extends Organization {
 }
 
 export default function OrganizationsPage() {
+  const supabase = createClient()
   const [organizations, setOrganizations] = useState<OrganizationWithClients[]>([])
   const [clientsWithoutOrg, setClientsWithoutOrg] = useState<Client[]>([])
   const [allClients, setAllClients] = useState<Client[]>([])
@@ -412,8 +413,8 @@ export default function OrganizationsPage() {
                         <Badge
                           variant="secondary"
                           className={`font-medium ${org.plan === 'transcendant' ? 'bg-pink-700 text-pink-200' :
-                              org.plan === 'initiate' ? 'bg-blue-700 text-blue-200' :
-                                'bg-gray-700 text-gray-200'
+                            org.plan === 'initiate' ? 'bg-blue-700 text-blue-200' :
+                              'bg-gray-700 text-gray-200'
                             }`}
                         >
                           {org.plan?.charAt(0).toUpperCase() + org.plan?.slice(1) || 'Basic'}

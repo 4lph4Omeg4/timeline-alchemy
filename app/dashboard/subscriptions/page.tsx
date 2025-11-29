@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Subscription } from '@/types/index'
 
 export default function SubscriptionsPage() {
+  const supabase = createClient()
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -24,7 +25,7 @@ export default function SubscriptionsPage() {
 
         if (subs) {
           // Filter out Admin Organization subscriptions
-          const nonAdminSubs = subs.filter((sub: any) => 
+          const nonAdminSubs = subs.filter((sub: any) =>
             sub.organizations?.name !== 'Admin Organization'
           )
           setSubscriptions(nonAdminSubs)
@@ -78,13 +79,12 @@ export default function SubscriptionsPage() {
                         {(sub as any).organizations?.name || 'Unknown Organization'}
                       </h3>
                       <div className="flex items-center space-x-4 mt-2 text-sm text-gray-400">
-                        <Badge 
-                          variant="secondary" 
-                          className={`${
-                            sub.status === 'active' ? 'bg-green-600 text-green-100' :
+                        <Badge
+                          variant="secondary"
+                          className={`${sub.status === 'active' ? 'bg-green-600 text-green-100' :
                             sub.status === 'canceled' ? 'bg-red-600 text-red-100' :
-                            'bg-yellow-600 text-yellow-100'
-                          }`}
+                              'bg-yellow-600 text-yellow-100'
+                            }`}
                         >
                           {sub.status}
                         </Badge>

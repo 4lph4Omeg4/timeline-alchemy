@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 
 export default function AnalyticsPage() {
+  const supabase = createClient()
   const [analytics, setAnalytics] = useState({
     totalOrganizations: 0,
     activeSubscriptions: 0,
@@ -34,7 +35,7 @@ export default function AnalyticsPage() {
 
         // Calculate posts this month
         const currentMonth = new Date().toISOString().slice(0, 7)
-        const postsThisMonth = posts?.filter(post => 
+        const postsThisMonth = posts?.filter((post: any) =>
           (post as any).created_at.startsWith(currentMonth)
         ).length || 0
 

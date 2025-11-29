@@ -28,12 +28,12 @@ interface SocialPostsData {
 function isGatewayEnabled(): boolean {
   // Check for AI Gateway API key (official method)
   const hasGatewayApiKey = process.env.AI_GATEWAY_API_KEY
-  
+
   console.log('🔍 Gateway Check:', {
     hasGatewayApiKey: !!hasGatewayApiKey,
     apiKey: hasGatewayApiKey ? hasGatewayApiKey.substring(0, 10) + '...' : 'Not set'
   })
-  
+
   return !!hasGatewayApiKey
 }
 
@@ -84,16 +84,16 @@ WRITE WITH GODLIKE AUTHORITY. BE PROFOUND, COMPLETE, AND IMMUTABLE. DIVINE WISDO
   const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
   const model = gatewayApiKey ? 'openai/gpt-5-mini' : 'gpt-4' // Use GPT-5-mini for better quality
   const content = await callOpenAI(enhancedPrompt, model, 5000) // Increased token limit for longer content
-  
+
   // Parse the structured response
   const lines = content.split('\n').filter(line => line.trim())
   const title = lines[0]?.trim() || 'Untitled'
   const postContent = content.replace(title, '').trim()
   const excerpt = postContent.substring(0, 150).replace(/\n/g, ' ').trim() + '...'
-  
+
   // Generate AI-powered hashtags based on the content
   const hashtags = await generateSmartHashtags(title, postContent, prompt)
-  
+
   const suggestions = [
     'Add a compelling call-to-action at the end',
     'Include visual elements or infographics to enhance engagement',
@@ -159,18 +159,18 @@ export async function generateVercelImage(prompt: string) {
   try {
     // Use the original prompt directly
     const enhancedPrompt = prompt
-    
+
     console.log('🎨 Using original prompt:', enhancedPrompt)
-    
+
     // Try Google Gemini first, fallback to DALL-E 3
     const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY
-    
+
     if (googleApiKey) {
       console.log('🚀 Attempting Google Gemini 2.5 Flash Image generation')
       try {
         // Use official Vercel AI SDK approach (as per Vercel docs)
         const { generateText } = await import('ai')
-        
+
         const result = await generateText({
           model: 'google/gemini-2.5-flash-image-preview',
           providerOptions: {
@@ -193,12 +193,12 @@ export async function generateVercelImage(prompt: string) {
             const extension = imageFile.mediaType?.split('/')[1] || 'png'
             const timestamp = Date.now()
             const filename = `gemini-generated/${timestamp}.${extension}`
-            
+
             console.log('🔄 Uploading Gemini image to Supabase Storage...')
-            
+
             // Import Supabase client
             const { supabaseAdmin } = await import('./supabase')
-            
+
             // Upload to Supabase Storage
             const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
               .from('blog-images')
@@ -216,9 +216,9 @@ export async function generateVercelImage(prompt: string) {
             const { data: { publicUrl } } = supabaseAdmin.storage
               .from('blog-images')
               .getPublicUrl(filename)
-            
+
             console.log('✅ Gemini image uploaded to Supabase:', publicUrl)
-            
+
             return {
               success: true,
               imageUrl: publicUrl,
@@ -258,15 +258,15 @@ export async function generateVercelImage(prompt: string) {
         })
       }
     }
-    
+
     // Fallback to DALL-E 3
     console.log('🚀 Using DALL-E 3 for image generation')
     const openaiKey = process.env.OPENAI_API_KEY
-    
+
     if (!openaiKey) {
       throw new Error('OpenAI API key not configured')
     }
-    
+
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -286,32 +286,32 @@ export async function generateVercelImage(prompt: string) {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('❌ DALL-E image generation failed:', response.status, errorText)
-      
+
       // Check if it's a billing limit error
       if (errorText.includes('billing_hard_limit_reached') || errorText.includes('billing')) {
         console.log('💰 DALL-E billing limit reached')
         throw new Error('DALL-E billing limit reached - please check your OpenAI account')
       }
-      
+
       throw new Error(`DALL-E image generation failed: ${response.statusText} - ${errorText}`)
     }
 
     const imageData = await response.json()
     console.log('🔍 DALL-E Response data:', imageData)
-    
+
     // DALL-E returns images in data[0].url format
     let imageUrl = null
-    
+
     if (imageData.data?.[0]?.url) {
       imageUrl = imageData.data[0].url
       console.log('✅ Found DALL-E image URL:', imageUrl)
     }
-    
+
     if (!imageUrl) {
       console.error('❌ No image URL found in DALL-E response:', imageData)
       throw new Error('No image URL returned from DALL-E')
     }
-    
+
     console.log('✅ Image URL found:', imageUrl)
     return {
       success: true,
@@ -330,7 +330,7 @@ export async function generateVercelImage(prompt: string) {
 async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: number = 1000): Promise<string> {
   // Check for AI Gateway environment variables
   const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
-  
+
   let apiUrl = 'https://api.openai.com/v1/chat/completions'
   let apiKey = process.env.OPENAI_API_KEY
   let headers: Record<string, string> = {
@@ -341,20 +341,20 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
   // Use Vercel AI Gateway if configured (according to official docs)
   if (gatewayApiKey) {
     console.log('🚀 Using Vercel AI Gateway (official method)')
-    
+
     // Use official Gateway base URL
     apiUrl = 'https://ai-gateway.vercel.sh/v1/chat/completions'
-    
+
     // Use Gateway API key
     headers['Authorization'] = `Bearer ${gatewayApiKey}`
-    
-           // Prefix model name with provider (required by Gateway)
-           if (model === 'gpt-4') {
-             model = 'openai/gpt-5-mini' // Use faster GPT-5 Mini
-           } else if (model === 'gpt-3.5-turbo') {
-             model = 'openai/gpt-5-mini' // Use faster GPT-5 Mini
-           }
-    
+
+    // Prefix model name with provider (required by Gateway)
+    if (model === 'gpt-4') {
+      model = 'openai/gpt-5-mini' // Use faster GPT-5 Mini
+    } else if (model === 'gpt-3.5-turbo') {
+      model = 'openai/gpt-5-mini' // Use faster GPT-5 Mini
+    }
+
     console.log('🔍 Gateway Configuration:', {
       url: apiUrl.substring(0, 50) + '...',
       hasApiKey: !!gatewayApiKey,
@@ -396,12 +396,12 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
       url: apiUrl.substring(0, 50) + '...',
       usingGateway: apiUrl.includes('vercel.com') || apiUrl.includes('gateway')
     })
-    
+
     // Check for quota limit specifically
     if (response.status === 429 || errorText.includes('quota') || errorText.includes('billing')) {
       throw new Error(`QUOTA LIMIT REACHED: ${errorText.includes('quota') ? 'OpenAI API quota exceeded' : 'API quota exceeded'}. Please check your billing and try again later.`)
     }
-    
+
     throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`)
   }
 
@@ -412,14 +412,14 @@ async function callOpenAI(prompt: string, model: string = 'gpt-4', maxTokens: nu
 // Stream generation for real-time content creation
 export async function* generateStreamingContent(prompt: string, type: 'blog' | 'social') {
   try {
-    const fullPrompt = type === 'blog' 
+    const fullPrompt = type === 'blog'
       ? `Write a comprehensive blog post about: ${prompt}`
       : `Create a social media post about: ${prompt} optimized for ${type}`
 
     // For now, yield the full content at once
     // In a real implementation, this would stream chunks
     const content = await callOpenAI(fullPrompt, 'gpt-4', type === 'blog' ? 2000 : 500)
-    
+
     // Simulate streaming by yielding words
     const words = content.split(' ')
     for (const word of words) {
@@ -436,8 +436,8 @@ export async function* generateStreamingContent(prompt: string, type: 'blog' | '
 // Analytics and monitoring with Vercel AI Gateway
 export function getVercelAIStats() {
   const gatewayUrl = process.env.AI_GATEWAY_URL
-  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY
-  
+  const gatewayToken = process.env.AI_GATEWAY_TOKEN || process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
+
   return {
     isUsingGateway: !!(gatewayUrl && gatewayToken),
     gatewayUrl: gatewayUrl ? 'Configured' : 'Not configured',
@@ -475,16 +475,16 @@ OUTPUT FORMAT (comma-separated):
 
     const gatewayApiKey = process.env.AI_GATEWAY_API_KEY
     const model = gatewayApiKey ? 'openai/gpt-5-mini' : 'gpt-4'
-    
+
     const hashtagResponse = await callOpenAI(hashtagPrompt, model, 200)
-    
+
     // Parse the hashtags
     const hashtags = hashtagResponse
       .split(/[,\n]/)
       .map(tag => tag.trim())
       .filter(tag => tag.startsWith('#'))
       .slice(0, 8)
-    
+
     if (hashtags.length > 0) {
       console.log('✅ AI-generated hashtags:', hashtags)
       return hashtags
@@ -492,7 +492,7 @@ OUTPUT FORMAT (comma-separated):
   } catch (error) {
     console.error('Error generating smart hashtags, using fallback:', error)
   }
-  
+
   // Fallback to simple extraction if AI fails
   return extractHashtags(content, originalPrompt)
 }
@@ -503,7 +503,7 @@ function extractHashtags(content: string, originalPrompt: string): string[] {
   if (hashtagMatches) {
     return hashtagMatches.slice(0, 6) // Limit to 6 hashtags
   }
-  
+
   // Generate hashtags from prompt
   const words = originalPrompt.toLowerCase().split(' ')
   return words
