@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { TokenManager, TokenStatus } from '@/lib/token-manager'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { RefreshCw, AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react'
 
 export default function TokenStatusPage() {
+  const supabase = createClient()
   const [tokenStatuses, setTokenStatuses] = useState<TokenStatus[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState<string | null>(null)
