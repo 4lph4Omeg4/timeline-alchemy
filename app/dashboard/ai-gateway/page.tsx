@@ -56,7 +56,7 @@ export default function AIGatewayPage() {
     try {
       const response = await fetch('/api/generate-vercel-content')
       const data = await response.json()
-      
+
       if (data.success) {
         setGatewayStats(data.gateway)
       }
@@ -74,7 +74,7 @@ export default function AIGatewayPage() {
       const response = await fetch('/api/vercel-credits')
       const data = await response.json()
       setVercelCredits(data)
-      
+
       if (data.success) {
         console.log('✅ Vercel credits fetched successfully')
       } else {
@@ -96,7 +96,7 @@ export default function AIGatewayPage() {
   const testGatewayConnection = async () => {
     setTestLoading(true)
     setTestResult(null)
-    
+
     try {
       const response = await fetch('/api/vercel-credits', {
         method: 'POST',
@@ -109,7 +109,7 @@ export default function AIGatewayPage() {
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
         setTestResult(`✅ Gateway Test Successful! Response: "${data.response}"`)
         toast.success('Gateway connection test passed!')
@@ -141,7 +141,7 @@ export default function AIGatewayPage() {
       })
 
       const data = await response.json()
-      
+
       if (data.success) {
         toast.success('✅ AI Gateway test successful! Enhanced content generated.')
         fetchGatewayStats() // Refresh stats
@@ -184,7 +184,7 @@ export default function AIGatewayPage() {
 
           const chunk = decoder.decode(value)
           const lines = chunk.split('\n').filter(line => line.trim())
-          
+
           for (const line of lines) {
             try {
               const data = JSON.parse(line)
@@ -245,7 +245,7 @@ export default function AIGatewayPage() {
               </Badge>
             )}
           </div>
-          
+
           {!isEnabled && (
             <Alert className="mt-4 bg-yellow-900/30 border-yellow-500/50">
               <AlertCircle className="h-4 w-4 text-yellow-400" />
@@ -254,38 +254,8 @@ export default function AIGatewayPage() {
               </AlertDescription>
             </Alert>
           )}
-          
-          {/* Test Gateway Connection */}
-          <div className="mt-4 pt-4 border-t border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-white font-semibold">Test Gateway Connection</h4>
-              <Button
-                onClick={testGatewayConnection}
-                disabled={testLoading}
-                variant="outline"
-                size="sm"
-                className="border-purple-500 text-purple-400 hover:bg-purple-900/30"
-              >
-                {testLoading ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="mr-2 h-4 w-4" />
-                    Test Connection
-                  </>
-                )}
-              </Button>
-            </div>
-            
-            {testResult && (
-              <div className="mt-2 p-3 bg-gray-800 rounded-lg">
-                <pre className="text-sm text-gray-200 whitespace-pre-wrap">{testResult}</pre>
-              </div>
-            )}
-          </div>
+
+
         </CardContent>
       </Card>
 
@@ -297,9 +267,9 @@ export default function AIGatewayPage() {
               <CreditCard className="h-6 w-6 text-blue-400" />
               <span>Vercel Credits</span>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={fetchVercelCredits}
               disabled={creditsLoading}
               className="border-blue-500 text-blue-400 hover:bg-blue-900/30"
@@ -324,7 +294,7 @@ export default function AIGatewayPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-gray-800 rounded-lg p-4 text-center">
                       <div className="text-2xl font-bold text-green-400">
-                        {typeof vercelCredits.credits.available === 'number' 
+                        {typeof vercelCredits.credits.available === 'number'
                           ? `$${vercelCredits.credits.available.toFixed(2)}`
                           : vercelCredits.credits.available}
                       </div>
@@ -332,7 +302,7 @@ export default function AIGatewayPage() {
                     </div>
                     <div className="bg-gray-800 rounded-lg p-4 text-center">
                       <div className="text-2xl font-bold text-yellow-400">
-                        {typeof vercelCredits.credits.used === 'number' 
+                        {typeof vercelCredits.credits.used === 'number'
                           ? `$${vercelCredits.credits.used.toFixed(2)}`
                           : vercelCredits.credits.used}
                       </div>
@@ -345,7 +315,7 @@ export default function AIGatewayPage() {
                       <div className="text-gray-300 text-sm">Gateway Status</div>
                     </div>
                   </div>
-                  
+
                   {vercelCredits.message && (
                     <Alert className="bg-blue-900/30 border-blue-500/50">
                       <AlertCircle className="h-4 w-4 text-blue-400" />
@@ -354,7 +324,7 @@ export default function AIGatewayPage() {
                       </AlertDescription>
                     </Alert>
                   )}
-                  
+
                   <div className="bg-gray-800 rounded-lg p-4">
                     <h4 className="text-white font-semibold mb-2">Account Information</h4>
                     <div className="text-sm text-gray-300 space-y-1">
@@ -436,7 +406,7 @@ export default function AIGatewayPage() {
               <p className="text-gray-300 text-sm mb-4">
                 Test enhanced blog post generation through the AI Gateway
               </p>
-              <Button 
+              <Button
                 onClick={testAIGateway}
                 disabled={testLoading || !isEnabled}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
@@ -450,7 +420,7 @@ export default function AIGatewayPage() {
               <p className="text-gray-300 text-sm mb-4">
                 Test real-time streaming content generation (requires Gateway)
               </p>
-              <Button 
+              <Button
                 onClick={testStreamingGateway}
                 disabled={testLoading || !isEnabled}
                 variant="outline"
@@ -550,7 +520,7 @@ export default function AIGatewayPage() {
                   <div className="text-blue-400"># OR use AI_GATEWAY_API_KEY instead</div>
                 </div>
               </div>
-              
+
               <div className="bg-gray-800/80 rounded-lg p-4">
                 <h4 className="text-white font-semibold mb-3 flex items-center space-x-2">
                   <span className="text-purple-400">🔑</span>
@@ -563,7 +533,7 @@ export default function AIGatewayPage() {
                   <li>Ensure you have credits loaded</li>
                 </ol>
               </div>
-              
+
               <div className="bg-gray-800/80 rounded-lg p-4">
                 <h4 className="text-white font-semibold mb-3 flex items-center space-x-2">
                   <span className="text-purple-400">🧪</span>
@@ -576,7 +546,7 @@ export default function AIGatewayPage() {
                   <li>Refresh this page to see updated status</li>
                 </ol>
               </div>
-              
+
               <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
                   <CheckCircle className="h-5 w-5 text-blue-400 mt-0.5" />

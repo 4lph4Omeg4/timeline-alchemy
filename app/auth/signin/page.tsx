@@ -169,7 +169,7 @@ export default function SignInPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {/* Google */}
               <Button
                 variant="outline"

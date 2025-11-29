@@ -305,65 +305,7 @@ export default function OrganizationsPage() {
         </p>
       </div>
 
-      {/* All Available Clients for Manual Assignment */}
-      {allClients.length > 0 && (
-        <Card className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-blue-500/30">
-          <CardHeader>
-            <CardTitle className="text-white">👥 All Available Clients</CardTitle>
-            <CardDescription className="text-blue-200">
-              {allClients.length} clients available for manual assignment to organizations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {allClients.map((client) => {
-                const currentOrg = client.organizations && Array.isArray(client.organizations)
-                  ? client.organizations.find((org: any) => org.name !== 'Admin Organization')
-                  : null
-                return (
-                  <div key={client.id} className="flex items-center justify-between p-4 bg-blue-800/20 border border-blue-500/30 rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-white">{client.name}</h4>
-                      <p className="text-blue-200 text-sm">
-                        Email: {client.contact_info?.email || 'No email provided'}
-                      </p>
-                      <p className="text-blue-300 text-xs">
-                        Current Org: {currentOrg?.name || 'Admin Organization only'}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <select
-                        className="bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-lg text-sm"
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            assignClientToOrganization(client.id, e.target.value)
-                          }
-                        }}
-                        defaultValue=""
-                      >
-                        <option value="">Assign to...</option>
-                        {organizations.map((org) => (
-                          <option key={org.id} value={org.id}>
-                            {org.name}
-                          </option>
-                        ))}
-                      </select>
-                      {!currentOrg && (
-                        <Button
-                          onClick={() => createOrganizationForClient(client)}
-                          className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white text-sm"
-                        >
-                          ✨ Create New Org
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
