@@ -18,8 +18,6 @@ export default function BillingPage() {
   const [processing, setProcessing] = useState<string | null>(null)
   const router = useRouter()
 
-  // ... (existing code)
-
   const fetchSubscription = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -70,48 +68,9 @@ export default function BillingPage() {
     }
   }
 
-  // ... (existing code)
-
-  {/* Usage Stats */ }
-  <Card className="bg-gray-800 border-gray-700">
-    <CardHeader>
-      <CardTitle className="text-white">Usage This Month</CardTitle>
-      <CardDescription className="text-gray-300">
-        Track your current usage against plan limits
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-yellow-400">
-            {usageStats?.contentPackages?.used || 0}
-          </div>
-          <div className="text-sm text-gray-300">Content Packages</div>
-          <div className="text-xs text-gray-400">
-            {usageStats?.contentPackages?.limit === -1 ? 'Unlimited' : `${usageStats?.contentPackages?.limit || 0} limit`}
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-yellow-400">
-            {usageStats?.customContent?.used || 0}
-          </div>
-          <div className="text-sm text-gray-300">Custom Content</div>
-          <div className="text-xs text-gray-400">
-            {usageStats?.customContent?.limit === -1 ? 'Unlimited' : `${usageStats?.customContent?.limit || 0} limit`}
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-yellow-400">
-            {usageStats?.bulkGeneration?.used || 0}
-          </div>
-          <div className="text-sm text-gray-300">Bulk Generations</div>
-          <div className="text-xs text-gray-400">
-            {usageStats?.bulkGeneration?.limit === -1 ? 'Unlimited' : `${usageStats?.bulkGeneration?.limit || 0} limit`}
-          </div>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+  useEffect(() => {
+    fetchSubscription()
+  }, [])
 
   const handleSubscribe = async (plan: PlanType) => {
     setProcessing(plan)
@@ -506,33 +465,30 @@ export default function BillingPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-400">4</div>
+              <div className="text-2xl font-bold text-yellow-400">
+                {usageStats?.contentPackages?.used || 0}
+              </div>
               <div className="text-sm text-gray-300">Content Packages</div>
               <div className="text-xs text-gray-400">
-                {subscription ?
-                  `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.contentPackages === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.contentPackages || 0} limit` :
-                  '4 limit'
-                }
+                {usageStats?.contentPackages?.limit === -1 ? 'Unlimited' : `${usageStats?.contentPackages?.limit || 0} limit`}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-400">2</div>
+              <div className="text-2xl font-bold text-yellow-400">
+                {usageStats?.customContent?.used || 0}
+              </div>
               <div className="text-sm text-gray-300">Custom Content</div>
               <div className="text-xs text-gray-400">
-                {subscription ?
-                  `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.customContent === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.customContent || 0} limit` :
-                  '0 limit'
-                }
+                {usageStats?.customContent?.limit === -1 ? 'Unlimited' : `${usageStats?.customContent?.limit || 0} limit`}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-400">0</div>
+              <div className="text-2xl font-bold text-yellow-400">
+                {usageStats?.bulkGeneration?.used || 0}
+              </div>
               <div className="text-sm text-gray-300">Bulk Generations</div>
               <div className="text-xs text-gray-400">
-                {subscription ?
-                  `${STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.bulkGeneration === -1 ? 'Unlimited' : STRIPE_PLANS[subscription.plan as StripePlanType]?.limits.bulkGeneration || 0} limit` :
-                  '0 limit'
-                }
+                {usageStats?.bulkGeneration?.limit === -1 ? 'Unlimited' : `${usageStats?.bulkGeneration?.limit || 0} limit`}
               </div>
             </div>
           </div>
