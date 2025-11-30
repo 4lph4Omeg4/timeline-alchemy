@@ -135,7 +135,43 @@ export async function POST(request: NextRequest) {
 
     console.log('User added as owner of their personal organization')
 
-    // Step 5: Create Stripe customer
+    // Step 5: Create default client in user's personal organization
+    console.log('Attempting to create default client for org:', orgData.id)
+
+    const clientName = name ? `${name}'s Client` : 'Default Client'
+
+    const { data: newClient, error: clientError } = await (supabaseAdmin as any)
+      .from('clients')
+      .insert({
+        org_id: orgData.id,
+        name: clientName,
+        contact_info: { email: email }
+      })
+      .select()
+      .single()
+
+    if (clientError) {
+      console.error('Error creating client with contact info:', JSON.stringify(clientError))
+
+      // Retry without contact info
+      const { error: retryError } = await (supabaseAdmin as any)
+        .from('clients')
+        .insert({
+          org_id: orgData.id,
+          name: clientName
+        })
+
+      if (retryError) {
+        console.error('Error creating client without contact info:', JSON.stringify(retryError))
+        // Don't fail the whole signup for client errors, but log it clearly
+      } else {
+        console.log('Default client created (without contact info) on retry')
+      }
+    } else {
+      console.log('Default client created successfully:', newClient?.id)
+    }
+
+    // Step 6: Create Stripe customer
     let stripeCustomerId = 'trial-customer-' + orgData.id // fallback
     let stripeSubscriptionId = 'trial-sub-' + orgData.id // fallback
 
@@ -144,7 +180,7 @@ export async function POST(request: NextRequest) {
       stripeCustomerId = stripeCustomer.id
       console.log('Stripe customer created:', stripeCustomerId)
 
-      // Step 6: Create Stripe subscription with 14-day trial that converts to Basic plan
+      // Step 7: Create Stripe subscription with 14-day trial that converts to Basic plan
       const stripe = getStripe()
       const basicPriceId = process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
 
@@ -213,7 +249,7 @@ export async function POST(request: NextRequest) {
       // Continue with fallback customer ID - don't fail signup
     }
 
-    // Step 7: Create database subscription record
+    // Step 8: Create database subscription record
     const trialStart = new Date()
     const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000) // 14 days
 
@@ -237,42 +273,6 @@ export async function POST(request: NextRequest) {
       console.log('Trial subscription record created in database')
     }
 
-    // Step 8: Create default client in user's personal organization
-    console.log('Attempting to create default client for org:', orgData.id)
-
-    const clientName = name ? `${name}'s Client` : 'Default Client'
-
-    const { data: newClient, error: clientError } = await (supabaseAdmin as any)
-      .from('clients')
-      .insert({
-        org_id: orgData.id,
-        name: clientName,
-        contact_info: { email: email }
-      })
-      .select()
-      .single()
-
-    if (clientError) {
-      console.error('Error creating client with contact info:', JSON.stringify(clientError))
-
-      // Retry without contact info
-      const { error: retryError } = await (supabaseAdmin as any)
-        .from('clients')
-        .insert({
-          org_id: orgData.id,
-          name: clientName
-        })
-
-      if (retryError) {
-        console.error('Error creating client without contact info:', JSON.stringify(retryError))
-        // Don't fail the whole signup for client errors, but log it clearly
-      } else {
-        console.log('Default client created (without contact info) on retry')
-      }
-    } else {
-      console.log('Default client created successfully:', newClient?.id)
-    }
-
     console.log('Signup process completed successfully')
     console.log('Summary:')
     console.log('- User created:', userId)
@@ -280,6 +280,7 @@ export async function POST(request: NextRequest) {
     console.log('- Added as client to Admin Organization:', adminOrgId)
     console.log('- Personal organization created:', orgData.id)
     console.log('- User is owner of personal organization')
+    console.log('- Default client created')
     console.log('- Trial subscription with Stripe customer linked')
 
     return NextResponse.json({
