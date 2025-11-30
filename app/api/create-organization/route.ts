@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     // 4. Create default client for the organization
     console.log('4. Creating default client...')
-    const clientName = userName ? `${userName}'s Client` : 'Default Client'
+    const clientName = userName ? userName : 'Default Client'
     const { error: clientError } = await supabaseAdmin
       .from('clients')
       .insert({
