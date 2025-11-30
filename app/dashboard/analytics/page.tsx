@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/utils/supabase/client'
+import { getAdminStats } from '@/app/actions/get-admin-stats'
 
 export default function AnalyticsPage() {
   const supabase = createClient()
@@ -20,32 +21,47 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        // Fetch all analytics data
-        const [
-          { data: orgs },
-          { data: subs },
-          { data: clients },
-          { data: posts },
-        ] = await Promise.all([
-          supabase.from('organizations').select('id'),
-          supabase.from('subscriptions').select('id').eq('status', 'active'),
-          supabase.from('clients').select('id'),
-          supabase.from('blog_posts').select('id, created_at'),
-        ])
+        const { data: { user } } = await supabase.auth.getUser()
+        const isAdmin = user?.email === 'sh4m4ni4k@sh4m4ni4k.nl'
 
-        // Calculate posts this month
-        const currentMonth = new Date().toISOString().slice(0, 7)
-        const postsThisMonth = posts?.filter((post: any) =>
-          (post as any).created_at.startsWith(currentMonth)
-        ).length || 0
+        if (isAdmin) {
+          // Use server action for admin to bypass RLS
+          const stats = await getAdminStats()
+          setAnalytics({
+            totalOrganizations: stats.totalOrganizations,
+            activeSubscriptions: stats.activeSubscriptions,
+            totalClients: stats.totalClients,
+            totalPosts: stats.totalPosts,
+            postsThisMonth: stats.postsThisMonth,
+          })
+        } else {
+          // Regular user - use client-side fetch (respects RLS)
+          const [
+            { data: orgs },
+            { data: subs },
+            { data: clients },
+            { data: posts },
+          ] = await Promise.all([
+            supabase.from('organizations').select('id'),
+            supabase.from('subscriptions').select('id').eq('status', 'active'),
+            supabase.from('clients').select('id'),
+            supabase.from('blog_posts').select('id, created_at'),
+          ])
 
-        setAnalytics({
-          totalOrganizations: orgs?.length || 0,
-          activeSubscriptions: subs?.length || 0,
-          totalClients: clients?.length || 0,
-          totalPosts: posts?.length || 0,
-          postsThisMonth,
-        })
+          // Calculate posts this month
+          const currentMonth = new Date().toISOString().slice(0, 7)
+          const postsThisMonth = posts?.filter((post: any) =>
+            (post as any).created_at.startsWith(currentMonth)
+          ).length || 0
+
+          setAnalytics({
+            totalOrganizations: orgs?.length || 0,
+            activeSubscriptions: subs?.length || 0,
+            totalClients: clients?.length || 0,
+            totalPosts: posts?.length || 0,
+            postsThisMonth,
+          })
+        }
       } catch (error) {
         console.error('Error fetching analytics:', error)
       } finally {

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { BlogPost, UsageStats, Organization, Client } from '@/types/index'
 import { formatDate } from '@/lib/utils'
 import Link from 'next/link'
+import { getAdminStats } from '@/app/actions/get-admin-stats'
 
 export default function DashboardPage() {
   const supabase = createClient()
@@ -40,28 +41,18 @@ export default function DashboardPage() {
 
         if (isAdminUser) {
           // Admin dashboard data
+          // Fetch stats from server action to bypass RLS
+          const stats = await getAdminStats()
+
+          // Fetch recent posts (client-side, might be limited by RLS but okay for now)
           const { data: allPosts } = await (supabase as any)
             .from('blog_posts')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(10)
 
-          const { data: totalOrgs } = await (supabase as any)
-            .from('organizations')
-            .select('id')
-
-          const { data: activeSubs } = await (supabase as any)
-            .from('subscriptions')
-            .select('id')
-            .eq('status', 'active')
-
-          const { data: totalClients, error: clientsError } = await (supabase as any)
-            .from('clients')
-            .select('id')
-
-          console.log('Admin clients count query:', { totalClients, clientsError })
-
-          // Fetch all organizations with their subscriptions
+          // Fetch all organizations with their subscriptions (client-side RLS might limit this)
+          // Ideally this should also be a server action if we want to see ALL orgs
           const { data: allOrgsWithSubs } = await (supabase as any)
             .from('organizations')
             .select(`
@@ -104,10 +95,10 @@ export default function DashboardPage() {
           setActiveUsers(usersWithSubs || [])
           setAllOrganizations(allOrgsWithSubs || [])
           setAdminStats({
-            totalOrganizations: totalOrgs?.length || 0,
-            activeSubscriptions: activeSubs?.length || 0,
-            totalClients: totalClients?.length || 0,
-            totalPosts: allPosts?.length || 0,
+            totalOrganizations: stats.totalOrganizations,
+            activeSubscriptions: stats.activeSubscriptions,
+            totalClients: stats.totalClients,
+            totalPosts: stats.totalPosts,
           })
         } else {
           // Regular user dashboard data - get user's organization first
