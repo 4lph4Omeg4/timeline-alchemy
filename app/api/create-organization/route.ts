@@ -173,8 +173,12 @@ export async function POST(request: NextRequest) {
       org_id: orgData.id,
       stripe_customer_id: stripeCustomerId || ('manual-' + orgData.id),
       stripe_subscription_id: stripeSubscriptionId || ('manual-sub-' + orgData.id),
-      plan: planToUse,
-      status: stripeSubscriptionId ? 'trialing' : 'active',
+      // If we have a stripe subscription (trial), force plan to 'trial' to match trial limits
+      // Otherwise use the selected plan
+      plan: stripeSubscriptionId ? 'trial' : planToUse,
+      // Status must be 'active' for get_effective_plan to pick it up
+      // The is_trial flag handles the trial logic
+      status: 'active',
       is_trial: !!stripeSubscriptionId,
       trial_start_date: stripeSubscriptionId ? trialStart.toISOString() : null,
       trial_end_date: stripeSubscriptionId ? trialEnd.toISOString() : null
