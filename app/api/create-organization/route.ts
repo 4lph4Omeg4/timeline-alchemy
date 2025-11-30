@@ -1,49 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { createStripeCustomer, getStripe } from '@/lib/stripe'
-import fs from 'fs'
-import path from 'path'
+import fetch from 'node-fetch'
 
-// Helper to log to file
-function logStep(step: string, data?: any) {
-  const logFile = path.join(process.cwd(), 'create-org-debug.log')
-  const timestamp = new Date().toISOString()
-  const message = `[${timestamp}] ${step} ${data ? JSON.stringify(data, null, 2) : ''}\n`
+// Create a local admin client to ensure we have full control and no global fetch issues
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-  try {
-    fs.appendFileSync(logFile, message)
-  } catch (e) {
-    console.error('Failed to write to log file:', e)
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  },
+  global: {
+    fetch: fetch as any
   }
-  console.log(step, data || '')
-}
+})
 
 export async function POST(request: NextRequest) {
-  logStep('🚀 STARTING CREATE ORG REQUEST')
+  console.log('🚀 STARTING CREATE ORG REQUEST (Self-Contained)')
 
   // Debug checks
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const hasServiceKey = !!serviceKey
+  const hasServiceKey = !!supabaseServiceKey
   const hasStripeKey = !!process.env.STRIPE_SECRET_KEY
   const hasPriceId = !!process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
 
-  logStep('Environment Check:', {
-    hasServiceKey,
-    serviceKeyPrefix: serviceKey ? serviceKey.substring(0, 10) + '...' : 'N/A',
-    hasStripeKey,
-    hasPriceId
-  })
+  console.log('Environment Check:', { hasServiceKey, hasStripeKey, hasPriceId, supabaseUrl })
 
   if (!hasServiceKey) {
+    console.error('❌ SUPABASE_SERVICE_ROLE_KEY is missing')
     return NextResponse.json({ error: 'Server misconfiguration: SUPABASE_SERVICE_ROLE_KEY is missing' }, { status: 500 })
   }
 
   try {
     const { userId, userName, email, orgName, plan } = await request.json()
-    logStep('Received payload', { userId, userName, email, orgName, plan })
+    console.log('Received payload', { userId, userName, email, orgName, plan })
 
     if (!userId) {
-      logStep('❌ Missing required fields')
+      console.error('❌ Missing required fields')
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -51,9 +45,9 @@ export async function POST(request: NextRequest) {
     const nameToUse = orgName ? orgName.trim() : (userName ? `${userName}'s Organization` : 'New Organization')
     const planToUse = plan || 'basic'
 
-    // Create organization
-    logStep('Creating organization...', { name: nameToUse, plan: planToUse })
-    const { data: orgData, error: orgError } = await (supabaseAdmin as any)
+    // 1. Create organization
+    console.log('1. Creating organization...', { name: nameToUse, plan: planToUse })
+    const { data: orgData, error: orgError } = await supabaseAdmin
       .from('organizations')
       .insert({
         name: nameToUse,
@@ -63,14 +57,14 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (orgError || !orgData) {
-      logStep('❌ Error creating organization:', orgError)
+      console.error('❌ Error creating organization:', orgError)
       return NextResponse.json({ error: 'Failed to create organization: ' + orgError?.message }, { status: 500 })
     }
-    logStep('✅ Organization created:', orgData.id)
+    console.log('✅ Organization created:', orgData.id)
 
-    // Create organization usage record
-    logStep('Creating organization usage record...')
-    const { error: usageError } = await (supabaseAdmin as any)
+    // 2. Create organization usage record
+    console.log('2. Creating organization usage record...')
+    const { error: usageError } = await supabaseAdmin
       .from('organization_usage')
       .insert({
         org_id: orgData.id,
@@ -80,14 +74,14 @@ export async function POST(request: NextRequest) {
       })
 
     if (usageError) {
-      logStep('❌ Error creating organization usage:', usageError)
+      console.error('❌ Error creating organization usage:', usageError)
     } else {
-      logStep('✅ Organization usage created')
+      console.log('✅ Organization usage created')
     }
 
-    // Add user as owner of the organization
-    logStep('Adding user as owner...')
-    const { data: memberData, error: memberError } = await (supabaseAdmin as any)
+    // 3. Add user as owner of the organization
+    console.log('3. Adding user as owner...')
+    const { data: memberData, error: memberError } = await supabaseAdmin
       .from('org_members')
       .insert({
         org_id: orgData.id,
@@ -97,17 +91,17 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (memberError) {
-      logStep('❌ Error adding user to organization:', memberError)
+      console.error('❌ Error adding user to organization:', memberError)
       // Try to clean up
-      await (supabaseAdmin as any).from('organizations').delete().eq('id', orgData.id)
-      return NextResponse.json({ error: 'Failed to add user to organization' }, { status: 500 })
+      await supabaseAdmin.from('organizations').delete().eq('id', orgData.id)
+      return NextResponse.json({ error: 'Failed to add user to organization: ' + memberError.message }, { status: 500 })
     }
-    logStep('✅ User added as owner:', memberData)
+    console.log('✅ User added as owner:', memberData)
 
-    // Create default client for the organization
-    logStep('Creating default client...')
+    // 4. Create default client for the organization
+    console.log('4. Creating default client...')
     const clientName = userName ? `${userName}'s Client` : 'Default Client'
-    const { error: clientError } = await (supabaseAdmin as any)
+    const { error: clientError } = await supabaseAdmin
       .from('clients')
       .insert({
         org_id: orgData.id,
@@ -116,26 +110,26 @@ export async function POST(request: NextRequest) {
       })
 
     if (clientError) {
-      logStep('❌ Error creating default client:', clientError)
+      console.error('❌ Error creating default client:', clientError)
     } else {
-      logStep('✅ Default client created')
+      console.log('✅ Default client created')
     }
 
-    // Create Stripe Customer and Subscription
+    // 5. Create Stripe Customer and Subscription
     let stripeCustomerId: string = ''
     let stripeSubscriptionId: string = ''
     let stripeErrorDetail: any = null
 
     if (hasStripeKey && email) {
-      logStep('Starting Stripe integration...')
+      console.log('5. Starting Stripe integration...')
       try {
         // Create Customer
         const stripeCustomer = await createStripeCustomer(email, userName || 'User')
         stripeCustomerId = stripeCustomer.id
-        logStep('✅ Stripe customer created:', stripeCustomerId)
+        console.log('✅ Stripe customer created:', stripeCustomerId)
 
         // Update Organization with Stripe Customer ID
-        await (supabaseAdmin as any)
+        await supabaseAdmin
           .from('organizations')
           .update({ stripe_customer_id: stripeCustomerId })
           .eq('id', orgData.id)
@@ -145,7 +139,7 @@ export async function POST(request: NextRequest) {
         const priceId = process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
 
         if (priceId) {
-          logStep('Creating Stripe subscription...', { priceId })
+          console.log('Creating Stripe subscription...', { priceId })
           const subscription = await stripe.subscriptions.create({
             customer: stripeCustomerId,
             items: [{ price: priceId }],
@@ -161,23 +155,23 @@ export async function POST(request: NextRequest) {
             },
           })
           stripeSubscriptionId = subscription.id
-          logStep('✅ Stripe subscription created:', stripeSubscriptionId)
+          console.log('✅ Stripe subscription created:', stripeSubscriptionId)
         } else {
-          logStep('⚠️ NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID is missing, skipping subscription creation')
+          console.warn('⚠️ NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID is missing, skipping subscription creation')
           stripeErrorDetail = 'NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID is missing'
         }
 
       } catch (stripeError) {
-        logStep('❌ Stripe error during organization creation:', stripeError)
+        console.error('❌ Stripe error during organization creation:', stripeError)
         stripeErrorDetail = stripeError
       }
     } else {
-      logStep('⚠️ Skipping Stripe: Missing key or email')
+      console.log('⚠️ Skipping Stripe: Missing key or email')
       stripeErrorDetail = 'Missing Stripe key or email'
     }
 
-    // Create a subscription record in DB
-    logStep('Creating DB subscription record...')
+    // 6. Create a subscription record in DB
+    console.log('6. Creating DB subscription record...')
 
     const trialStart = new Date()
     const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000)
@@ -193,17 +187,17 @@ export async function POST(request: NextRequest) {
       trial_end_date: stripeSubscriptionId ? trialEnd.toISOString() : null
     }
 
-    logStep('Subscription data to insert:', subscriptionData)
+    console.log('Subscription data to insert:', subscriptionData)
 
-    const { data: subData, error: subError } = await (supabaseAdmin as any)
+    const { data: subData, error: subError } = await supabaseAdmin
       .from('subscriptions')
       .insert(subscriptionData)
       .select()
 
     if (subError) {
-      logStep('❌ Error creating subscription record:', subError)
+      console.error('❌ Error creating subscription record:', subError)
     } else {
-      logStep('✅ DB subscription record created:', subData)
+      console.log('✅ DB subscription record created:', subData)
     }
 
     return NextResponse.json({
@@ -216,12 +210,13 @@ export async function POST(request: NextRequest) {
         hasStripeKey,
         hasPriceId,
         stripeError: stripeErrorDetail,
-        dbSubscriptionError: subError
+        dbSubscriptionError: subError,
+        orgId: orgData.id
       }
     })
 
   } catch (error) {
-    logStep('💥 CRITICAL API ERROR:', error)
+    console.error('💥 CRITICAL API ERROR:', error)
     return NextResponse.json(
       { error: 'Internal server error: ' + (error as Error).message },
       { status: 500 }
