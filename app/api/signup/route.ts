@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
             metadata: {
               org_id: orgData.id,
               user_id: userId,
-              plan: 'basic',
+              plan: 'trial',
             },
           })
 
@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
               metadata: {
                 org_id: orgData.id,
                 user_id: userId,
-                plan: 'basic',
+                plan: 'trial',
               },
             })
 
@@ -329,6 +329,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Account, organization, and client created successfully',
+      apiVersion: '2.0',
       userId: userId,
       personalOrganizationId: orgData.id,
       adminOrganizationId: adminOrgId,
