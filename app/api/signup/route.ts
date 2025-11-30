@@ -191,13 +191,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 6: Create Stripe customer
-    let stripeCustomerId = 'trial-customer-' + orgData.id // fallback
-    let stripeSubscriptionId = 'trial-sub-' + orgData.id // fallback
+    let stripeCustomerId: string
+    let stripeSubscriptionId: string = ''
 
     // Check for Stripe secret key
     if (!process.env.STRIPE_SECRET_KEY) {
       console.error('STRIPE_SECRET_KEY is missing in environment variables')
-      debugErrors.push({ step: 'check_stripe_key', error: 'STRIPE_SECRET_KEY missing' })
+      throw new Error('STRIPE_SECRET_KEY is missing')
     }
 
     try {
@@ -213,37 +213,71 @@ export async function POST(request: NextRequest) {
 
       if (updateOrgError) {
         console.error('Error updating organization with Stripe Customer ID:', updateOrgError)
-        debugErrors.push({ step: 'update_org_stripe_id', error: updateOrgError })
+        // We continue even if this fails, as we have the ID in memory for the subscription
       } else {
         console.log('Organization updated with Stripe Customer ID')
       }
+    } catch (stripeError: any) {
+      console.error('Error creating Stripe customer:', JSON.stringify(stripeError))
+      // Fail the signup if we can't create a Stripe customer
+      // Clean up organization and user
+      await supabaseAdmin.auth.admin.deleteUser(userId)
+      await (supabaseAdmin as any).from('organizations').delete().eq('id', orgData.id)
 
-      // Step 7: Create Stripe subscription with 14-day trial that converts to Basic plan
-      const stripe = getStripe()
-      const basicPriceId = process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
+      throw new Error(`Failed to create Stripe customer: ${stripeError.message || JSON.stringify(stripeError)}`)
+    }
 
-      if (!basicPriceId) {
-        console.warn('NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID not found, creating manual trial subscription')
-        debugErrors.push({ step: 'check_price_id', error: 'NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID missing' })
-      } else {
+    // Step 7: Create Stripe subscription with 14-day trial that converts to Basic plan
+    const stripe = getStripe()
+    const basicPriceId = process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
+
+    if (!basicPriceId) {
+      console.warn('NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID not found, creating manual trial subscription')
+      debugErrors.push({ step: 'check_price_id', error: 'NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID missing' })
+    } else {
+      try {
+        console.log('Attempting to create Stripe subscription for customer:', stripeCustomerId, 'with price:', basicPriceId)
+
+        // Create subscription with trial period that auto-converts to Basic plan
+        const subscription = await stripe.subscriptions.create({
+          customer: stripeCustomerId,
+          items: [
+            {
+              price: basicPriceId,
+            },
+          ],
+          trial_period_days: 14, // 14-day trial
+          payment_behavior: 'default_incomplete', // Don't require payment method during trial
+          trial_settings: {
+            end_behavior: {
+              missing_payment_method: 'pause', // Pause subscription if no payment method after trial
+            },
+          },
+          metadata: {
+            org_id: orgData.id,
+            user_id: userId,
+            plan: 'trial',
+          },
+        })
+
+        stripeSubscriptionId = subscription.id
+        console.log('Stripe subscription created with 14-day trial:', stripeSubscriptionId)
+        console.log('Trial ends at:', new Date(subscription.trial_end! * 1000).toISOString())
+      } catch (subscriptionError: any) {
+        console.error('Error creating Stripe subscription with trial settings:', JSON.stringify(subscriptionError))
+        debugErrors.push({ step: 'create_stripe_sub_advanced', error: subscriptionError })
+
+        // Retry without advanced trial settings (fallback for API compatibility or other issues)
         try {
-          console.log('Attempting to create Stripe subscription for customer:', stripeCustomerId, 'with price:', basicPriceId)
-
-          // Create subscription with trial period that auto-converts to Basic plan
-          const subscription = await stripe.subscriptions.create({
+          console.log('Retrying subscription creation without advanced trial settings...')
+          const retrySubscription = await stripe.subscriptions.create({
             customer: stripeCustomerId,
             items: [
               {
                 price: basicPriceId,
               },
             ],
-            trial_period_days: 14, // 14-day trial
-            payment_behavior: 'default_incomplete', // Don't require payment method during trial
-            trial_settings: {
-              end_behavior: {
-                missing_payment_method: 'pause', // Pause subscription if no payment method after trial
-              },
-            },
+            trial_period_days: 14,
             metadata: {
               org_id: orgData.id,
               user_id: userId,
@@ -251,45 +285,16 @@ export async function POST(request: NextRequest) {
             },
           })
 
-          stripeSubscriptionId = subscription.id
-          console.log('Stripe subscription created with 14-day trial:', stripeSubscriptionId)
-          console.log('Trial ends at:', new Date(subscription.trial_end! * 1000).toISOString())
-        } catch (subscriptionError: any) {
-          console.error('Error creating Stripe subscription with trial settings:', JSON.stringify(subscriptionError))
-          debugErrors.push({ step: 'create_stripe_sub_advanced', error: subscriptionError })
-
-          // Retry without advanced trial settings (fallback for API compatibility or other issues)
-          try {
-            console.log('Retrying subscription creation without advanced trial settings...')
-            const retrySubscription = await stripe.subscriptions.create({
-              customer: stripeCustomerId,
-              items: [
-                {
-                  price: basicPriceId,
-                },
-              ],
-              trial_period_days: 14,
-              metadata: {
-                org_id: orgData.id,
-                user_id: userId,
-                plan: 'trial',
-              },
-            })
-
-            stripeSubscriptionId = retrySubscription.id
-            console.log('Retry successful: Stripe subscription created:', stripeSubscriptionId)
-          } catch (retryError: any) {
-            console.error('Retry failed: Error creating Stripe subscription:', JSON.stringify(retryError))
-            debugErrors.push({ step: 'create_stripe_sub_retry', error: retryError })
-            // Continue with fallback (database-only trial)
-          }
+          stripeSubscriptionId = retrySubscription.id
+          console.log('Retry successful: Stripe subscription created:', stripeSubscriptionId)
+        } catch (retryError: any) {
+          console.error('Retry failed: Error creating Stripe subscription:', JSON.stringify(retryError))
+          debugErrors.push({ step: 'create_stripe_sub_retry', error: retryError })
+          // Continue with fallback (database-only trial)
         }
       }
-    } catch (stripeError: any) {
-      console.error('Error creating Stripe customer:', JSON.stringify(stripeError))
-      debugErrors.push({ step: 'create_stripe_customer', error: stripeError })
-      // Continue with fallback customer ID - don't fail signup
     }
+
 
     // Step 8: Create database subscription record
     const trialStart = new Date()

@@ -1,0 +1,14 @@
+[dotenv@17.2.3] injecting env (45) from .env.local -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+Checking env vars...
+STRIPE_SECRET_KEY: true
+NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID: price_1SXUBHPPQ85AybSbFrlbkD7Y
+
+Creating test customer...
+Customer created: cus_TWGSZwDVjxXrzL
+
+Attempting to create subscription with advanced trial settings...
+Success! Subscription created: sub_1SZDv9PPQ85AybSbxF0jFWoq
+Status: trialing
+Trial end: 1765731383
+Subscription canceled.
+Customer deleted.
