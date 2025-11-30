@@ -42,6 +42,7 @@ export default function CreateOrganizationPage() {
         },
         body: JSON.stringify({
           userId: user.id,
+          email: user.email,
           userName: user.user_metadata?.name || user.email?.split('@')[0],
           orgName: name.trim(),
           plan: plan
