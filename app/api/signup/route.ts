@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { createStripeCustomer, getStripe } from '@/lib/stripe'
 
 export async function POST(request: NextRequest) {
+  const debugErrors: any[] = []
+
   try {
     const { email, password, name, organizationName } = await request.json()
 
@@ -152,6 +154,7 @@ export async function POST(request: NextRequest) {
 
     if (clientError) {
       console.error('Error creating client with contact info:', JSON.stringify(clientError))
+      debugErrors.push({ step: 'create_client_with_contact', error: clientError })
 
       // Retry without contact info
       const { error: retryError } = await (supabaseAdmin as any)
@@ -163,6 +166,7 @@ export async function POST(request: NextRequest) {
 
       if (retryError) {
         console.error('Error creating client without contact info:', JSON.stringify(retryError))
+        debugErrors.push({ step: 'create_client_retry', error: retryError })
         // Don't fail the whole signup for client errors, but log it clearly
       } else {
         console.log('Default client created (without contact info) on retry')
@@ -178,6 +182,7 @@ export async function POST(request: NextRequest) {
     // Check for Stripe secret key
     if (!process.env.STRIPE_SECRET_KEY) {
       console.error('STRIPE_SECRET_KEY is missing in environment variables')
+      debugErrors.push({ step: 'check_stripe_key', error: 'STRIPE_SECRET_KEY missing' })
     }
 
     try {
@@ -193,6 +198,7 @@ export async function POST(request: NextRequest) {
 
       if (updateOrgError) {
         console.error('Error updating organization with Stripe Customer ID:', updateOrgError)
+        debugErrors.push({ step: 'update_org_stripe_id', error: updateOrgError })
       } else {
         console.log('Organization updated with Stripe Customer ID')
       }
@@ -203,6 +209,7 @@ export async function POST(request: NextRequest) {
 
       if (!basicPriceId) {
         console.warn('NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID not found, creating manual trial subscription')
+        debugErrors.push({ step: 'check_price_id', error: 'NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID missing' })
       } else {
         try {
           console.log('Attempting to create Stripe subscription for customer:', stripeCustomerId, 'with price:', basicPriceId)
@@ -234,6 +241,7 @@ export async function POST(request: NextRequest) {
           console.log('Trial ends at:', new Date(subscription.trial_end! * 1000).toISOString())
         } catch (subscriptionError: any) {
           console.error('Error creating Stripe subscription with trial settings:', JSON.stringify(subscriptionError))
+          debugErrors.push({ step: 'create_stripe_sub_advanced', error: subscriptionError })
 
           // Retry without advanced trial settings (fallback for API compatibility or other issues)
           try {
@@ -257,12 +265,14 @@ export async function POST(request: NextRequest) {
             console.log('Retry successful: Stripe subscription created:', stripeSubscriptionId)
           } catch (retryError: any) {
             console.error('Retry failed: Error creating Stripe subscription:', JSON.stringify(retryError))
+            debugErrors.push({ step: 'create_stripe_sub_retry', error: retryError })
             // Continue with fallback (database-only trial)
           }
         }
       }
     } catch (stripeError: any) {
       console.error('Error creating Stripe customer:', JSON.stringify(stripeError))
+      debugErrors.push({ step: 'create_stripe_customer', error: stripeError })
       // Continue with fallback customer ID - don't fail signup
     }
 
@@ -285,6 +295,7 @@ export async function POST(request: NextRequest) {
 
     if (subError) {
       console.error('Error creating subscription:', subError)
+      debugErrors.push({ step: 'create_db_subscription', error: subError })
       // Don't fail the whole signup for subscription errors
     } else {
       console.log('Trial subscription record created in database')
@@ -306,13 +317,14 @@ export async function POST(request: NextRequest) {
       userId: userId,
       personalOrganizationId: orgData.id,
       adminOrganizationId: adminOrgId,
-      stripeCustomerId: stripeCustomerId
+      stripeCustomerId: stripeCustomerId,
+      debugErrors: debugErrors.length > 0 ? debugErrors : undefined
     })
 
   } catch (error) {
     console.error('Signup API Error:', error)
     return NextResponse.json(
-      { error: 'Internal server error: ' + (error as Error).message },
+      { error: 'Internal server error: ' + (error as Error).message, debugErrors },
       { status: 500 }
     )
   }
