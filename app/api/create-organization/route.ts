@@ -50,6 +50,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to add user to organization' }, { status: 500 })
     }
 
+    // Create default client for the organization
+    const clientName = userName ? `${userName}'s Client` : 'Default Client'
+    const { error: clientError } = await (supabaseAdmin as any)
+      .from('clients')
+      .insert({
+        org_id: orgData.id,
+        name: clientName
+      })
+
+    if (clientError) {
+      console.error('Error creating default client:', clientError)
+      // Don't fail the organization creation for client errors
+    }
+
     // Create a subscription for the organization
     const { error: subError } = await (supabaseAdmin as any)
       .from('subscriptions')
