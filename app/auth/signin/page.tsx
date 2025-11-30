@@ -189,7 +189,7 @@ export default function SignInPage() {
               {/* Facebook */}
               <Button
                 variant="outline"
-                className="bg-[#1877F2]/10 border-purple-500/30 hover:bg-[#1877F2]/20 hover:border-[#1877F2] transition-all"
+                className="bg-white/5 border-purple-500/30 hover:bg-white/10 hover:border-purple-400 transition-all"
                 onClick={() => handleOAuthSignIn('facebook')}
                 disabled={loading}
                 title="Sign in with Facebook"
@@ -202,7 +202,7 @@ export default function SignInPage() {
               {/* Twitter/X */}
               <Button
                 variant="outline"
-                className="bg-white/5 border-purple-500/30 hover:bg-white/10 hover:border-white transition-all"
+                className="bg-white/5 border-purple-500/30 hover:bg-white/10 hover:border-purple-400 transition-all"
                 onClick={() => handleOAuthSignIn('twitter')}
                 disabled={loading}
                 title="Sign in with Twitter"
@@ -215,7 +215,7 @@ export default function SignInPage() {
               {/* GitHub */}
               <Button
                 variant="outline"
-                className="bg-white/5 border-purple-500/30 hover:bg-white/10 hover:border-white transition-all"
+                className="bg-white/5 border-purple-500/30 hover:bg-white/10 hover:border-purple-400 transition-all"
                 onClick={() => handleOAuthSignIn('github')}
                 disabled={loading}
                 title="Sign in with GitHub"
@@ -228,7 +228,7 @@ export default function SignInPage() {
               {/* LinkedIn */}
               <Button
                 variant="outline"
-                className="bg-[#0077b5]/10 border-purple-500/30 hover:bg-[#0077b5]/20 hover:border-[#0077b5] transition-all"
+                className="bg-white/5 border-purple-500/30 hover:bg-white/10 hover:border-purple-400 transition-all"
                 onClick={() => handleOAuthSignIn('linkedin_oidc')}
                 disabled={loading}
                 title="Sign in with LinkedIn"
@@ -241,16 +241,16 @@ export default function SignInPage() {
               {/* Slack */}
               <Button
                 variant="outline"
-                className="bg-[#4A154B]/10 border-purple-500/30 hover:bg-[#4A154B]/20 hover:border-[#E01E5A] transition-all"
+                className="bg-white/5 border-purple-500/30 hover:bg-white/10 hover:border-purple-400 transition-all"
                 onClick={() => handleOAuthSignIn('slack')}
                 disabled={loading}
                 title="Sign in with Slack"
               >
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path d="M5.042 15.165a2.528 2.528 0 1 0-2.528 2.528h2.528v-2.528Zm.827 0a2.528 2.528 0 1 0 2.528-2.528V10.11a2.528 2.528 0 1 0-2.528 2.528v2.528Zm0-5.883a2.528 2.528 0 1 0 2.528-2.528h-2.528v2.528Zm5.883-5.883a2.528 2.528 0 1 0-2.528 2.528v2.528h2.528V3.4ZM10.11 9.282a2.528 2.528 0 1 0 2.528 2.528V9.282h-2.528Zm5.883.827a2.528 2.528 0 1 0-2.528-2.528v2.528h2.528Zm0 5.883a2.528 2.528 0 1 0 2.528 2.528v-2.528h-2.528Zm5.883-5.883a2.528 2.528 0 1 0-2.528 2.528v-2.528h2.528Z" fill="#E01E5A" />
-                  <path d="M5.869 15.165v2.528a2.528 2.528 0 1 0 2.528-2.528H5.87Zm5.883-5.883V6.754a2.528 2.528 0 1 0-2.528 2.528h2.528Z" fill="#36C5F0" />
-                  <path d="M11.752 15.165a2.528 2.528 0 1 0 2.528-2.528v2.528h-2.528Zm5.883-5.883a2.528 2.528 0 1 0 2.528-2.528v2.528h-2.528Z" fill="#2EB67D" />
-                  <path d="M5.869 10.11a2.528 2.528 0 1 0 2.528 2.528V10.11H5.87Zm5.883 5.883a2.528 2.528 0 1 0 2.528 2.528v-2.528h-2.528Z" fill="#ECB22E" />
+                <svg className="h-5 w-5" viewBox="0 0 127 127">
+                  <path fill="#E01E5A" d="M28.6 22.8c-7.8 0-14.2 6.3-14.2 14.2s6.3 14.2 14.2 14.2h14.2v-14.2c0-7.8-6.3-14.2-14.2-14.2zM48.5 22.8c0-7.8-6.3-14.2-14.2-14.2s-14.2 6.3-14.2 14.2v28.4c0 7.8 6.3 14.2 14.2 14.2s14.2-6.3 14.2-14.2V22.8z" />
+                  <path fill="#36C5F0" d="M28.6 79.7c0 7.8 6.3 14.2 14.2 14.2s14.2-6.3 14.2-14.2v-14.2H42.8c-7.8 0-14.2 6.3-14.2 14.2zM28.6 48.5c-7.8 0-14.2 6.3-14.2 14.2s6.3 14.2 14.2 14.2h28.4c7.8 0 14.2-6.3 14.2-14.2s-6.3-14.2-14.2-14.2H28.6z" />
+                  <path fill="#2EB67D" d="M98.4 79.7c7.8 0 14.2-6.3 14.2-14.2s-6.3-14.2-14.2-14.2h-14.2v14.2c0 7.8 6.3 14.2 14.2 14.2zM78.5 79.7c0 7.8 6.3 14.2 14.2 14.2s14.2-6.3 14.2-14.2v-28.4c0-7.8-6.3-14.2-14.2-14.2s-14.2 6.3-14.2 14.2v28.4z" />
+                  <path fill="#ECB22E" d="M98.4 22.8c0-7.8-6.3-14.2-14.2-14.2s-14.2 6.3-14.2 14.2v14.2h14.2c7.8 0 14.2-6.3 14.2-14.2zM98.4 54c7.8 0 14.2-6.3 14.2-14.2s-6.3-14.2-14.2-14.2H69.9c-7.8 0-14.2 6.3-14.2 14.2s6.3 14.2 14.2 14.2h28.5z" />
                 </svg>
               </Button>
             </div>
