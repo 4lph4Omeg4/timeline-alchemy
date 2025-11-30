@@ -175,10 +175,27 @@ export async function POST(request: NextRequest) {
     let stripeCustomerId = 'trial-customer-' + orgData.id // fallback
     let stripeSubscriptionId = 'trial-sub-' + orgData.id // fallback
 
+    // Check for Stripe secret key
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('STRIPE_SECRET_KEY is missing in environment variables')
+    }
+
     try {
       const stripeCustomer = await createStripeCustomer(email, name)
       stripeCustomerId = stripeCustomer.id
       console.log('Stripe customer created:', stripeCustomerId)
+
+      // Update organization with Stripe Customer ID
+      const { error: updateOrgError } = await (supabaseAdmin as any)
+        .from('organizations')
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq('id', orgData.id)
+
+      if (updateOrgError) {
+        console.error('Error updating organization with Stripe Customer ID:', updateOrgError)
+      } else {
+        console.log('Organization updated with Stripe Customer ID')
+      }
 
       // Step 7: Create Stripe subscription with 14-day trial that converts to Basic plan
       const stripe = getStripe()
