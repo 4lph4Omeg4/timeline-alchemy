@@ -20,6 +20,24 @@ function logStep(step: string, data?: any) {
 
 export async function POST(request: NextRequest) {
   logStep('🚀 STARTING CREATE ORG REQUEST')
+
+  // Debug checks
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const hasServiceKey = !!serviceKey
+  const hasStripeKey = !!process.env.STRIPE_SECRET_KEY
+  const hasPriceId = !!process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
+
+  logStep('Environment Check:', {
+    hasServiceKey,
+    serviceKeyPrefix: serviceKey ? serviceKey.substring(0, 10) + '...' : 'N/A',
+    hasStripeKey,
+    hasPriceId
+  })
+
+  if (!hasServiceKey) {
+    return NextResponse.json({ error: 'Server misconfiguration: SUPABASE_SERVICE_ROLE_KEY is missing' }, { status: 500 })
+  }
+
   try {
     const { userId, userName, email, orgName, plan } = await request.json()
     logStep('Received payload', { userId, userName, email, orgName, plan })
@@ -50,15 +68,33 @@ export async function POST(request: NextRequest) {
     }
     logStep('✅ Organization created:', orgData.id)
 
+    // Create organization usage record
+    logStep('Creating organization usage record...')
+    const { error: usageError } = await (supabaseAdmin as any)
+      .from('organization_usage')
+      .insert({
+        org_id: orgData.id,
+        content_packages_used: 0,
+        custom_content_used: 0,
+        bulk_generation_used: 0
+      })
+
+    if (usageError) {
+      logStep('❌ Error creating organization usage:', usageError)
+    } else {
+      logStep('✅ Organization usage created')
+    }
+
     // Add user as owner of the organization
     logStep('Adding user as owner...')
-    const { error: memberError } = await (supabaseAdmin as any)
+    const { data: memberData, error: memberError } = await (supabaseAdmin as any)
       .from('org_members')
       .insert({
         org_id: orgData.id,
         user_id: userId,
         role: 'owner'
       })
+      .select()
 
     if (memberError) {
       logStep('❌ Error adding user to organization:', memberError)
@@ -66,7 +102,7 @@ export async function POST(request: NextRequest) {
       await (supabaseAdmin as any).from('organizations').delete().eq('id', orgData.id)
       return NextResponse.json({ error: 'Failed to add user to organization' }, { status: 500 })
     }
-    logStep('✅ User added as owner')
+    logStep('✅ User added as owner:', memberData)
 
     // Create default client for the organization
     logStep('Creating default client...')
@@ -88,8 +124,9 @@ export async function POST(request: NextRequest) {
     // Create Stripe Customer and Subscription
     let stripeCustomerId: string = ''
     let stripeSubscriptionId: string = ''
+    let stripeErrorDetail: any = null
 
-    if (process.env.STRIPE_SECRET_KEY && email) {
+    if (hasStripeKey && email) {
       logStep('Starting Stripe integration...')
       try {
         // Create Customer
@@ -127,13 +164,16 @@ export async function POST(request: NextRequest) {
           logStep('✅ Stripe subscription created:', stripeSubscriptionId)
         } else {
           logStep('⚠️ NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID is missing, skipping subscription creation')
+          stripeErrorDetail = 'NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID is missing'
         }
 
       } catch (stripeError) {
         logStep('❌ Stripe error during organization creation:', stripeError)
+        stripeErrorDetail = stripeError
       }
     } else {
       logStep('⚠️ Skipping Stripe: Missing key or email')
+      stripeErrorDetail = 'Missing Stripe key or email'
     }
 
     // Create a subscription record in DB
@@ -170,13 +210,20 @@ export async function POST(request: NextRequest) {
       message: 'Organization created successfully',
       organization: orgData,
       stripeCustomerId,
-      stripeSubscriptionId
+      stripeSubscriptionId,
+      debug: {
+        hasServiceKey,
+        hasStripeKey,
+        hasPriceId,
+        stripeError: stripeErrorDetail,
+        dbSubscriptionError: subError
+      }
     })
 
   } catch (error) {
     logStep('💥 CRITICAL API ERROR:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + (error as Error).message },
       { status: 500 }
     )
   }

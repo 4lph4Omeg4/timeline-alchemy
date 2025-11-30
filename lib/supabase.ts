@@ -97,9 +97,16 @@ export const supabase = (() => {
 // Server-side Supabase instance (for API routes) - singleton pattern
 export const supabaseAdmin = (() => {
   if (!supabaseAdminClient) {
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!serviceRoleKey) {
+      // In development, we might not have it set, but we should warn loudly
+      console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY is missing. Admin client will use Anon Key (RLS will apply).')
+    }
+
     supabaseAdminClient = createClient<Database>(
       supabaseUrl,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey,
+      serviceRoleKey || supabaseAnonKey,
       {
         auth: {
           autoRefreshToken: false,
