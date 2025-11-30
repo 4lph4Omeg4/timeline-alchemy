@@ -289,8 +289,13 @@ export async function POST(request: NextRequest) {
           console.log('Retry successful: Stripe subscription created:', stripeSubscriptionId)
         } catch (retryError: any) {
           console.error('Retry failed: Error creating Stripe subscription:', JSON.stringify(retryError))
-          debugErrors.push({ step: 'create_stripe_sub_retry', error: retryError })
-          // Continue with fallback (database-only trial)
+
+          // CRITICAL CHANGE: Fail the signup if subscription cannot be created
+          // Clean up organization and user
+          await supabaseAdmin.auth.admin.deleteUser(userId)
+          await (supabaseAdmin as any).from('organizations').delete().eq('id', orgData.id)
+
+          throw new Error(`Failed to create Stripe subscription: ${retryError.message || JSON.stringify(retryError)}`)
         }
       }
     }
