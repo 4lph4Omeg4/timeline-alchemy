@@ -1,35 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createStripeCustomer, getStripe } from '@/lib/stripe'
-import fetch from 'node-fetch'
 
-// Create a local admin client to ensure we have full control and no global fetch issues
+// Create a local admin client to ensure we have full control
+// We use the global fetch which is polyfilled by Next.js
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  },
-  global: {
-    fetch: fetch as any
-  }
-})
+const supabaseAdmin = supabaseServiceKey
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+  : null
 
 export async function POST(request: NextRequest) {
-  console.log('🚀 STARTING CREATE ORG REQUEST (Self-Contained)')
+  console.log('🚀 STARTING CREATE ORG REQUEST (Global Fetch)')
 
   // Debug checks
   const hasServiceKey = !!supabaseServiceKey
   const hasStripeKey = !!process.env.STRIPE_SECRET_KEY
-  const hasPriceId = !!process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
 
-  console.log('Environment Check:', { hasServiceKey, hasStripeKey, hasPriceId, supabaseUrl })
+  console.log('Environment Check:', { hasServiceKey, hasStripeKey })
 
-  if (!hasServiceKey) {
+  if (!supabaseAdmin || !hasServiceKey) {
     console.error('❌ SUPABASE_SERVICE_ROLE_KEY is missing')
-    return NextResponse.json({ error: 'Server misconfiguration: SUPABASE_SERVICE_ROLE_KEY is missing' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Server Configuration Error: SUPABASE_SERVICE_ROLE_KEY is missing. Please add it to your environment variables.'
+    }, { status: 500 })
   }
 
   try {
@@ -37,8 +37,7 @@ export async function POST(request: NextRequest) {
     console.log('Received payload', { userId, userName, email, orgName, plan })
 
     if (!userId) {
-      console.error('❌ Missing required fields')
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json({ error: 'Missing required fields: userId' }, { status: 400 })
     }
 
     // Use provided name or fallback
@@ -75,20 +74,17 @@ export async function POST(request: NextRequest) {
 
     if (usageError) {
       console.error('❌ Error creating organization usage:', usageError)
-    } else {
-      console.log('✅ Organization usage created')
     }
 
     // 3. Add user as owner of the organization
     console.log('3. Adding user as owner...')
-    const { data: memberData, error: memberError } = await supabaseAdmin
+    const { error: memberError } = await supabaseAdmin
       .from('org_members')
       .insert({
         org_id: orgData.id,
         user_id: userId,
         role: 'owner'
       })
-      .select()
 
     if (memberError) {
       console.error('❌ Error adding user to organization:', memberError)
@@ -96,7 +92,6 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin.from('organizations').delete().eq('id', orgData.id)
       return NextResponse.json({ error: 'Failed to add user to organization: ' + memberError.message }, { status: 500 })
     }
-    console.log('✅ User added as owner:', memberData)
 
     // 4. Create default client for the organization
     console.log('4. Creating default client...')
@@ -111,8 +106,6 @@ export async function POST(request: NextRequest) {
 
     if (clientError) {
       console.error('❌ Error creating default client:', clientError)
-    } else {
-      console.log('✅ Default client created')
     }
 
     // 5. Create Stripe Customer and Subscription
@@ -157,13 +150,13 @@ export async function POST(request: NextRequest) {
           stripeSubscriptionId = subscription.id
           console.log('✅ Stripe subscription created:', stripeSubscriptionId)
         } else {
-          console.warn('⚠️ NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID is missing, skipping subscription creation')
+          console.warn('⚠️ NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID is missing')
           stripeErrorDetail = 'NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID is missing'
         }
 
-      } catch (stripeError) {
-        console.error('❌ Stripe error during organization creation:', stripeError)
-        stripeErrorDetail = stripeError
+      } catch (stripeError: any) {
+        console.error('❌ Stripe error:', stripeError)
+        stripeErrorDetail = stripeError.message || stripeError
       }
     } else {
       console.log('⚠️ Skipping Stripe: Missing key or email')
@@ -187,8 +180,6 @@ export async function POST(request: NextRequest) {
       trial_end_date: stripeSubscriptionId ? trialEnd.toISOString() : null
     }
 
-    console.log('Subscription data to insert:', subscriptionData)
-
     const { data: subData, error: subError } = await supabaseAdmin
       .from('subscriptions')
       .insert(subscriptionData)
@@ -197,7 +188,7 @@ export async function POST(request: NextRequest) {
     if (subError) {
       console.error('❌ Error creating subscription record:', subError)
     } else {
-      console.log('✅ DB subscription record created:', subData)
+      console.log('✅ DB subscription record created')
     }
 
     return NextResponse.json({
@@ -208,17 +199,15 @@ export async function POST(request: NextRequest) {
       debug: {
         hasServiceKey,
         hasStripeKey,
-        hasPriceId,
         stripeError: stripeErrorDetail,
-        dbSubscriptionError: subError,
-        orgId: orgData.id
+        dbSubscriptionError: subError
       }
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('💥 CRITICAL API ERROR:', error)
     return NextResponse.json(
-      { error: 'Internal server error: ' + (error as Error).message },
+      { error: 'Internal server error: ' + error.message },
       { status: 500 }
     )
   }
