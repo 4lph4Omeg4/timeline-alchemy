@@ -157,12 +157,14 @@ export default function SocialConnectionsPage() {
       return null
     }
 
-    // Find the user's personal organization (not Admin Organization)
-    let userOrgId = (orgMembers as any[]).find(member => member.role !== 'client')?.org_id
-    if (!userOrgId) {
-      userOrgId = (orgMembers as any[])[0].org_id
+    // Prioritize organization where user is owner
+    const ownedOrg = (orgMembers as any[]).find(member => member.role === 'owner')
+    if (ownedOrg) {
+      return ownedOrg.org_id
     }
-    return userOrgId
+
+    // Fallback to first organization found
+    return (orgMembers as any[])[0].org_id
   }
 
   const fetchConnections = async () => {
@@ -640,8 +642,8 @@ export default function SocialConnectionsPage() {
                 <p className="text-sm text-gray-300 mb-6 leading-relaxed">{platform.description}</p>
                 <Button
                   className={`w-full transition-all duration-200 ${isConnected(platform.id)
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
-                      : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
+                    : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50'
                     }`}
                   variant={isConnected(platform.id) ? "default" : "default"}
                   onClick={() => {
@@ -800,86 +802,22 @@ export default function SocialConnectionsPage() {
                               {result?.ok ? `✅ ${result.status}` : `❌ ${result.error || 'Failed'}`}
                             </span>
                           </div>
-                          {result?.url && (
-                            <div className="text-gray-400 mt-1">
-                              <small>{result.url}</small>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  {/* Tests */}
-                  <div>
-                    <h3 className="text-white font-semibold mb-3">Connection Tests</h3>
-                    <div className="space-y-2">
-                      {Object.entries(wordPressDebugResults.debugResults.tests || {}).map(([testName, result]: [string, any]) => (
-                        <div key={testName} className="bg-gray-800 rounded-lg p-3 text-sm">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-gray-300 capitalize">{testName.replace(/([A-Z])/g, ' $1').trim()}</span>
-                            <span className={result?.success !== false ? "text-green-400" : "text-red-400"}>
-                              {result?.success !== false ? "✅ Success" : "❌ Failed"}
-                            </span>
-                          </div>
-                          {result?.error && (
-                            <div className="text-red-300 mt-1">
-                              <small>Error: {result.error}</small>
-                            </div>
-                          )}
-                          {result?.message && (
-                            <div className="text-green-300 mt-1">
-                              <small>{result.message}</small>
-                            </div>
-                          )}
-                          {result?.user && (
-                            <div className="text-blue-300 mt-1">
-                              <small>User: {result.user.name} (ID: {result.user.id})</small>
-                            </div>
-                          )}
-                          {result?.postId && (
-                            <div className="text-green-300 mt-1">
-                              <small>Test post created: ID {result.postId}</small>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Recommendations */}
-                  <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4">
-                    <h4 className="text-blue-200 font-semibold mb-2">Recommendations</h4>
-                    <ul className="text-blue-200 text-sm space-y-1">
-                      {!wordPressDebugResults.summary?.siteAccessible && (
-                        <li>• Check if your WordPress site URL is correct and accessible</li>
-                      )}
-                      {!wordPressDebugResults.summary?.hasAuthentication && (
-                        <li>• Verify your username and password are correct</li>
-                      )}
-                      {wordPressDebugResults.summary?.isWordPressCom && !wordPressDebugResults.summary?.canPost && (
-                        <li>• WordPress.com has limited REST API access for posting. Consider using a self-hosted WordPress.</li>
-                      )}
-                      {!wordPressDebugResults.summary?.canPost && !wordPressDebugResults.summary?.isWordPressCom && (
-                        <li>• Make sure your WordPress REST API is enabled and you have posting permissions</li>
-                      )}
-                      {wordPressDebugResults.summary?.canPost && (
-                        <li>• ✅ Your WordPress site is ready for integration!</li>
-                      )}
-                    </ul>
                   </div>
                 </div>
               ) : (
-                <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4">
-                  <h3 className="text-red-200 font-semibold mb-2">Debug Failed</h3>
-                  <p className="text-red-300 text-sm">{wordPressDebugResults.error}</p>
+                <div className="text-red-400 p-4 bg-red-900/20 rounded-lg">
+                  <p className="font-semibold">Diagnostics Failed</p>
+                  <p className="text-sm mt-2">{wordPressDebugResults.error}</p>
                 </div>
               )}
-
-              <div className="flex justify-end mt-6">
+              <div className="mt-6 flex justify-end">
                 <Button
                   onClick={() => setShowWordPressDebug(false)}
-                  className="bg-gray-700 hover:bg-gray-600 text-white"
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
                 >
                   Close
                 </Button>
@@ -888,33 +826,6 @@ export default function SocialConnectionsPage() {
           </Card>
         </div>
       )}
-
-      {/* Help Section */}
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white">Need Help?</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 text-sm text-gray-200">
-            <div className="flex items-start space-x-3">
-              <span className="text-yellow-400 mt-0.5">•</span>
-              <p>Make sure you have admin access to the social media accounts you want to connect</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-yellow-400 mt-0.5">•</span>
-              <p>You can connect multiple accounts of the same platform</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-yellow-400 mt-0.5">•</span>
-              <p>Connected accounts will be used for automatic publishing of scheduled content</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-yellow-400 mt-0.5">•</span>
-              <p>You can disconnect accounts at any time</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

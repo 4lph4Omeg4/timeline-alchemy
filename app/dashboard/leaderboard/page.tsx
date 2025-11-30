@@ -37,27 +37,27 @@ export default function LeaderboardPage() {
       }
 
       // Get user's organization
-      const { data: orgMemberData, error: orgError } = await supabase
+      const { data: orgMembers, error: orgError } = await supabase
         .from('org_members')
-        .select('org_id')
+        .select('org_id, role')
         .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .single()
 
-      const orgMember = orgMemberData as unknown as { org_id: string } | null
-
-      if (orgError || !orgMember) {
+      if (orgError || !orgMembers || orgMembers.length === 0) {
         console.error('Error getting user organization:', orgError)
         toast.error('No organization found')
         router.push('/create-organization')
         return
       }
 
+      // Prioritize organization where user is owner
+      const ownedOrg = (orgMembers as any[]).find(member => member.role === 'owner')
+      const orgId = ownedOrg ? ownedOrg.org_id : (orgMembers as any[])[0].org_id
+
       // Build query based on timeframe
       let query = supabase
         .from('blog_posts')
         .select('*')
-        .or(`org_id.eq.${orgMember.org_id},and(created_by_admin.eq.true)`)
+        .or(`org_id.eq.${orgId},and(created_by_admin.eq.true)`)
         .gte('average_rating', 1) // Only show packages with at least 1 rating
         .order('average_rating', { ascending: false })
         .order('rating_count', { ascending: false })

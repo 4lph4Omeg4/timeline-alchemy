@@ -68,11 +68,13 @@ export default function BrandingPage() {
         // For non-admin users, check their plan
         const { data: orgMembers } = await (supabase as any)
           .from('org_members')
-          .select('org_id')
+          .select('org_id, role')
           .eq('user_id', user.id)
 
         if (orgMembers && orgMembers.length > 0) {
-          const orgId = orgMembers[0].org_id
+          // Prioritize organization where user is owner
+          const ownedOrg = (orgMembers as any[]).find(member => member.role === 'owner')
+          const orgId = ownedOrg ? ownedOrg.org_id : orgMembers[0].org_id
 
           // Get subscription/plan
           const { data: subscription } = await (supabase as any)
@@ -84,8 +86,8 @@ export default function BrandingPage() {
           if (subscription) {
             setUserPlan(subscription.plan)
 
-            // Only Transcendant plan can customize branding
-            if (subscription.plan === 'transcendant') {
+            // Only Transcendant or Universal plan can customize branding
+            if (subscription.plan === 'transcendant' || subscription.plan === 'universal') {
               setHasAccess(true)
               setAdminOrgId(orgId)
             } else {
