@@ -30,92 +30,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const router = useRouter()
 
-  const ensureAdminOrganization = async (currentUser: any) => {
-    try {
-      // First, check if "Admin Organization" organization already exists
-      const { data: existingAdminOrg, error: orgCheckError } = await (supabase as any)
-        .from('organizations')
-        .select('id')
-        .eq('name', 'Admin Organization')
-        .single()
-
-      const isAdminUser = currentUser?.email === 'sh4m4ni4k@sh4m4ni4k.nl'
-
-      if (existingAdminOrg) {
-        // Organization exists, check if user is already a member
-        const { data: existingMember, error: memberCheckError } = await (supabase as any)
-          .from('org_members')
-          .select('id, role')
-          .eq('user_id', currentUser.id)
-          .eq('org_id', existingAdminOrg.id)
-          .single()
-
-        if (!existingMember) {
-          // User is not a member, add them (admin as owner, others as client)
-          const { error: memberError } = await (supabase as any)
-            .from('org_members')
-            .insert({
-              org_id: existingAdminOrg.id,
-              user_id: currentUser.id,
-              role: isAdminUser ? 'owner' : 'client'
-            })
-
-          if (memberError) {
-            console.error('Error adding user to admin organization:', memberError)
-          } else {
-            console.log(`User added to admin organization as ${isAdminUser ? 'owner' : 'client'}`)
-          }
-        }
-        return // Organization already exists
-      }
-
-      // Organization doesn't exist, create it
-      console.log('Creating admin organization...')
-
-      // Create admin organization
-      const { data: newOrg, error: orgError } = await (supabase as any)
-        .from('organizations')
-        .insert({
-          name: 'Admin Organization',
-          plan: 'universal'
-        })
-        .select()
-        .single()
-
-      if (orgError || !newOrg) {
-        console.error('Error creating admin organization:', orgError)
-        return
-      }
-
-      // Add user (admin as owner, others as client)
-      const { error: memberError } = await (supabase as any)
-        .from('org_members')
-        .insert({
-          org_id: newOrg.id,
-          user_id: currentUser.id,
-          role: isAdminUser ? 'owner' : 'client'
-        })
-
-      if (memberError) {
-        console.error('Error adding user to organization:', memberError)
-      }
-
-      // Create a subscription for the admin organization
-      await (supabase as any)
-        .from('subscriptions')
-        .insert({
-          org_id: newOrg.id,
-          stripe_customer_id: 'admin-' + newOrg.id,
-          stripe_subscription_id: 'admin-sub-' + newOrg.id,
-          plan: 'universal',
-          status: 'active'
-        })
-
-    } catch (error) {
-      console.error('Error ensuring admin organization:', error)
-    }
-  }
-
   useEffect(() => {
     let mounted = true
 
@@ -161,10 +75,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         // Check if user is admin (sh4m4ni4k@sh4m4ni4k.nl)
         const isAdminUser = user.email === 'sh4m4ni4k@sh4m4ni4k.nl'
         setIsAdmin(isAdminUser)
-
-        // Ensure all users have access to admin organization for global packages
-        // Pass user object to avoid re-fetching
-        await ensureAdminOrganization(user)
 
         if (isAdminUser) {
           // For admin: fetch all active organizations

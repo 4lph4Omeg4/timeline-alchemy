@@ -42,60 +42,36 @@ export default function BrandingPage() {
         return
       }
 
-      // Check if admin
-      const isAdmin = user.email?.includes('sh4m4ni4k@sh4m4ni4k.nl')
+      // Check user's organization and plan
+      const { data: orgMembers } = await (supabase as any)
+        .from('org_members')
+        .select('org_id, role')
+        .eq('user_id', user.id)
 
-      if (isAdmin) {
-        // Admin always has access - fetch Admin Organization
-        const { data, error } = await (supabase as any)
-          .from('organizations')
-          .select('id')
-          .eq('name', 'Admin Organization')
+      if (orgMembers && orgMembers.length > 0) {
+        // Prioritize organization where user is owner
+        const ownedOrg = (orgMembers as any[]).find(member => member.role === 'owner')
+        const orgId = ownedOrg ? ownedOrg.org_id : orgMembers[0].org_id
+
+        // Get subscription/plan
+        const { data: subscription } = await (supabase as any)
+          .from('subscriptions')
+          .select('plan')
+          .eq('org_id', orgId)
           .single()
 
-        if (error) {
-          console.error('Error fetching admin org:', error)
-          toast.error('Failed to fetch organization')
-          return
-        }
+        if (subscription) {
+          setUserPlan(subscription.plan)
 
-        if (data) {
-          setAdminOrgId(data.id)
-          setHasAccess(true)
-          setUserPlan('admin')
-        }
-      } else {
-        // For non-admin users, check their plan
-        const { data: orgMembers } = await (supabase as any)
-          .from('org_members')
-          .select('org_id, role')
-          .eq('user_id', user.id)
-
-        if (orgMembers && orgMembers.length > 0) {
-          // Prioritize organization where user is owner
-          const ownedOrg = (orgMembers as any[]).find(member => member.role === 'owner')
-          const orgId = ownedOrg ? ownedOrg.org_id : orgMembers[0].org_id
-
-          // Get subscription/plan
-          const { data: subscription } = await (supabase as any)
-            .from('subscriptions')
-            .select('plan')
-            .eq('org_id', orgId)
-            .single()
-
-          if (subscription) {
-            setUserPlan(subscription.plan)
-
-            // Only Transcendant or Universal plan can customize branding
-            if (subscription.plan === 'transcendant' || subscription.plan === 'universal') {
-              setHasAccess(true)
-              setAdminOrgId(orgId)
-            } else {
-              setHasAccess(false)
-            }
+          // Only Transcendant or Universal plan can customize branding
+          if (subscription.plan === 'transcendant' || subscription.plan === 'universal') {
+            setHasAccess(true)
+            setAdminOrgId(orgId)
           } else {
             setHasAccess(false)
           }
+        } else {
+          setHasAccess(false)
         }
       }
     } catch (error) {
