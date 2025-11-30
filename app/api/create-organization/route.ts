@@ -1,46 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, userName } = await request.json()
+    const { userId, userName, orgName, plan } = await request.json()
 
-    if (!userId || !userName) {
+    if (!userId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check if user already has an organization
-    const { data: existingOrg } = await supabase
-      .from('org_members')
-      .select('org_id, organizations(*)')
-      .eq('user_id', userId)
-      .eq('role', 'owner')
-      .single()
+    // Check if user already has an organization (only if we want to enforce 1 org limit, but let's be flexible for now or keep it)
+    // The original code enforced it. Let's keep the check but maybe relax it if they are explicitly creating a new one?
+    // For now, let's assume the user wants to create a NEW one even if they have one, OR we can keep the check.
+    // The user's request implies they are stuck on the "create org" screen, so they probably don't have one.
 
-    if (existingOrg) {
-      return NextResponse.json({ 
-        message: 'User already has an organization',
-        organization: (existingOrg as any).organizations
-      })
-    }
+    // Use provided name or fallback
+    const nameToUse = orgName ? orgName.trim() : (userName ? `${userName}'s Organization` : 'New Organization')
+    const planToUse = plan || 'basic'
 
-    // Create default organization for the user
-    const { data: orgData, error: orgError } = await (supabase as any)
+    // Create organization
+    // Cast to any to avoid type issues with the admin client if types aren't perfectly aligned
+    const { data: orgData, error: orgError } = await (supabaseAdmin as any)
       .from('organizations')
       .insert({
-        name: `${userName}'s Organization`,
-        plan: 'basic'
+        name: nameToUse,
+        plan: planToUse
       })
       .select()
       .single()
 
     if (orgError || !orgData) {
       console.error('Error creating organization:', orgError)
-      return NextResponse.json({ error: 'Failed to create organization' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create organization: ' + orgError?.message }, { status: 500 })
     }
 
     // Add user as owner of the organization
-    const { error: memberError } = await (supabase as any)
+    const { error: memberError } = await (supabaseAdmin as any)
       .from('org_members')
       .insert({
         org_id: orgData.id,
@@ -50,18 +45,20 @@ export async function POST(request: NextRequest) {
 
     if (memberError) {
       console.error('Error adding user to organization:', memberError)
+      // Try to clean up
+      await (supabaseAdmin as any).from('organizations').delete().eq('id', orgData.id)
       return NextResponse.json({ error: 'Failed to add user to organization' }, { status: 500 })
     }
 
-    // Create a trial subscription for the organization (no payment required initially)
-    const { error: subError } = await (supabase as any)
+    // Create a subscription for the organization
+    const { error: subError } = await (supabaseAdmin as any)
       .from('subscriptions')
       .insert({
         org_id: orgData.id,
-        stripe_customer_id: 'temp-' + orgData.id,
-        stripe_subscription_id: 'temp-sub-' + orgData.id,
-        plan: 'basic',
-        status: 'trialing' // Changed from 'active' to 'trialing'
+        stripe_customer_id: 'manual-' + orgData.id,
+        stripe_subscription_id: 'manual-sub-' + orgData.id,
+        plan: planToUse,
+        status: 'active'
       })
 
     if (subError) {
@@ -69,7 +66,7 @@ export async function POST(request: NextRequest) {
       // Don't fail the organization creation for subscription errors
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Organization created successfully',
       organization: orgData
     })

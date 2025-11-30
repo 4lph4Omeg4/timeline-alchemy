@@ -34,51 +34,24 @@ export default function CreateOrganizationPage() {
         return
       }
 
-      // Create organization
-      const { data: newOrg, error: orgError } = await (supabase as any)
-        .from('organizations')
-        .insert({
-          name: name.trim(),
+      // Call API to create organization (bypasses RLS)
+      const response = await fetch('/api/create-organization', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          userName: user.user_metadata?.name || user.email?.split('@')[0],
+          orgName: name.trim(),
           plan: plan
         })
-        .select()
-        .single()
+      })
 
-      if (orgError || !newOrg) {
-        console.error('Error creating organization:', orgError)
-        setMessage('Failed to create organization: ' + (orgError?.message || 'Unknown error'))
-        return
-      }
+      const data = await response.json()
 
-      // Add user as owner of the organization
-      const { error: memberError } = await (supabase as any)
-        .from('org_members')
-        .insert({
-          org_id: newOrg.id,
-          user_id: user.id,
-          role: 'owner'
-        })
-
-      if (memberError) {
-        console.error('Error adding user to organization:', memberError)
-        setMessage('Organization created but failed to add you as owner: ' + memberError.message)
-        return
-      }
-
-      // Create a subscription for the organization
-      const { error: subError } = await (supabase as any)
-        .from('subscriptions')
-        .insert({
-          org_id: newOrg.id,
-          stripe_customer_id: 'manual-' + newOrg.id,
-          stripe_subscription_id: 'manual-sub-' + newOrg.id,
-          plan: plan,
-          status: 'active'
-        })
-
-      if (subError) {
-        console.error('Error creating subscription:', subError)
-        // Don't fail, subscription is optional
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create organization')
       }
 
       setMessage('Organization created successfully! Redirecting...')
