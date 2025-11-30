@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { createStripeCustomer, getStripe } from '@/lib/stripe'
+import fetch from 'node-fetch'
+
+// Force node-fetch for Supabase in this route to avoid undici issues
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  },
+  global: {
+    fetch: fetch as any
+  }
+})
 
 export async function POST(request: NextRequest) {
   const debugErrors: any[] = []
@@ -318,7 +333,12 @@ export async function POST(request: NextRequest) {
       personalOrganizationId: orgData.id,
       adminOrganizationId: adminOrgId,
       stripeCustomerId: stripeCustomerId,
-      debugErrors: debugErrors.length > 0 ? debugErrors : undefined
+      debugErrors: debugErrors.length > 0 ? debugErrors : undefined,
+      envCheck: {
+        stripeKey: !!process.env.STRIPE_SECRET_KEY,
+        supabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        basicPriceId: !!process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
+      }
     })
 
   } catch (error) {
