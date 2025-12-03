@@ -8,65 +8,93 @@ export async function setupNewUser(
     name: string,
     organizationName: string
 ) {
-    const debugErrors: any[] = []
-    const log = (msg: string, data?: any) => console.log(`[Onboarding] ${msg}`, data || '')
+    const log = (msg: string, data?: any) => console.log(`[Onboarding] ${msg}`, data ? JSON.stringify(data) : '')
 
     log('Starting setup for user:', userId)
 
-    // Step 1: Check/Create Admin Organization
-    let adminOrgId: string | null = null
+    // Step 0: Validate Env
+    if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('STRIPE_SECRET_KEY is missing')
+    }
 
-    const { data: adminOrg } = await supabaseAdmin
-        .from('organizations')
-        .select('id')
-        .eq('name', 'Admin Organization')
-        .single()
+    // Step 1: Create Stripe Customer FIRST
+    let stripeCustomerId: string
+    try {
+        log('Creating Stripe customer...')
+        const stripeCustomer = await createStripeCustomer(email, name)
+        stripeCustomerId = stripeCustomer.id
+        log('Stripe customer created:', stripeCustomerId)
+    } catch (error: any) {
+        throw new Error('Failed to create Stripe customer: ' + error.message)
+    }
 
-    if (adminOrg) {
-        adminOrgId = adminOrg.id
-    } else {
-        // Create Admin Organization if it doesn't exist
-        const { data: newAdminOrg } = await supabaseAdmin
+    // Step 2: Check/Create Admin Organization (Legacy/Requirement)
+    try {
+        const { data: adminOrg } = await supabaseAdmin
             .from('organizations')
-            .insert({
-                name: 'Admin Organization',
-                plan: 'transcendant'
-            })
-            .select()
+            .select('id')
+            .eq('name', 'Admin Organization')
             .single()
 
-        if (newAdminOrg) {
-            adminOrgId = newAdminOrg.id
-            // Create subscription for Admin Organization
-            await supabaseAdmin
-                .from('subscriptions')
+        if (!adminOrg) {
+            log('Creating Admin Organization...')
+            const { data: newAdminOrg } = await supabaseAdmin
+                .from('organizations')
                 .insert({
-                    org_id: adminOrgId,
-                    stripe_customer_id: 'admin-' + adminOrgId,
-                    stripe_subscription_id: 'admin-sub-' + adminOrgId,
-                    plan: 'transcendant',
-                    status: 'active'
+                    name: 'Admin Organization',
+                    plan: 'transcendant'
                 })
+                .select()
+                .single()
+
+            if (newAdminOrg) {
+                // Create subscription for Admin Organization
+                await supabaseAdmin
+                    .from('subscriptions')
+                    .insert({
+                        org_id: newAdminOrg.id,
+                        stripe_customer_id: 'admin-' + newAdminOrg.id,
+                        stripe_subscription_id: 'admin-sub-' + newAdminOrg.id,
+                        plan: 'transcendant',
+                        status: 'active'
+                    })
+
+                // Add user as CLIENT to Admin Organization
+                await supabaseAdmin
+                    .from('org_members')
+                    .insert({
+                        org_id: newAdminOrg.id,
+                        user_id: userId,
+                        role: 'client'
+                    })
+            }
+        } else {
+            // Add user as CLIENT to Admin Organization if they aren't already
+            const { error: adminMemberError } = await supabaseAdmin
+                .from('org_members')
+                .insert({
+                    org_id: adminOrg.id,
+                    user_id: userId,
+                    role: 'client'
+                })
+
+            if (adminMemberError) {
+                // Ignore unique constraint violation or other errors
+            }
         }
+    } catch (e) {
+        console.error('Error handling Admin Organization:', e)
+        // Continue, as this is not critical for the user's own org
     }
 
-    // Add user as CLIENT to Admin Organization
-    if (adminOrgId) {
-        await supabaseAdmin
-            .from('org_members')
-            .insert({
-                org_id: adminOrgId,
-                user_id: userId,
-                role: 'client'
-            })
-    }
-
-    // Step 2: Create user's personal organization
+    // Step 3: Create user's personal organization WITH Stripe ID
+    log('Creating personal organization...')
     const { data: orgData, error: orgError } = await supabaseAdmin
         .from('organizations')
         .insert({
             name: organizationName,
-            plan: 'trial'
+            plan: 'trial',
+            stripe_customer_id: stripeCustomerId // Insert directly
         })
         .select()
         .single()
@@ -77,7 +105,7 @@ export async function setupNewUser(
 
     log('Personal organization created:', orgData.id)
 
-    // Step 3: Add user as OWNER of their personal organization
+    // Step 4: Add user as OWNER
     const { error: memberError } = await supabaseAdmin
         .from('org_members')
         .insert({
@@ -92,7 +120,7 @@ export async function setupNewUser(
         throw new Error('Failed to add user to organization: ' + memberError.message)
     }
 
-    // Step 4: Create default client
+    // Step 5: Create default client
     const clientName = name ? `${name}'s Client` : 'Default Client'
     await supabaseAdmin
         .from('clients')
@@ -102,27 +130,6 @@ export async function setupNewUser(
             contact_info: { email: email }
         })
 
-    // Step 5: Create Stripe customer
-    if (!process.env.STRIPE_SECRET_KEY) {
-        throw new Error('STRIPE_SECRET_KEY is missing')
-    }
-
-    let stripeCustomerId: string
-    try {
-        const stripeCustomer = await createStripeCustomer(email, name)
-        stripeCustomerId = stripeCustomer.id
-
-        // Update organization with Stripe Customer ID
-        await supabaseAdmin
-            .from('organizations')
-            .update({ stripe_customer_id: stripeCustomerId })
-            .eq('id', orgData.id)
-    } catch (stripeError: any) {
-        // Rollback
-        await supabaseAdmin.from('organizations').delete().eq('id', orgData.id)
-        throw new Error('Failed to create Stripe customer: ' + stripeError.message)
-    }
-
     // Step 6: Create Stripe subscription
     const stripe = getStripe()
     const basicPriceId = process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
@@ -130,6 +137,7 @@ export async function setupNewUser(
 
     if (basicPriceId) {
         try {
+            log('Creating Stripe subscription...')
             const subscription = await stripe.subscriptions.create({
                 customer: stripeCustomerId,
                 items: [{ price: basicPriceId }],
@@ -145,17 +153,26 @@ export async function setupNewUser(
                 },
             })
             stripeSubscriptionId = subscription.id
-        } catch (error) {
+            log('Stripe subscription created:', stripeSubscriptionId)
+        } catch (error: any) {
             console.error('Error creating Stripe subscription:', error)
-            // Don't fail the whole process if subscription fails, but log it
+            // We log but don't fail, so the user can still access the app (subscription will be missing/pending)
         }
+    } else {
+        log('Skipping Stripe subscription: NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID not set')
     }
 
     // Step 7: Create DB subscription record
     const trialStart = new Date()
     const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000)
 
-    await supabaseAdmin
+    log('Creating DB subscription record...', {
+        org_id: orgData.id,
+        stripe_customer_id: stripeCustomerId,
+        stripe_subscription_id: stripeSubscriptionId || 'pending'
+    })
+
+    const { error: subError } = await supabaseAdmin
         .from('subscriptions')
         .insert({
             org_id: orgData.id,
@@ -167,6 +184,11 @@ export async function setupNewUser(
             trial_start_date: trialStart.toISOString(),
             trial_end_date: trialEnd.toISOString()
         })
+
+    if (subError) {
+        console.error('Error creating DB subscription:', subError)
+        // Don't throw, as the org is created and usable
+    }
 
     return {
         success: true,
