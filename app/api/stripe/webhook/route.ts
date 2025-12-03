@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Create or update subscription in database
-          const { error } = await (supabase as any)
+          const { error } = await (supabaseAdmin as any)
             .from('subscriptions')
             .upsert(
               {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Update subscription status
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseAdmin as any)
           .from('subscriptions')
           .update({
             status: subscription.status,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Update subscription status to canceled
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseAdmin as any)
           .from('subscriptions')
           .update({
             status: 'canceled',
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Update subscription status to active
-          const { error } = await (supabase as any)
+          const { error } = await (supabaseAdmin as any)
             .from('subscriptions')
             .update({
               status: 'active',
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Update subscription status to past_due
-          const { error } = await (supabase as any)
+          const { error } = await (supabaseAdmin as any)
             .from('subscriptions')
             .update({
               status: 'past_due',
@@ -189,3 +189,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
