@@ -1,26 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
-// Server-side Supabase client
 export async function POST(request: NextRequest) {
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key',
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  )
-
   try {
     const { priceId, plan, userId } = await request.json()
 
+    console.log('Creating checkout session for:', { userId, plan, priceId })
+
     if (!priceId || !plan || !userId) {
+      console.error('Missing required fields')
       return NextResponse.json(
         { error: 'Missing priceId, plan, or userId' },
         { status: 400 }
@@ -31,6 +22,7 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId)
 
     if (userError || !user) {
+      console.error('Error fetching user:', userError)
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -38,7 +30,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's organization
-    const { data: orgMember, error: orgError } = await supabaseAdmin
+    // We use 'maybeSingle' or check for error to handle cases where user might not have an org yet (though they should)
+    const { data: orgMember, error: orgError } = await (supabaseAdmin as any)
       .from('org_members')
       .select('org_id, organizations(*)')
       .eq('user_id', user.id)
@@ -46,8 +39,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (orgError || !orgMember) {
+      console.error('Error fetching organization:', orgError)
       return NextResponse.json(
-        { error: 'No organization found' },
+        { error: 'No organization found where user is owner' },
         { status: 400 }
       )
     }
@@ -56,25 +50,28 @@ export async function POST(request: NextRequest) {
 
     // Check if customer already exists
     let customerId: string
-    const existingSubscription = await supabaseAdmin
+    const { data: existingSubscription, error: subError } = await (supabaseAdmin as any)
       .from('subscriptions')
       .select('stripe_customer_id')
-      .eq('org_id', orgMember.org_id)
-      .single()
+      .eq('org_id', (orgMember as any).org_id)
+      .maybeSingle()
 
-    if (existingSubscription.data?.stripe_customer_id) {
-      customerId = existingSubscription.data.stripe_customer_id
+    if ((existingSubscription as any)?.stripe_customer_id) {
+      console.log('Found existing Stripe customer:', (existingSubscription as any).stripe_customer_id)
+      customerId = (existingSubscription as any).stripe_customer_id
     } else {
+      console.log('Creating new Stripe customer for:', user.email)
       // Create Stripe customer
       const customer = await stripe.customers.create({
         email: user.email,
         name: user.user_metadata?.name || user.email,
         metadata: {
-          org_id: orgMember.org_id,
+          org_id: (orgMember as any).org_id,
           user_id: user.id,
         },
       })
       customerId = customer.id
+      console.log('Created new Stripe customer:', customerId)
     }
 
     // Create checkout session with custom domain
@@ -95,25 +92,27 @@ export async function POST(request: NextRequest) {
         custom_domain: process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_DOMAIN,
       }),
       metadata: {
-        org_id: orgMember.org_id,
+        org_id: (orgMember as any).org_id,
         user_id: user.id,
         plan: plan,
       },
       subscription_data: {
         metadata: {
-          org_id: orgMember.org_id,
+          org_id: (orgMember as any).org_id,
           user_id: user.id,
           plan: plan,
         },
       },
     })
 
+    console.log('Created checkout session:', session.id)
+
     return NextResponse.json({ sessionId: session.id })
 
   } catch (error: any) {
     console.error('Error creating checkout session:', error)
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: 'Failed to create checkout session: ' + error.message },
       { status: 500 }
     )
   }
