@@ -319,7 +319,7 @@ export default function SocialConnectionsPage() {
         authUrl = `/api/auth/facebook?state=${encodeURIComponent(state)}`
       } else if (platform === 'instagram') {
         // Instagram uses Facebook OAuth
-        authUrl = `/api/auth/facebook?state=${encodeURIComponent(state)}`
+        authUrl = `/api/auth/instagram?state=${encodeURIComponent(state)}`
       } else if (platform === 'youtube') {
         authUrl = `/api/auth/youtube?state=${encodeURIComponent(state)}`
       } else if (platform === 'discord') {

@@ -42,19 +42,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if we have the required environment variables
+    const clientId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID
+    const clientSecret = process.env.FACEBOOK_APP_SECRET || process.env.INSTAGRAM_CLIENT_SECRET
+
     console.log('Environment check:', {
-      NEXT_PUBLIC_INSTAGRAM_CLIENT_ID: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID ? 'SET' : 'NOT SET',
-      INSTAGRAM_CLIENT_SECRET: process.env.INSTAGRAM_CLIENT_SECRET ? 'SET' : 'NOT SET',
+      NEXT_PUBLIC_FACEBOOK_APP_ID: clientId ? 'SET' : 'NOT SET',
+      FACEBOOK_APP_SECRET: clientSecret ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
     })
 
-    if (!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || !process.env.INSTAGRAM_CLIENT_SECRET) {
-      console.error('Missing Instagram API credentials:', {
-        NEXT_PUBLIC_INSTAGRAM_CLIENT_ID: !!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
-        INSTAGRAM_CLIENT_SECRET: !!process.env.INSTAGRAM_CLIENT_SECRET
+    if (!clientId || !clientSecret) {
+      console.error('Missing Facebook API credentials:', {
+        NEXT_PUBLIC_FACEBOOK_APP_ID: !!clientId,
+        FACEBOOK_APP_SECRET: !!clientSecret
       })
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=missing_credentials&details=instagram_creds`
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=missing_credentials&details=facebook_creds`
       )
     }
 
@@ -83,8 +86,8 @@ export async function GET(request: NextRequest) {
 
     // Exchange code for access token using Facebook Pages API
     const tokenRequestBody = new URLSearchParams({
-      client_id: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
-      client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       grant_type: 'authorization_code',
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/instagram/callback`,
       code,
@@ -117,14 +120,14 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenResponse.json()
     const { access_token, user_id } = tokenData
 
-    // Get user info from Instagram
-    const userResponse = await fetch(`https://graph.instagram.com/${user_id}?fields=id,username&access_token=${access_token}`)
+    // Get user info from Facebook (since we use Facebook Login)
+    const userResponse = await fetch(`https://graph.facebook.com/v18.0/me?fields=id,name&access_token=${access_token}`)
 
-    console.log('Instagram user info response status:', userResponse.status)
+    console.log('Facebook user info response status:', userResponse.status)
 
     if (!userResponse.ok) {
       const errorData = await userResponse.text()
-      console.error('Failed to get Instagram user info:', {
+      console.error('Failed to get Facebook user info:', {
         status: userResponse.status,
         statusText: userResponse.statusText,
         error: errorData
@@ -135,8 +138,8 @@ export async function GET(request: NextRequest) {
     }
 
     const userData = await userResponse.json()
-    const instagramUserId = userData.id
-    const instagramUsername = userData.username || `User ${instagramUserId}`
+    const facebookUserId = userData.id
+    const facebookUsername = userData.name || `User ${facebookUserId}`
 
     // Use org_id from state parameter
     console.log('Using org_id from state:', orgId)
@@ -146,8 +149,8 @@ export async function GET(request: NextRequest) {
 
     // Store TEMPORARY user connection (needed to fetch Pages and Instagram accounts)
     // This will be replaced by the Instagram Business Account connection after user selects
-    const accountId = `facebook_${instagramUserId}` // Facebook user ID for fetching pages
-    const accountName = instagramUsername
+    const accountId = `facebook_${facebookUserId}` // Facebook user ID for fetching pages
+    const accountName = facebookUsername
 
     const { error: dbError } = await supabaseAdmin
       .from('social_connections')

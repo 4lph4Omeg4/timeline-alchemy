@@ -89,7 +89,7 @@ export default function RootLayout({
           {`
             window.fbAsyncInit = function() {
               FB.init({
-                appId      : '${process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || 'YOUR_APP_ID'}',
+                appId      : '${process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || ''}',
                 cookie     : true,
                 xfbml      : true,
                 version    : 'v18.0'
@@ -118,10 +118,10 @@ export default function RootLayout({
           />
         </noscript>
         {/* End Google Tag Manager (noscript) */}
-        
+
         {/* Facebook SDK Root Element */}
         <div id="fb-root"></div>
-        
+
         {children}
         <Toaster position="top-right" />
         <Analytics />

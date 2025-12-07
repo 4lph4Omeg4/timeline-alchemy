@@ -9,7 +9,10 @@ export async function GET(request: NextRequest) {
 
     // Instagram uses Facebook OAuth
     // Check if we have the required environment variables
-    if (!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || !process.env.INSTAGRAM_CLIENT_SECRET) {
+    const clientId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID
+    const clientSecret = process.env.FACEBOOK_APP_SECRET || process.env.INSTAGRAM_CLIENT_SECRET
+
+    if (!clientId || !clientSecret) {
       console.error('Missing Instagram/Facebook API credentials')
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=missing_credentials&details=instagram_creds`
@@ -20,10 +23,10 @@ export async function GET(request: NextRequest) {
     // Instagram posting requires: Facebook Page -> Instagram Business Account connection
     // NOTE: Instagram Graph API permissions need to be requested via the Page's access token
     const authParams = new URLSearchParams({
-      client_id: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
+      client_id: clientId,
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/instagram/callback`,
       state: state || '',
-      scope: 'public_profile,pages_show_list,pages_read_engagement,pages_manage_posts',
+      scope: 'public_profile,pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages',
       response_type: 'code',
     })
 

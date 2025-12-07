@@ -42,16 +42,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if we have the required environment variables
+    const clientId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID
+    const clientSecret = process.env.FACEBOOK_APP_SECRET || process.env.INSTAGRAM_CLIENT_SECRET
+
     console.log('Environment check:', {
-      NEXT_PUBLIC_INSTAGRAM_CLIENT_ID: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID ? 'SET' : 'NOT SET',
-      INSTAGRAM_CLIENT_SECRET: process.env.INSTAGRAM_CLIENT_SECRET ? 'SET' : 'NOT SET',
+      NEXT_PUBLIC_FACEBOOK_APP_ID: clientId ? 'SET' : 'NOT SET',
+      FACEBOOK_APP_SECRET: clientSecret ? 'SET' : 'NOT SET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'NOT SET'
     })
 
-    if (!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || !process.env.INSTAGRAM_CLIENT_SECRET) {
+    if (!clientId || !clientSecret) {
       console.error('Missing Facebook API credentials:', {
-        NEXT_PUBLIC_INSTAGRAM_CLIENT_ID: !!process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
-        INSTAGRAM_CLIENT_SECRET: !!process.env.INSTAGRAM_CLIENT_SECRET
+        NEXT_PUBLIC_FACEBOOK_APP_ID: !!clientId,
+        FACEBOOK_APP_SECRET: !!clientSecret
       })
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/socials?error=missing_credentials&details=facebook_creds`
@@ -83,8 +86,8 @@ export async function GET(request: NextRequest) {
 
     // Exchange code for access token using Facebook Graph API
     const tokenRequestBody = new URLSearchParams({
-      client_id: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
-      client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       grant_type: 'authorization_code',
       redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/facebook/callback`,
       code,
