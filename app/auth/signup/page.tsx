@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Logo } from '@/components/Logo'
 import toast from 'react-hot-toast'
+import { oauthSignIn } from '../actions'
 
 export default function SignUpPage() {
   const supabase = createClient()
@@ -71,23 +72,18 @@ export default function SignUpPage() {
     }
   }
 
+  /* import removed */
+
+  // ...
+
   const handleOAuthSignUp = async (provider: any) => {
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (error) {
-        toast.error(error.message)
-      }
+      await oauthSignIn(provider)
     } catch (error) {
       toast.error('An unexpected error occurred')
     } finally {
-      setLoading(false)
+      // Note: We don't set loading to false here because we are redirecting
     }
   }
 

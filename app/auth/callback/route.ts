@@ -4,9 +4,16 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { setupNewUser } from '@/lib/onboarding'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
+
+    // Debug logging
+    const cookieStore = cookies()
+    console.log('Callback Cookies:', cookieStore.getAll().map(c => c.name))
+
     // if "next" is in param, use it as the redirect URL
     const next = searchParams.get('next') ?? '/dashboard'
 
