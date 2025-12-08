@@ -23,6 +23,8 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/dashboard/socials?success=twitter_connected&username=${username}`)
     }
 
+    let authError = null
+
     if (code) {
         const cookieStore = cookies()
         const supabase = createServerClient(
@@ -30,20 +32,29 @@ export async function GET(request: Request) {
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
                 cookies: {
-                    get(name: string) {
-                        return cookieStore.get(name)?.value
+                    getAll() {
+                        return cookieStore.getAll()
                     },
-                    set(name: string, value: string, options: CookieOptions) {
-                        cookieStore.set({ name, value, ...options })
-                    },
-                    remove(name: string, options: CookieOptions) {
-                        cookieStore.delete({ name, ...options })
+                    setAll(cookiesToSet) {
+                        try {
+                            cookiesToSet.forEach(({ name, value, options }) =>
+                                cookieStore.set(name, value, options)
+                            )
+                        } catch {
+                            // The `setAll` method was called from a Server Component.
+                            // This can be ignored if you have middleware refreshing
+                            // user sessions.
+                        }
                     },
                 },
             }
         )
 
         const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
+
+        if (error) {
+            authError = error
+        }
 
         if (!error && session?.user) {
             // Check if user is new (has no organization)
@@ -87,6 +98,5 @@ export async function GET(request: Request) {
     }
 
     // Return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/signin?error=auth_callback_failed`)
+    return NextResponse.redirect(`${origin}/auth/signin?error=auth_callback_failed&details=${encodeURIComponent(authError?.message || 'Unknown error')}`)
 }
-
