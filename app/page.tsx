@@ -136,7 +136,7 @@ export default function HomePage() {
           {/* Hero Text Above Video */}
           <div className="text-center mb-12">
             <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-6 animate-pulse">
-              Timeline Alchemy
+              Timeline Alchemy™
             </h1>
 
             {/* Free Platform Badge */}
@@ -371,7 +371,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start text-gray-300">
                   <span className="text-green-400 mr-2 text-xl">✓</span>
-                  <span>Timeline Alchemy branding</span>
+                  <span>Timeline Alchemy™ branding</span>
                 </li>
               </ul>
               <Button
@@ -570,7 +570,7 @@ export default function HomePage() {
               <div className="flex items-center gap-4 mb-6">
                 <Logo size="lg" showText={false} />
                 <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                  Timeline Alchemy
+                  Timeline Alchemy™
                 </span>
               </div>
               <p className="text-gray-400 leading-relaxed mb-6">
@@ -634,7 +634,7 @@ export default function HomePage() {
 
           {/* Social Media Links */}
           <div className="mt-12 mb-8">
-            <h4 className="text-white font-bold text-lg mb-6 text-center">Follow Timeline Alchemy</h4>
+            <h4 className="text-white font-bold text-lg mb-6 text-center">Follow Timeline Alchemy™</h4>
             <div className="flex flex-wrap justify-center items-center gap-4">
               {/* X/Twitter */}
               <a
@@ -720,10 +720,10 @@ export default function HomePage() {
           <div className="border-t border-purple-500/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-gray-500 text-sm">
-                © {new Date().getFullYear()} Timeline Alchemy. All rights reserved.
+                © {new Date().getFullYear()} Timeline Alchemy™ All rights reserved.
               </p>
               <p className="text-gray-500 text-sm">
-                Crafted with ✨ and 💜 by the Timeline Alchemy team
+                Crafted with ✨ and 💜 by the Timeline Alchemy™ team
               </p>
             </div>
           </div>
