@@ -124,16 +124,22 @@ export async function setupNewUser(
 
     let orgId: string
 
+    // Determine the authoritative Stripe Customer ID (or fallback)
+    const finalStripeCustomerId = stripeCustomerId || `local-trial-${userId.substring(0, 8)}`
+    const finalStripeSubscriptionId = stripeSubscriptionId || `local-sub-${userId.substring(0, 8)}`
+
+    const trialStart = new Date()
+    const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000)
+
     if (existingMembers) {
         log('Found existing organization (likely from trigger), updating...', existingMembers.org_id)
         orgId = existingMembers.org_id
 
+        // Update existing organization - Force over-write of temp values
         const updateData: any = {
             name: organizationName,
-            plan: 'trial'
-        }
-        if (stripeCustomerId) {
-            updateData.stripe_customer_id = stripeCustomerId
+            plan: 'trial',
+            stripe_customer_id: finalStripeCustomerId
         }
 
         const { error: updateError } = await supabaseAdmin
@@ -145,27 +151,25 @@ export async function setupNewUser(
             throw new Error('Failed to update existing organization: ' + updateError.message)
         }
 
-        const trialStart = new Date()
-        const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000)
-
+        // Update existing subscription (if any)
         const { data: existingSub } = await supabaseAdmin
             .from('subscriptions')
             .select('id')
             .eq('org_id', orgId)
             .maybeSingle()
 
+        const subUpdateData: any = {
+            plan: 'trial',
+            status: 'trialing',
+            is_trial: true,
+            trial_start_date: trialStart.toISOString(),
+            trial_end_date: trialEnd.toISOString(),
+            stripe_customer_id: finalStripeCustomerId,
+            stripe_subscription_id: finalStripeSubscriptionId
+        }
+
         if (existingSub) {
             log('Updating existing subscription...')
-            const subUpdateData: any = {
-                plan: 'trial',
-                status: 'trialing',
-                is_trial: true,
-                trial_start_date: trialStart.toISOString(),
-                trial_end_date: trialEnd.toISOString()
-            }
-            if (stripeCustomerId) subUpdateData.stripe_customer_id = stripeCustomerId
-            if (stripeSubscriptionId) subUpdateData.stripe_subscription_id = stripeSubscriptionId
-
             await supabaseAdmin
                 .from('subscriptions')
                 .update(subUpdateData)
@@ -176,13 +180,7 @@ export async function setupNewUser(
                 .from('subscriptions')
                 .insert({
                     org_id: orgId,
-                    stripe_customer_id: stripeCustomerId || `no-stripe-${userId}`,
-                    stripe_subscription_id: stripeSubscriptionId || 'pending',
-                    plan: 'trial',
-                    status: 'trialing',
-                    is_trial: true,
-                    trial_start_date: trialStart.toISOString(),
-                    trial_end_date: trialEnd.toISOString()
+                    ...subUpdateData
                 })
         }
 
@@ -193,7 +191,7 @@ export async function setupNewUser(
             .insert({
                 name: organizationName,
                 plan: 'trial',
-                stripe_customer_id: stripeCustomerId // Can be null
+                stripe_customer_id: finalStripeCustomerId
             })
             .select()
             .single()
@@ -218,16 +216,13 @@ export async function setupNewUser(
             throw new Error('Failed to add user to organization: ' + memberError.message)
         }
 
-        const trialStart = new Date()
-        const trialEnd = new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000)
-
         log('Creating DB subscription record...')
         await supabaseAdmin
             .from('subscriptions')
             .insert({
                 org_id: orgId,
-                stripe_customer_id: stripeCustomerId || `no-stripe-${userId}`,
-                stripe_subscription_id: stripeSubscriptionId || 'pending',
+                stripe_customer_id: finalStripeCustomerId,
+                stripe_subscription_id: finalStripeSubscriptionId,
                 plan: 'trial',
                 status: 'trialing',
                 is_trial: true,
