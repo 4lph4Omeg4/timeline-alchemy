@@ -153,6 +153,31 @@ export default function DashboardPage() {
 
             postsCount = postsThisMonth?.length || 0
             socialCount = (socialConnections?.length || 0) + (telegramChannels?.length || 0)
+
+            // Auto-fix: Ensure a client exists for the organization
+            const { data: clients } = await supabase
+              .from('clients')
+              .select('id')
+              .eq('org_id', member.org_id)
+              .limit(1)
+
+            if (!clients || clients.length === 0) {
+              console.log('No clients found, creating default client...')
+              const clientName = user.user_metadata.full_name
+                ? `${user.user_metadata.full_name}'s Client`
+                : 'Default Client'
+
+              await supabase
+                .from('clients')
+                .insert({
+                  org_id: member.org_id,
+                  name: clientName,
+                  contact_info: { email: user.email }
+                })
+
+              // Refresh admin stats to reflect new client if needed, 
+              // but mostly just ensures the user has a client for other features.
+            }
           }
 
           setUsageStats({

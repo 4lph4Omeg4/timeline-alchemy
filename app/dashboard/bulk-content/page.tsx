@@ -62,7 +62,8 @@ export default function BulkContentPage() {
                 .single()
 
               const used = usage?.bulk_generation_used || 0
-              const limit = planFeatures?.bulk_generation_limit || 0
+              // Hardcode trial limit to 5 to match backend logic
+              const limit = subscription.plan === 'trial' ? 5 : (planFeatures?.bulk_generation_limit || 0)
 
               setUsageInfo({ used, limit })
 
@@ -129,7 +130,7 @@ export default function BulkContentPage() {
                 <p className="text-gray-300">
                   {userPlan === 'trial' && usageInfo
                     ? `You've used your ${usageInfo.limit} bulk generation(s) for the trial period. Upgrade to Universal plan for unlimited bulk generations.`
-                    : 'Bulk Content Generation is available for Trial (1x) and Universal (unlimited) plans.'}
+                    : 'Bulk Content Generation is available for Trial (5x) and Universal (unlimited) plans.'}
                 </p>
                 <div className="mt-4 space-y-2">
                   <p className="text-purple-300 font-semibold">Current Plan: {userPlan || 'Unknown'}</p>
