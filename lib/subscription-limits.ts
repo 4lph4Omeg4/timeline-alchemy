@@ -57,15 +57,15 @@ export async function checkPlanLimits(orgId: string, action: 'contentPackage' | 
     switch (action) {
       case 'contentPackage':
         currentUsage = (usage as any)?.content_packages_used || 0
-        limit = (planFeatures as any).content_packages_limit
+        limit = plan === 'trial' ? 5 : (planFeatures as any).content_packages_limit
         break
       case 'customContent':
         currentUsage = (usage as any)?.custom_content_used || 0
-        limit = (planFeatures as any).custom_content_limit
+        limit = plan === 'trial' ? 5 : (planFeatures as any).custom_content_limit
         break
       case 'bulkGeneration':
         currentUsage = (usage as any)?.bulk_generation_used || 0
-        limit = (planFeatures as any).bulk_generation_limit
+        limit = plan === 'trial' ? 5 : (planFeatures as any).bulk_generation_limit
         break
     }
 
@@ -82,8 +82,8 @@ export async function checkPlanLimits(orgId: string, action: 'contentPackage' | 
 
     // If trial is expired, don't allow any actions
     if (isTrialExpired && plan === 'trial') {
-      return { 
-        allowed: false, 
+      return {
+        allowed: false,
         reason: 'Trial has expired. Please subscribe to continue using the service.',
         currentUsage,
         limit: limit || -1

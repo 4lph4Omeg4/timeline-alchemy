@@ -60,11 +60,22 @@ export default function BrandingPage() {
           .eq('org_id', orgId)
           .single()
 
+        // Get organization details to check for Admin Organization
+        const { data: org } = await (supabase as any)
+          .from('organizations')
+          .select('name')
+          .eq('id', orgId)
+          .single()
+
         if (subscription) {
           setUserPlan(subscription.plan)
 
-          // Only Transcendant or Universal plan can customize branding
-          if (subscription.plan === 'transcendant' || subscription.plan === 'universal') {
+          // Only Transcendant, Universal plan, or Admin Organization can customize branding
+          if (
+            subscription.plan === 'transcendant' ||
+            subscription.plan === 'universal' ||
+            (org && org.name === 'Admin Organization')
+          ) {
             setHasAccess(true)
             setAdminOrgId(orgId)
           } else {
