@@ -24,6 +24,7 @@ interface PortfolioPost extends BlogPost {
     is_active?: boolean
     prompt_number?: number
   }>
+  contact_user_id?: string | null
   creator?: {
     id: string
     name: string
@@ -884,7 +885,7 @@ export default function PortfolioPage() {
             )}
 
             {/* Message Creator Button */}
-            {selectedPost.created_by_user_id && selectedPost.created_by_user_id !== currentUserId && (
+            {selectedPost.contact_user_id && selectedPost.contact_user_id !== currentUserId && (
               <div className="border-t border-purple-500/30 pt-6">
                 <div className="flex items-center justify-between bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-6">
                   <div className="flex items-center gap-4">
@@ -921,8 +922,8 @@ export default function PortfolioPage() {
                   </div>
                   <Button
                     onClick={() => {
-                      if (selectedPost.created_by_user_id) {
-                        startConversation(selectedPost.created_by_user_id)
+                      if (selectedPost.contact_user_id) {
+                        startConversation(selectedPost.contact_user_id)
                       }
                     }}
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold shadow-lg hover:shadow-purple-500/50"
@@ -932,7 +933,7 @@ export default function PortfolioPage() {
                 </div>
               </div>
             )}
-            {selectedPost.created_by_user_id === currentUserId && (
+            {(selectedPost.created_by_user_id === currentUserId || selectedPost.contact_user_id === currentUserId) && (
               <div className="border-t border-purple-500/30 pt-6">
                 <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-xl p-6 text-center">
                   <p className="text-blue-300 font-semibold">

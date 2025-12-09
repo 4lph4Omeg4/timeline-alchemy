@@ -32,7 +32,7 @@ interface DatabasePost {
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Portfolio API - Starting request')
-    
+
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category') || 'all'
     const limit = parseInt(searchParams.get('limit') || '50')
@@ -122,11 +122,31 @@ export async function GET(request: NextRequest) {
           console.warn(`⚠️ Error fetching social posts for post ${post.id}:`, err)
         }
 
-        // Get creator info
+        // Get creator info or fallback to Org Owner
+        let contactUserId = post.created_by_user_id
         let creatorInfo = null
-        if (post.created_by_user_id) {
+
+        // If no specific creator, try to find the Organization Owner
+        if (!contactUserId && post.org_id) {
           try {
-            const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(post.created_by_user_id)
+            const { data: members } = await supabaseAdmin
+              .from('org_members')
+              .select('user_id')
+              .eq('org_id', post.org_id)
+              .eq('role', 'owner')
+              .limit(1)
+
+            if (members && (members as any[]).length > 0) {
+              contactUserId = (members as any[])[0].user_id
+            }
+          } catch (err) {
+            console.warn(`⚠️ Error fetching org owner for post ${post.id}:`, err)
+          }
+        }
+
+        if (contactUserId) {
+          try {
+            const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(contactUserId)
             if (!userError && userData?.user) {
               creatorInfo = {
                 id: userData.user.id,
@@ -154,6 +174,7 @@ export async function GET(request: NextRequest) {
           average_rating: post.average_rating ? parseFloat(post.average_rating) : null,
           rating_count: post.rating_count || 0,
           created_by_user_id: post.created_by_user_id || null,
+          contact_user_id: contactUserId || null,
           creator: creatorInfo,
           organizations: post.organizations ? {
             ...post.organizations,
@@ -184,8 +205,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('❌ Portfolio API - Unexpected error:', error)
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
+      {
+        error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
         debug: {
           supabaseConnected: false,
