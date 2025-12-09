@@ -67,19 +67,28 @@ export default function MessagesPage() {
 
   // Auto-select conversation from URL
   useEffect(() => {
-    if (conversationIdParam && conversations.length > 0 && !selectedConversation) {
-      const targetConv = conversations.find(c => c.id === conversationIdParam)
-      if (targetConv) {
-        loadMessages(targetConv)
+    if (conversationIdParam && !selectedConversation && currentUserId) {
+      if (conversations.length > 0) {
+        // Try to find in loaded conversations
+        const targetConv = conversations.find(c => c.id === conversationIdParam)
+        if (targetConv) {
+          loadMessages(targetConv)
+        } else {
+          // Not found in list, try to load directly
+          loadConversationById(conversationIdParam)
+        }
+      } else if (!loading) {
+        // Conversations loaded but empty (or failed), try to load directly
+        loadConversationById(conversationIdParam)
       }
     }
-  }, [conversations, conversationIdParam])
+  }, [conversations, conversationIdParam, loading, currentUserId])
 
   const loadConversations = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
-        toast.error('Not authenticated')
+        // Only show error if we expected to be authenticated (handled by auth guard usually)
         return
       }
 
@@ -96,6 +105,49 @@ export default function MessagesPage() {
     } catch (error) {
       console.error('Error loading conversations:', error)
       toast.error('Failed to load conversations')
+    }
+  }
+
+  const loadConversationById = async (id: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      const response = await fetch(`/api/messages/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        // Construct conversation object
+        const conversation: Conversation = {
+          ...data.conversation,
+          otherUser: data.otherUser,
+          latestMessage: data.messages && data.messages.length > 0
+            ? data.messages[data.messages.length - 1]
+            : null,
+          unreadCount: 0 // Assume read since we just loaded it
+        }
+
+        setSelectedConversation(conversation)
+        setMessages(data.messages)
+        setOtherUser(data.otherUser)
+
+        // Optionally add to conversations list if not present
+        setConversations(prev => {
+          if (!prev.find(c => c.id === conversation.id)) {
+            return [conversation, ...prev]
+          }
+          return prev
+        })
+      } else {
+        toast.error('Conversation not found')
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error)
+      toast.error('Failed to load conversation')
     }
   }
 
@@ -218,8 +270,8 @@ export default function MessagesPage() {
                     key={conv.id}
                     onClick={() => loadMessages(conv)}
                     className={`p-4 rounded-lg cursor-pointer transition-all duration-300 ${selectedConversation?.id === conv.id
-                        ? 'bg-gradient-to-r from-purple-600/30 to-pink-600/30 border-2 border-purple-500'
-                        : 'bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700'
+                      ? 'bg-gradient-to-r from-purple-600/30 to-pink-600/30 border-2 border-purple-500'
+                      : 'bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700'
                       }`}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -352,8 +404,8 @@ export default function MessagesPage() {
                         )}
                         <div
                           className={`max-w-[70%] rounded-lg p-4 ${isMine
-                              ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                              : 'bg-gray-700 text-gray-200'
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                            : 'bg-gray-700 text-gray-200'
                             }`}
                         >
                           <p className="whitespace-pre-wrap break-words">{message.content}</p>
