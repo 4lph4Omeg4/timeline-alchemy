@@ -11,19 +11,19 @@ export async function GET(
     // Get user ID from authorization header
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Unauthorized - No auth header' 
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized - No auth header'
       }, { status: 401 })
     }
 
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
-    
+
     if (userError || !user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Unauthorized' 
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized'
       }, { status: 401 })
     }
 
@@ -37,9 +37,9 @@ export async function GET(
       .single()
 
     if (convError || !conversation) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Conversation not found' 
+      return NextResponse.json({
+        success: false,
+        error: 'Conversation not found'
       }, { status: 404 })
     }
 
@@ -47,9 +47,9 @@ export async function GET(
     const conv = conversation as any
 
     if (conv.user1_id !== user.id && conv.user2_id !== user.id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Unauthorized' 
+      return NextResponse.json({
+        success: false,
+        error: 'Unauthorized'
       }, { status: 403 })
     }
 
@@ -62,9 +62,9 @@ export async function GET(
 
     if (messagesError) {
       console.error('❌ Error fetching messages:', messagesError)
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to fetch messages' 
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to fetch messages'
       }, { status: 500 })
     }
 
@@ -84,9 +84,10 @@ export async function GET(
     const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id
     const { data: otherUser } = await supabaseAdmin.auth.admin.getUserById(otherUserId)
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       messages,
+      conversation: conv,
       otherUser: {
         id: otherUser?.user?.id,
         email: otherUser?.user?.email,
@@ -97,9 +98,9 @@ export async function GET(
 
   } catch (error) {
     console.error('❌ Error in messages API:', error)
-    return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 }
