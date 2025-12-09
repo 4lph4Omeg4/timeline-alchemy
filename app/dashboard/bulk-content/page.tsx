@@ -67,24 +67,34 @@ export default function BulkContentPage() {
 
               setUsageInfo({ used, limit })
 
+              const lowerPlan = (subscription.plan || '').toLowerCase()
+
               // Trial and Universal plans have access to bulk content
-              // BUT trial users must not exceed their limit
-              if (subscription.plan === 'universal') {
-                // Universal = unlimited
+              if (lowerPlan === 'universal' || lowerPlan === 'transcendant' || lowerPlan === 'admin') {
+                // Unlimited access
                 setHasAccess(true)
-              } else if (subscription.plan === 'trial') {
-                // Trial = 1 bulk generation
+              } else if (lowerPlan.includes('trial')) {
+                // Trial = limit dependent
                 if (used < limit) {
                   setHasAccess(true)
                 } else {
+                  // Even if limit reached, we might want to show the page but disable the button? 
+                  // For now, keep blocking but ensure the comparison is correct.
                   setHasAccess(false)
                 }
               } else {
+                // Fallback: If we are not sure, block effectively, but let's be generous for 'basic' if it exists?
+                // No, standard is strict.
                 setHasAccess(false)
               }
             } else {
+              // No subscription found? Maybe allow if it's a fresh user? 
+              // No, setupNewUser ensures subscription.
               setHasAccess(false)
             }
+          } else {
+            // No org members? 
+            setHasAccess(false)
           }
         } else {
           // Admin always has access

@@ -137,7 +137,7 @@ export async function setupNewUser(
 
         // Update existing organization - Force over-write of temp values
         const updateData: any = {
-            name: organizationName,
+            // Do NOT overwrite user-defined name with default/OAuth name
             plan: 'trial',
             stripe_customer_id: finalStripeCustomerId
         }

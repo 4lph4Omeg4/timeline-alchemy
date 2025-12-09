@@ -6,6 +6,7 @@ import { setupNewUser } from '@/lib/onboarding'
 
 export const dynamic = 'force-dynamic'
 
+
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
@@ -85,6 +86,8 @@ export async function GET(request: Request) {
                 const email = session.user.email!
                 const orgName = `${name}'s Organization`
 
+                // We pass the generated orgName, but setupNewUser is now smart enough to NOT overwrite
+                // an existing organization's name if the user has renamed it.
                 await setupNewUser(supabaseAdmin, session.user.id, email, name, orgName)
                 console.log('Setup completed/verified for user:', session.user.id)
             } catch (setupError) {
