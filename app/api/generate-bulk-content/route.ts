@@ -41,23 +41,42 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's organization
-    const { data: orgMembers, error: orgError } = await supabaseAdmin
-      .from('org_members')
-      .select('org_id, role')
-      .eq('user_id', userId)
+    let userOrgId = body.orgId
 
-    if (orgError || !orgMembers || orgMembers.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Organization not found for user'
-      }, { status: 400 })
+    if (userOrgId) {
+      // Verify user belongs to this org
+      const { data: memberCheck } = await supabaseAdmin
+        .from('org_members')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('org_id', userOrgId)
+        .single()
+
+      if (!memberCheck) {
+        userOrgId = null // Invalid org provided
+      }
     }
 
-    // Prioritize non-client roles
-    const members = orgMembers as any[]
-    let userOrgId = members.find(member => member.role !== 'client')?.org_id
     if (!userOrgId) {
-      userOrgId = members[0].org_id
+      // Fallback: Find first org
+      const { data: orgMembers, error: orgError } = await supabaseAdmin
+        .from('org_members')
+        .select('org_id, role')
+        .eq('user_id', userId)
+
+      if (orgError || !orgMembers || orgMembers.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'Organization not found for user'
+        }, { status: 400 })
+      }
+
+      // Prioritize non-client roles
+      const members = orgMembers as any[]
+      userOrgId = members.find(member => member.role !== 'client')?.org_id
+      if (!userOrgId) {
+        userOrgId = members[0].org_id
+      }
     }
 
     console.log('🏢 Using Organization:', userOrgId)

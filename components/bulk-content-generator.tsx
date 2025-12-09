@@ -199,9 +199,23 @@ export default function BulkContentGenerator() {
     setIsGenerating(true)
     setGeneratedPosts([])
 
-    // Get current user ID
+    // Get current user ID and Org ID
     const { data: { user } } = await supabase.auth.getUser()
     const userId = user?.id
+
+    // Get user's org id
+    let orgId = null
+    if (userId) {
+      const { data: members } = await supabase
+        .from('org_members')
+        .select('org_id')
+        .eq('user_id', userId)
+        .limit(1)
+
+      if (members && members.length > 0) {
+        orgId = (members[0] as any).org_id
+      }
+    }
 
     try {
 
@@ -218,7 +232,8 @@ export default function BulkContentGenerator() {
           items: items,
           contentType: 'blog', // Always generate complete blog packages
           language,
-          userId // Pass userId for organization lookup
+          userId, // Pass userId for organization lookup
+          orgId   // Explicitly pass orgId to avoid ambiguity
         }),
         signal: controller.signal // Use abort signal for timeout
       })
@@ -239,6 +254,13 @@ export default function BulkContentGenerator() {
         toast.error(`Server error: ${response.status} ${response.statusText}`)
         return
       }
+
+      if (!response.ok) {
+        console.error('API Error:', result)
+        toast.error(result.error || `Server error: ${response.status}`)
+        return
+      }
+
       setCurrentResponse(result)
 
       if (result.success && result.generatedPosts) {

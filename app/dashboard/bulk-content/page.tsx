@@ -43,7 +43,7 @@ export default function BulkContentPage() {
               .from('subscriptions')
               .select('plan')
               .eq('org_id', orgId)
-              .single()
+              .maybeSingle()
 
             if (subscription) {
               setUserPlan(subscription.plan)
@@ -53,13 +53,13 @@ export default function BulkContentPage() {
                 .from('plan_features')
                 .select('bulk_generation_limit')
                 .eq('plan_name', subscription.plan)
-                .single()
+                .maybeSingle()
 
               const { data: usage } = await (supabase as any)
                 .from('organization_usage')
                 .select('bulk_generation_used')
                 .eq('org_id', orgId)
-                .single()
+                .maybeSingle()
 
               const used = usage?.bulk_generation_used || 0
               // Handle trial limit (hardcoded 5) vs database limit
