@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +13,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 
 export default function ContentEditPage() {
+  const supabase = createClient()
   const params = useParams()
   const router = useRouter()
   const [title, setTitle] = useState('')

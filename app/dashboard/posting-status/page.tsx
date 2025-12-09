@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -37,7 +37,7 @@ export default function PostingStatusDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [posting, setPosting] = useState<string | null>(null)
 
-  const supabaseClient = supabase
+  const supabaseClient = createClient()
 
   useEffect(() => {
     fetchPosts()
