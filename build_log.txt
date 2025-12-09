@@ -1,0 +1,25 @@
+
+> timeline-alchemy@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.33
+  - Environments: .env.local
+
+
+> Build error occurred
+Error: EINVAL: invalid argument, readlink 'C:\Users\denni\OneDrive\Github\timeline-alchemy\.next\server\edge-runtime-webpack.js'
+    at async Object.readlink (node:internal/fs/promises:976:10)
+    at async C:\Users\denni\OneDrive\Github\timeline-alchemy\node_modules\next\dist\lib\recursive-delete.js:58:30
+    at async Promise.all (index 2)
+    at async recursiveDelete (C:\Users\denni\OneDrive\Github\timeline-alchemy\node_modules\next\dist\lib\recursive-delete.js:51:5)
+    at async C:\Users\denni\OneDrive\Github\timeline-alchemy\node_modules\next\dist\lib\recursive-delete.js:68:17
+    at async Promise.all (index 1)
+    at async recursiveDelete (C:\Users\denni\OneDrive\Github\timeline-alchemy\node_modules\next\dist\lib\recursive-delete.js:51:5)
+    at async C:\Users\denni\OneDrive\Github\timeline-alchemy\node_modules\next\dist\build\index.js:694:17
+    at async Span.traceAsyncFn (C:\Users\denni\OneDrive\Github\timeline-alchemy\node_modules\next\dist\trace\trace.js:154:20)
+    at async build (C:\Users\denni\OneDrive\Github\timeline-alchemy\node_modules\next\dist\build\index.js:368:9) {
+  errno: -4071,
+  code: 'EINVAL',
+  syscall: 'readlink',
+  path: 'C:\\Users\\denni\\OneDrive\\Github\\timeline-alchemy\\.next\\server\\edge-runtime-webpack.js'
+}
