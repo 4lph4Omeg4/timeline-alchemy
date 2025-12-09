@@ -6,7 +6,7 @@ export const getStripe = () => {
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('STRIPE_SECRET_KEY is not set')
   }
-  
+
   return new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2023-10-16',
   })
@@ -96,6 +96,18 @@ export type StripePlanType = keyof typeof STRIPE_PLANS
 
 export async function createStripeCustomer(email: string, name: string) {
   const stripe = getStripe()
+
+  // Check if customer already exists
+  const existingCustomers = await stripe.customers.list({
+    email,
+    limit: 1
+  })
+
+  if (existingCustomers.data.length > 0) {
+    // If name is different, we could update it, but for now just return existing
+    return existingCustomers.data[0]
+  }
+
   return await stripe.customers.create({
     email,
     name,
@@ -151,7 +163,7 @@ export function getPlanLimits(plan: PlanType) {
 // Helper function to check if user can perform action
 export function canPerformAction(plan: PlanType, action: 'contentPackage' | 'customContent' | 'bulkGeneration', currentUsage: number) {
   const limits = getPlanLimits(plan)
-  
+
   switch (action) {
     case 'contentPackage':
       return limits.contentPackages === -1 || currentUsage < limits.contentPackages

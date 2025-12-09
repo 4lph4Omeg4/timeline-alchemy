@@ -34,24 +34,41 @@ export async function setupNewUser(
             const stripe = getStripe()
             const basicPriceId = process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
 
-            log('Creating Stripe subscription...')
-            const subscription = await stripe.subscriptions.create({
+            // Check for existing subscriptions for this customer
+            const existingSubs = await stripe.subscriptions.list({
                 customer: stripeCustomerId,
-                items: [{ price: basicPriceId }],
-                trial_period_days: 14,
-                payment_behavior: 'default_incomplete',
-                trial_settings: {
-                    end_behavior: { missing_payment_method: 'pause' },
-                },
-                metadata: {
-                    user_id: userId,
-                    plan: 'trial',
-                },
+                limit: 1,
+                status: 'all' // check all statuses
             })
-            stripeSubscriptionId = subscription.id
-            log('Stripe subscription created:', stripeSubscriptionId)
+
+            // Filter for active or trialing
+            const activeSub = existingSubs.data.find(sub =>
+                sub.status === 'active' || sub.status === 'trialing' || sub.status === 'incomplete'
+            )
+
+            if (activeSub) {
+                log('Found existing Stripe subscription:', activeSub.id)
+                stripeSubscriptionId = activeSub.id
+            } else {
+                log('Creating Stripe subscription...')
+                const subscription = await stripe.subscriptions.create({
+                    customer: stripeCustomerId,
+                    items: [{ price: basicPriceId }],
+                    trial_period_days: 14,
+                    payment_behavior: 'default_incomplete',
+                    trial_settings: {
+                        end_behavior: { missing_payment_method: 'pause' },
+                    },
+                    metadata: {
+                        user_id: userId,
+                        plan: 'trial',
+                    },
+                })
+                stripeSubscriptionId = subscription.id
+                log('Stripe subscription created:', stripeSubscriptionId)
+            }
         } catch (error: any) {
-            console.error('Error creating Stripe subscription:', error)
+            console.error('Error handling Stripe subscription:', error)
         }
     } else {
         log('Skipping Stripe subscription: Missing Customer ID or Configuration')
