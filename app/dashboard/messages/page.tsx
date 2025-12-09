@@ -67,22 +67,21 @@ export default function MessagesPage() {
 
   // Auto-select conversation from URL
   useEffect(() => {
-    if (conversationIdParam && !selectedConversation && currentUserId) {
-      if (conversations.length > 0) {
-        // Try to find in loaded conversations
-        const targetConv = conversations.find(c => c.id === conversationIdParam)
-        if (targetConv) {
-          loadMessages(targetConv)
-        } else {
-          // Not found in list, try to load directly
-          loadConversationById(conversationIdParam)
-        }
-      } else if (!loading) {
-        // Conversations loaded but empty (or failed), try to load directly
+    if (conversationIdParam && currentUserId) {
+      // If we already have this conversation selected, do nothing
+      if (selectedConversation?.id === conversationIdParam) return
+
+      // Try to find in loaded conversations
+      const targetConv = conversations.find(c => c.id === conversationIdParam)
+      if (targetConv) {
+        loadMessages(targetConv)
+      } else {
+        // Not found in list, and we haven't tried loading it yet (or we need to try again)
+        // We only load if we are not already loading it (to avoid loops, though strict mode might trigger twice)
         loadConversationById(conversationIdParam)
       }
     }
-  }, [conversations, conversationIdParam, loading, currentUserId])
+  }, [conversationIdParam, currentUserId, conversations]) // Removed 'loading' from dependency to allow immediate reaction once other deps are ready
 
   const loadConversations = async () => {
     try {
@@ -100,7 +99,13 @@ export default function MessagesPage() {
       const data = await response.json()
 
       if (data.success) {
-        setConversations(data.conversations)
+        setConversations(prev => {
+          // If we have a selected conversation that is NOT in the new list (e.g. just added), keep it
+          if (selectedConversation && !data.conversations.find((c: Conversation) => c.id === selectedConversation.id)) {
+            return [selectedConversation, ...data.conversations]
+          }
+          return data.conversations
+        })
       }
     } catch (error) {
       console.error('Error loading conversations:', error)
