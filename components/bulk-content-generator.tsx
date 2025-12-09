@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Upload, FileText, TrendingUp, Users, Save, Package, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 
 interface TrendItem {
   title: string
@@ -122,6 +122,7 @@ const detectCategoryFromContent = (title: string, summary: string, tags: string[
 }
 
 export default function BulkContentGenerator() {
+  const supabase = createClient()
   const [jsonInput, setJsonInput] = useState('')
   const [language, setLanguage] = useState<'nl' | 'en' | 'auto'>('auto')
   const [imageStyle, setImageStyle] = useState<'photorealistic' | 'digital_art' | 'cosmic'>('photorealistic')
