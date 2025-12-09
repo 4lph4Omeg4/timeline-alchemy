@@ -8,7 +8,7 @@ export const runtime = 'nodejs' // Explicitly set runtime
 
 // Add GET handler for debugging
 export async function GET(request: NextRequest) {
-  return NextResponse.json({ 
+  return NextResponse.json({
     message: 'Bulk Watermark API - Ready',
     method: 'POST',
     endpoint: '/api/apply-watermark-to-existing',
@@ -64,6 +64,43 @@ export async function POST(request: NextRequest) {
 
     console.log(`📊 Found ${images.length} images to process`)
 
+    // Collect unique organization IDs to efficiently fetch plans
+    const uniqueOrgIds = new Set(images.map((img: any) => img.org_id).filter(Boolean))
+    console.log(`📊 Found ${uniqueOrgIds.size} unique organizations`)
+
+    // Fetch plans for all involved organizations
+    const { data: orgs } = await supabaseAdmin
+      .from('organizations')
+      .select('id, plan')
+      .in('id', Array.from(uniqueOrgIds))
+
+    // Fetch branding settings for these orgs
+    const { data: orgBrandings } = await supabaseAdmin
+      .from('branding_settings')
+      .select('*')
+      .in('organization_id', Array.from(uniqueOrgIds))
+
+    // Fetch white_label status for plans
+    const plans = orgs?.map((o: any) => o.plan).filter(Boolean) || []
+    const uniquePlans = Array.from(new Set(plans))
+
+    const { data: planFeatures } = await supabaseAdmin
+      .from('plan_features')
+      .select('plan_name, white_label')
+      .in('plan_name', uniquePlans)
+
+    // Build lookup maps
+    const orgPlanMap = new Map(orgs?.map((o: any) => [o.id, o.plan]))
+    const planWhiteLabelMap = new Map(planFeatures?.map((f: any) => [f.plan_name, f.white_label]))
+    const orgBrandingMap = new Map()
+    if (orgBrandings) {
+      orgBrandings.forEach((b: any) => {
+        if (b.authorization_status !== 'rejected') { // Optional: check status
+          orgBrandingMap.set(b.organization_id, b)
+        }
+      })
+    }
+
     let processed = 0
     let skipped = 0
     let failed = 0
@@ -82,6 +119,33 @@ export async function POST(request: NextRequest) {
             const imageId = (image as { id: string }).id
             const imageOrgId = (image as { org_id: string }).org_id
 
+            // Determine which branding to use
+            const plan = orgPlanMap.get(imageOrgId)
+            const isWhiteLabel = planWhiteLabelMap.get(plan) === true
+
+            let brandingToUse = null
+
+            if (isWhiteLabel) {
+              // Transcendant/White Label: Use Custom Branding if available
+              const customBranding = orgBrandingMap.get(imageOrgId)
+              if (customBranding && customBranding.logo_url) {
+                brandingToUse = customBranding
+                console.log(`   🎨 Using Custom Branding for Org ${imageOrgId} (${plan})`)
+              } else {
+                console.log(`   ⚪ White Label Org ${imageOrgId} has no custom logo - Skipping watermark`)
+              }
+            } else {
+              // Basic/Initiate/Standard: Use Admin Branding
+              brandingToUse = branding // The Admin Branding fetched earlier
+              console.log(`   🛡️ Using Admin Branding for Org ${imageOrgId} (${plan})`)
+            }
+
+            if (!brandingToUse) {
+              skipped++
+              results.push({ id: imageId, status: 'skipped', error: 'No applicable branding' })
+              return
+            }
+
             console.log(`\n🖼️  Processing image ${imageId}`)
             console.log(`   Original URL: ${imageUrl}`)
 
@@ -94,13 +158,13 @@ export async function POST(request: NextRequest) {
             }
 
             // Apply watermark
-            const watermarkedUrl = await addWatermarkToImageServer(imageUrl, branding, imageOrgId)
+            const watermarkedUrl = await addWatermarkToImageServer(imageUrl, brandingToUse, imageOrgId)
 
             if (watermarkedUrl && watermarkedUrl !== imageUrl) {
               // Update database with new watermarked URL
               // Note: We bypass TypeScript strict checking here due to Supabase type inference issues
               let updateSuccess = false
-              
+
               try {
                 // Cast the entire client to bypass TypeScript's overly strict type checking
                 const client: any = supabaseAdmin
@@ -108,7 +172,7 @@ export async function POST(request: NextRequest) {
                   .from('images')
                   .update({ url: watermarkedUrl })
                   .eq('id', imageId)
-                
+
                 if (updateError) {
                   console.error(`   ❌ Failed to update database:`, updateError)
                   failed++
@@ -121,7 +185,7 @@ export async function POST(request: NextRequest) {
                 failed++
                 results.push({ id: imageId, status: 'failed', error: 'Update failed' })
               }
-              
+
               if (updateSuccess) {
                 console.log(`   ✅ Watermarked successfully`)
                 console.log(`   New URL: ${watermarkedUrl}`)
@@ -136,10 +200,10 @@ export async function POST(request: NextRequest) {
           } catch (error) {
             console.error(`   ❌ Error processing image:`, error)
             failed++
-            results.push({ 
-              id: (image as { id: string }).id, 
-              status: 'failed', 
-              error: error instanceof Error ? error.message : 'Unknown error' 
+            results.push({
+              id: (image as { id: string }).id,
+              status: 'failed',
+              error: error instanceof Error ? error.message : 'Unknown error'
             })
           }
         })
