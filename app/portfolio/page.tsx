@@ -15,9 +15,9 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 
 interface PortfolioPost extends BlogPost {
-  images?: Array<{ 
+  images?: Array<{
     id?: string
-    url: string 
+    url: string
     prompt?: string
     style?: string
     variant_type?: string
@@ -32,7 +32,10 @@ interface PortfolioPost extends BlogPost {
   }
 }
 
+import { createClient } from '@/utils/supabase/client'
+
 export default function PortfolioPage() {
+  const supabase = createClient()
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | 'all'>('all')
   const [posts, setPosts] = useState<PortfolioPost[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,7 +57,6 @@ export default function PortfolioPage() {
   }, [selectedCategory])
 
   const loadCurrentUser = async () => {
-    const { supabase } = await import('@/lib/supabase')
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       setCurrentUserId(user.id)
@@ -76,10 +78,10 @@ export default function PortfolioPage() {
         },
         cache: 'no-cache'
       })
-      
+
       console.log('📡 Response status:', response.status)
       console.log('📡 Response ok:', response.ok)
-      
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error('❌ API Error Response:', errorText)
@@ -94,7 +96,7 @@ export default function PortfolioPage() {
 
       const data = await response.json()
       console.log('✅ API Response:', data)
-      
+
       setPosts(data.posts || [])
     } catch (err) {
       console.error('❌ Error fetching posts:', err)
@@ -131,7 +133,7 @@ export default function PortfolioPage() {
     setSelectedPost(post)
     setIsModalOpen(true)
     setShowAllStyles(false)
-    
+
     // Load user's rating for this post
     if (currentUserId) {
       await loadUserRating(post.id)
@@ -151,7 +153,7 @@ export default function PortfolioPage() {
     try {
       const response = await fetch(`/api/ratings?postId=${postId}&userId=${currentUserId}`)
       const data = await response.json()
-      
+
       if (data.success && data.userRating) {
         setUserRating(data.userRating.rating)
         setUserReviewText(data.userRating.review_text || '')
@@ -166,12 +168,12 @@ export default function PortfolioPage() {
 
   const submitRating = async (rating: number, reviewText?: string) => {
     if (!selectedPost || !currentUserId) return
-    
+
     setSubmittingRating(true)
-    
+
     try {
       console.log('📤 Submitting rating:', { rating, reviewText: reviewText || userReviewText })
-      
+
       const response = await fetch('/api/ratings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -182,10 +184,10 @@ export default function PortfolioPage() {
           reviewText: reviewText !== undefined ? reviewText : userReviewText
         })
       })
-      
+
       const data = await response.json()
       console.log('📥 Rating response:', data)
-      
+
       if (data.success) {
         setUserRating(rating)
         if (reviewText !== undefined) {
@@ -193,10 +195,10 @@ export default function PortfolioPage() {
         }
         setShowRatingForm(false)
         toast.success('Rating submitted! ✨')
-        
+
         // Refresh posts to update average rating
         await fetchPosts()
-        
+
         // Reload the rating to ensure we have the latest
         await loadUserRating(selectedPost.id)
       } else {
@@ -213,28 +215,26 @@ export default function PortfolioPage() {
   const startConversation = async (creatorUserId: string) => {
     try {
       toast.loading('Starting conversation...', { id: 'conversation' })
-      
-      // Get auth token
-      const { supabase } = await import('@/lib/supabase')
+
       const { data: { session } } = await supabase.auth.getSession()
-      
+
       if (!session?.access_token) {
         toast.error('Please sign in to send messages', { id: 'conversation' })
         return
       }
-      
+
       // Create or get conversation
       const response = await fetch('/api/messages/conversations', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ otherUserId: creatorUserId })
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success) {
         toast.success('Opening messages...', { id: 'conversation' })
         // Navigate to messages page
@@ -250,15 +250,15 @@ export default function PortfolioPage() {
 
   const getActiveImages = (post: PortfolioPost) => {
     if (!post.images || post.images.length === 0) return []
-    
+
     // Try to get active final images first (new format)
     const activeImages = post.images.filter(img => img.is_active && img.variant_type === 'final')
     if (activeImages.length > 0) return activeImages
-    
+
     // Fallback: get active images without variant type check (transition format)
     const activeAny = post.images.filter(img => img.is_active)
     if (activeAny.length > 0) return activeAny
-    
+
     // Fallback: get all images if no active flag (old format)
     return post.images.slice(0, 3) // Max 3 images
   }
@@ -269,7 +269,7 @@ export default function PortfolioPage() {
 
   const getSocialLinks = (post: PortfolioPost) => {
     if (!post.social_posts) return []
-    
+
     return Object.entries(post.social_posts).map(([platform, content]) => ({
       platform,
       content,
@@ -299,7 +299,7 @@ export default function PortfolioPage() {
     <div className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-black protected-content">
       {/* Content Protection */}
       <ContentProtection />
-      
+
       {/* Header with Logo */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-purple-500/30">
         <div className="container mx-auto px-4 py-4">
@@ -312,7 +312,7 @@ export default function PortfolioPage() {
             {/* Back to Home Button - Right */}
             <div className="flex items-center gap-4">
               <Link href="/">
-                <Button 
+                <Button
                   variant="outline"
                   className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 text-purple-200 hover:bg-gradient-to-r hover:from-purple-600/30 hover:to-pink-600/30 hover:border-purple-400 transition-all duration-300"
                 >
@@ -345,25 +345,23 @@ export default function PortfolioPage() {
             <Button
               variant={selectedCategory === 'all' ? 'default' : 'outline'}
               onClick={() => setSelectedCategory('all')}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                selectedCategory === 'all'
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${selectedCategory === 'all'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                   : 'bg-white/10 text-gray-300 border-purple-500/30 hover:bg-white/20'
-              }`}
+                }`}
             >
               🌟 Alle Categorieën
             </Button>
-            
+
             {categories.map((category) => (
               <Button
                 key={category.id}
                 variant={selectedCategory === category.id ? 'default' : 'outline'}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                  selectedCategory === category.id
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${selectedCategory === category.id
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                     : 'bg-white/10 text-gray-300 border-purple-500/30 hover:bg-white/20'
-                }`}
+                  }`}
               >
                 {category.emoji} {category.label}
               </Button>
@@ -381,7 +379,7 @@ export default function PortfolioPage() {
             <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 max-w-md mx-auto">
               <h3 className="text-red-300 text-xl font-semibold mb-2">Error</h3>
               <p className="text-red-200">{error}</p>
-              <Button 
+              <Button
                 onClick={fetchPosts}
                 className="mt-4 bg-red-600 hover:bg-red-700"
               >
@@ -395,7 +393,7 @@ export default function PortfolioPage() {
               <div className="text-6xl mb-4">📝</div>
               <h3 className="text-white text-xl font-semibold mb-2">Geen content gevonden</h3>
               <p className="text-gray-300">
-                {selectedCategory === 'all' 
+                {selectedCategory === 'all'
                   ? 'Er zijn nog geen posts gepubliceerd.'
                   : `Er zijn nog geen posts in de categorie "${getCategoryLabel(selectedCategory)}".`
                 }
@@ -419,15 +417,15 @@ export default function PortfolioPage() {
             {/* Posts Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map((post) => (
-                <Card 
-                  key={post.id} 
+                <Card
+                  key={post.id}
                   className="bg-white/10 backdrop-blur-md border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 group cursor-pointer"
                   onClick={() => openPostModal(post)}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between mb-2">
-                      <Badge 
-                        variant="secondary" 
+                      <Badge
+                        variant="secondary"
                         className="bg-purple-600/20 text-purple-200 border-purple-500/30"
                       >
                         {getCategoryEmoji(post.category || 'uncategorized')} {getCategoryLabel(post.category || 'uncategorized')}
@@ -440,20 +438,20 @@ export default function PortfolioPage() {
                       {post.title}
                     </CardTitle>
                   </CardHeader>
-                  
+
                   <CardContent className="pt-0">
                     <CardDescription className="text-gray-300 mb-4 leading-relaxed">
                       {post.excerpt || truncateContent(post.content)}
                     </CardDescription>
-                    
+
                     {/* Post Images - Show all 3 */}
                     {post.images && post.images.length > 0 && (
                       <div className="mb-4">
                         <div className="grid grid-cols-3 gap-2">
                           {getActiveImages(post).slice(0, 3).map((image, idx) => (
                             <div key={idx} className="w-full h-32 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
-                              <img 
-                                src={image.url} 
+                              <img
+                                src={image.url}
                                 alt={`${post.title} - Image ${idx + 1}`}
                                 className="w-full h-full object-contain"
                               />
@@ -468,8 +466,8 @@ export default function PortfolioPage() {
                             </div>
                             {post.average_rating ? (
                               <div className="flex items-center justify-center space-x-2">
-                                <StarRating 
-                                  rating={post.average_rating} 
+                                <StarRating
+                                  rating={post.average_rating}
                                   size="md"
                                   showNumber={false}
                                 />
@@ -485,7 +483,7 @@ export default function PortfolioPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Resonance Rating (if no image) */}
                     {(!post.images || post.images.length === 0) && (
                       <div className="flex items-center justify-center mb-3">
@@ -495,8 +493,8 @@ export default function PortfolioPage() {
                           </div>
                           {post.average_rating ? (
                             <div className="flex items-center justify-center space-x-2">
-                              <StarRating 
-                                rating={post.average_rating} 
+                              <StarRating
+                                rating={post.average_rating}
                                 size="md"
                                 showNumber={false}
                               />
@@ -511,21 +509,21 @@ export default function PortfolioPage() {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Post Stats */}
                     <div className="flex items-center justify-between text-sm text-gray-400">
                       <div className="flex items-center space-x-1">
                         <span>👁️</span>
                         <span>Gepubliceerd</span>
                       </div>
-                      
+
                       {/* Creator info */}
                       {(post.creator || post.organizations) && (
                         <div className="flex items-center gap-2">
                           {post.creator?.avatar_url && (
                             <div className="relative w-6 h-6 rounded-full overflow-hidden border border-purple-500/50 flex-shrink-0">
-                              <img 
-                                src={post.creator.avatar_url} 
+                              <img
+                                src={post.creator.avatar_url}
                                 alt={post.creator.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
@@ -574,8 +572,8 @@ export default function PortfolioPage() {
                       {getActiveImages(selectedPost).map((image, index) => (
                         <div key={index} className="space-y-2">
                           <div className="w-full h-64 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
-                            <img 
-                              src={image.url} 
+                            <img
+                              src={image.url}
                               alt={image.prompt || selectedPost.title}
                               className="w-full h-full object-contain"
                             />
@@ -616,7 +614,7 @@ export default function PortfolioPage() {
                           ← Back to Active Images
                         </Button>
                       </div>
-                      
+
                       {/* Group by variant type */}
                       <div className="space-y-4">
                         {/* Original Variants */}
@@ -629,8 +627,8 @@ export default function PortfolioPage() {
                                 .map((image, index) => (
                                   <div key={index} className="space-y-2">
                                     <div className="w-full h-48 bg-black/30 rounded-lg border border-purple-500/20 overflow-hidden flex items-center justify-center">
-                                      <img 
-                                        src={image.url} 
+                                      <img
+                                        src={image.url}
                                         alt={image.prompt || selectedPost.title}
                                         className="w-full h-full object-contain"
                                       />
@@ -643,7 +641,7 @@ export default function PortfolioPage() {
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Final Images */}
                         {getAllStyleVariants(selectedPost).filter(img => img.variant_type === 'final').length > 0 && (
                           <div>
@@ -654,8 +652,8 @@ export default function PortfolioPage() {
                                 .map((image, index) => (
                                   <div key={index} className="space-y-2">
                                     <div className="w-full h-48 bg-black/30 rounded-lg border-2 border-green-500/30 overflow-hidden flex items-center justify-center">
-                                      <img 
-                                        src={image.url} 
+                                      <img
+                                        src={image.url}
                                         alt={image.prompt || selectedPost.title}
                                         className="w-full h-full object-contain"
                                       />
@@ -672,14 +670,14 @@ export default function PortfolioPage() {
                     </div>
                   </>
                 )}
-                
+
                 {/* Post Title */}
                 <h2 className="text-2xl font-bold text-white mt-4">
                   {selectedPost.title}
                 </h2>
               </div>
             )}
-            
+
             {/* Post Title (if no images) */}
             {(!selectedPost.images || selectedPost.images.length === 0) && (
               <h2 className="text-2xl font-bold text-white mb-4">
@@ -690,15 +688,15 @@ export default function PortfolioPage() {
             {/* Post Meta */}
             <div className="flex items-center justify-between text-sm text-gray-400">
               <div className="flex items-center space-x-4">
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className="bg-purple-600/20 text-purple-200 border-purple-500/30"
                 >
                   {getCategoryEmoji(selectedPost.category || 'uncategorized')} {getCategoryLabel(selectedPost.category || 'uncategorized')}
                 </Badge>
                 <span>{formatDate(selectedPost.published_at || selectedPost.created_at)}</span>
               </div>
-              
+
               {selectedPost.organizations && (
                 <div className="text-right">
                   <div className="text-xs text-purple-300">
@@ -723,7 +721,7 @@ export default function PortfolioPage() {
                     <span className="mr-2">⭐</span>
                     Resonance Rating
                   </h3>
-                  
+
                   {/* Average Rating Display */}
                   {selectedPost.average_rating && selectedPost.rating_count && selectedPost.rating_count > 0 && (
                     <div className="mb-4 text-center">
@@ -738,7 +736,7 @@ export default function PortfolioPage() {
                       </p>
                     </div>
                   )}
-                  
+
                   {/* User Rating Input */}
                   <div className="text-center">
                     {/* Show button if no rating yet and form is closed */}
@@ -750,7 +748,7 @@ export default function PortfolioPage() {
                         ⭐ Rate This Content
                       </Button>
                     )}
-                    
+
                     {/* Show existing rating if not editing */}
                     {userRating && !showRatingForm && (
                       <div className="max-w-md mx-auto">
@@ -780,14 +778,14 @@ export default function PortfolioPage() {
                         </Button>
                       </div>
                     )}
-                    
+
                     {/* Show rating form when editing or creating new */}
                     {showRatingForm && (
                       <div className="max-w-md mx-auto">
                         <p className="text-sm text-gray-300 mb-3">
                           {userRating ? 'Update your rating:' : 'Rate this content:'}
                         </p>
-                        
+
                         {/* Star selector */}
                         <div className="flex justify-center gap-2 mb-4">
                           {[1, 2, 3, 4, 5].map((star) => (
@@ -795,11 +793,10 @@ export default function PortfolioPage() {
                               key={star}
                               onClick={() => setUserRating(star)}
                               disabled={submittingRating}
-                              className={`text-4xl transition-all duration-300 ${
-                                submittingRating 
-                                  ? 'opacity-50 cursor-not-allowed' 
+                              className={`text-4xl transition-all duration-300 ${submittingRating
+                                  ? 'opacity-50 cursor-not-allowed'
                                   : 'hover:scale-125 cursor-pointer'
-                              }`}
+                                }`}
                             >
                               {userRating && star <= userRating ? (
                                 <span className="text-yellow-400">⭐</span>
@@ -809,7 +806,7 @@ export default function PortfolioPage() {
                             </button>
                           ))}
                         </div>
-                        
+
                         {/* Review Text (Optional) */}
                         <textarea
                           value={userReviewText}
@@ -818,7 +815,7 @@ export default function PortfolioPage() {
                           className="w-full bg-gray-800 border border-purple-500/30 text-white rounded-lg p-3 mb-3 resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
                           rows={3}
                         />
-                        
+
                         {/* Action buttons */}
                         <div className="flex gap-2 justify-center">
                           <Button
@@ -894,8 +891,8 @@ export default function PortfolioPage() {
                     {/* Creator Avatar */}
                     <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500/50 flex-shrink-0">
                       {selectedPost.creator?.avatar_url ? (
-                        <img 
-                          src={selectedPost.creator.avatar_url} 
+                        <img
+                          src={selectedPost.creator.avatar_url}
                           alt={selectedPost.creator.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
