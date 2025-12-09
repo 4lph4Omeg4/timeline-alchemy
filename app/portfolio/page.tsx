@@ -237,8 +237,8 @@ export default function PortfolioPage() {
 
       if (data.success) {
         toast.success('Opening messages...', { id: 'conversation' })
-        // Navigate to messages page
-        window.location.href = '/dashboard/messages'
+        // Navigate to messages page with conversation ID
+        window.location.href = `/dashboard/messages?conversationId=${data.conversation.id}`
       } else {
         toast.error(data.error || 'Failed to start conversation', { id: 'conversation' })
       }
@@ -346,8 +346,8 @@ export default function PortfolioPage() {
               variant={selectedCategory === 'all' ? 'default' : 'outline'}
               onClick={() => setSelectedCategory('all')}
               className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${selectedCategory === 'all'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                  : 'bg-white/10 text-gray-300 border-purple-500/30 hover:bg-white/20'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                : 'bg-white/10 text-gray-300 border-purple-500/30 hover:bg-white/20'
                 }`}
             >
               🌟 Alle Categorieën
@@ -359,8 +359,8 @@ export default function PortfolioPage() {
                 variant={selectedCategory === category.id ? 'default' : 'outline'}
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${selectedCategory === category.id
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                    : 'bg-white/10 text-gray-300 border-purple-500/30 hover:bg-white/20'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                  : 'bg-white/10 text-gray-300 border-purple-500/30 hover:bg-white/20'
                   }`}
               >
                 {category.emoji} {category.label}
@@ -794,8 +794,8 @@ export default function PortfolioPage() {
                               onClick={() => setUserRating(star)}
                               disabled={submittingRating}
                               className={`text-4xl transition-all duration-300 ${submittingRating
-                                  ? 'opacity-50 cursor-not-allowed'
-                                  : 'hover:scale-125 cursor-pointer'
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'hover:scale-125 cursor-pointer'
                                 }`}
                             >
                               {userRating && star <= userRating ? (

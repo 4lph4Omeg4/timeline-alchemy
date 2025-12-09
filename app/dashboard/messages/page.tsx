@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 
 interface Conversation {
   id: string
@@ -48,6 +49,9 @@ export default function MessagesPage() {
   const [otherUser, setOtherUser] = useState<any>(null)
   const [mounted, setMounted] = useState(false)
 
+  const searchParams = useSearchParams()
+  const conversationIdParam = searchParams.get('conversationId')
+
   useEffect(() => {
     setMounted(true)
     const loadUserAndConversations = async () => {
@@ -60,6 +64,16 @@ export default function MessagesPage() {
     }
     loadUserAndConversations()
   }, [])
+
+  // Auto-select conversation from URL
+  useEffect(() => {
+    if (conversationIdParam && conversations.length > 0 && !selectedConversation) {
+      const targetConv = conversations.find(c => c.id === conversationIdParam)
+      if (targetConv) {
+        loadMessages(targetConv)
+      }
+    }
+  }, [conversations, conversationIdParam])
 
   const loadConversations = async () => {
     try {
@@ -75,7 +89,7 @@ export default function MessagesPage() {
         }
       })
       const data = await response.json()
-      
+
       if (data.success) {
         setConversations(data.conversations)
       }
@@ -88,7 +102,7 @@ export default function MessagesPage() {
   const loadMessages = async (conversation: Conversation) => {
     try {
       setSelectedConversation(conversation)
-      
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
         toast.error('Not authenticated')
@@ -101,11 +115,11 @@ export default function MessagesPage() {
         }
       })
       const data = await response.json()
-      
+
       if (data.success) {
         setMessages(data.messages)
         setOtherUser(data.otherUser)
-        
+
         // Reload conversations to update unread counts
         await loadConversations()
       }
@@ -117,9 +131,9 @@ export default function MessagesPage() {
 
   const sendMessage = async () => {
     if (!selectedConversation || !newMessage.trim()) return
-    
+
     setSending(true)
-    
+
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
@@ -130,7 +144,7 @@ export default function MessagesPage() {
 
       const response = await fetch('/api/messages/send', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
@@ -139,14 +153,14 @@ export default function MessagesPage() {
           content: newMessage.trim()
         })
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success) {
         // Add message to local state
         setMessages(prev => [...prev, data.message])
         setNewMessage('')
-        
+
         // Reload conversations to update preview
         await loadConversations()
       } else {
@@ -203,18 +217,17 @@ export default function MessagesPage() {
                   <div
                     key={conv.id}
                     onClick={() => loadMessages(conv)}
-                    className={`p-4 rounded-lg cursor-pointer transition-all duration-300 ${
-                      selectedConversation?.id === conv.id
+                    className={`p-4 rounded-lg cursor-pointer transition-all duration-300 ${selectedConversation?.id === conv.id
                         ? 'bg-gradient-to-r from-purple-600/30 to-pink-600/30 border-2 border-purple-500'
                         : 'bg-gray-800/50 hover:bg-gray-700/50 border border-gray-700'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-3">
                         <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-purple-500/50 flex-shrink-0">
                           {conv.otherUser.avatar_url ? (
-                            <img 
-                              src={conv.otherUser.avatar_url} 
+                            <img
+                              src={conv.otherUser.avatar_url}
                               alt={conv.otherUser.name}
                               className="w-full h-full object-cover"
                               onError={(e) => {
@@ -271,8 +284,8 @@ export default function MessagesPage() {
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500/50 flex-shrink-0">
                     {otherUser?.avatar_url ? (
-                      <img 
-                        src={otherUser.avatar_url} 
+                      <img
+                        src={otherUser.avatar_url}
                         alt={otherUser.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -297,7 +310,7 @@ export default function MessagesPage() {
                   </div>
                 </div>
               </CardHeader>
-              
+
               {/* Messages */}
               <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.length === 0 ? (
@@ -317,8 +330,8 @@ export default function MessagesPage() {
                       >
                         {!isMine && otherUser?.avatar_url && (
                           <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-purple-500/50 flex-shrink-0 mt-1">
-                            <img 
-                              src={otherUser.avatar_url} 
+                            <img
+                              src={otherUser.avatar_url}
                               alt={otherUser.name}
                               className="w-full h-full object-cover"
                               onError={(e) => {
@@ -338,11 +351,10 @@ export default function MessagesPage() {
                           </div>
                         )}
                         <div
-                          className={`max-w-[70%] rounded-lg p-4 ${
-                            isMine
+                          className={`max-w-[70%] rounded-lg p-4 ${isMine
                               ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                               : 'bg-gray-700 text-gray-200'
-                          }`}
+                            }`}
                         >
                           <p className="whitespace-pre-wrap break-words">{message.content}</p>
                           {mounted && (
