@@ -270,7 +270,7 @@ export default function BulkContentGenerator() {
         // DIVINE COMPLETE PACKAGE GENERATION - Always generate complete packages
         console.log('🌟 Triggering DIVINE complete package generation...')
         toast.loading('🌟 Generating divine social posts and cosmic images...', { duration: 3000 })
-        await generateSocialPostsAndImages(result.generatedPosts)
+        await generateSocialPostsAndImages(result.generatedPosts, orgId)
 
         toast.success(`Successfully generated ${result.generatedPosts.length} posts!`)
       } else {
@@ -284,7 +284,7 @@ export default function BulkContentGenerator() {
     }
   }
 
-  const generateSocialPostsAndImages = async (posts: GeneratedPost[]) => {
+  const generateSocialPostsAndImages = async (posts: GeneratedPost[], orgId: string | null) => {
     console.log('🌟 Starting DIVINE social posts and images generation for', posts.length, 'posts')
 
     try {
@@ -392,7 +392,10 @@ export default function BulkContentGenerator() {
               const imageResponse = await fetch('/api/generate-vercel-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: fullPrompt })
+                body: JSON.stringify({
+                  prompt: fullPrompt,
+                  orgId: orgId
+                })
               })
 
               if (imageResponse.ok) {
