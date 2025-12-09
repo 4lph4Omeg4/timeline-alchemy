@@ -62,42 +62,51 @@ export default function BulkContentPage() {
                 .single()
 
               const used = usage?.bulk_generation_used || 0
-              // Hardcode trial limit to 5 to match backend logic
-              const limit = subscription.plan === 'trial' ? 5 : (planFeatures?.bulk_generation_limit || 0)
+              // Handle trial limit (hardcoded 5) vs database limit
+              // If not trial, use DB limit. If DB limit is null, it means UNLIMITED.
+              let limit: number | null = 0
+              if (subscription.plan === 'trial') {
+                limit = 5
+              } else {
+                limit = planFeatures?.bulk_generation_limit // could be null (unlimited) or number
+                // If it's explicitly undefined (missing), treat as 0
+                if (limit === undefined) limit = 0
+              }
 
-              setUsageInfo({ used, limit })
+              // Store for UI - if unlimited, we can show a special value or just high number
+              setUsageInfo({ used, limit: limit === null ? -1 : limit })
 
               const lowerPlan = (subscription.plan || '').toLowerCase()
 
-              // Trial and Universal plans have access to bulk content
-              if (lowerPlan === 'universal' || lowerPlan === 'transcendant' || lowerPlan === 'admin') {
-                // Unlimited access
+              // Access Logic:
+              // 1. Admin always has access (handled by outer if, but good to double check)
+              // 2. Unlimited plans (limit === null)
+              // 3. Limited plans (limit > 0) IF usage < limit
+
+              const isUnlimited = limit === null
+              const isQuotaAvailable = typeof limit === 'number' && limit > 0 && used < limit
+
+              // We also keep the hardcoded check for 'universal'/'transcendant'/admin as backup for unlimited
+              // but relies mostly on data now.
+              if (
+                lowerPlan === 'universal' ||
+                lowerPlan === 'transcendant' ||
+                lowerPlan === 'admin' ||
+                isUnlimited ||
+                isQuotaAvailable
+              ) {
                 setHasAccess(true)
-              } else if (lowerPlan.includes('trial')) {
-                // Trial = limit dependent
-                if (used < limit) {
-                  setHasAccess(true)
-                } else {
-                  // Even if limit reached, we might want to show the page but disable the button? 
-                  // For now, keep blocking but ensure the comparison is correct.
-                  setHasAccess(false)
-                }
               } else {
-                // Fallback: If we are not sure, block effectively, but let's be generous for 'basic' if it exists?
-                // No, standard is strict.
+                // Limit reached or no access
                 setHasAccess(false)
               }
             } else {
-              // No subscription found? Maybe allow if it's a fresh user? 
-              // No, setupNewUser ensures subscription.
               setHasAccess(false)
             }
           } else {
-            // No org members? 
             setHasAccess(false)
           }
         } else {
-          // Admin always has access
           setHasAccess(true)
         }
       } catch (error) {
@@ -117,7 +126,7 @@ export default function BulkContentPage() {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center space-y-4">
             <Shield className="h-12 w-12 text-purple-400 mx-auto animate-pulse" />
-            <p className="text-gray-300">Checking admin permissions...</p>
+            <p className="text-gray-300">Checking permissions...</p>
           </div>
         </div>
       </div>
@@ -125,6 +134,8 @@ export default function BulkContentPage() {
   }
 
   if (!hasAccess) {
+    const isLimitReached = usageInfo && usageInfo.limit !== -1 && usageInfo.used >= usageInfo.limit
+
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -133,14 +144,12 @@ export default function BulkContentPage() {
               <div className="text-center space-y-4">
                 <Shield className="h-16 w-16 text-red-400 mx-auto" />
                 <h2 className="text-2xl font-bold text-white">
-                  {userPlan === 'trial' && usageInfo
-                    ? 'Trial Limit Reached'
-                    : 'Bulk Content Unavailable'}
+                  {isLimitReached ? 'Plan Limit Reached' : 'Bulk Content Unavailable'}
                 </h2>
                 <p className="text-gray-300">
-                  {userPlan === 'trial' && usageInfo
-                    ? `You've used your ${usageInfo.limit} bulk generation(s) for the trial period. Upgrade to Universal plan for unlimited bulk generations.`
-                    : 'Bulk Content Generation is available for Trial (5x) and Universal (unlimited) plans.'}
+                  {isLimitReached
+                    ? `You've used your ${usageInfo.limit} bulk generation(s) for the current plan. Upgrade to Universal for unlimited access.`
+                    : 'Your current plan does not include Bulk Content Generation. Upgrade to Universal to unlock this feature.'}
                 </p>
                 <div className="mt-4 space-y-2">
                   <p className="text-purple-300 font-semibold">Current Plan: {userPlan || 'Unknown'}</p>
