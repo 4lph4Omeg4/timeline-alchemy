@@ -78,21 +78,15 @@ export async function GET(request: Request) {
             )
 
             try {
-                const { data: orgMembers } = await supabaseAdmin
-                    .from('org_members')
-                    .select('id')
-                    .eq('user_id', session.user.id)
-                    .maybeSingle()
+                // Always run setupNewUser to ensure any trigger-created artifacts are upgraded
+                // (e.g. converting 'temp-sub' to real Stripe trial or fallback)
+                console.log('Running user setup/check in OAuth callback...')
+                const name = session.user.user_metadata.name || session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User'
+                const email = session.user.email!
+                const orgName = `${name}'s Organization`
 
-                if (!orgMembers) {
-                    console.log('New user detected in OAuth callback, running setup...')
-                    const name = session.user.user_metadata.name || session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User'
-                    const email = session.user.email!
-                    const orgName = `${name}'s Organization`
-
-                    await setupNewUser(supabaseAdmin, session.user.id, email, name, orgName)
-                    console.log('Setup completed for user:', session.user.id)
-                }
+                await setupNewUser(supabaseAdmin, session.user.id, email, name, orgName)
+                console.log('Setup completed/verified for user:', session.user.id)
             } catch (setupError) {
                 console.error('Error setting up new user in callback:', setupError)
                 // We don't block the login, but the user might have a broken state
