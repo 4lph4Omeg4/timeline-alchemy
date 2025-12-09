@@ -427,12 +427,12 @@ export default function BulkContentGenerator() {
           } else {
             // Fallback to single image if all 3 failed
             console.log('⚠️ No images generated, falling back to single image')
-            await generateSingleImageFallback(post)
+            await generateSingleImageFallback(post, orgId)
           }
         } catch (imageError) {
           console.error('❌ Image generation error:', imageError)
           // Fallback to old single image method
-          await generateSingleImageFallback(post)
+          await generateSingleImageFallback(post, orgId)
         }
 
         // Divine timing - respect the universe's rhythm
@@ -466,7 +466,7 @@ export default function BulkContentGenerator() {
   }
 
   // Fallback function for single image generation
-  const generateSingleImageFallback = async (post: GeneratedPost) => {
+  const generateSingleImageFallback = async (post: GeneratedPost, orgId: string | null) => {
     try {
       // Create relevant image prompt based on content and category
       const category = post.category || 'Consciousness & Awakening'
@@ -556,7 +556,8 @@ export default function BulkContentGenerator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: imagePrompt
+          prompt: imagePrompt,
+          orgId: orgId
         })
       })
 
