@@ -100,10 +100,20 @@ export default function MessagesPage() {
 
       if (data.success) {
         setConversations(prev => {
-          // If we have a selected conversation that is NOT in the new list (e.g. just added), keep it
-          if (selectedConversation && !data.conversations.find((c: Conversation) => c.id === selectedConversation.id)) {
-            return [selectedConversation, ...data.conversations]
+          // Robust merge: ensure we don't lose the currently viewed conversation 
+          // if it hasn't propagated to the main list yet
+          const currentId = searchParams.get('conversationId')
+          const newIds = new Set(data.conversations.map((c: Conversation) => c.id))
+
+          // If we had a conversation in 'prev' that matches the current URL ID, 
+          // and it is NOT in the new list, we must preserve it.
+          const preserved = prev.find(c => c.id === currentId && !newIds.has(c.id))
+
+          if (preserved) {
+            console.log('🔄 Preserving locally loaded conversation not yet in list', preserved.id)
+            return [preserved, ...data.conversations]
           }
+
           return data.conversations
         })
       }
