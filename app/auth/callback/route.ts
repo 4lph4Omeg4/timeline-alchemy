@@ -11,6 +11,15 @@ export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
 
+    // Handle error callback from Supabase
+    const errorParam = searchParams.get('error')
+    const errorDescription = searchParams.get('error_description')
+
+    if (errorParam) {
+        console.error('Supabase callback error:', errorParam, errorDescription)
+        return NextResponse.redirect(`${origin}/auth/signin?error=${errorParam}&details=${encodeURIComponent(errorDescription || 'Unknown error')}`)
+    }
+
     // Debug logging
     const cookieStore = cookies()
     console.log('Callback Cookies:', cookieStore.getAll().map(c => c.name))
