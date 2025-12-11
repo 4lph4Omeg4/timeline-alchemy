@@ -77,7 +77,7 @@ User is Admin/Manager of pages but they don't show up in `/me/accounts` API call
 ```bash
 # Get your user ID from Timeline Alchemy dashboard
 # Then visit:
-https://www.timeline-alchemy.nl/api/facebook/test-token?user_id=YOUR_USER_ID
+https://www.timeline-alchemy.com/api/facebook/test-token?user_id=YOUR_USER_ID
 ```
 
 This shows:
@@ -128,10 +128,10 @@ This shows:
 ## Meta App Settings Checklist
 
 ### Required Settings:
-- ✅ App Domain: `timeline-alchemy.nl`
+- ✅ App Domain: `timeline-alchemy.com`
 - ✅ Valid OAuth Redirect URIs:
-  - `https://www.timeline-alchemy.nl/api/auth/facebook/callback`
-  - `https://www.timeline-alchemy.nl/api/auth/instagram/callback`
+  - `https://www.timeline-alchemy.com/api/auth/facebook/callback`
+  - `https://www.timeline-alchemy.com/api/auth/instagram/callback`
 - ✅ Products Added:
   - Facebook Login
   - Facebook Pages
@@ -198,5 +198,5 @@ Go to: https://developers.facebook.com/apps/YOUR_APP_ID/roles/
 Contact me and provide:
 1. Screenshot of Meta App → Roles → Developers/Test Users
 2. Screenshot of Meta App → App Review → Permissions
-3. Output of: `https://www.timeline-alchemy.nl/api/facebook/test-token?user_id=YOUR_USER_ID`
+3. Output of: `https://www.timeline-alchemy.com/api/facebook/test-token?user_id=YOUR_USER_ID`
 

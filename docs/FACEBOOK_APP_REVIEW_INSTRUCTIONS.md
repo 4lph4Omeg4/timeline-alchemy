@@ -2,7 +2,7 @@
 
 ## App Access Information
 
-**App URL:** https://www.timeline-alchemy.nl
+**App URL:** https://www.timeline-alchemy.com
 
 **Test Account Credentials:**
 - Email: [CREATE_TEST_ACCOUNT@example.com]
@@ -50,7 +50,7 @@ We request the following permissions:
 ## How to Test the App
 
 ### Step 1: Create an Account
-1. Go to: https://www.timeline-alchemy.nl
+1. Go to: https://www.timeline-alchemy.com
 2. Click "Get Started" or "Sign Up"
 3. Create an account using email/password
 4. You'll receive a 14-day trial plan automatically
@@ -142,7 +142,7 @@ We request the following permissions:
 
 **OAuth Flow:**
 - Standard OAuth 2.0 with PKCE
-- Redirect URI: `https://www.timeline-alchemy.nl/api/auth/facebook/callback`
+- Redirect URI: `https://www.timeline-alchemy.com/api/auth/facebook/callback`
 - Uses Facebook Graph API v18.0
 - Implements proper error handling and token refresh
 
@@ -180,7 +180,7 @@ Timeline Alchemy is an AI-powered content creation and social media management p
 If you encounter any issues during review:
 - **Support Email:** [YOUR_SUPPORT_EMAIL]
 - **Developer Contact:** [YOUR_EMAIL]
-- **Documentation:** https://www.timeline-alchemy.nl/docs
+- **Documentation:** https://www.timeline-alchemy.com/docs
 
 ---
 

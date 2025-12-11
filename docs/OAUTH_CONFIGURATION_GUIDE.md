@@ -30,10 +30,10 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 **Supabase Dashboard Configuration**:
 1. Ga naar https://app.supabase.com/project/kjjrzhicspmbiitayrco/auth/url-configuration
-2. **Site URL**: `https://www.timeline-alchemy.nl`
+2. **Site URL**: `https://www.timeline-alchemy.com`
 3. **Redirect URLs**:
-   - `https://www.timeline-alchemy.nl/auth/callback`
-   - `https://auth.timeline-alchemy.nl/auth/callback`
+   - `https://www.timeline-alchemy.com/auth/callback`
+   - `https://auth.timeline-alchemy.com/auth/callback`
    - `http://localhost:3000/auth/callback` (voor development)
 
 ### 3️⃣ Supabase OAuth Server (Identity Provider)
