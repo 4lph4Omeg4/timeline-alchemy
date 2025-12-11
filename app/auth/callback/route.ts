@@ -98,9 +98,13 @@ export async function GET(request: Request) {
             return NextResponse.redirect(`${origin}${next}`)
         } else {
             console.error('Auth code exchange error:', error)
+            authError = error || new Error('No session returned')
         }
     }
 
     // Return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/signin?error=auth_callback_failed&details=${encodeURIComponent(authError?.message || 'Unknown error')}`)
+    const errorMessage = authError?.message || 'Unknown authentication error'
+    console.error('Redirecting to signin with error:', errorMessage)
+
+    return NextResponse.redirect(`${origin}/auth/signin?error=auth_callback_failed&details=${encodeURIComponent(errorMessage)}`)
 }
