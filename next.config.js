@@ -23,6 +23,9 @@ const nextConfig = {
   },
   // Optimize bundle
   webpack: (config, { isServer }) => {
+    // Suppress warning about big strings serialization
+    config.cache = false;
+
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
