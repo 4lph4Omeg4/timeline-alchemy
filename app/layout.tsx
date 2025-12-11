@@ -9,7 +9,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.timeline-alchemy.nl'),
+  metadataBase: new URL('https://www.timeline-alchemy.com'),
   title: 'Timeline Alchemy - AI Content Creation Platform',
   description: 'Create, schedule, and publish AI-generated content across all your social media platforms.',
   keywords: ['AI content creation', 'social media automation', 'content scheduling', 'AI tools', 'social media management'],
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://www.timeline-alchemy.nl',
+    url: 'https://www.timeline-alchemy.com',
     siteName: 'Timeline Alchemy',
     title: 'Timeline Alchemy - AI Content Creation Platform',
     description: 'Create, schedule, and publish AI-generated content across all your social media platforms.',

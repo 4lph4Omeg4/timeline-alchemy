@@ -42,9 +42,9 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 **Configuration**:
 1. Ga naar Supabase Dashboard → Authentication → OAuth Server
 2. **Enable Supabase OAuth Server**: ON
-3. **Site URL**: `https://www.timeline-alchemy.nl`
+3. **Site URL**: `https://www.timeline-alchemy.com`
 4. **Authorization Path**: `/oauth/consent` (⚠️ NIET de bestandsnaam `page.tsx`, alleen het pad)
-   - Preview URL moet zijn: `https://timeline-alchemy.nl/oauth/consent`
+   - Preview URL moet zijn: `https://timeline-alchemy.com/oauth/consent`
 
 
 ---
@@ -56,11 +56,11 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 User klikt "Connect Twitter" in /dashboard/socials
   ↓
-App redirect: https://www.timeline-alchemy.nl/api/auth/twitter
+App redirect: https://www.timeline-alchemy.com/api/auth/twitter
   ↓
 Twitter OAuth: https://twitter.com/i/oauth2/authorize
   ↓
-Twitter callback: https://www.timeline-alchemy.nl/api/auth/twitter/callback
+Twitter callback: https://www.timeline-alchemy.com/api/auth/twitter/callback
   ↓
 Token opslaan in database (social_connections table)
   ↓
@@ -80,10 +80,10 @@ Redirect naar: /dashboard/socials?success=twitter_connected
 - **Type of App**: Web App, Automated App or Bot
 - **Callback URI / Redirect URL**:
   ```
-  https://www.timeline-alchemy.nl/api/auth/twitter/callback
+  https://www.timeline-alchemy.com/api/auth/twitter/callback
   http://localhost:3000/api/auth/twitter/callback
   ```
-- **Website URL**: `https://www.timeline-alchemy.nl`
+- **Website URL**: `https://www.timeline-alchemy.com`
 
 **Environment Variables**:
 ```bash
@@ -105,7 +105,7 @@ TWITTER_CLIENT_SECRET=your_client_secret
 **OAuth 2.0 Settings**:
 - **Authorized redirect URLs**:
   ```
-  https://www.timeline-alchemy.nl/api/auth/linkedin/callback
+  https://www.timeline-alchemy.com/api/auth/linkedin/callback
   http://localhost:3000/api/auth/linkedin/callback
   ```
 
@@ -131,8 +131,8 @@ LINKEDIN_CLIENT_SECRET=your_client_secret
 **OAuth Settings**:
 - **Valid OAuth Redirect URIs**:
   ```
-  https://www.timeline-alchemy.nl/api/auth/facebook/callback
-  https://www.timeline-alchemy.nl/api/auth/instagram/callback
+  https://www.timeline-alchemy.com/api/auth/facebook/callback
+  https://www.timeline-alchemy.com/api/auth/instagram/callback
   http://localhost:3000/api/auth/facebook/callback
   http://localhost:3000/api/auth/instagram/callback
   ```
@@ -166,7 +166,7 @@ INSTAGRAM_CLIENT_SECRET=your_facebook_app_secret
 - **Application type**: Web application
 - **Authorized redirect URIs**:
   ```
-  https://www.timeline-alchemy.nl/api/auth/youtube/callback
+  https://www.timeline-alchemy.com/api/auth/youtube/callback
   http://localhost:3000/api/auth/youtube/callback
   ```
 
@@ -192,7 +192,7 @@ YOUTUBE_CLIENT_SECRET=your_google_client_secret
 **OAuth2 Settings**:
 - **Redirects**:
   ```
-  https://www.timeline-alchemy.nl/api/auth/discord/callback
+  https://www.timeline-alchemy.com/api/auth/discord/callback
   http://localhost:3000/api/auth/discord/callback
   ```
 
@@ -220,7 +220,7 @@ DISCORD_CLIENT_SECRET=your_client_secret
 **OAuth Settings**:
 - **redirect uri**:
   ```
-  https://www.timeline-alchemy.nl/api/auth/reddit/callback
+  https://www.timeline-alchemy.com/api/auth/reddit/callback
   http://localhost:3000/api/auth/reddit/callback
   ```
 
@@ -243,26 +243,26 @@ REDDIT_CLIENT_SECRET=your_client_secret
 ### Current Setup
 
 ```
-timeline-alchemy.nl           → Vercel (Main app)
-www.timeline-alchemy.nl       → Vercel (Main app)
-auth.timeline-alchemy.nl      → Vercel (Auth subdomain for Supabase callbacks)
-pay.timeline-alchemy.nl       → Stripe (Payment links)
+timeline-alchemy.com           → Vercel (Main app)
+www.timeline-alchemy.com       → Vercel (Main app)
+auth.timeline-alchemy.com      → Vercel (Auth subdomain for Supabase callbacks)
+pay.timeline-alchemy.com       → Stripe (Payment links)
 ```
 
 ### Vercel Domain Settings
 
 1. Go to: https://vercel.com/your-team/timeline-alchemy/settings/domains
 2. Add these domains:
-   - `timeline-alchemy.nl` (Production)
-   - `www.timeline-alchemy.nl` (Production)
-   - `auth.timeline-alchemy.nl` (Production)
+   - `timeline-alchemy.com ` (Production)
+   - `www.timeline-alchemy.com` (Production)
+   - `auth.timeline-alchemy.com` (Production)
 
 ### Environment Variables in Vercel
 
 ```bash
 # App URLs
-NEXT_PUBLIC_APP_URL=https://www.timeline-alchemy.nl
-NEXT_PUBLIC_SITE_URL=https://www.timeline-alchemy.nl
+NEXT_PUBLIC_APP_URL=https://www.timeline-alchemy.com
+NEXT_PUBLIC_SITE_URL=https://www.timeline-alchemy.com
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://kjjrzhicspmbiitayrco.supabase.co
@@ -300,11 +300,11 @@ TELEGRAM_BOT_TOKEN=your_key
 5. Should redirect to http://localhost:3000/dashboard
 
 # Production
-1. Go to https://www.timeline-alchemy.nl/auth/signin
+1. Go to https://www.timeline-alchemy.com/auth/signin
 2. Click "Sign in with Google"
-3. Should redirect to Supabase OAuth (auth.timeline-alchemy.nl)
-4. Should redirect back to https://www.timeline-alchemy.nl/auth/callback
-5. Should redirect to https://www.timeline-alchemy.nl/dashboard
+3. Should redirect to Supabase OAuth (auth.timeline-alchemy.com)
+4. Should redirect back to https://www.timeline-alchemy.com/auth/callback
+5. Should redirect to https://www.timeline-alchemy.com/dashboard
 ```
 
 ### 2. Test Social Media OAuth (Platform Connections)
@@ -320,13 +320,13 @@ TELEGRAM_BOT_TOKEN=your_key
 7. Should save tokens and redirect to http://localhost:3000/dashboard/socials?success={platform}_connected
 
 # Production
-1. Sign in to https://www.timeline-alchemy.nl
-2. Go to https://www.timeline-alchemy.nl/dashboard/socials
+1. Sign in to https://www.timeline-alchemy.com
+2. Go to https://www.timeline-alchemy.com/dashboard/socials
 3. Click "Connect Account" for any platform
-4. Should redirect to https://www.timeline-alchemy.nl/api/auth/{platform}
+4. Should redirect to https://www.timeline-alchemy.com/api/auth/{platform}
 5. Should redirect to platform's OAuth page
-6. After authorization, should redirect to https://www.timeline-alchemy.nl/api/auth/{platform}/callback
-7. Should save tokens and redirect to https://www.timeline-alchemy.nl/dashboard/socials?success={platform}_connected
+6. After authorization, should redirect to https://www.timeline-alchemy.com/api/auth/{platform}/callback
+7. Should save tokens and redirect to https://www.timeline-alchemy.com/dashboard/socials?success={platform}_connected
 ```
 
 ---
@@ -362,9 +362,9 @@ TELEGRAM_BOT_TOKEN=your_key
 **Solution**:
 1. Check Supabase Dashboard → Authentication → URL Configuration
 2. Make sure redirect URLs include:
-   - `https://www.timeline-alchemy.nl/auth/callback`
+   - `https://www.timeline-alchemy.com/auth/callback`
    - `http://localhost:3000/auth/callback`
-3. Site URL should be: `https://www.timeline-alchemy.nl`
+3. Site URL should be: `https://www.timeline-alchemy.com`
 
 ### Issue: "auth_required" in social media callback
 **Solution**:
@@ -452,8 +452,8 @@ Vercel environment variables override `.env.local`. Make sure production secrets
 ## 📝 Summary
 
 **Two separate OAuth systems**:
-1. **Supabase Auth** → User login → Uses `auth.timeline-alchemy.nl`
-2. **Social Media OAuth** → Platform connections → Uses `www.timeline-alchemy.nl/api/auth/*`
+1. **Supabase Auth** → User login → Uses `auth.timeline-alchemy.com`
+2. **Social Media OAuth** → Platform connections → Uses `www.timeline-alchemy.com/api/auth/*`
 
 **Key Points**:
 - They don't interfere with each other

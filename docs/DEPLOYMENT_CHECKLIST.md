@@ -122,7 +122,7 @@ git push origin main
 
 **Test 1: Health Check**
 ```bash
-curl https://www.timeline-alchemy.nl/api/generate-image-google \
+curl https://www.timeline-alchemy.com/api/generate-image-google \
   -X POST \
   -H "Content-Type: application/json" \
   -d '{"prompt":"test"}'
@@ -132,7 +132,7 @@ curl https://www.timeline-alchemy.nl/api/generate-image-google \
 ```
 
 **Test 2: Via de UI**
-1. Ga naar https://www.timeline-alchemy.nl
+1. Ga naar https://www.timeline-alchemy.com
 2. Log in met je account
 3. Ga naar Dashboard → Content
 4. Genereer een nieuwe post met image

@@ -3,18 +3,18 @@
 ## Configured Domains
 
 ### 1. 🎨 **Main Application Domain**
-- **Domain**: `timeline-alchemy.nl`
+- **Domain**: `timeline-alchemy.com`
 - **Purpose**: Main application and landing page
 - **Status**: ✅ Active
 
 ### 2. 🔐 **Authentication Domain** 
-- **Domain**: `auth.timeline-alchemy.nl`
+- **Domain**: `auth.timeline-alchemy.com`
 - **Purpose**: Supabase OAuth callback handler
 - **Status**: ✅ Integrated in code
-- **Callback URL**: `https://auth.timeline-alchemy.nl/callback`
+- **Callback URL**: `https://auth.timeline-alchemy.com/callback`
 
 ### 3. 💳 **Payment Domain**
-- **Domain**: `pay.timeline-alchemy.nl`
+- **Domain**: `pay.timeline-alchemy.com`
 - **Purpose**: Stripe payment links and plan selection
 - **Status**: ✅ Integrated in billing page
 - **Usage**: View plans, upgrades, and new subscriptions
@@ -29,13 +29,13 @@ Go to **Supabase Dashboard** → **Authentication** → **URL Configuration**
 
 #### 1. Site URL
 ```
-https://timeline-alchemy.nl
+https://timeline-alchemy.com
 ```
 
 #### 2. Redirect URLs (Add all of these)
 ```
-https://timeline-alchemy.nl/auth/callback
-https://auth.timeline-alchemy.nl/auth/callback
+https://timeline-alchemy.com/auth/callback
+https://auth.timeline-alchemy.com/auth/callback
 http://localhost:3000/auth/callback
 ```
 
@@ -43,8 +43,8 @@ http://localhost:3000/auth/callback
 
 #### 3. Additional Redirect URLs
 ```
-https://timeline-alchemy.nl/dashboard/socials
-https://auth.timeline-alchemy.nl/dashboard/socials
+https://timeline-alchemy.com/dashboard/socials
+https://auth.timeline-alchemy.com/dashboard/socials
 ```
 
 ### OAuth Provider Configuration
@@ -53,8 +53,8 @@ For each OAuth provider (Google, LinkedIn, Twitter, etc.), configure:
 
 **Authorized Redirect URIs**:
 ```
-https://timeline-alchemy.nl/auth/callback
-https://auth.timeline-alchemy.nl/auth/callback
+https://timeline-alchemy.com/auth/callback
+https://auth.timeline-alchemy.com/auth/callback
 http://localhost:3000/auth/callback
 ```
 
@@ -68,7 +68,7 @@ http://localhost:3000/auth/callback
 
 **Stripe Dashboard** → **Settings** → **Payment Links**
 
-1. Set custom domain: `pay.timeline-alchemy.nl`
+1. Set custom domain: `pay.timeline-alchemy.com`
 2. Verify domain ownership
 3. Enable SSL/TLS
 
@@ -88,9 +88,9 @@ Keep the default Stripe billing portal for managing existing subscriptions:
    - ✅ OAuth redirect uses `window.location.origin` in `app/auth/signin/page.tsx`
    - ✅ OAuth redirect uses `window.location.origin` in `app/auth/signup/page.tsx`
    - ✅ Callback handler ready in `app/auth/callback/page.tsx`
-   - ✅ Works with: `timeline-alchemy.nl`, `auth.timeline-alchemy.nl`, or `localhost`
+   - ✅ Works with: `timeline-alchemy.com`, `auth.timeline-alchemy.com`, or `localhost`
 
-2. **Payment Domain** (`pay.timeline-alchemy.nl`)
+2. **Payment Domain** (`pay.timeline-alchemy.com`)
    - ✅ Integrated in billing page quick access
    - ✅ Added "View Plans & Upgrade" button
    - ✅ Separated from "Manage Current Subscription" action
@@ -116,8 +116,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
 SUPABASE_SERVICE_ROLE_KEY=your_key
 
 # Auth Redirects (update if needed)
-NEXT_PUBLIC_SUPABASE_REDIRECT_URL=https://auth.timeline-alchemy.nl/callback
-NEXT_PUBLIC_AUTH_CALLBACK_URL=https://auth.timeline-alchemy.nl/callback
+NEXT_PUBLIC_SUPABASE_REDIRECT_URL=https://auth.timeline-alchemy.com/callback
+NEXT_PUBLIC_AUTH_CALLBACK_URL=https://auth.timeline-alchemy.com/callback
 
 # Stripe (already configured)
 STRIPE_PUBLIC_KEY=your_key
@@ -129,16 +129,16 @@ STRIPE_WEBHOOK_SECRET=your_key
 
 ## DNS Configuration
 
-### Main Domain (`timeline-alchemy.nl`)
+### Main Domain (`timeline-alchemy.com`)
 - **Type**: A or CNAME
 - **Points to**: Vercel deployment
 
-### Auth Subdomain (`auth.timeline-alchemy.nl`)
+### Auth Subdomain (`auth.timeline-alchemy.com`)
 - **Type**: CNAME
 - **Points to**: Vercel deployment
 - **Purpose**: OAuth callbacks
 
-### Payment Subdomain (`pay.timeline-alchemy.nl`)
+### Payment Subdomain (`pay.timeline-alchemy.com`)
 - **Type**: CNAME  
 - **Points to**: Stripe
 - **Purpose**: Payment links
@@ -150,14 +150,14 @@ STRIPE_WEBHOOK_SECRET=your_key
 ### Authentication Flow
 - [ ] Google OAuth sign in works
 - [ ] Google OAuth sign up works
-- [ ] Redirect to `auth.timeline-alchemy.nl/callback` succeeds
+- [ ] Redirect to `auth.timeline-alchemy.com/callback` succeeds
 - [ ] After auth, redirect to dashboard works
 - [ ] Social media OAuth connections work
 
 ### Payment Flow
-- [ ] "View Plans & Upgrade" button opens `pay.timeline-alchemy.nl`
+- [ ] "View Plans & Upgrade" button opens `pay.timeline-alchemy.com`
 - [ ] "Manage Current Subscription" opens Stripe billing portal
-- [ ] Stripe payment links work on `pay.timeline-alchemy.nl`
+- [ ] Stripe payment links work on `pay.timeline-alchemy.com`
 - [ ] Successful payment redirects work
 
 ### UI Consistency
@@ -174,8 +174,8 @@ STRIPE_WEBHOOK_SECRET=your_key
 **Problem**: "Invalid redirect URL" error
 
 **Solution**:
-1. Check Supabase redirect URLs include `auth.timeline-alchemy.nl`
-2. Verify DNS for `auth.timeline-alchemy.nl` points to Vercel
+1. Check Supabase redirect URLs include `auth.timeline-alchemy.com`
+2. Verify DNS for `auth.timeline-alchemy.com` points to Vercel
 3. Check OAuth provider settings include the new domain
 
 ### Payment Link Issues
@@ -183,7 +183,7 @@ STRIPE_WEBHOOK_SECRET=your_key
 **Problem**: Payment page doesn't load
 
 **Solution**:
-1. Verify `pay.timeline-alchemy.nl` is configured in Stripe
+1. Verify `pay.timeline-alchemy.com` is configured in Stripe
 2. Check DNS propagation
 3. Verify SSL certificate is active
 
@@ -197,7 +197,7 @@ STRIPE_WEBHOOK_SECRET=your_key
    ```
    1. Go to sign in page
    2. Click "Sign in with Google"
-   3. Verify redirect to auth.timeline-alchemy.nl
+   3. Verify redirect to auth.timeline-alchemy.com
    4. Verify redirect back to dashboard
    ```
 
@@ -205,7 +205,7 @@ STRIPE_WEBHOOK_SECRET=your_key
    ```
    1. Go to billing page
    2. Click "View Plans & Upgrade"
-   3. Verify opens pay.timeline-alchemy.nl
+   3. Verify opens pay.timeline-alchemy.com
    4. Test a payment flow
    ```
 

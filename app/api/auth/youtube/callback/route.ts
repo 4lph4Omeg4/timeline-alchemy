@@ -34,13 +34,13 @@ export async function GET(request: NextRequest) {
         : error
 
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=${encodeURIComponent(errorMessage)}`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=${encodeURIComponent(errorMessage)}`
       )
     }
 
     if (!code || !state) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=missing_parameters&details=no_code_or_state`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=missing_parameters&details=no_code_or_state`
       )
     }
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     } catch (e) {
       console.error('Invalid state parameter:', e)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=invalid_state&details=state_parse_error`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=invalid_state&details=state_parse_error`
       )
     }
 
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     if (!orgId || !userId) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=missing_org_or_user&details=no_org_id_or_user_id`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=missing_org_or_user&details=no_org_id_or_user_id`
       )
     }
 
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     if (!youtubeClientId || !youtubeClientSecret) {
       console.error('YouTube OAuth credentials not configured')
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=oauth_not_configured&details=missing_youtube_credentials`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=oauth_not_configured&details=missing_youtube_credentials`
       )
     }
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
         client_secret: youtubeClientSecret,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/api/auth/youtube/callback`,
+        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/api/auth/youtube/callback`,
       }),
     })
 
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
       const errorData = await tokenResponse.text()
       console.error('YouTube token exchange failed:', errorData)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=token_exchange_failed&details=${encodeURIComponent(errorData)}`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=token_exchange_failed&details=${encodeURIComponent(errorData)}`
       )
     }
 
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       const errorData = await channelResponse.text()
       console.error('YouTube channel fetch failed:', errorData)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=channel_fetch_failed&details=${encodeURIComponent(errorData)}`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=channel_fetch_failed&details=${encodeURIComponent(errorData)}`
       )
     }
 
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 
     if (!channel) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=no_channel_found&details=no_youtube_channel`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=no_channel_found&details=no_youtube_channel`
       )
     }
 
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
         account_name: accountName
       })
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=database_error&details=${encodeURIComponent(dbError.message)}`
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=database_error&details=${encodeURIComponent(dbError.message)}`
       )
     }
 
@@ -170,13 +170,13 @@ export async function GET(request: NextRequest) {
 
     // Redirect back to socials page with success
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?success=youtube_connected&username=${encodeURIComponent(accountName)}`
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?success=youtube_connected&username=${encodeURIComponent(accountName)}`
     )
 
   } catch (error) {
     console.error('YouTube OAuth callback error:', error)
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.nl'}/dashboard/socials?error=unexpected_error&details=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
+      `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.timeline-alchemy.com'}/dashboard/socials?error=unexpected_error&details=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`
     )
   }
 }

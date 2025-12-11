@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', 'supabase.co', 'auth.timeline-alchemy.nl'],
+    domains: ['localhost', 'supabase.co', 'auth.timeline-alchemy.com', 'timeline-alchemy.com', 'www.timeline-alchemy.com'],
     remotePatterns: [
       {
         protocol: 'https',
